@@ -36,10 +36,10 @@ services:
       bingo_hasura_db:
         condition: service_healthy
 
-  user-front:
+  view-user:
     build:
-      context: .docker
-      dockerfile: view-user.Dockerfile
+      context: .
+      dockerfile: .docker/view-user.Dockerfile
     container_name: "view-user"
     volumes:
       - ./view-user:/app
