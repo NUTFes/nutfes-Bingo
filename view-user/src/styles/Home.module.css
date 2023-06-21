@@ -1,0 +1,37 @@
+.container {
+  height: 100vh;
+  width: 100vw;
+  background-color: aliceblue;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card_frame {
+  border-radius: 10px;
+  border-width: 3px;
+  border-style: solid;
+  border-color: #333;
+  padding: 1rem;
+  background-color: moccasin;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-gap: 10px;
+}
+
+.card_content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  border-width: 3px;
+  border-style: solid;
+  border-color: #333;
+  background-color: darksalmon;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 2rem;
+}

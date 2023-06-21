@@ -36,5 +36,20 @@ services:
       bingo_hasura_db:
         condition: service_healthy
 
+  view-user:
+    build:
+      context: .
+      dockerfile: .docker/view-user.Dockerfile
+    container_name: "view-user"
+    volumes:
+      - ./view-user:/app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    environment:
+      - WATCHPACK_POLLING=true
+
 volumes:
   db-data:
