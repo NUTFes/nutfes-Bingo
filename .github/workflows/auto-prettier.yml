@@ -1,4 +1,4 @@
-on:
+  on:
     pull_request:
       branches:
         - develop
@@ -22,7 +22,7 @@ on:
 
         # - name: prettier format
         #   run: npm run format
-        #   working-directory: frontend
+        #   working-directory: view-user
 
         - name: lint
           run: npm run lint:fix
