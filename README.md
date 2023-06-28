@@ -12,3 +12,9 @@
 編集・修正：[fix] title
 
 削除：[del] title
+
+## 実装メモ
+- `next: permission denied`が出る時の対処法
+    - `docker compose run --rm [コンテナ名] bash` でそのコンテナに入る
+    - `chown +x -R .`　で実行権限を与える
+    - `exit`でそのコンテナから出る
