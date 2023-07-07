@@ -1,0 +1,18 @@
+.container {
+    height: 6rem;
+    width: 100vw;
+    background-color: #D9D9D9;
+    border-bottom: 0.3rem solid #333;
+}
+
+.title {
+    color: #333;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 4.5rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 0.7;
+    margin: 1rem;
+    display: inline-block;
+
+}
