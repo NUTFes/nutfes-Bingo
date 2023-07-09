@@ -17,8 +17,8 @@ services:
 
   api: # hasura
     build:
-      context: .docker
-      dockerfile: hasura.Dockerfile
+      context: .
+      dockerfile: ./docker/hasura.Dockerfile
     container_name: "bingo_api"
     ports: ["8080:8080"]
     volumes: [./api:/tmp/hasura-project]
