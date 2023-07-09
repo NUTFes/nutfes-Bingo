@@ -22,7 +22,6 @@ services:
     container_name: "bingo_api"
     ports: ["8080:8080"]
     volumes: [./api:/tmp/hasura-project]
-    # volumes: [./api:/hasura]
     environment:
       # HASURA_GRAPHQL_MIGRATIONS_DIR: /tmp/hasura-projectmigrations/
       HASURA_GRAPHQL_ENABLE_CONSOLE: true
