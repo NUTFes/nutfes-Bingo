@@ -45,8 +45,8 @@ services:
       KEYCLOAK_ADMIN: admin # 管理ユーザーIDを設定
       KEYCLOAK_ADMIN_PASSWORD: password # 管理ユーザーのパスワードを設定
     depends_on:
-      - bingo_hasura_db
-      - hasura
+      - db
+      - api
     command:
       - start-dev
 
