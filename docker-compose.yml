@@ -32,6 +32,24 @@ services:
       db:
         condition: service_healthy
 
+  keycloak:
+    build:
+      context: .docker
+      dockerfile: keycloak.Dockerfile
+    container_name: "bingo_keycloak"
+    ports:
+      - "8888:8080"
+    volumes:
+      - ./data/keycloak:/opt/keycloak/data # DB情報等が格納される
+    environment:
+      KEYCLOAK_ADMIN: admin # 管理ユーザーIDを設定
+      KEYCLOAK_ADMIN_PASSWORD: password # 管理ユーザーのパスワードを設定
+    depends_on:
+      - bingo_hasura_db
+      - hasura
+    command:
+      - start-dev
+
   view-user:
     build:
       context: .
