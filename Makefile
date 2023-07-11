@@ -18,3 +18,5 @@ db-apply:
 db-export:
 	docker compose exec api hasura metadata export
 	docker compose exec api hasura migrate create "auto" --from-server --database-name default
+	docker system prune -af --filter "until=24h"
+	docker compose build
