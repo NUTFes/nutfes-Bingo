@@ -4,7 +4,7 @@ build:
 run:
 	docker compose up -d
 	sleep 10
-	make db-apply
+	make db-apply	
 	
 down:
 	docker compose down
