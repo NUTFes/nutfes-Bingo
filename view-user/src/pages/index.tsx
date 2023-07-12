@@ -2,7 +2,8 @@ import Image from "next/image";
 import styles from "@/styles/Home.module.css";
 import Head from "next/head";
 import type { NextPage } from "next";
-import { Header } from "@/components/common";
+import { Header,Logoutbutton } from "@/components/common";
+
 
 const Page: NextPage = () => {
   return (
