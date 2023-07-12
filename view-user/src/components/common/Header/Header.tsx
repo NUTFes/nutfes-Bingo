@@ -1,8 +1,7 @@
-import React from "react";
-import { ReactNode } from "react";
-import styles from "./Header.module.css";
-import LogoutButton from "@/components/common/LogoutButton";
-import { Modal } from "@/components/common";
+import React from 'react'
+import { ReactNode } from "react"
+import styles from "./Header.module.css"
+import { Modal,Button } from "@/components/common";
 
 interface HeaderProps {
   user: string;
@@ -23,8 +22,12 @@ const Header = (props: HeaderProps) =>  {
                         </div>
                     </Modal>
                 </div>
+            <div className={styles.title}>
+                <p>NUTFES BINGO {props.user}</p>
+                <Button/>
             </div>
         </div>
+    </div>
     )
 }
 

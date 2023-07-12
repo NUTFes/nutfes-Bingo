@@ -11,6 +11,7 @@ const Page: NextPage = () => {
     <div>
       <Header user="USER" />
     </div>
+    <Button/>
   </div>
   )
 };
