@@ -1,0 +1,32 @@
+.button {
+  background-color: var(--background-color);
+  border: 1px solid black;
+  color: black;
+  padding: 0.3rem 0.3rem;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 1rem;
+  font-family: sans-serif;
+  position: absolute;
+  top:5%;
+  left: 90%;
+  white-space: nowrap;
+  font-size: 3rem;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  font-size:x-large;
+}
+
+.icon {
+  background-color: var(--background-color);
+  color: black;
+  align-items: center;
+  padding: 4.8;
+}
+
+.button:hover {
+  background-color: whitesmoke;
+  color: var(--primary);
+  transition: 0.25s;
+}
