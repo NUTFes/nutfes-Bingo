@@ -22,12 +22,8 @@ const Header = (props: HeaderProps) =>  {
                         </div>
                     </Modal>
                 </div>
-            <div className={styles.title}>
-                <p>NUTFES BINGO {props.user}</p>
-                <Button/>
             </div>
         </div>
-    </div>
     )
 }
 
