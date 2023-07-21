@@ -17,8 +17,10 @@ const Button = ({
           className={classNames(styles[theme],styles[size],styles[shape])}
           onClick={() => console.log("button click")}
         >
-          Logout
-          <CgLogOut className={styles.icon} />
+          <span className={styles.contents}>
+            <CgLogOut className={styles.icon} />
+            <p>Logout</p>
+          </span>
         </button>
       </div>
     </main>
