@@ -1,0 +1,12 @@
+tunnel: 9969e5a2-8905-4d82-9b82-3891da00718a
+credentials-file: /home/nonroot/.cloudflared/9969e5a2-8905-4d82-9b82-3891da00718a.json
+protocol: http2
+
+ingress:
+  - hostname: bingo.nutfes.net
+    service: http://view-user:3000
+  - hostname: bingo-admin.nutfes.net
+    service: http://view-admin:3000
+  - hostname: bingo-api.nutfes.net
+    service: http://api:8080
+  - service: http_status:404
