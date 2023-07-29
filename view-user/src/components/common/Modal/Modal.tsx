@@ -1,53 +1,34 @@
-import { type ReactNode, useState } from "react";
-import { createPortal } from "react-dom";
+import { type ReactNode } from "react";
 import styles from "./Modal.module.css";
 
 interface ModalProps {
   children: ReactNode;
-  buttonText: string;
+  isOpened: boolean;
+  close: () => void;
   canCloseByClickingBackground?: boolean;
 }
 
 const Modal = ({
   children,
-  buttonText,
+  isOpened,
+  close,
   canCloseByClickingBackground = true,
 }: ModalProps) => {
-  const [isOpened, setIsOpened] = useState(false);
-
-  const open = () => setIsOpened(true);
-  const close = () => setIsOpened(false);
-
-  const renderButton = () => {
-      return (
-        <button
-          type="button"
-          onClick={open}
-          className={styles.btnOpen}
-          >
-          {buttonText}
-        </button>
-      );
-  };
-
-  const elmModal = (
-    <div className={styles.wrapper}>
-      <div className={styles.content}>
-        <button
-          className={styles.btnClose}
-          onClick={close}
-          >✕</button>
-        {children}
-      </div>
-      {canCloseByClickingBackground && (
-          <div className={styles.background} onClick={close} />
-      )}
-    </div>
-  );
   return (
     <>
-      {renderButton()}
-      {isOpened && createPortal(elmModal, document.body)}
+      {isOpened && (
+        <div className={styles.wrapper}>
+          <div className={styles.content}>
+            <button className={styles.btnClose} onClick={close}>
+              ✕
+            </button>
+            <p className={styles.number}>{children}</p>
+          </div>
+          {canCloseByClickingBackground && (
+            <div className={styles.background} onClick={close} />
+          )}
+        </div>
+      )}
     </>
   );
 };
