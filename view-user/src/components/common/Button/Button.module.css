@@ -4,7 +4,6 @@
   color: #333333;
   text-align: center;
   cursor: pointer;
-  position: absolute;
   align-items: center;
   display: flex;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
@@ -32,7 +31,7 @@
 
 
 .square {
-  border-radius: 0.5;
+  border-radius: 0.5rem;
 }
 
 .contents {
