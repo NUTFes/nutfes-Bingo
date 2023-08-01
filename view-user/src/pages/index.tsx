@@ -13,19 +13,17 @@ const Page: NextPage = () => {
         抽選された番号
         <p>25</p>
       </Modal>
-      <div>
-        <Header>
-          <div className={styles.main}>
-            <div className={styles.title}>
-              <p>NUTFES BINGO USER</p>
-            </div>
-            <button type="button" onClick={open} className={styles.btnOpen}>
-              最新の番号を表示
-            </button>
-            <Button />
+      <Header>
+        <div className={styles.main}>
+          <div className={styles.title}>
+            <p>NUTFES BINGO USER</p>
           </div>
-        </Header>
-      </div>
+          <button type="button" onClick={open} className={styles.btnOpen}>
+            最新の番号を表示
+          </button>
+          <Button />
+        </div>
+      </Header>
     </div>
   );
 };
