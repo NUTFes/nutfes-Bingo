@@ -4,35 +4,7 @@
   background-color: #c9aaaa;
 }
 
-/* Header */
-.main {
-  display: flex;
-  align-items: center;
-  margin-right: 1rem;
-}
-
-.title {
-  color: #333;
-  font-size: 5vw;
-  font-style: normal;
-  font-weight: 700;
-  line-height: 1;
-  margin: 1rem auto 1rem 1rem;
-  display: inline-block;
-}
-/* Modal */
-.modalContent p {
-  color: #d9d9d9;
-  font-size: 14rem;
-  font-weight: 700;
-  margin-top: -3rem;
-  margin-bottom: -3rem;
-}
-
 .btnOpen {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   padding: 0.9em 2em;
   border: 0.2rem solid #fff;
   border-radius: 0.5rem;
@@ -42,21 +14,24 @@
   font-weight: 600;
   font-size: 1rem;
   margin-right: 1rem;
+  white-space:nowrap;
+}
+
+.btnOpen:hover {
+  background-color: whitesmoke;
+  color: var(--primary);
+  transition: 0.25s;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
 }
 
 @media screen and (max-width: 600px) {
   .btnOpen {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0.9em 2em;
-    border: 2px solid #fff;
-    border-radius: 5px;
-    box-shadow: 0 0 0 3px #333333;
-    background-color: #333333;
-    color: #fff;
-    font-weight: 600;
-    font-size: 0.5rem;
-    margin-right: 0rem;
+    display: none;
   }
+
 }

@@ -5,23 +5,20 @@ import { Header, Button, Modal } from "@/components/common";
 
 const Page: NextPage = () => {
   const [isOpened, setIsOpened] = useState(false);
-  const open = () => setIsOpened(true);
-  const close = () => setIsOpened(false);
+  const isopenBool = () => setIsOpened(!isOpened);
+
   return (
     <div className={styles.container}>
-      <Modal isOpened={isOpened} close={close}>
+      <Modal isOpened={isOpened} setisOpened={setIsOpened}>
         抽選された番号
         <p>25</p>
       </Modal>
-      <Header>
+      <Header user="USER">
         <div className={styles.main}>
-          <div className={styles.title}>
-            <p>NUTFES BINGO USER</p>
-          </div>
-          <button type="button" onClick={open} className={styles.btnOpen}>
+          <button type="button" onClick={isopenBool} className={styles.btnOpen}>
             最新の番号を表示
           </button>
-          <Button />
+          <Button className={styles.btnLogin} />
         </div>
       </Header>
     </div>
