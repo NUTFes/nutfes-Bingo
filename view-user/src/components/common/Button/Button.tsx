@@ -1,26 +1,25 @@
 import styles from "./Button.module.css";
-import { CgLogOut } from "react-icons/cg";
 import classNames from "classnames";
+import { ReactNode } from "react";
 
-
-const Button = ({
-  theme = "primary",
-  size = "l",
-  shape = "circle",
-  ...props
-}) => {
-
+interface ButtonProps {
+  children: ReactNode;
+  size: string;
+  shape: string;
+}
+const Button = (props: ButtonProps) => {
   return (
     <main>
       <div>
         <button
-          className={classNames(styles[theme],styles[size],styles[shape])}
+          className={classNames(
+            styles.primary,
+            styles[props.size],
+            styles[props.shape],
+            )}
           onClick={() => console.log("button click")}
         >
-          <span className={styles.contents}>
-            <CgLogOut className={styles.icon} />
-            <p>Logout</p>
-          </span>
+          {props.children}
         </button>
       </div>
     </main>

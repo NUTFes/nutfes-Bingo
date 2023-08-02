@@ -34,4 +34,18 @@
     display: none;
   }
 
+  .contents {
+    display: flex;
+    padding: 0.5rem 1rem;
+  }
+
+  .contents p {
+    line-height: 19px;
+    color: #333333;
+  }
+
+  .icon {
+    background-color: var(--background-color);
+    color: #333333;
+  }
 }

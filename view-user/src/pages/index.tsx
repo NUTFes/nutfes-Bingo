@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { NextPage } from "next";
 import styles from "@/styles/Home.module.css";
 import { Header, Button, Modal } from "@/components/common";
+import { CgLogOut } from "react-icons/cg";
 
 const Page: NextPage = () => {
   const [isOpened, setIsOpened] = useState(false);
@@ -18,7 +19,12 @@ const Page: NextPage = () => {
           <button type="button" onClick={isopenBool} className={styles.btnOpen}>
             最新の番号を表示
           </button>
-          <Button className={styles.btnLogin} />
+          <Button size="l" shape="circle">
+            <div className={styles.contents}>
+              <CgLogOut className={styles.icon} />
+              <p>Logout</p>
+            </div>
+          </Button>
         </div>
       </Header>
     </div>
