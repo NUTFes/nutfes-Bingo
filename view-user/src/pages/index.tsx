@@ -1,16 +1,12 @@
 import { useState } from "react";
 import type { NextPage } from "next";
 import styles from "@/styles/Home.module.css";
-import { Header, Button, Modal ,BingoResult } from "@/components/common";
+import { Header, Button, Modal } from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
 
 const Page: NextPage = () => {
   const [isOpened, setIsOpened] = useState(false);
   const isopenBool = () => setIsOpened(!isOpened);
-  const bingoResultNumber: number[] = [
-    21, 5, 33, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 55,
-    66, 32,
-  ];
 
   return (
     <div className={styles.container}>
@@ -31,9 +27,8 @@ const Page: NextPage = () => {
           </Button>
         </div>
       </Header>
-      <BingoResult bingoResultNumber={bingoResultNumber} />
     </div>
-  )
-  };
+  );
+};
 
 export default Page;
