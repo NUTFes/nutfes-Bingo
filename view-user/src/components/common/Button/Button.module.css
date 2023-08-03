@@ -42,6 +42,6 @@
   transition: 0.25s;
 }
 
-@media screen and (max-width: 600px){
+@media screen and (max-width: 900px){
   .primary {display:none}
   }
