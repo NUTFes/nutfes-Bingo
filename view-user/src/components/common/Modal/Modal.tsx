@@ -1,53 +1,40 @@
-import { type ReactNode, useState } from "react";
-import { createPortal } from "react-dom";
+import { type ReactNode } from "react";
 import styles from "./Modal.module.css";
+import { RxCrossCircled } from "react-icons/rx"
 
 interface ModalProps {
   children: ReactNode;
-  buttonText: string;
+  isOpened: boolean;
   canCloseByClickingBackground?: boolean;
+  setisOpened: (isOpened: boolean) => void;
 }
 
 const Modal = ({
   children,
-  buttonText,
+  isOpened,
   canCloseByClickingBackground = true,
+  setisOpened,
 }: ModalProps) => {
-  const [isOpened, setIsOpened] = useState(false);
 
-  const open = () => setIsOpened(true);
-  const close = () => setIsOpened(false);
-
-  const renderButton = () => {
-      return (
-        <button
-          type="button"
-          onClick={open}
-          className={styles.btnOpen}
-          >
-          {buttonText}
-        </button>
-      );
+  const closeModal = () => {
+    setisOpened(false);
   };
 
-  const elmModal = (
-    <div className={styles.wrapper}>
-      <div className={styles.content}>
-        <button
-          className={styles.btnClose}
-          onClick={close}
-          >✕</button>
-        {children}
-      </div>
-      {canCloseByClickingBackground && (
-          <div className={styles.background} onClick={close} />
-      )}
-    </div>
-  );
   return (
     <>
-      {renderButton()}
-      {isOpened && createPortal(elmModal, document.body)}
+      {isOpened && (
+        <div className={styles.wrapper}>
+          <div className={styles.content}>
+            <button className={styles.btnClose} onClick={closeModal}>
+              <RxCrossCircled />
+            </button>
+            <p className={styles.number}>{children}</p>
+          </div>
+          {canCloseByClickingBackground && (
+            <div className={styles.background} onClick={closeModal} />
+          )}
+        </div>
+      )}
     </>
   );
 };

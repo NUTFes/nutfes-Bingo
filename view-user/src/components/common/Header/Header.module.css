@@ -1,6 +1,5 @@
 /* Header */
 .container {
-    height: 6rem;
     width: 100vw;
     background-color: #D9D9D9;
     border-bottom: 0.3rem solid #333;
@@ -10,36 +9,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-right: 1rem;
 }
 
 .title {
     color: #333;
-    font-size: clamp(12px, calc(100vw / 12 ) , 56px);
+    font-size: 5vw;
     font-style: normal;
     font-weight: 700;
     line-height: 1;
     margin: 1rem;
     display: inline-block;
+    white-space:nowrap;
 }
-
-/* Modal */
-.modalContent {
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
-    align-items: center;
-    color: #D9D9D9;
-    font-size: 2rem;
-    font-weight: 700;
-    font-feature-settings: "palt" 1;
-}
-
-.modalContent p {
-    color: #D9D9D9;
-    font-size: 14rem;
-    font-weight: 700;
-    margin-top: -3rem;
-    margin-bottom: -3rem;
-}
-

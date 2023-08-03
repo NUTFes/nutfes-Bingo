@@ -1,30 +1,24 @@
-import React from 'react'
-import { ReactNode } from "react"
-import styles from "./Header.module.css"
-import { Modal } from "@/components/common";
+import React, { ReactNode } from "react";
+import styles from "./Header.module.css";
 
 interface HeaderProps {
+    children: ReactNode;
     user: string;
 }
 
-const Header = (props: HeaderProps) =>  {
+const Header = ({ children, user }: HeaderProps) => {
     return (
-        <div className={styles.container}>
-            <div className={styles.main}>
-                <div className={styles.title}>
-                    <p>NUTFES BINGO {props.user}</p>
-                </div>
-                <div>
-                    <Modal buttonText="最新の番号を表示">
-                        <div className={styles.modalContent}>
-                            抽選された番号
-                            <p>25</p>
-                        </div>
-                    </Modal>
-                </div>
+    <div className={styles.container}>
+        <div className={styles.main}>
+            <div className={styles.title}>
+                <p>NUTFES BINGO {user}</p>
+            </div>
+            <div>
+                {children}
             </div>
         </div>
-    )
-}
+    </div>
+    );
+};
 
-export default Header
+export default Header;
