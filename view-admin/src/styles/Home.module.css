@@ -5,12 +5,14 @@
 }
 
 .main {
+  display: flex;
+  align-items: center;
   margin-right: 1rem;
 }
 
 .LoginButtonContents {
   display: flex;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.8rem;
 }
 
 .buttonIcon {
@@ -78,7 +80,6 @@
 }
 
 .deleteFrame {
-  width: 50%;
   height: 200px;
   background-color: #d9d9d9;
   border: 5px solid #333333;
@@ -123,4 +124,22 @@
 .deleteButton:hover {
   background: #313131;
   color: #FFF;
+}
+
+.btnOpen {
+  padding: 0.9em 2em;
+  border: 0.2rem solid #333;
+  border-radius: 1.5rem;
+  background-color: #d9d9d9;
+  color: #333;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-right: 1rem;
+  white-space:nowrap;
+}
+
+.btnOpen:hover {
+  background-color: #a28bab;
+  color: var(--primary);
+  transition: 0.25s;
 }
