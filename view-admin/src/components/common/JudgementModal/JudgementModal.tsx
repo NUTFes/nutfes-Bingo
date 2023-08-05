@@ -113,9 +113,13 @@ const Modal = ({
                 >
                   リセット
                 </button>
-                {isIncluded && (
+                {isIncluded ? (
                   <div className={styles.jugementResults}>
                     <p>BINGO</p>
+                  </div>
+                ) : (
+                  <div className={styles.jugementResults}>
+                    <p>NotYet!</p>
                   </div>
                 )}
               </div>
