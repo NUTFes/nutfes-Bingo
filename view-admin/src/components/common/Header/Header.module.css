@@ -1,6 +1,5 @@
 /* Header */
 .container {
-    height: 6rem;
     width: 100vw;
     background-color: #35335D;
     border-bottom: 0.3rem solid #333;
@@ -10,15 +9,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-right: 1rem;
 }
 
 .title {
     color: #d9d9d9;
-    font-size: clamp(12px, calc(100vw / 12 ) , 40px);
+    font-size: 5vw;
     font-style: normal;
     font-weight: 700;
-    line-height: 2.5;
-    margin-left: 3rem;
+    line-height: 0;
+    margin: 2rem;
     display: inline-block;
+    white-space:nowrap;
+}
+
+.title p {
+    padding: 1.2rem 0rem 0.5rem;
 }
