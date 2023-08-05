@@ -164,11 +164,10 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
-  color: #333;
+  color: #43436d;
   font-size: 50px;
   text-shadow: 2px 2px 0px rgba(255, 255, 255, 1), 4px 4px 0px rgb(205, 85, 85);
   font-weight: bold;
-  /* background-color: #d9d9d9; */
   padding: 0.4rem;
   border-radius: 1rem;
   margin-left: 1rem;
