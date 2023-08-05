@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import styles from "./JudgementModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
-import { JudgementModal } from "..";
 
 interface ModalProps {
   isOpened: boolean;
@@ -38,9 +37,24 @@ const Modal = ({
     setInputNumbers(inputValues);
     checkInclusion();
   };
+
   const closeModal = () => {
     setisOpened(false);
     setIsIncluded(false);
+  };
+
+  const resetInputs = () => {
+    setIsIncluded(false);
+    setInputValues([100, 100, 100, 100, 100]);
+    resetInputElements();
+  };
+
+  const resetInputElements = () => {
+    const inputElements = document.getElementsByClassName(styles.inputNum);
+    const inputElementArray = Array.from(inputElements) as HTMLInputElement[];
+    for (let i = 0; i < inputElementArray.length; i++) {
+      inputElementArray[i].value = "";
+    }
   };
 
   return (
@@ -95,10 +109,7 @@ const Modal = ({
                 <button
                   type="button"
                   className={styles.resetButton}
-                  onClick={() => {
-                    setIsIncluded(false);
-                    setInputValues([100, 100, 100, 100, 100]);
-                  }}
+                  onClick={resetInputs}
                 >
                   リセット
                 </button>
