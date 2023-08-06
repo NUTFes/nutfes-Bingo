@@ -40,7 +40,7 @@ const Page: NextPage = () => {
       </Header>
       <div className={styles.form}>
         <div className={styles.frame}>
-          <p className={styles.centerText}>抽選した番号を入力</p>
+          <p>抽選した番号を入力</p>
           <form className={styles.item}>
             <input
               type="number"
