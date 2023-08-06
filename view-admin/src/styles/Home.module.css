@@ -3,11 +3,7 @@
   background-color: aliceblue;
   background-image: linear-gradient(
     180deg,
-    rgba(217, 90, 127, 0.65) 0%,
-    rgba(217, 90, 127, 0.44) 24.4%,
-    rgba(127, 58, 105, 0.45) 48.88%,
-    rgba(30, 24, 81, 0.44) 73.88%,
-    rgba(30, 24, 81, 0.65) 100%
+    #D95B7F, #856DB2, #07033E
   );
 }
 
@@ -29,7 +25,7 @@
 .inputForm {
   width: 300px;
   border-radius: 0.25rem;
-  border: 3px solid #000;
+  border: 2px solid #07033E;
   background: rgba(255, 255, 255, 0.2);
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   font-weight: 700;
@@ -43,7 +39,7 @@
   border: 3px solid #a28bab;
 }
 
-@media screen and (max-width: 959px) {
+@media screen and (max-width: 1225px) {
   .form {
     display: grid;
     margin: 1rem 0rem 0rem;
@@ -52,14 +48,13 @@
 
 .frame {
   border-radius: 0.25rem;
-  border: 3px solid #000;
-  background: rgba(255, 255, 255, 0.2);
+  background: #FFFFFF80;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   padding: 1rem 1rem 3rem 1rem;
 }
 
 .frame p {
-  color: #333333;
+  color: #07033E;
   font-size: 1.8rem;
   font-family: bold;
   font-weight: 700;
@@ -68,17 +63,21 @@
   margin-bottom: 1rem;
 }
 
-@media (min-width: 958px) {
+@media (min-width: 1225px) {
   .form {
     display: flex;
     justify-content: start;
   }
 }
 
-@media screen and (max-width: 959px) {
+@media screen and (max-width: 1224px) {
+  .frame {
+    min-width: 85vw;
+  }
+
   .frame p {
-    color: #333333;
-    font-size: 1.8rem;
+    color: #07033E;
+    font-size: 1.4rem;
     font-family: bold;
     font-weight: 700;
     margin-left: 2rem;
@@ -87,19 +86,20 @@
   }
 
   .inputForm {
-    border-radius: 0.25rem;
-    border: 3px solid #000;
+    border-radius: 0.625rem;
+    border: 2px solid #07033E;
     background: rgba(255, 255, 255, 0.2);
     box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
     font-weight: 700;
     font-size: 1rem;
     padding: 1rem;
+    width: 100%;
   }
 
   .inputForm:focus,
   .inputForm:active {
     color: #333;
-    border: 3px solid #a28bab;
+    border: 2px solid #a28bab;
   }
 }
 
@@ -109,7 +109,7 @@
   margin: 0rem 2rem;
 }
 
-@media screen and (max-width: 599px) {
+@media screen and (max-width: 735px) {
   .item {
     display: grid;
     margin: 0rem 0rem;
@@ -126,20 +126,20 @@
 
 .frame select {
   border-radius: 0.5rem;
-  border: 3px solid #333;
+  border: 2px solid #07033E;
   background: #d9d9d9;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-  color: #333;
+  color: #07033E;
   font-weight: 700;
   padding: 0.8rem 1rem;
 }
 
 .Button {
   border-radius: 0.5rem;
-  border: 3px solid #333;
+  border: 2px solid #07033E;
   background: #d9d9d9;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-  color: #333;
+  color: #07033E;
   font-weight: 700;
   padding: 0.8rem 1rem;
 }
