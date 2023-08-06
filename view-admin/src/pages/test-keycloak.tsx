@@ -6,13 +6,11 @@ export default function Component() {
   const router = useRouter();
 
   if (session) {
-    router.push("/test-keycloak");
-    //適宜行きたいファイルに変更
+    return (
+      <>
+        Signed in as {session.user!.email} <br />
+        <button onClick={() => signOut({ callbackUrl: "/" })}>Sign out</button>
+      </>
+    );
   }
-  return (
-    <>
-      Not signed in <br />
-      <button onClick={() => signIn()}>Sign in</button>
-    </>
-  );
 }
