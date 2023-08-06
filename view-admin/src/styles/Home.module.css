@@ -1,16 +1,18 @@
 .container {
   height: 100%;
   background-color: aliceblue;
-  background-image: linear-gradient(180deg, rgba(217, 90, 127, 0.65) 0%, rgba(217, 90, 127, 0.44) 24.40%, rgba(127, 58, 105, 0.45) 48.88%, rgba(30, 24, 81, 0.44) 73.88%, rgba(30, 24, 81, 0.65) 100%);;
+  background-image: linear-gradient(
+    180deg,
+    rgba(217, 90, 127, 0.65) 0%,
+    rgba(217, 90, 127, 0.44) 24.4%,
+    rgba(127, 58, 105, 0.45) 48.88%,
+    rgba(30, 24, 81, 0.44) 73.88%,
+    rgba(30, 24, 81, 0.65) 100%
+  );
 }
 
 .main {
   margin-right: 1rem;
-}
-
-.LoginButtonContents {
-  display: flex;
-  padding: 0.5rem 1rem;
 }
 
 .buttonIcon {
@@ -19,73 +21,44 @@
 
 .form {
   display: flex;
+  justify-content: center;
   gap: 2rem;
   margin: 1rem 2rem 0rem;
-}
-
-.inputFrame {
-  background-color: #d9d9d9;
-  border: 5px solid #333333;
-  border-radius: 3px;
-}
-
-.inputFrame p {
-  color: #333333;
-  font-size: 1.8rem;
-  font-family: bold;
-  font-weight: 700;
-  margin-left: 2rem;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-}
-
-.item {
-  display: flex;
-  justify-content: flex-start;
-  gap: 1rem;
-  margin: 0rem 2rem;
 }
 
 .inputForm {
   width: 300px;
   border-radius: 0.25rem;
   border: 3px solid #000;
-  background: rgba(255, 255, 255, 0.20);
+  background: rgba(255, 255, 255, 0.2);
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   font-weight: 700;
   font-size: 1rem;
-  padding-left: 0.5rem;
+  padding: 1rem;
 }
 
-.inputForm:focus, .inputForm:active {
+.inputForm:focus,
+.inputForm:active {
   color: #333;
   border: 3px solid #a28bab;
 }
 
-.inputButton {
-  border-radius: 0.5rem;
-  border: 3px solid #333;
-  background: #D9D9D9;
+@media screen and (max-width: 959px) {
+  .form {
+    display: grid;
+    margin: 1rem 0rem 0rem;
+  }
+}
+
+.frame {
+  border-radius: 0.25rem;
+  border: 3px solid #000;
+  background: rgba(255, 255, 255, 0.2);
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-  color: #333;
-  font-weight: 700;
-  padding: 0.8rem 1rem;
+  padding: 1rem 1rem 3rem 1rem;
 }
 
-.inputButton:hover {
-  background: #313131;
-  color: #FFF;
-}
-
-.deleteFrame {
-  width: 50%;
-  height: 200px;
-  background-color: #d9d9d9;
-  border: 5px solid #333333;
-  border-radius: 3px;
-}
-
-.deleteFrame p {
+.frame p {
   color: #333333;
   font-size: 1.8rem;
   font-family: bold;
@@ -95,32 +68,83 @@
   margin-bottom: 1rem;
 }
 
-.deleteFrame select {
+@media (min-width: 958px) {
+  .form {
+    display: flex;
+    justify-content: start;
+  }
+}
+
+@media screen and (max-width: 959px) {
+  .frame p {
+    color: #333333;
+    font-size: 1.8rem;
+    font-family: bold;
+    font-weight: 700;
+    margin-left: 2rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .inputForm {
+    border-radius: 0.25rem;
+    border: 3px solid #000;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 1rem;
+  }
+
+  .inputForm:focus,
+  .inputForm:active {
+    color: #333;
+    border: 3px solid #a28bab;
+  }
+}
+
+.item {
+  display: flex;
+  gap: 1rem;
+  margin: 0rem 2rem;
+}
+
+@media screen and (max-width: 599px) {
+  .item {
+    display: grid;
+    margin: 0rem 0rem;
+  }
+
+  .frame p {
+    margin-left: 0;
+  }
+
+  .centerText {
+    text-align: center;
+  }
+}
+
+.frame select {
   border-radius: 0.5rem;
   border: 3px solid #333;
-  background: #D9D9D9;
+  background: #d9d9d9;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   color: #333;
   font-weight: 700;
   padding: 0.8rem 1rem;
 }
 
-.deleteFrame select:hover {
-  background: #313131;
-  color: #FFF;
-}
-
-.deleteButton {
+.Button {
   border-radius: 0.5rem;
   border: 3px solid #333;
-  background: #D9D9D9;
+  background: #d9d9d9;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   color: #333;
   font-weight: 700;
   padding: 0.8rem 1rem;
 }
 
-.deleteButton:hover {
+.Button:hover {
   background: #313131;
-  color: #FFF;
+  color: #fff;
 }
