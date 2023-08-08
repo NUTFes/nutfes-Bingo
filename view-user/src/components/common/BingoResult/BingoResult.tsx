@@ -2,12 +2,16 @@ import React from "react";
 import { ReactNode } from "react";
 import styles from "./BingoResult.module.css";
 import { BingoIcon } from "@/components/common";
+import { BingoNumber } from "@/utils/api_methods";
 
 interface BingoResultProps {
-  bingoResultNumber: number[];
+  bingoResultNumber: BingoNumber[];
 }
 
 export const BingoResult = (props: BingoResultProps) => {
+  const copiedArray = [...props.bingoResultNumber];
+  const firstBingoNumber = copiedArray.pop();
+
   return (
     <div className={styles.content_wrapper}>
       <div className={styles.container}>
@@ -17,12 +21,14 @@ export const BingoResult = (props: BingoResultProps) => {
         </div>
         <div className={styles.card_frame}>
           <div className={styles.large_card}>
-            <div className={styles.card_content}>{props.bingoResultNumber[0]}</div>
+            <div className={styles.card_content}>
+              {firstBingoNumber?.data}
+            </div>
           </div>
           <div className={styles.small_card_frame}>
-            {props.bingoResultNumber.slice(1).map((num, index) => (
+            {props.bingoResultNumber.slice(0, -1).reverse().map((num, index) => (
               <div className={styles.small_card} key={index}>
-                <div className={styles.card_content}>{num}</div>
+                <div className={styles.card_content}>{num.data}</div>
               </div>
             ))}
           </div>
