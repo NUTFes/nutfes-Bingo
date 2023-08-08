@@ -1,3 +1,6 @@
 data/
 
-.env
+cloudflare/prod/*.pem
+cloudflare/prod/*.json
+
+*.env
