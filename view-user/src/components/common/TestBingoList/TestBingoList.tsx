@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getBingoNumber, BingoNumber } from "@/utils/api_methods";
+import { getBingoNumber, BingoNumber, subscriptionBingoNumber } from "@/utils/api_methods";
 
 function TestBingoList() {
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
@@ -7,7 +7,7 @@ function TestBingoList() {
   useEffect(() => {
     async function fetchBingoNumbers() {
       try {
-        const response: BingoNumber[] = await getBingoNumber();
+        const response: BingoNumber[] = await subscriptionBingoNumber();
         if (response) {
           setBingoNumbers(response);
         }
