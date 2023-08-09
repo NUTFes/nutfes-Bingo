@@ -1,6 +1,5 @@
 import { ApolloClient, InMemoryCache, gql} from "@apollo/client";
 import next from "next/types";
-import { getMainDefinition } from "@apollo/client/utilities";
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from "graphql-ws";
 import { userAgent } from "next/server";
