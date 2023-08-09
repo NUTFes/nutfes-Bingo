@@ -42,6 +42,9 @@
   transition: 0.25s;
 }
 
-@media screen and (max-width: 900px){
-  .primary {display:none}
+@media screen and (min-width: 1224px) {
+    .m {
+    font-size: medium;
+    padding: 0.8rem 1.5rem;
   }
+}
