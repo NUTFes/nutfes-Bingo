@@ -32,7 +32,7 @@ const Page: NextPage = () => {
     <div className={styles.container}>
       <Header user="Admin">
         <div className={styles.main}>
-          <Button size="l" shape="circle">
+          <Button size="m" shape="circle">
             <CgLogOut className={styles.buttonIcon} />
             <p>Logout</p>
           </Button>
