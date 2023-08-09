@@ -1,24 +1,21 @@
 import { ApolloClient, InMemoryCache, gql} from "@apollo/client";
-import { WebSocketLink } from '@apollo/client/link/ws';
 import next from "next/types";
-import { SubscriptionClient } from 'subscriptions-transport-ws';
+import { getMainDefinition } from "@apollo/client/utilities";
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from "graphql-ws";
+import { userAgent } from "next/server";
 
-const wsClient = new SubscriptionClient('ws://localhost:8080/v1/graphql', {
-  reconnect: true,
-});
-
-const wsLink = new WebSocketLink(wsClient)
+const wsLink = new GraphQLWsLink(createClient({
+  // ↓これつかえないの？？？
+  // url: process.env.WS_API_URL + "/v1/graphql",
+  url: "ws://localhost:8080" + "/v1/graphql",
+    // 認証関連はここに書く
+}));
 
 const client = new ApolloClient({
-  // uriをlinkに変更（http通信からws通信にする）
   link: wsLink,
   cache: new InMemoryCache(),
 });
-
-// const client = new ApolloClient({
-//   uri: process.env.API_URI + "/v1/graphql",
-//   cache: new InMemoryCache(),
-// });
 
 export interface BingoNumber {
   id: number;
@@ -45,6 +42,7 @@ export async function getBingoNumber(): Promise<BingoNumber[]> {
   }
 }
 
+// websocket通信でBingoNumberを取得
 export async function subscriptionBingoNumber(): Promise<BingoNumber[]> {
   try {
     const response = await client.subscribe({
@@ -80,7 +78,6 @@ export async function subscriptionBingoNumber(): Promise<BingoNumber[]> {
     return [];
   }
 }
-
 
 export async function createBingoNumber(
   data: number
