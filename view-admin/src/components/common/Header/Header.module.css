@@ -1,0 +1,33 @@
+/* Header */
+.container {
+  width: 100vw;
+  background-color: #07033e;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 5vw;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 0;
+  margin: 1rem;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.title p {
+  padding: 0.9rem 0rem 0.5rem 1rem;
+}
+
+@media (min-width: 1225px) {
+  .title p {
+    font-size: 3rem;
+    margin: 1rem;
+  }
+}
