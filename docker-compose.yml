@@ -58,8 +58,8 @@ services:
     volumes: [./view-user:/app]
     command: sh -c "npm install && npm run dev"
     ports: ["3000:3000"]
-    environment:
-      WATCHPACK_POLLING: true
+    env_file:
+      - .env
 
   view-admin:
     build:
@@ -74,7 +74,7 @@ services:
     stdin_open: true
     tty: true
     environment:
-      - WATCHPACK_POLLING=true
+      - .env
 
 volumes:
   db-data:
