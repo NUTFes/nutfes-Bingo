@@ -16,11 +16,11 @@
   position: relative;
   z-index: 1;
   box-sizing: border-box;
+  border-radius: 1rem;
   object-fit: cover;
   padding: 40px;
   overflow: hidden;
-  background-color: #d9d9d9;
-  border-radius: 5px;
+  background: #FFF;
   animation: zoomIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) 1 forwards;
   will-change: transform, opacity;
 }
@@ -37,13 +37,13 @@
 }
 
 .icon {
-  color: #333;
+  color: #07033E;
 }
 
 .contents {
   width: 700px;
   height: 360px;
-  background-color: #9e8ca9;
+  background: rgba(7, 3, 62, 0.50);
 }
 
 .number {
@@ -71,7 +71,7 @@
 }
 
 .title {
-  color: #333;
+  color: #07033E;
   font-family: Inter;
   font-size: 2.5rem;
   font-style: normal;
@@ -90,7 +90,7 @@
 .inputNum {
   width: 100px;
   height: 100px;
-  background-color: #d9d9d9;
+  background-color: #FFF;
   margin-top: 2rem;
   font-weight: 700;
   font-size: 3rem;
@@ -98,8 +98,8 @@
   text-align: center;
   border: 0rem solid #333;
   border-radius: 1rem;
-  box-shadow: 0px 3px 3px -1px #333;
-}
+  filter: drop-shadow(0px 2px 4px rgba(155, 104, 159, 0.71));
+  }
 
 .inputNum::-webkit-inner-spin-button,
 .inputNum::-webkit-outer-spin-button {
@@ -108,7 +108,7 @@
 }
 
 .explanation {
-  color: #d9d9d9;
+  color: #FFF;
   font-family: Inter;
   font-size: 1.8rem;
   font-style: normal;
@@ -123,10 +123,10 @@
 
 .jugementButton {
     position: relative;
-    background-color: #d9d9d9;
+    background: rgba(255, 255, 255, 0.70);
     padding: 0.8rem 2.7rem;
     text-align: center;
-    color: #333;
+    color: #07033E;
     font-size: 1.8rem;
     font-weight: 700;
     margin: 4px 2px;
@@ -144,10 +144,10 @@
 
 .resetButton {
   position: relative;
-  background-color: #d9d9d9;
+  background: rgba(255, 255, 255, 0.70);
   padding: 0.8rem 2.7rem;
   text-align: center;
-  color: #333;
+  color: #07033E;
   font-size: 1.8rem;
   font-weight: 700;
   margin: 4px 2px;
@@ -168,7 +168,7 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
-  color: #43436d;
+  color: #07033E;
   font-size: 50px;
   text-shadow: 2px 2px 0px rgba(255, 255, 255, 1), 4px 4px 0px rgb(205, 85, 85);
   font-weight: bold;
