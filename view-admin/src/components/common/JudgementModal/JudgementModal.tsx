@@ -34,8 +34,11 @@ const Modal = ({
   };
 
   const handleJugement = () => {
-    setInputNumbers(inputValues);
-    checkInclusion();
+    setTimeout(function(){
+      setInputNumbers(inputValues);
+      checkInclusion();
+    }, 500);
+
   };
 
   const closeModal = () => {
