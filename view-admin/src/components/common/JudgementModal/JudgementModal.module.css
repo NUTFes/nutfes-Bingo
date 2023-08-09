@@ -159,6 +159,10 @@
   margin-left: 1rem;
 }
 
+.resetButton:active {
+  transform: translateY(4px);
+}
+
 .jugementResults {
   display: flex;
   align-items: center;
