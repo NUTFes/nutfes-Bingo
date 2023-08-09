@@ -13,31 +13,28 @@
 
 .l {
   font-size: x-large;
-  padding: 0.5rem 0.5rem;
-
+  padding: 0.8rem 1.5rem;
 }
 
 .m {
   font-size: medium;
-  padding: 0.1rem 0.1rem;
+  padding: 0.3rem 0.6rem;
 }
 
 .s {
   font-size: x-small;
 }
 
-
 .circle {
   border-radius: 1.5rem;
 }
-
 
 .square {
   border-radius: 0.5rem;
 }
 
 .primary:hover {
-  background-color: #A78AAD;
+  background-color: #a78aad;
   color: var(--primary);
   transition: 0.25s;
 }
