@@ -22,13 +22,12 @@
 }
 
 .title p {
-  padding: 0.9rem 1rem 0.5rem;
+  padding: 0.9rem 0rem 0.5rem 1rem;
 }
 
 @media (min-width: 1225px) {
   .title p {
     font-size: 3rem;
     margin: 1rem;
-
   }
 }
