@@ -5,8 +5,7 @@ import { createClient } from "graphql-ws";
 import { userAgent } from "next/server";
 
 const wsLink = new GraphQLWsLink(createClient({
-  // url: process.env.WS_API_URL + "/v1/graphql",
-  url: "ws://localhost:8080/v1/graphql",
+  url: process.env.WS_API_URL + "/v1/graphql",
     // 認証関連はここに書く
 }));
 
