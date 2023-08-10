@@ -56,11 +56,9 @@ const Page: NextPage = () => {
   const handleSubmit = async () => {
     if (inputNumber !== null) {
       console.log(inputNumber);
-      // await deleteBingoNumber(inputNumber);
       deleteMethod(inputNumber);
     } else if (selectedNumber !== null) {
       console.log(selectedNumber);
-      // await deleteBingoNumber(selectedNumber);
       deleteMethod(selectedNumber);
     }
     setInputNumber(null);
