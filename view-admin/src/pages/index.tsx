@@ -129,7 +129,7 @@ const Page: NextPage = () => {
               <option value="" hidden>
                 選択してください
               </option>
-              {bingoNumbers.map((number, index) => (
+              {[...bingoNumbers].reverse().map((number, index) => (
                 <option key={index} value={number.data}>
                   {number.data}
                 </option>
