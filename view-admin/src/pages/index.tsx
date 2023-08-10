@@ -2,27 +2,64 @@ import styles from "@/styles/Home.module.css";
 import type { NextPage } from "next";
 import { Header, BingoResult, Button } from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { BingoNumber, createBingoNumber, deleteBingoNumber, subscriptionBingoNumber } from "@/utils/api_methods";
 
 const Page: NextPage = () => {
-  const bingoResultNumber: number[] = [
-    21, 5, 33, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 55,
-    66, 32,
-  ];
-  const [data, setData] = useState("");
+  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
+  const [data, setData] = useState<number | null >(null);
   const [inputNumber, setInputNumber] = useState<number | null>(null);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function fetchBingoNumbers() {
+      try {
+        const response: BingoNumber[] = await subscriptionBingoNumber();
+        if (response) {
+          setBingoNumbers(response);
+        }
+      } catch (error) {
+        console.error("データの取得中にエラーが発生しました:", error);
+      }
+    }
+
+    fetchBingoNumbers();
+  }, [bingoNumbers]);
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => {
     const newValue = parseInt(event.target.value);
     setSelectedNumber(isNaN(newValue) ? null : newValue);
   };
 
-  const handleSubmit = () => {
+  async function createMethod(data: number | null) {
+    if (data !== null) {
+      const newBingoNumber = await createBingoNumber(data);
+      if (newBingoNumber) {
+        console.log('Bingo number created:', newBingoNumber);
+      } else {
+        console.error('Failed to create bingo number.');
+      }
+    } else {
+      console.log('data is null');
+    }
+  }
+
+  async function deleteMethod(data: number) {
+    const BingoNumber = await deleteBingoNumber(data);
+    if (BingoNumber) {
+      console.log('Bingo number deleted:', BingoNumber);
+    } else {
+      console.error('Failed to delete bingo number.',Error);
+    }
+  }
+
+  const handleSubmit = async () => {
     if (inputNumber !== null) {
       console.log(inputNumber);
+      deleteMethod(inputNumber);
     } else if (selectedNumber !== null) {
       console.log(selectedNumber);
+      deleteMethod(selectedNumber);
     }
     setInputNumber(null);
     setSelectedNumber(null);
@@ -48,16 +85,17 @@ const Page: NextPage = () => {
               max="99"
               name="data"
               placeholder="番号を入力"
-              value={data}
-              onChange={(event) => setData(event.target.value)}
+              value={data !== null ? data : ""}
+              onChange={(event) => setData(event.target.valueAsNumber)}
               className={styles.inputForm}
             />
             <button
               type="button"
               className={styles.Button}
-              onClick={() => {
+              onClick={async () => {
                 console.log(data);
-                setData("");
+                await createMethod(data);
+                setData(null);
               }}
             >
               送信
@@ -91,9 +129,9 @@ const Page: NextPage = () => {
               <option value="" hidden>
                 選択してください
               </option>
-              {bingoResultNumber.map((number, index) => (
-                <option key={index} value={number}>
-                  {number}
+              {[...bingoNumbers].reverse().map((number, index) => (
+                <option key={index} value={number.data}>
+                  {number.data}
                 </option>
               ))}
             </select>
@@ -108,7 +146,7 @@ const Page: NextPage = () => {
           </form>
         </div>
       </div>
-      <BingoResult bingoResultNumber={bingoResultNumber} />
+      <BingoResult bingoResultNumber={bingoNumbers} />
     </div>
   );
 };
