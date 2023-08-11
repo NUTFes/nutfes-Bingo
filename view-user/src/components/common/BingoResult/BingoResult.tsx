@@ -1,5 +1,5 @@
 import React from "react";
-import { ReactNode } from "react";
+import Image from "next/image";
 import styles from "./BingoResult.module.css";
 import { BingoIcon } from "@/components/common";
 import { BingoNumber } from "@/utils/api_methods";
@@ -16,7 +16,7 @@ export const BingoResult = (props: BingoResultProps) => {
     <div className={styles.content_wrapper}>
       <div className={styles.container}>
         <div className={styles.frame_title}>
-          <BingoIcon width={24} height={24} fill="#FF0000" />
+          <Image src="/BingoCard.svg" alt="BingoCard" width={25} height={25} />
           <p>BINGO Number List</p>
         </div>
         <div className={styles.card_frame}>
