@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getBingoNumber, BingoNumber } from "@/utils/api_methods";
+import { getBingoNumber, BingoNumber, subscriptionBingoNumber } from "@/utils/api_methods";
 import type { NextPage } from "next";
 import styles from "@/styles/Home.module.css";
 import { Header, Modal, BingoResult } from "@/components/common";
@@ -12,7 +12,7 @@ const Page: NextPage = () => {
   useEffect(() => {
     async function fetchBingoNumbers() {
       try {
-        const response: BingoNumber[] = await getBingoNumber();
+        const response: BingoNumber[] = await subscriptionBingoNumber();
         if (response) {
           setBingoNumbers(response);
         }

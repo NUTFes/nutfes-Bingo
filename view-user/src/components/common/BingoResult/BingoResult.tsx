@@ -26,7 +26,7 @@ export const BingoResult = (props: BingoResultProps) => {
             </div>
           </div>
           <div className={styles.small_card_frame}>
-            {props.bingoResultNumber.slice(0, -1).reverse().map((num, index) => (
+            {[...props.bingoResultNumber].slice(0, -1).reverse().map((num, index) => (
               <div className={styles.small_card} key={index}>
                 <div className={styles.card_content}>{num.data}</div>
               </div>
