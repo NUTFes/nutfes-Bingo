@@ -57,10 +57,11 @@
   height: 45vw;
   background: rgba(255, 255, 255, 0.5);
   border-radius: 0.625rem;
+  position: relative;
 }
 
 .item_01 img {
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .item_01 p {
@@ -83,6 +84,7 @@
   height: 29vw;
   background: rgba(255, 255, 255, 0.5);
   border-radius: 0.625rem;
+  position: relative;
 }
 
 .item_02 img {
@@ -93,3 +95,48 @@
   font-size: 2vw;
 }
 
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.625rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay p {
+  text-align: center;
+  line-height: 1.7;
+  width: 100%;
+  height: 35%;
+  font-size: 2rem;
+  color: #d95b7f;
+  background-color: #07033e;
+}
+
+.overlay_small {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.625rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay_small p {
+  text-align: center;
+  line-height: 1.6;
+  width: 100%;
+  height: 35%;
+  font-size: 1.4rem;
+  color: #d95b7f;
+  background-color: #07033e;
+}
