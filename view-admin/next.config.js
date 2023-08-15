@@ -8,3 +8,10 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+
+module.exports = {
+  env: {
+    API_URI: process.env.API_URI,
+    WS_API_URL: process.env.WS_API_URL,
+  }
+}
