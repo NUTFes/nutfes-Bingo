@@ -6,6 +6,7 @@ interface ButtonProps {
   children: ReactNode;
   size: string;
   shape: string;
+  onClick: () => void;
 }
 const Button = (props: ButtonProps) => {
   return (
@@ -17,7 +18,7 @@ const Button = (props: ButtonProps) => {
             styles[props.size],
             styles[props.shape],
             )}
-          onClick={() => console.log("button click")}
+          onClick={props.onClick}
         >
           {props.children}
         </button>
