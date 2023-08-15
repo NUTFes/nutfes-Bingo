@@ -15,6 +15,10 @@ const Page: NextPage = () => {
   const [inputNumber, setInputNumber] = useState<number | null>(null);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
 
+  const logoutClick = () => {
+    signOut({ callbackUrl: "/" });
+  };
+
   useEffect(() => {
     async function fetchBingoNumbers() {
       try {
@@ -68,13 +72,13 @@ const Page: NextPage = () => {
     setInputNumber(null);
     setSelectedNumber(null);
   };
-  
+
   if (session) {
   return (
     <div className={styles.container}>
       <Header user="Admin">
         <div className={styles.main}>
-          <Button size="m" shape="circle">
+          <Button size="m" shape="circle" onClick={logoutClick}>
             <CgLogOut className={styles.buttonIcon} />
             <p>Logout</p>
           </Button>
