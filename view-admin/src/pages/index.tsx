@@ -1,3 +1,5 @@
+import { useSession, signIn, signOut } from "next-auth/react";
+import { useRouter } from "next/router";
 import styles from "@/styles/Home.module.css";
 import type { NextPage } from "next";
 import { Header, BingoResult, Button } from "@/components/common";
@@ -6,6 +8,8 @@ import { useEffect, useState } from "react";
 import { BingoNumber, createBingoNumber, deleteBingoNumber, subscriptionBingoNumber } from "@/utils/api_methods";
 
 const Page: NextPage = () => {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
   const [data, setData] = useState<number | null >(null);
   const [inputNumber, setInputNumber] = useState<number | null>(null);
@@ -64,7 +68,8 @@ const Page: NextPage = () => {
     setInputNumber(null);
     setSelectedNumber(null);
   };
-
+  
+  if (session) {
   return (
     <div className={styles.container}>
       <Header user="Admin">
@@ -149,6 +154,13 @@ const Page: NextPage = () => {
       <BingoResult bingoResultNumber={bingoNumbers} />
     </div>
   );
+  }
+  return (
+  <>
+    Not signed in <br />
+    <button onClick={() => signIn()}>Sign in</button>
+  </>
+);
 };
 
 export default Page;

@@ -71,6 +71,8 @@ services:
     command: sh -c "npm install && npm run dev"
     ports:
       - "3001:3000"
+    env_file:
+      - ./settings/admin.env
     stdin_open: true
     tty: true
     env_file:
