@@ -21,7 +21,7 @@ const Modal = ({
   setInputNumbers,
   checkInclusion,
 }: ModalProps) => {
-  const [inputValues, setInputValues] = useState<number[]>([0, 0, 0, 0, 0]);
+  const [inputValues, setInputValues] = useState<number[]>([100, 100, 100, 100, 100]);
 
   const handleInputChange = (
     index: number,
