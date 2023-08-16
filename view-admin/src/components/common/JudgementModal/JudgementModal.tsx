@@ -6,7 +6,7 @@ interface ModalProps {
   isOpened: boolean;
   isIncluded: boolean;
   canCloseByClickingBackground?: boolean;
-  setisOpened: (isOpened: boolean) => void;
+  setIsOpened: (isOpened: boolean) => void;
   setIsIncluded: (included: boolean) => void;
   setInputNumbers: (numbers: number[]) => void;
   checkInclusion: () => void;
@@ -16,7 +16,7 @@ const Modal = ({
   isOpened,
   isIncluded,
   canCloseByClickingBackground = true,
-  setisOpened,
+  setIsOpened,
   setIsIncluded,
   setInputNumbers,
   checkInclusion,
@@ -42,7 +42,7 @@ const Modal = ({
   };
 
   const closeModal = () => {
-    setisOpened(false);
+    setIsOpened(false);
     setIsIncluded(false);
   };
 

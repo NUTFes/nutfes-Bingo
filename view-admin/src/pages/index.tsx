@@ -104,7 +104,7 @@ const Page: NextPage = () => {
         <JudgementModal
         isOpened={isOpened}
         isIncluded={isIncluded}
-        setisOpened={setIsOpened}
+        setIsOpened={setIsOpened}
         setIsIncluded={setIsIncluded}
         setInputNumbers={setInputNumbers}
         checkInclusion={checkInclusion}
