@@ -43,7 +43,7 @@
 .contents {
   width: 700px;
   height: 360px;
-  background: rgba(7, 3, 62, 0.50);
+  background-color: #07033E;
 }
 
 .number {
@@ -90,11 +90,12 @@
 .inputNum {
   width: 100px;
   height: 100px;
-  background-color: #FFF;
+  background-color: #FF6591;
   margin-top: 2rem;
   font-weight: 700;
   font-size: 3rem;
-  color: #333;
+  color: #FFF;
+  -webkit-text-stroke: 2px #333;
   text-align: center;
   border: 0rem solid #333;
   border-radius: 1rem;
@@ -168,9 +169,9 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
-  color: #07033E;
+  color: #ffffff;
   font-size: 50px;
-  text-shadow: 2px 2px 0px rgba(255, 255, 255, 1), 4px 4px 0px rgb(205, 85, 85);
+  text-shadow: 2px 2px 0px rgb(205, 85, 85), 4px 4px 0px rgb(205, 85, 85);
   font-weight: bold;
   padding: 0.4rem;
   border-radius: 1rem;
