@@ -34,11 +34,8 @@ const Modal = ({
   };
 
   const handleJugement = () => {
-    setTimeout(function(){
-      setInputNumbers(inputValues);
-      checkInclusion();
-    }, 500);
-
+    setInputNumbers(inputValues);
+    checkInclusion();
   };
 
   const closeModal = () => {
@@ -48,7 +45,6 @@ const Modal = ({
 
   const resetInputs = () => {
     setIsIncluded(false);
-    setInputValues([100, 100, 100, 100, 100]);
     resetInputElements();
   };
 

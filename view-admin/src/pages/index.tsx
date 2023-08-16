@@ -18,8 +18,9 @@ const Page: NextPage = () => {
   const [isIncluded, setIsIncluded] = useState(false);
 
   const checkInclusion = () => {
-    const included = inputNumbers.length === 5 && inputNumbers.every(number => bingoResultNumber.includes(number));
-    setIsIncluded(included);
+    if (inputNumbers.every(number => bingoResultNumber.includes(number))) {
+      setIsIncluded(true);
+    }
   };
 
   const [isOpened, setIsOpened] = useState(false);
