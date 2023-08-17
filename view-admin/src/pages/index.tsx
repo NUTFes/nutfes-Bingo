@@ -33,7 +33,7 @@ const Page: NextPage = () => {
   const [isIncluded, setIsIncluded] = useState(false);
 
   const checkInclusion = () => {
-    if (inputNumbers.every(number => bingoResultNumber.includes(number))) {
+    if (inputNumbers.every(number => bingoNumbers.map(num => num.data).includes(number))) {
       setIsIncluded(true);
     }
   };
