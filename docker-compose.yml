@@ -1,11 +1,11 @@
 version: "3"
 services:
-  bingo_hasura_db:
+  db:
     image: postgres:12
-    volumes:
-      - db-data:/var/lib/postgresql/data
+    container_name: "bingo_db"
+    volumes: [db-data:/var/lib/postgresql/data]
     environment:
-      POSTGRES_DB: myapp_development
+      POSTGRES_DB: bingo_db
       POSTGRES_USER: bingo
       POSTGRES_PASSWORD: password
       POSTGRES_HOST_AUTH_METHOD: trust
@@ -15,26 +15,66 @@ services:
       timeout: 5s
       retries: 5
 
-  hasura:
+  api: # hasura
     build:
-      context: .docker
-      dockerfile: hasura.Dockerfile
-    container_name: "bingo_hasura"
-    ports:
-      - "8080:8080"
-    # restart: always
-    volumes:
-      - ./hasura:/hasura
+      context: .
+      dockerfile: .docker/api.Dockerfile
+    container_name: "bingo_api"
+    ports: ["8080:8080"]
+    volumes: [./api:/tmp/hasura-project]
     environment:
-      HASURA_GRAPHQL_MIGRATIONS_DIR: /hasura/migrations
-      HASURA_GRAPHQL_METADATA_DIR: /hasura/metadata
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-      HASURA_GRAPHQL_DATABASE_URL: postgres://bingo:password@bingo_hasura_db:5432/myapp_development
-      HASURA_GRAPHQL_DEV_MODE: "true"
+      # HASURA_GRAPHQL_MIGRATIONS_DIR: /tmp/hasura-projectmigrations/
+      HASURA_GRAPHQL_ENABLE_CONSOLE: true
+      HASURA_GRAPHQL_DATABASE_URL: "postgres://bingo:password@db:5432/bingo_db"
+      HASURA_GRAPHQL_DEV_MODE: true
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
     depends_on:
-      bingo_hasura_db:
+      db:
         condition: service_healthy
+
+  keycloak:
+    build:
+      context: .docker
+      dockerfile: keycloak.Dockerfile
+    container_name: "bingo_keycloak"
+    ports:
+      - "8888:8080"
+    volumes:
+      - ./data/keycloak:/opt/keycloak/data # DB情報等が格納される
+    environment:
+      KEYCLOAK_ADMIN: admin # 管理ユーザーIDを設定
+      KEYCLOAK_ADMIN_PASSWORD: password # 管理ユーザーのパスワードを設定
+    depends_on:
+      - db
+      - api
+    command:
+      - start-dev
+
+  view-user:
+    build:
+      context: .
+      dockerfile: .docker/view-user.Dockerfile
+    container_name: "view-user"
+    volumes: [./view-user:/app]
+    command: sh -c "npm install && npm run dev"
+    ports: ["3000:3000"]
+    env_file:
+      - .env
+
+  view-admin:
+    build:
+      context: .
+      dockerfile: .docker/view-admin.Dockerfile
+    container_name: "view-admin"
+    volumes:
+      - ./view-admin:/app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3001:3000"
+    env_file:
+      - ./settings/admin.env
+    stdin_open: true
+    tty: true
 
 volumes:
   db-data:

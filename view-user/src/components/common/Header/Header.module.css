@@ -1,0 +1,22 @@
+/* Header */
+.container {
+    width: 100vw;
+    background-color: #07033E;;
+}
+
+.main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.title {
+    color: #FFF;
+    font-size: 5vw;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 1;
+    margin: 1.3rem 1.6rem;
+    display: inline-block;
+    white-space:nowrap;
+}
