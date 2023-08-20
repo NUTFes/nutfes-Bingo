@@ -3,6 +3,5 @@ data/
 cloudflare/prod/*.pem
 cloudflare/prod/*.json
 
-*.env
 settings/
 
