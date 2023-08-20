@@ -15,9 +15,10 @@ ALTER SEQUENCE public.bingo_number_id_seq OWNED BY public.bingo_number.id;
 CREATE TABLE public.bingo_prize (
     id integer NOT NULL,
     name text DEFAULT 'null'::text,
-    existing boolean DEFAULT true NOT NULL,
+    existing boolean DEFAULT true,
     image text DEFAULT 'null'::text
 );
+COMMENT ON TABLE public.bingo_prize IS 'ビンゴの景品データを格納';
 CREATE SEQUENCE public.bingo_prize_id_seq
     AS integer
     START WITH 1
