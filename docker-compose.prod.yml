@@ -14,7 +14,7 @@ services:
     ports: ["8080:8080"]
     volumes: [./api:/tmp/hasura-project]
     env_file:
-      - bingo.env
+      - ./settings/bingo.env
 
   view-user:
     build:
