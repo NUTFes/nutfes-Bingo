@@ -2,7 +2,12 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import styles from "@/styles/Home.module.css";
 import type { NextPage } from "next";
-import { Header, BingoResult, Button } from "@/components/common";
+import {
+  Header,
+  BingoResult,
+  Button,
+  JudgementModal,
+} from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
 import { useEffect, useState } from "react";
 import {
@@ -23,6 +28,18 @@ const Page: NextPage = () => {
   const logoutClick = () => {
     signOut({ callbackUrl: "/" });
   };
+
+  const [inputNumbers, setInputNumbers] = useState<number[]>([]);
+  const [isIncluded, setIsIncluded] = useState(false);
+
+  const checkInclusion = () => {
+    if (inputNumbers.every(number => bingoNumbers.map(num => num.data).includes(number))) {
+      setIsIncluded(true);
+    }
+  };
+
+  const [isOpened, setIsOpened] = useState(false);
+  const isopenBool = () => setIsOpened(!isOpened);
 
   useEffect(() => {
     async function fetchBingoNumbers() {
@@ -85,8 +102,19 @@ const Page: NextPage = () => {
   if (session) {
     return (
       <div className={styles.container}>
+        <JudgementModal
+        isOpened={isOpened}
+        isIncluded={isIncluded}
+        setIsOpened={setIsOpened}
+        setIsIncluded={setIsIncluded}
+        setInputNumbers={setInputNumbers}
+        checkInclusion={checkInclusion}
+        />
         <Header user="Admin">
           <div className={styles.main}>
+            <button type="button" onClick={isopenBool} className={styles.btnOpen}>
+              ビンゴ正誤判定
+            </button>
             <Button size="m" shape="circle" onClick={logoutClick}>
               <CgLogOut className={styles.buttonIcon} />
               <p>Logout</p>
