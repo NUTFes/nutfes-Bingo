@@ -58,8 +58,8 @@ services:
     volumes: [./view-user:/app]
     command: sh -c "npm install && npm run dev"
     ports: ["3000:3000"]
-    environment:
-      WATCHPACK_POLLING: true
+    env_file:
+      - ./settings/bingo.env
 
   view-admin:
     build:
@@ -71,10 +71,10 @@ services:
     command: sh -c "npm install && npm run dev"
     ports:
       - "3001:3000"
+    env_file:
+      - ./settings/admin.env
     stdin_open: true
     tty: true
-    environment:
-      - WATCHPACK_POLLING=true
 
 volumes:
   db-data:

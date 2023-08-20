@@ -1,6 +1,57 @@
 .container {
-    height: 100vh;
-    width: 100vw;
-    background-color: #C9AAAA;
+  height: 100vh;
+  width: 100vw;
+  overflow: auto;
+  background: linear-gradient(180deg, #D95B7F 0%, #856DB2 23.96%, #07033E 100%);
+}
+
+.contents {
+  display: flex;
+  padding: 0.5rem 1rem;
+}
+
+.btnOpen {
+  padding: 0.9em 2em;
+  border: 0.2rem solid #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 0.2rem #333333;
+  background-color: #333333;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-right: 1rem;
+  white-space:nowrap;
+}
+
+.btnOpen:hover {
+  background-color: whitesmoke;
+  color: var(--primary);
+  transition: 0.25s;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+@media screen and (max-width: 900px) {
+  .btnOpen {
+    display: none;
   }
 
+  .contents {
+    display: flex;
+    padding: 0.5rem 1rem;
+  }
+
+  .contents p {
+    line-height: 19px;
+    color: #333333;
+  }
+
+  .icon {
+    background-color: var(--background-color);
+    color: #333333;
+  }
+}

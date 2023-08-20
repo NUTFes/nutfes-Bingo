@@ -1,17 +1,22 @@
+/* Header */
 .container {
-    height: 6rem;
     width: 100vw;
-    background-color: #D9D9D9;
-    border-bottom: 0.3rem solid #333;
+    background-color: #07033E;;
+}
+
+.main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .title {
-    color: #333;
-    font-size: 3.5rem;
+    color: #FFF;
+    font-size: 5vw;
     font-style: normal;
     font-weight: 700;
     line-height: 1;
-    margin: 1rem;
+    margin: 1.3rem 1.6rem;
     display: inline-block;
-
+    white-space:nowrap;
 }
