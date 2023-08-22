@@ -6,8 +6,12 @@ import {
 
 const Page: NextPage = () => {
   return (
-    <div className={styles.container}>
-
+    <div>
+      <title>File Input</title>
+      <form id="uploadForm">
+        <input type="file" id="fileInput" />
+        <input type="submit" value="Upload" />
+      </form>
     </div>
   );
 };
