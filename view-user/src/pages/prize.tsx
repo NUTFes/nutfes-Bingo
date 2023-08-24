@@ -1,12 +1,12 @@
 import type { NextPage } from "next";
-import Link from "next/link";
 import Image from "next/image";
 import styles from "@/styles/prize.module.css";
 import { Header, Button } from "@/components/common";
+import { useRouter } from "next/router";
 
 const Page: NextPage = () => {
   const overlayImageNumbers = [1, 4, 5, 7, 8, 11, 16, 18, 20, 23, 26, 30];
-
+  const router = useRouter();
   const ShowOverlay = (imageNumber: number) => {
     return overlayImageNumbers.includes(imageNumber);
   };
@@ -14,7 +14,7 @@ const Page: NextPage = () => {
     <div className={styles.container}>
       <Header user="">
         <div className={styles.main}>
-          <Button size="m" shape="circle">
+          <Button size="m" shape="circle" onClick={() => router.push("/")}>
             <div className={styles.buttonContents}>
               <Image
                 src="/BingoCard.svg"
@@ -22,9 +22,7 @@ const Page: NextPage = () => {
                 width={25}
                 height={25}
               />
-              <Link className={styles.link} href="/">
-                Number List
-              </Link>
+              Number List
             </div>
           </Button>
         </div>
