@@ -11,6 +11,13 @@
   margin-right: 0.8rem;
 }
 
+.link {
+  text-decoration: none;
+  color: #07033e;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
 .buttonContents {
   display: flex;
   align-items: center;

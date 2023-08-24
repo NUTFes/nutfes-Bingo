@@ -17,7 +17,7 @@ export const BingoResult = (props: BingoResultProps) => {
       <div className={styles.container}>
         <div className={styles.frame_title}>
           <Image src="/BingoCard.svg" alt="BingoCard" width={25} height={25} />
-          <p>BINGO Number</p>
+          <p>BINGO Number List</p>
         </div>
         <div className={styles.card_frame}>
           <div className={styles.large_card}>
