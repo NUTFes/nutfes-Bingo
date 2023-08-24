@@ -1,1 +1,2 @@
 - "!include public_bingo_number.yaml"
+- "!include public_bingo_prize.yaml"

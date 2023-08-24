@@ -32,24 +32,6 @@ services:
       db:
         condition: service_healthy
 
-  keycloak:
-    build:
-      context: .docker
-      dockerfile: keycloak.Dockerfile
-    container_name: "bingo_keycloak"
-    ports:
-      - "8888:8080"
-    volumes:
-      - ./data/keycloak:/opt/keycloak/data # DB情報等が格納される
-    environment:
-      KEYCLOAK_ADMIN: admin # 管理ユーザーIDを設定
-      KEYCLOAK_ADMIN_PASSWORD: password # 管理ユーザーのパスワードを設定
-    depends_on:
-      - db
-      - api
-    command:
-      - start-dev
-
   view-user:
     build:
       context: .
@@ -59,7 +41,7 @@ services:
     command: sh -c "npm install && npm run dev"
     ports: ["3000:3000"]
     env_file:
-      - .env
+      - ./settings/bingo.env
 
   view-admin:
     build:
@@ -71,10 +53,10 @@ services:
     command: sh -c "npm install && npm run dev"
     ports:
       - "3001:3000"
+    env_file:
+      - ./settings/admin.env
     stdin_open: true
     tty: true
-    env_file:
-      - .env
 
 volumes:
   db-data:
