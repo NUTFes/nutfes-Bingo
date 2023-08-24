@@ -20,17 +20,16 @@ export const BingoResult = (props: BingoResultProps) => {
           <p>BINGO Number List</p>
         </div>
         <div className={styles.card_frame}>
-          <div className={styles.large_card}>
-            <div className={styles.card_content}>
-              {firstBingoNumber?.data}
-            </div>
-          </div>
+          <div className={styles.large_card}>{firstBingoNumber?.data}</div>
           <div className={styles.small_card_frame}>
-            {[...props.bingoResultNumber].slice(0, -1).reverse().map((num, index) => (
-              <div className={styles.small_card} key={index}>
-                <div className={styles.card_content}>{num.data}</div>
-              </div>
-            ))}
+            {[...props.bingoResultNumber]
+              .slice(0, -1)
+              .reverse()
+              .map((num, index) => (
+                <div className={styles.small_card} key={index}>
+                  <div>{num.data}</div>
+                </div>
+              ))}
           </div>
         </div>
       </div>
