@@ -3,6 +3,7 @@ import next from "next/types";
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from "graphql-ws";
 import { userAgent } from "next/server";
+import { NextApiRequest, NextApiResponse } from "next/types";
 
 const wsLink = new GraphQLWsLink(createClient({
   url: process.env.WS_API_URL + "/v1/graphql",
@@ -108,5 +109,20 @@ export async function deleteBingoNumber(
   } catch (error) {
     console.error("Error deleteing bingo number:", error);
     return []
+  }
+}
+
+export async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).end(); // Method Not Allowed
+  }
+
+  try {
+    const imageFile = req.body.image; // Assuming you're sending the image as base64 encoded string
+    const base64Image = Buffer.from(imageFile, 'base64').toString('base64');
+    res.status(200).send(base64Image);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('Internal Server Error');
   }
 }
