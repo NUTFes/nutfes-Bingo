@@ -16,6 +16,14 @@ export interface BingoNumber {
   id: number;
   data: number;
 }
+
+export interface BingoPrize {
+  id: number;
+  name: string;
+  existing: boolean;
+  image: string;
+}
+
 // GraphQLクエリを実行
 export async function getBingoNumber(): Promise<BingoNumber[]> {
   try {
@@ -102,9 +110,9 @@ export async function deleteBingoNumber(
     return []
   }
 }
-export async function createImage(
-  image: String
-): Promise<String> {
+export async function createBingoPrize(
+  image: string
+): Promise<string> {
   try {
     const response = await client.mutate({
       mutation: gql`
@@ -122,3 +130,32 @@ export async function createImage(
     return ""
   }
 }
+export async function subscriptionBingoPrize(): Promise<BingoPrize[]> {
+  try {
+    const response = await client.subscribe({
+      query: gql`
+        subscription MySubscription {
+          bingo_prize {
+            image
+            existing
+            name
+            id
+          }
+        }
+      `,
+    });
+    return new Promise<BingoPrize[]>((resolve, reject) => {
+      response.subscribe({
+        next: image => resolve(image.data.bingo_prize),
+        error: error => {
+          console.error('Subscription error:', error);
+          reject(error);
+        },
+      });
+    });
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return[];
+  }
+}
+
