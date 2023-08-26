@@ -1,48 +1,49 @@
 import type { NextPage } from "next";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import styles from "@/styles/Home.module.css";
 import {
-
 } from "@/components/common";
-import { handler } from "@/utils/api_methods";
-
+import { createImage} from "@/utils/api_methods";
 const Page: NextPage = () => {
-  const [base64Image, setBase64Image] = useState<string>('');
-
-  const inputImageFile = async (event: React.FormEvent<HTMLFormElement>) => {
-    const preview = document.querySelector("#preview");
-    const files = document.querySelector("input[type=file]").files;
-
-    function readAndPreview(file) {
-      // `file.name` が拡張子の基準と一致していることを確認します。
-      if (/\.(jpe?g|png|gif)$/i.test(file.name)) {
-        const reader = new FileReader();
-
-        reader.readAsDataURL(file);
-        console.log(reader)
-      }
+  // アップロードした画像ファイルから取得したbase64
+  const [displayImage, setDisplayImage] = useState<string | ArrayBuffer | null>(null);
+  /**
+   * ファイルアップロードインプット変更時ハンドラ
+   */
+  const handlerChangeImageFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target?.files?.[0];
+    if (!file) {
+      return;
     }
-
-  if (files) {
-    Array.prototype.forEach.call(files, readAndPreview);
-  }
-}
-
+    // 選択されたファイルが画像ファイル以外だったらreturn
+    if (file.type !== 'image/jpeg' && file.type !== 'image/png') {
+      // バリデーションメッセージ表示
+      console.log('jpeg/pngファイルを選択してください');
+      return;
+    }
+    const reader = new FileReader();
+    // base64に変換
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      // base64に変換した結果をstateにセットする
+      setDisplayImage(reader.result);
+      console.log(reader.result)
+      createImage(reader.result as string)
+    };
+  }, []);
   return (
     <div>
-      <h1>Image Upload</h1>
-      <form onSubmit={inputImageFile}>
-        <input type="file" name="image" accept="image/*" />
-        <button type="submit">Upload</button>
-      </form>
-      {base64Image && (
-        <div>
-          <h2>Base64 Image:</h2>
-          {/* <img src={`data:image/png;base64,${base64Image}`} alt="Uploaded" /> */}
-        </div>
-      )}
+      <h1>
+        アップロードした画像をbase64変換
+      </h1>
+      <input type="file" onChange={handlerChangeImageFileInput} />
+      <img
+        src={(displayImage as string) || ""}
+        alt=""
+        width="100px"
+        height="100px"
+        />
     </div>
   );
-};
-
+}
 export default Page;

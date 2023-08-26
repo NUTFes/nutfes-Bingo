@@ -3,23 +3,19 @@ import next from "next/types";
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from "graphql-ws";
 import { userAgent } from "next/server";
-import { NextApiRequest, NextApiResponse } from "next/types";
 
 const wsLink = new GraphQLWsLink(createClient({
   url: process.env.WS_API_URL + "/v1/graphql",
     // 認証関連はここに書く
 }));
-
 const client = new ApolloClient({
   link: wsLink,
   cache: new InMemoryCache(),
 });
-
 export interface BingoNumber {
   id: number;
   data: number;
 }
-
 // GraphQLクエリを実行
 export async function getBingoNumber(): Promise<BingoNumber[]> {
   try {
@@ -39,7 +35,6 @@ export async function getBingoNumber(): Promise<BingoNumber[]> {
     return []
   }
 }
-
 // websocket通信でBingoNumberを取得
 export async function subscriptionBingoNumber(): Promise<BingoNumber[]> {
   try {
@@ -67,7 +62,6 @@ export async function subscriptionBingoNumber(): Promise<BingoNumber[]> {
     return [];
   }
 }
-
 export async function createBingoNumber(
   data: number
 ): Promise<BingoNumber[]> {
@@ -82,14 +76,12 @@ export async function createBingoNumber(
       `,
       variables: { data },
     });
-
     return response.data.insert_bingo_number_one;
   } catch (error) {
     console.error("Error creating bingo number:", error);
     return []
   }
 }
-
 export async function deleteBingoNumber(
   data: number
 ): Promise<BingoNumber[]> {
@@ -104,25 +96,29 @@ export async function deleteBingoNumber(
       `,
       variables: { data },
     });
-
     return response.data.delete_bingo_number;
   } catch (error) {
     console.error("Error deleteing bingo number:", error);
     return []
   }
 }
-
-export async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).end(); // Method Not Allowed
-  }
-
+export async function createImage(
+  image: String
+): Promise<String> {
   try {
-    const imageFile = req.body.image; // Assuming you're sending the image as base64 encoded string
-    const base64Image = Buffer.from(imageFile, 'base64').toString('base64');
-    res.status(200).send(base64Image);
+    const response = await client.mutate({
+      mutation: gql`
+        mutation MyMutation($image: String!) {
+          insert_bingo_prize_one(object: {image: $image}) {
+            id
+          }
+        }
+      `,
+      variables: { image },
+    });
+    return response.data.insert_bingo_prize_one;
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Internal Server Error');
+    console.error("Error creating bingo_prize image:", error);
+    return ""
   }
 }

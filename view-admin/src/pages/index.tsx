@@ -113,13 +113,14 @@ const Page: NextPage = () => {
         />
         <Header user="Admin">
           <div className={styles.main}>
-            <Button size="m" shape="circle">
+            <Button size="l" shape="circle">
               <div className={styles.buttonContents}>
                 <Link className={styles.link} href="/testimage">
-                  景品
+                  景品画像
                 </Link>
               </div>
             </Button>
+
             <button type="button" onClick={isopenBool} className={styles.btnOpen}>
               ビンゴ正誤判定
             </button>
