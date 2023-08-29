@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 
 const Page: NextPage = () => {
   const router = useRouter();
+
+// トグルスイッチがクリックされた時の配列動作を定義
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const toggleNumber = (number: number) => {
     if (selectedNumbers.includes(number)) {
@@ -19,9 +21,10 @@ const Page: NextPage = () => {
     console.log("selectedNumbers:", selectedNumbers);
   }, [selectedNumbers]);
 
+
+// 景品の文字検索機能 pタグの要素を取得しています。
   const [searchText, setSearchText] = useState("");
   const [searchDone, setSearchDone] = useState(false);
-
   useEffect(() => {
     if (searchDone) {
       const elements = Array.from(document.querySelectorAll("p"));
@@ -42,17 +45,15 @@ const Page: NextPage = () => {
     setSearchDone(true);
   };
 
-  const [selectAll, setSelectAll] = useState<boolean>(false);
+// すべて選択・すべて選択解除 機能
+  const isAllSelected = selectedNumbers.length === 31;
   const toggleSelectAll = () => {
-    if (selectAll) {
+    if (isAllSelected) {
       setSelectedNumbers([]);
     } else {
-      setSelectedNumbers([
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-        21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-      ]);
+      const allNumbers = Array.from({ length: 31 }, (_, index) => index + 1);
+      setSelectedNumbers(allNumbers);
     }
-    setSelectAll(!selectAll);
   };
 
   return (
@@ -60,16 +61,14 @@ const Page: NextPage = () => {
       <Header user="">
         <div className={styles.main}>
           <Button size="m" shape="circle" onClick={() => router.push("/")}>
-            <div className={styles.buttonContents}>
-              番号入力ページ
-            </div>
+            <div className={styles.buttonContents}>番号入力ページ</div>
           </Button>
         </div>
       </Header>
       <div className={styles.title}>
         <div className={styles.title_button}>
           <Button size="m" shape="circle" onClick={toggleSelectAll}>
-            {selectAll ? "すべて選択解除" : "すべて選択"}
+            {selectedNumbers.length === 31 ? "すべて選択解除" : "すべて選択"}
           </Button>
         </div>
         <div>
@@ -80,7 +79,9 @@ const Page: NextPage = () => {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <button className={styles.search_button} onClick={handleSearch}>検索</button>
+          <button className={styles.search_button} onClick={handleSearch}>
+            検索
+          </button>
         </div>
       </div>
 
@@ -100,13 +101,14 @@ const Page: NextPage = () => {
           <p>Apple Watch</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(1) ? styles.selected : styles.notSelected
+              selectedNumbers.includes(1) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(1)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -127,13 +129,14 @@ const Page: NextPage = () => {
           <p>黒毛和牛1kg</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(2) ? styles.selected : styles.notSelected
+              selectedNumbers.includes(2) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(2)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -154,13 +157,14 @@ const Page: NextPage = () => {
           <p>選べるペアチケット</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(3) ? styles.selected : styles.notSelected
+              selectedNumbers.includes(3) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(3)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -181,13 +185,14 @@ const Page: NextPage = () => {
           <p>コーヒーメーカー</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(4) ? styles.selected : styles.notSelected
+              selectedNumbers.includes(4) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(4)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -208,13 +213,14 @@ const Page: NextPage = () => {
           <p>缶つま</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(5) ? styles.selected : styles.notSelected
+              selectedNumbers.includes(5) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(5)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -235,13 +241,14 @@ const Page: NextPage = () => {
           <p>朝日山 天籟 越淡麗 純米大吟醸</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(6) ? styles.selected : styles.notSelected
+              selectedNumbers.includes(6) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(6)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -262,13 +269,14 @@ const Page: NextPage = () => {
           <p>折りたたみ自転車</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(7) ? styles.selected : styles.notSelected
+              selectedNumbers.includes(7) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(7)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -289,13 +297,14 @@ const Page: NextPage = () => {
           <p>焼肉プレート.jpg</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(8) ? styles.selected : styles.notSelected
+              selectedNumbers.includes(8) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(8)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -320,13 +329,14 @@ const Page: NextPage = () => {
           <p>ジバニャン着ぐるみ</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(9) ? styles.selected : styles.notSelected
+              selectedNumbers.includes(9) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(9)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -351,15 +361,14 @@ const Page: NextPage = () => {
           </p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(10)
-                ? styles.selected
-                : styles.notSelected
+              selectedNumbers.includes(10) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(10)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -380,15 +389,14 @@ const Page: NextPage = () => {
           <p>技大セット</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(11)
-                ? styles.selected
-                : styles.notSelected
+              selectedNumbers.includes(11) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(11)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -409,15 +417,14 @@ const Page: NextPage = () => {
           <p>瓶コーラ12本セット</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(12)
-                ? styles.selected
-                : styles.notSelected
+              selectedNumbers.includes(12) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(12)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -438,15 +445,14 @@ const Page: NextPage = () => {
           <p>魚沼産コシヒカリ(2kg)</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(13)
-                ? styles.selected
-                : styles.notSelected
+              selectedNumbers.includes(13) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(13)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -467,15 +473,14 @@ const Page: NextPage = () => {
           <p>着る毛布(サメ)</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(14)
-                ? styles.selected
-                : styles.notSelected
+              selectedNumbers.includes(14) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(14)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -500,15 +505,14 @@ const Page: NextPage = () => {
           </p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(15)
-                ? styles.selected
-                : styles.notSelected
+              selectedNumbers.includes(15) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(15)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -529,15 +533,14 @@ const Page: NextPage = () => {
           <p>トトロクッション</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(16)
-                ? styles.selected
-                : styles.notSelected
+              selectedNumbers.includes(16) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(16)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -558,15 +561,14 @@ const Page: NextPage = () => {
           <p>ハンディファン</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(17)
-                ? styles.selected
-                : styles.notSelected
+              selectedNumbers.includes(17) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(17)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -587,15 +589,14 @@ const Page: NextPage = () => {
           <p>サウナハット</p>
           <div
             className={`${styles.toggle_button} ${
-              selectedNumbers.includes(18)
-                ? styles.selected
-                : styles.notSelected
+              selectedNumbers.includes(18) ? styles.selected : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(18)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -618,13 +619,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(19)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(19)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -651,13 +653,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(20)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(20)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -680,13 +683,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(21)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(21)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -709,13 +713,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(22)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(22)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -738,13 +743,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(23)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(23)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -767,13 +773,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(24)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(24)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -796,13 +803,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(25)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(25)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -829,13 +837,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(26)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(26)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -858,13 +867,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(27)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(27)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -887,13 +897,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(28)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(28)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -920,13 +931,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(29)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(29)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -949,13 +961,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(30)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(30)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
@@ -982,13 +995,14 @@ const Page: NextPage = () => {
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(31)
                 ? styles.selected
-                : styles.notSelected
+                : ""
             }`}
           >
             <input
               id="toggle"
               className={styles.toggle_input}
               type="checkbox"
+              checked={selectedNumbers.length === 31}
               onClick={() => toggleNumber(31)}
             />
             <label htmlFor="toggle" className={styles.toggle_label} />
