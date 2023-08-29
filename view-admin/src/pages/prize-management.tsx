@@ -946,17 +946,17 @@ const Page: NextPage = () => {
         </div>
         <div className={styles.item_02}>
           <Image
-            src="/PrizeItem/30_巨大クマのぬいぐるみ.jpg"
+            src="/PrizeItem/シークレットアイコン.png"
             alt="Image30"
             width={500}
             height={500}
             sizes="100vw"
             style={{
-              width: "87%",
+              width: "88%",
               height: "auto",
             }}
           />
-          <p>巨大クマのぬいぐるみ</p>
+          <p>シークレット</p>
           <div
             className={`${styles.toggle_button} ${
               selectedNumbers.includes(30)
@@ -976,20 +976,18 @@ const Page: NextPage = () => {
         </div>
         <div className={styles.item_02}>
           <Image
-            src="/PrizeItem/31_ハーゲンダッツ詰め合わせ.jpg"
+            src="/PrizeItem/シークレットアイコン.png"
             alt="Image31"
             width={500}
             height={500}
             sizes="100vw"
             style={{
-              width: "56%",
+              width: "88%",
               height: "auto",
             }}
           />
           <p>
-            ハーゲンダッツ
-            <br />
-            詰め合わせ
+            シークレット
           </p>
           <div
             className={`${styles.toggle_button} ${
