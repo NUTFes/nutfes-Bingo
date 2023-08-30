@@ -110,3 +110,32 @@ export async function deleteBingoNumber(
     return []
   }
 }
+
+export interface BingoPrize {
+  id: number;
+  name: string;
+  existing: boolean
+  image: string
+}
+
+// GraphQLクエリを実行
+export async function getBingoPrize(): Promise<BingoPrize[]> {
+  try {
+    const response = await client.query({
+      query: gql`
+        query MyQuery {
+          bingo_prize {
+            image
+            existing
+            name
+            id
+          }
+        }
+      `,
+    });
+    return response.data.bingo_prize;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return []
+  }
+}

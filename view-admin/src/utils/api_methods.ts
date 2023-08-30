@@ -159,3 +159,57 @@ export async function subscriptionBingoPrize(): Promise<BingoPrize[]> {
   }
 }
 
+
+export interface BingoPrize {
+  id: number;
+  name: string;
+  existing: boolean;
+  image: string;
+}
+
+// GraphQLクエリを実行
+export async function getBingoPrize(): Promise<BingoPrize[]> {
+  try {
+    const response = await client.query({
+      query: gql`
+        query MyQuery {
+          bingo_prize {
+            image
+            existing
+            name
+            id
+          }
+        }
+      `,
+    });
+    return response.data.bingo_prize;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return []
+  }
+}
+
+export async function postBingoPrize(
+  id: number
+  name: string
+  existing: boolean
+  image: string
+): Promise<BingoPrize[]> {
+  try {
+    const response = await client.mutate({
+      mutation: gql`
+        mutation MyMutation($data: Int!) {
+          insert_bingo_number_one(object: { data: $data }) {
+            id
+          }
+        }
+      `,
+      variables: { data },
+    });
+
+    return response.data.insert_bingo_number_one;
+  } catch (error) {
+    console.error("Error creating bingo number:", error);
+    return []
+  }
+}
