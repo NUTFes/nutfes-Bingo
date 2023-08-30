@@ -1,7 +1,7 @@
 .primary {
-  background-color: var(--background-color);
+  background: rgba(255, 255, 255, 0.70);
   border: 1px solid #333333;
-  color: #333333;
+  color: #07033E;
   text-align: center;
   cursor: pointer;
   align-items: center;
@@ -13,13 +13,12 @@
 
 .l {
   font-size: x-large;
-  padding: 0.2rem 0.2rem;
-
+  padding: 0.8rem 1.5rem;
 }
 
 .m {
   font-size: medium;
-  padding: 0.1rem 0.1rem;
+  padding: 0.4rem 1rem;
 }
 
 .s {
@@ -28,7 +27,7 @@
 
 
 .circle {
-  border-radius: 1.5rem;
+  border-radius: 0.625rem;
 }
 
 
@@ -41,7 +40,3 @@
   color: var(--primary);
   transition: 0.25s;
 }
-
-@media screen and (max-width: 900px){
-  .primary {display:none}
-  }
