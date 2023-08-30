@@ -29,7 +29,7 @@ const Page: NextPage = () => {
       </Header>
       <div className={styles.title}>
         <Image src="/GiftBox.svg" alt="PresentBox" width={19} height={19} />
-        <p>景品</p>
+        <p>Prize</p>
       </div>
 
       <div className={styles.grid_01}>
