@@ -1,5 +1,6 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
+import { useForm, SubmitHandler } from "react-hook-form";
 import styles from "@/styles/Home.module.css";
 import type { NextPage } from "next";
 import {
@@ -17,6 +18,10 @@ import {
   subscriptionBingoNumber,
 } from "@/utils/api_methods";
 
+interface formData {
+  submitBingoNumber: number;
+}
+
 const Page: NextPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -24,6 +29,19 @@ const Page: NextPage = () => {
   const [data, setData] = useState<number | null>(null);
   const [inputNumber, setInputNumber] = useState<number | null>(null);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: {errors},
+  } = useForm<formData>();
+
+  const onSubmit = (data: formData) => {
+    console.log("onSubmit:", data.submitBingoNumber);
+    createMethod(data.submitBingoNumber);
+    setData(null);
+  };
 
   const logoutClick = () => {
     signOut({ callbackUrl: "/" });
@@ -66,7 +84,7 @@ const Page: NextPage = () => {
   };
 
   async function createMethod(data: number | null) {
-    if (data !== null) {
+    if ((data !== null)) {
       const newBingoNumber = await createBingoNumber(data);
       if (newBingoNumber) {
         console.log("Bingo number created:", newBingoNumber);
@@ -87,7 +105,7 @@ const Page: NextPage = () => {
     }
   }
 
-  const handleSubmit = async () => {
+  const handleSubmitDelete = async () => {
     if (inputNumber !== null) {
       console.log(inputNumber);
       deleteMethod(inputNumber);
@@ -124,9 +142,15 @@ const Page: NextPage = () => {
         <div className={styles.form}>
           <div className={styles.frame}>
             <p>抽選した番号を入力</p>
-            <form className={styles.item}>
+
+            <form className={styles.item} onSubmit={handleSubmit(onSubmit)}>
               <input
-                type="number"
+                {...register('submitBingoNumber', {
+                  required: true,
+                  max: { value: 99, message: '99以下にしてください'},
+                  min: {value: 0, message: '1以上にしてください'},
+                })}
+                type="number" 
                 min="0"
                 max="99"
                 name="data"
@@ -135,11 +159,15 @@ const Page: NextPage = () => {
                 onChange={(event) => setData(event.target.valueAsNumber)}
                 className={styles.inputForm}
               />
+              {errors.submitBingoNumber && (
+                <p>{errors.submitBingoNumber.message} </p>
+              )}
               <button
-                type="button"
+                type="submit"
                 className={styles.Button}
                 onClick={async () => {
                   console.log(data);
+                  console.log(register)
                   await createMethod(data);
                   setData(null);
                 }}
@@ -184,7 +212,7 @@ const Page: NextPage = () => {
               <button
                 type="button"
                 className={styles.Button}
-                onClick={handleSubmit}
+                onClick={handleSubmitDelete}
                 disabled={inputNumber === null && selectedNumber === null}
               >
                 送信
