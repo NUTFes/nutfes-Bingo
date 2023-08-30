@@ -22,14 +22,14 @@ const Page: NextPage = () => {
                 width={25}
                 height={25}
               />
-              Number List
+              Number
             </div>
           </Button>
         </div>
       </Header>
       <div className={styles.title}>
         <Image src="/GiftBox.svg" alt="PresentBox" width={19} height={19} />
-        <p>景品 List</p>
+        <p>景品</p>
       </div>
 
       <div className={styles.grid_01}>
