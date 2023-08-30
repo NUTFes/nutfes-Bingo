@@ -58,7 +58,7 @@ const Page: NextPage = () => {
 
   return (
     <div className={styles.container}>
-      <Header user="">
+      <Header user="Admin">
         <div className={styles.main}>
           <Button size="m" shape="circle" onClick={() => router.push("/")}>
             <div className={styles.buttonContents}>番号入力</div>
