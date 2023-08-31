@@ -112,11 +112,11 @@ const Page: NextPage = () => {
         />
         <Header user="Admin">
           <div className={styles.main}>
-            <button type="button" onClick={isopenBool} className={styles.btnOpen}>
-              ビンゴ正誤判定
-            </button>
             <Button size="m" shape="circle" onClick={() => router.push("/prize-management")}>
               <p>景品管理</p>
+            </Button>
+            <Button size="m" shape="circle" onClick={isopenBool}>
+              <p>ビンゴ正誤判定</p>
             </Button>
             <Button size="m" shape="circle" onClick={logoutClick}>
               <CgLogOut className={styles.buttonIcon} />
