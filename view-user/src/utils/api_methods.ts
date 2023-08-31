@@ -1,13 +1,17 @@
-import { ApolloClient, InMemoryCache, gql} from "@apollo/client";
-import next from "next/types";
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
-import { createClient } from "graphql-ws";
-import { userAgent } from "next/server";
+import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
+import { WebSocketLink } from "@apollo/client/link/ws";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 
-const wsLink = new GraphQLWsLink(createClient({
-  url: process.env.WS_API_URL + "/v1/graphql",
-    // 認証関連はここに書く
-}));
+const wsLink = new WebSocketLink(
+  new SubscriptionClient(process.env.WS_API_URL + "/v1/graphql", {
+    reconnect: true,
+    connectionParams: {
+      headers: {
+        "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET,
+      },
+    },
+  })
+);
 
 const client = new ApolloClient({
   link: wsLink,
@@ -35,7 +39,7 @@ export async function getBingoNumber(): Promise<BingoNumber[]> {
     return response.data.bingo_number;
   } catch (error) {
     console.error("Error fetching data:", error);
-    return []
+    return [];
   }
 }
 
@@ -54,22 +58,20 @@ export async function subscriptionBingoNumber(): Promise<BingoNumber[]> {
     });
     return new Promise<BingoNumber[]>((resolve, reject) => {
       response.subscribe({
-        next: data => resolve(data.data.bingo_number),
-        error: error => {
-          console.error('Subscription error:', error);
+        next: (data) => resolve(data.data.bingo_number),
+        error: (error) => {
+          console.error("Subscription error:", error);
           reject(error);
         },
       });
     });
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
     return [];
   }
 }
 
-export async function createBingoNumber(
-  data: number
-): Promise<BingoNumber[]> {
+export async function createBingoNumber(data: number): Promise<BingoNumber[]> {
   try {
     const response = await client.mutate({
       mutation: gql`
@@ -85,13 +87,11 @@ export async function createBingoNumber(
     return response.data.insert_bingo_number_one;
   } catch (error) {
     console.error("Error creating bingo number:", error);
-    return []
+    return [];
   }
 }
 
-export async function deleteBingoNumber(
-  data: number
-): Promise<BingoNumber[]> {
+export async function deleteBingoNumber(data: number): Promise<BingoNumber[]> {
   try {
     const response = await client.mutate({
       mutation: gql`
@@ -107,6 +107,6 @@ export async function deleteBingoNumber(
     return response.data.delete_bingo_number;
   } catch (error) {
     console.error("Error deleteing bingo number:", error);
-    return []
+    return [];
   }
 }
