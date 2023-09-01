@@ -19,9 +19,9 @@ import {
 } from "@/utils/api_methods";
 
 interface formData {
-  submitNumber: number;
-  inputedNumber: number;
-  selectedNumber: number;
+  submitNumber: number | null;
+  inputedNumber: number | null;
+  selectedNumber: number | null;
 }
 
 const Page: NextPage = () => {
@@ -39,18 +39,19 @@ const Page: NextPage = () => {
     formState: { errors },
   } = useForm<formData>();
 
-  const handleSubmitCreate: SubmitHandler<formData> = (data) => {
-    createMethod(data.submitNumber);
+  const handleSubmitCreate: SubmitHandler<formData> = () => {
+    const { submitNumber } = getValues();
+    createMethod(submitNumber);
   };
 
   const handleSubmitDelete = async () => {
     const { inputedNumber, selectedNumber } = getValues();
     if (inputedNumber) {
       deleteMethod(inputedNumber);
-      reset({ inputedNumber: 0 });
+      reset({ inputedNumber: null });
     } else if (selectedNumber) {
       deleteMethod(selectedNumber);
-      reset({ selectedNumber: 0 });
+      reset({ selectedNumber: null });
     }
   };
 
@@ -68,12 +69,16 @@ const Page: NextPage = () => {
     fetchBingoNumbers();
   }, [bingoNumbers]);
 
-  async function createMethod(data: number) {
-    const newBingoNumber = await createBingoNumber(data);
-    if (newBingoNumber) {
-      console.log("Bingo number created:", newBingoNumber);
-    } else {
-      console.error("Failed to create bingo number.");
+  async function createMethod(data: number | null) {
+    if (data != null) {
+      const newBingoNumber = await createBingoNumber(data);
+      reset({submitNumber: null})
+      if (newBingoNumber) {
+        console.log("Bingo number created:", newBingoNumber);
+      } else {
+        console.error("Failed to create bingo number.");
+      }
+
     }
   }
 
@@ -149,7 +154,7 @@ const Page: NextPage = () => {
                   type="number"
                   placeholder="番号を入力"
                   className={styles.inputForm}
-                  onChange={() => reset({ selectedNumber: 0 })}
+                  onChange={() => reset({ selectedNumber: null })}
                 />
                 {(errors.inputedNumber || errors.selectedNumber) && (
                   <div className={styles.errormessage}>
@@ -159,7 +164,7 @@ const Page: NextPage = () => {
               </div>
               <select
                 {...register("selectedNumber")}
-                onChange={() => reset({ inputedNumber: 0 })}
+                onChange={() => reset({ inputedNumber: null })}
               >
                 <option value="" hidden>
                   選択してください
