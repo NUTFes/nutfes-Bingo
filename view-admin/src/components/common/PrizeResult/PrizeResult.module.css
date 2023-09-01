@@ -1,0 +1,47 @@
+.content_wrapper {
+    padding: 2rem;
+}
+  
+.container {
+border-radius: 0.625rem;
+padding: 2rem;
+display: flex;
+flex-direction: column;
+gap: 1.5rem;
+background-color: #FFFFFF80;
+}
+
+.frame_title {
+/* font-size: clamp(下限, 可変, 上限)で動的に変わる */
+font-size: clamp(12px, calc(100vw / 18 ) , 24px);
+font-weight: bold;
+color: #07033E;
+padding-left: 10px;
+}
+
+.card_frame {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(min(25%, 100px), 2fr));
+gap: 16px;
+}
+
+.card {
+height: auto;
+aspect-ratio: 1 / 1;
+position: relative;
+border-radius: 3px;
+border: 0px solid #333;
+background-color: #FF6591  ;
+}
+
+.card_content {
+height: 100%;
+font-size: clamp(24px, calc(100vw / 9 ) , 60px);
+font-weight: bold;
+color: #FFFFFF;
+-webkit-text-stroke: 1.5px #07033E;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+  
