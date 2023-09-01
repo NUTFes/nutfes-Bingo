@@ -139,3 +139,28 @@ export async function getBingoPrize(): Promise<BingoPrize[]> {
     return []
   }
 }
+
+export async function postBingoPrize(
+  data: BingoPrize[]
+): Promise<BingoPrize[]> {
+  try {
+    const response = await client.mutate({
+      mutation: gql`
+      mutation MyMutation {
+        insert_bingo_prize(objects: {existing: false, image: "1", name: "test"}) {
+          returning {
+            existing
+            id
+            image
+            name
+          }
+        }
+      `,
+      variables: { data },
+    });
+    return response.data.insert_bingo_number_one;
+  } catch (error) {
+    console.error("Error creating bingo number:", error);
+    return []
+  }
+}

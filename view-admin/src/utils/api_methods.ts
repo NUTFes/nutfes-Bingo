@@ -130,6 +130,7 @@ export async function createBingoPrize(
     return ""
   }
 }
+
 export async function subscriptionBingoPrize(): Promise<BingoPrize[]> {
   try {
     const response = await client.subscribe({
@@ -159,14 +160,6 @@ export async function subscriptionBingoPrize(): Promise<BingoPrize[]> {
   }
 }
 
-
-export interface BingoPrize {
-  id: number;
-  name: string;
-  existing: boolean;
-  image: string;
-}
-
 // GraphQLクエリを実行
 export async function getBingoPrize(): Promise<BingoPrize[]> {
   try {
@@ -190,26 +183,58 @@ export async function getBingoPrize(): Promise<BingoPrize[]> {
 }
 
 export async function postBingoPrize(
-  id: number
-  name: string
-  existing: boolean
-  image: string
+  existing: boolean,
+  image: string,
+  name: string, 
 ): Promise<BingoPrize[]> {
   try {
     const response = await client.mutate({
       mutation: gql`
-        mutation MyMutation($data: Int!) {
-          insert_bingo_number_one(object: { data: $data }) {
+      mutation MyMutation($existing: Boolean!, $image: String!, $name: String!) {
+        insert_bingo_prize(objects: {existing: $existing, image: $image, name: $name}) {
+          returning {
+            existing
             id
+            image
+            name
+          }
+        }
+      }
+    `,
+    variables: { existing,image,name },
+    });
+    return response.data.insert_bingo_prize;
+  } catch (error) {
+    console.error("Error creating bingo prize:", error);
+    return []
+  }
+}
+
+export async function updateBingoPrize(
+  id: number,
+  newExistingValue: boolean
+): Promise<BingoPrize | null> {
+  try {
+    const response = await client.mutate({
+      mutation: gql`
+        mutation UpdateBingoPrize($id: Int!, $existing: Boolean!) {
+          update_bingo_prize_by_pk(
+            pk_columns: { id: $id }
+            _set: { existing: $existing }
+          ) {
+            id
+            name
+            existing
+            image
           }
         }
       `,
-      variables: { data },
+      variables: { id, existing: newExistingValue },
     });
 
-    return response.data.insert_bingo_number_one;
+    return response.data.update_bingo_prize_by_pk;
   } catch (error) {
-    console.error("Error creating bingo number:", error);
-    return []
+    console.error("Error updating bingo prize:", error);
+    return null;
   }
 }

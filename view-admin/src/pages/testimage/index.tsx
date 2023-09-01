@@ -1,15 +1,17 @@
 import type { NextPage } from "next";
 import { useState, useCallback, useEffect } from "react";
 import styles from "@/styles/Home.module.css";
-import { BingoPrize, createBingoPrize, subscriptionBingoPrize} from "@/utils/api_methods";
+import { BingoPrize, createBingoPrize, postBingoPrize, subscriptionBingoPrize, updateBingoPrize} from "@/utils/api_methods";
 
 
 
 const Page: NextPage = () => {
   // アップロードした画像ファイルから取得したbase64
-  const [displayImage, setDisplayImage] = useState<string | ArrayBuffer | null>(null);
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
-
+  const [displayImage, setDisplayImage] = useState<string>("");  // imagedata base64
+  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // getしてきた画像
+  const [prizeName, setPrizeName] = useState<string>("");
+  const [prizeExisting , setPrizeExisting] = useState<boolean>(false);
+  const [prizeID , setPrizeID] = useState<number>(0);
 
   useEffect(() => {
     async function fetchBingoPrizes() {
@@ -45,7 +47,7 @@ const Page: NextPage = () => {
     reader.readAsDataURL(file);
     reader.onload = () => {
       // base64に変換した結果をstateにセットする
-      setDisplayImage(reader.result);
+      setDisplayImage(reader.result as string);
       // console.log(reader.result)
       // createBingoPrize(reader.result as string)
     };
@@ -58,14 +60,36 @@ const Page: NextPage = () => {
     }
   };
 
+  const updateExisting = () => {
+    updateBingoPrize(prizeID,prizeExisting);
+    console.log(prizeID,prizeExisting);
+  };
+
+  const insertPrize = () => {
+    postBingoPrize(prizeExisting, displayImage, prizeName);
+    console.log(prizeExisting, displayImage, prizeName)
+  }
+
   return (
     <div className={styles.container}>
       <div>
+      <input
+        type="checkbox"
+        name="existing"
+        onChange={() => setPrizeExisting(!prizeExisting)}
+        />
+      <label htmlFor="existing">当選</label>
+      <input
+        type="text"
+        name="name"
+        placeholder="景品名"
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrizeName(e.target.value)}
+        />
         <h1>
           アップロードした画像をbase64変換
         </h1>
         <input type="file" onChange={handlerChangeImageFileInput} />
-        <input type="submit" value="送信" onClick={submitImage} />
+        <input type="submit" value="送信" onClick={insertPrize} />
         <img
           src={(displayImage as string) || ""}
           alt=""
@@ -83,6 +107,23 @@ const Page: NextPage = () => {
         ></img>
         ))}
       </div>
+      <h1>update処理</h1>
+      <div>
+      <input
+        type="number"
+        name="name"
+        placeholder="ID番号"
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrizeID(e.target.valueAsNumber)}
+        />
+      <input
+        type="checkbox"
+        placeholder="当選されたかどうか"
+        onChange={() => setPrizeExisting(!prizeExisting)}
+        // checked={setPrizeExisiting(!prizeExisting)} // または {false}、必要な値に変更してください
+        />
+        <input type="submit" value="送信" onClick={updateExisting} />
+      </div>
+
     </div>
   );
 }
