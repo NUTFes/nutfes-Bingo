@@ -2,6 +2,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import styles from "@/styles/Home.module.css";
 import type { NextPage } from "next";
+import Link from "next/link";
 import {
   Header,
   BingoResult,
@@ -112,6 +113,13 @@ const Page: NextPage = () => {
         />
         <Header user="Admin">
           <div className={styles.main}>
+            <Button size="l" shape="circle" onClick={() => ""}>
+              <div className={styles.buttonContents}>
+                <Link className={styles.link} href="/testimage">
+                  景品画像
+                </Link>
+              </div>
+            </Button>
             <Button size="m" shape="circle" onClick={() => router.push("/prize-management")}>
               <p>景品管理</p>
             </Button>
@@ -147,7 +155,7 @@ const Page: NextPage = () => {
                   setData(null);
                 }}
               >
-                送信
+               送信
               </button>
             </form>
           </div>
