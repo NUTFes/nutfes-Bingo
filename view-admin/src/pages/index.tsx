@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useForm, SubmitHandler } from "react-hook-form";
 import styles from "@/styles/Home.module.css";
 import type { NextPage } from "next";
+import Link from "next/link";
 import {
   Header,
   BingoResult,
@@ -98,20 +99,22 @@ const Page: NextPage = () => {
         <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} />
         <Header user="Admin">
           <div className={styles.main}>
-            <button
-              type="button"
-              onClick={isopenBool}
-              className={styles.btnOpen}
-            >
-              ビンゴ正誤判定
-            </button>
-            <Button
-              size="m"
-              shape="circle"
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
+            <Button size="l" shape="circle" onClick={() => ""}>
+              <div className={styles.buttonContents}>
+                <Link className={styles.link} href="/testimage">
+                  景品画像
+                </Link>
+              </div>
+            </Button>
+            <Button size="m" shape="circle" onClick={() => router.push("/prize-management")}>
+              <p>景品管理</p>
+            </Button>
+            <Button size="m" shape="circle" onClick={isopenBool}>
+              <p>ビンゴ正誤判定</p>
+            </Button>
+            <Button size="m" shape="circle" onClick={logoutClick}>
               <CgLogOut className={styles.buttonIcon} />
-              <p>Logout</p>
+              <p>ログアウト</p>
             </Button>
           </div>
         </Header>
