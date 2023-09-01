@@ -1,5 +1,5 @@
 .container {
-  height: 100vh;
+  height: 100%;
   background-color: aliceblue;
   background-image: linear-gradient(180deg, #d95b7f, #856db2, #07033e);
 }
@@ -197,4 +197,8 @@
   background-color: #a28bab;
   color: var(--primary);
   transition: 0.25s;
+}
+
+.img {
+  max-width: 100vw;
 }
