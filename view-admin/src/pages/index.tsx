@@ -120,16 +120,15 @@ const Page: NextPage = () => {
                 </Link>
               </div>
             </Button>
-
-            <button type="button" onClick={isopenBool} className={styles.btnOpen}>
-              ビンゴ正誤判定
-            </button>
             <Button size="m" shape="circle" onClick={() => router.push("/prize-management")}>
               <p>景品管理</p>
             </Button>
+            <Button size="m" shape="circle" onClick={isopenBool}>
+              <p>ビンゴ正誤判定</p>
+            </Button>
             <Button size="m" shape="circle" onClick={logoutClick}>
               <CgLogOut className={styles.buttonIcon} />
-              <p>Logout</p>
+              <p>ログアウト</p>
             </Button>
           </div>
         </Header>
