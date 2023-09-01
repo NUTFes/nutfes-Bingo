@@ -133,6 +133,18 @@
   padding: 0.8rem 1rem;
 }
 
+.errormessage {
+  color:black;
+  border:1px red;
+  font-size: small;
+  
+}
+
+.flexerror {
+  display: flex;
+  flex-direction: column;
+}
+
 .Button {
   border-radius: 0.5rem;
   border: 2px solid #07033e;
