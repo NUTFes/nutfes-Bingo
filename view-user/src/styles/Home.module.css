@@ -32,7 +32,21 @@
 .main {
   display: flex;
   align-items: center;
-  margin-right: 1rem;
+  margin-right: 1.5rem;
+}
+
+.link {
+  text-decoration: none;
+  color: #07033E;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.buttonContents {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
 }
 
 @media screen and (max-width: 900px) {

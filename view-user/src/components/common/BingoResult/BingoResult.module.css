@@ -41,7 +41,15 @@
   font-size: clamp(1rem, 100vw / 3 , 10rem);
   font-weight: bold;
   color: #FFF;
-  -webkit-text-stroke: 4px #07033E;
+  text-shadow    :
+       3px  3px 1px #333333,
+      -3px  3px 1px #333333,
+       3px -3px 1px #333333,
+      -3px -3px 1px #333333,
+       3px  0px 1px #333333,
+       0px  3px 1px #333333,
+      -3px  0px 1px #333333,
+       0px -3px 1px #333333;
 }
 
 .small_card_frame {
@@ -80,7 +88,15 @@
     font-size: clamp(1rem, 100vw / 3 , 10rem);
     font-weight: bold;
     color: #FFF;
-    -webkit-text-stroke: 4px #07033E;
+    text-shadow    :
+    3px  3px 2px #333333,
+   -3px  3px 2px #333333,
+    3px -3px 2px #333333,
+   -3px -3px 2px #333333,
+    3px  0px 2px #333333,
+    0px  3px 2px #333333,
+   -3px  0px 2px #333333,
+    0px -3px 2px #333333;
   }
 
   .small_card_frame {

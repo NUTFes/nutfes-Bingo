@@ -1,27 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./JudgementModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
+import { BingoNumber, subscriptionBingoNumber } from "@/utils/api_methods";
 
 interface ModalProps {
   isOpened: boolean;
-  isIncluded: boolean;
   canCloseByClickingBackground?: boolean;
   setIsOpened: (isOpened: boolean) => void;
-  setIsIncluded: (included: boolean) => void;
-  setInputNumbers: (numbers: number[]) => void;
-  checkInclusion: () => void;
 }
 
 const Modal = ({
   isOpened,
-  isIncluded,
   canCloseByClickingBackground = true,
   setIsOpened,
-  setIsIncluded,
-  setInputNumbers,
-  checkInclusion,
 }: ModalProps) => {
-  const [inputValues, setInputValues] = useState<number[]>([100, 100, 100, 100, 100]);
+  const [inputValues, setInputValues] = useState<number[]>([
+    100, 100, 100, 100, 100,
+  ]);
+  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
+  const [isIncluded, setIsIncluded] = useState(false);
 
   const handleInputChange = (
     index: number,
@@ -33,28 +30,39 @@ const Modal = ({
     setInputValues(newInputValues);
   };
 
-  const handleJugement = () => {
-    setInputNumbers(inputValues);
-    checkInclusion();
-  };
-
   const closeModal = () => {
     setIsOpened(false);
     setIsIncluded(false);
   };
 
   const resetInputs = () => {
-    setIsIncluded(false);
-    resetInputElements();
-  };
-
-  const resetInputElements = () => {
     const inputElements = document.getElementsByClassName(styles.inputNum);
     const inputElementArray = Array.from(inputElements) as HTMLInputElement[];
     for (let i = 0; i < inputElementArray.length; i++) {
       inputElementArray[i].value = "";
     }
+    setIsIncluded(false);
   };
+
+  const checkInclusion = () => {
+    if (inputValues.every(number => bingoNumbers.map(num => num.data).includes(number))) {
+      setIsIncluded(true);
+    }
+  };
+
+  useEffect(() => {
+    async function fetchBingoNumbers() {
+      try {
+        const response: BingoNumber[] = await subscriptionBingoNumber();
+        if (response) {
+          setBingoNumbers(response);
+        }
+      } catch (error) {
+        console.error("データの取得中にエラーが発生しました:", error);
+      }
+    }
+    fetchBingoNumbers();
+  }, [bingoNumbers]);
 
   return (
     <>
@@ -101,7 +109,7 @@ const Modal = ({
                 <button
                   type="submit"
                   className={styles.jugementButton}
-                  onClick={handleJugement}
+                  onClick={checkInclusion}
                 >
                   正誤判定
                 </button>
