@@ -36,35 +36,6 @@ const Page: NextPage = () => {
     fetchBingoPrizes();
   }, [bingoPrize]);
 
-  // // トグルスイッチがクリックされた時の配列動作を定義
-  //   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
-  //   const toggleNumber = (number: number) => {
-  //     if (selectedNumbers.includes(number)) {
-  //       setSelectedNumbers(selectedNumbers.filter((n) => n !== number));
-  //     } else {
-  //       setSelectedNumbers([...selectedNumbers, number]);
-  //     }
-  //   };
-  //   useEffect(() => {
-  //     console.log("selectedNumbers:", selectedNumbers);
-  //   }, [selectedNumbers]);
-
-  {
-    /* <div
-        className={`${styles.toggle_button} ${
-          selectedNumbers.includes(1) ? styles.selected : ""
-        }`}
-      >
-        <input
-          id="toggle"
-          className={styles.toggle_input}
-          type="checkbox"
-          checked={selectedNumbers.length === 31}
-          onClick={() => toggleNumber(1)}
-        />
-        <label htmlFor="toggle" className={styles.toggle_label} /> */
-  }
-
   // 景品の文字検索機能 pタグの要素を取得しています。
   const [searchText, setSearchText] = useState("");
   const [searchDone, setSearchDone] = useState(false);
@@ -87,17 +58,6 @@ const Page: NextPage = () => {
   const handleSearch = () => {
     setSearchDone(true);
   };
-
-  // // すべて選択・すべて選択解除 機能
-  //   const isAllSelected = selectedNumbers.length === 31;
-  //   const toggleSelectAll = () => {
-  //     if (isAllSelected) {
-  //       setSelectedNumbers([]);
-  //     } else {
-  //       const allNumbers = Array.from({ length: 31 }, (_, index) => index + 1);
-  //       setSelectedNumbers(allNumbers);
-  //     }
-  //   };
 
   return (
     <div className={styles.container}>

@@ -93,7 +93,7 @@ const Page: NextPage = () => {
     }
   }
 
-  // if (session) {
+  if (session) {
     return (
       <div className={styles.container}>
         <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} />
@@ -191,7 +191,7 @@ const Page: NextPage = () => {
         <BingoResult bingoResultNumber={bingoNumbers} />
       </div>
     );
-  // }
+  }
 
   return (
     <div className={styles.loginContainer}>

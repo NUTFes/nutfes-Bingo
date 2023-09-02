@@ -35,7 +35,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
                     className={styles.toggle_input}
                     type="checkbox"
                     checked={prizeResult.existing}
-                    onClick={(e) => {
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       console.log(prizeResult.id, e.target.checked);
                       updatePrizeExisting(prizeResult.id, e.target.checked);
                     }}
