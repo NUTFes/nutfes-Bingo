@@ -18,7 +18,6 @@
   .container {
     padding: 0.5rem;
     gap: 0.5rem;
-    
   }
 }
 
@@ -37,7 +36,6 @@
 }
 
 .card {
-  /* height: auto; */ 
   aspect-ratio: 1 / 1;
   position: relative;
   border-radius: 3px;
@@ -47,7 +45,7 @@
 }
 
 .card_content {
-  font-size: clamp(6px, calc(100vw / 9), 18px);
+  font-size: clamp(4px, calc(100vw / 10), 18px);
   color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -55,13 +53,34 @@
   align-items: center;
 }
 
-.card_img {
-  height: 50px;
-  /* width: 80%; */
-}
-
 .img {
   height: 100%;
+}
+
+.card_overlay {
+  aspect-ratio: 1 / 1;
+  position: relative;
+  border-radius: 3px;
+  border: 1px solid #333;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.card_overlay p {
+  position: absolute;
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  line-height: 2.4;
+  top: 50%;
+  width: 100%;
+  font-size: 2rem;
+  color: #ffffff;
+  background-color: #07033e;
 }
 
 .toggle_input {
