@@ -93,7 +93,7 @@ const Page: NextPage = () => {
     }
   }
 
-  if (session) {
+  // if (session) {
     return (
       <div className={styles.container}>
         <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} />
@@ -106,13 +106,13 @@ const Page: NextPage = () => {
                 </Link>
               </div>
             </Button>
-            <Button size="m" shape="circle" onClick={() => router.push("/prize-management")}>
+            <Button size="m" shape="circle" onClick={() => router.push("/prizes")}>
               <p>景品管理</p>
             </Button>
             <Button size="m" shape="circle" onClick={isopenBool}>
               <p>ビンゴ正誤判定</p>
             </Button>
-            <Button size="m" shape="circle" onClick={logoutClick}>
+            <Button size="m" shape="circle" onClick={() => signOut({ callbackUrl: "/" })}>
               <CgLogOut className={styles.buttonIcon} />
               <p>ログアウト</p>
             </Button>
@@ -191,7 +191,7 @@ const Page: NextPage = () => {
         <BingoResult bingoResultNumber={bingoNumbers} />
       </div>
     );
-  }
+  // }
 
   return (
     <div className={styles.loginContainer}>
@@ -203,7 +203,7 @@ const Page: NextPage = () => {
           Log in
         </Button>
       </div>
-    </div>
+    </div>  
   );
 };
 

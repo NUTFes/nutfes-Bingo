@@ -1,9 +1,7 @@
 import type { NextPage } from "next";
 import { useState, useCallback, useEffect } from "react";
 import styles from "@/styles/Home.module.css";
-import { BingoPrize, createBingoPrize, postBingoPrize, subscriptionBingoPrize, updateBingoPrize} from "@/utils/api_methods";
-
-
+import { BingoPrize, createBingoPrize, postBingoPrize, subscriptionBingoPrize, updatePrizeExisting} from "@/utils/api_methods";
 
 const Page: NextPage = () => {
   // アップロードした画像ファイルから取得したbase64
@@ -61,7 +59,7 @@ const Page: NextPage = () => {
   };
 
   const updateExisting = () => {
-    updateBingoPrize(prizeID,prizeExisting);
+    updatePrizeExisting(prizeID,prizeExisting);
     console.log(prizeID,prizeExisting);
   };
 
@@ -118,12 +116,9 @@ const Page: NextPage = () => {
       <input
         type="checkbox"
         placeholder="当選されたかどうか"
-        onChange={() => setPrizeExisting(!prizeExisting)}
-        // checked={setPrizeExisiting(!prizeExisting)} // または {false}、必要な値に変更してください
-        />
+        onChange={() => setPrizeExisting(!prizeExisting)}/>
         <input type="submit" value="送信" onClick={updateExisting} />
       </div>
-
     </div>
   );
 }

@@ -147,7 +147,7 @@ export async function subscriptionBingoPrize(): Promise<BingoPrize[]> {
     });
     return new Promise<BingoPrize[]>((resolve, reject) => {
       response.subscribe({
-        next: image => resolve(image.data.bingo_prize),
+        next: response => resolve(response.data.bingo_prize),
         error: error => {
           console.error('Subscription error:', error);
           reject(error);
@@ -210,7 +210,7 @@ export async function postBingoPrize(
   }
 }
 
-export async function updateBingoPrize(
+export async function updatePrizeExisting(
   id: number,
   newExistingValue: boolean
 ): Promise<BingoPrize | null> {
