@@ -1,12 +1,10 @@
 import type { NextPage } from "next";
 import styles from "./prizes.module.css";
+import Image from "next/image";
 import { Header, Button, PrizeResult } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import {
-  BingoPrize,
-  subscriptionBingoPrize,
-} from "@/utils/api_methods";
+import { BingoPrize, subscriptionBingoPrize } from "@/utils/api_methods";
 
 const Page: NextPage = () => {
   const router = useRouter();
@@ -32,7 +30,15 @@ const Page: NextPage = () => {
       <Header user="">
         <div className={styles.main}>
           <Button size="m" shape="circle" onClick={() => router.push("/")}>
-            <div className={styles.buttonContents}>Number</div>
+            <div className={styles.buttonContents}>
+              <Image
+                src="/BingoCard.svg"
+                alt="BingoCard"
+                width={25}
+                height={25}
+              />
+              Number
+            </div>
           </Button>
         </div>
       </Header>
