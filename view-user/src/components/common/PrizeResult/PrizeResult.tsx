@@ -12,24 +12,38 @@ export const PrizeResult = (props: PrizeResultProps) => {
   return (
     <div className={styles.content_wrapper}>
       <div className={styles.container}>
-        <div className={styles.frame_title}>景品一覧</div>
+        <div className={styles.frame_title}>
+          <Image
+            src="/GiftBox.svg"
+            alt="GiftBox"
+            width={19}
+            height={19}
+          />
+          Prize List
+        </div>
         <div className={styles.card_frame}>
           {[...props.prizeResult]
             .sort((a, b) => a.id - b.id)
             .map((prizeResult) => (
-              <div className={prizeResult.existing? styles.card_overlay : styles.card} key={prizeResult.id}>
+              <div className={styles.card} key={prizeResult.id}>
                 <div style={{position:"relative", width:"100%", height:"100%"}}>
                   <Image
                     src={prizeResult.image}
+                    className={styles.iamge}
                     alt="PrizeImage"
                     fill
+                    style={{objectFit:"cover"}}
                   />
-                  <p>{prizeResult.existing? "当選" : ""}</p>
                 </div>
                 <div style={{position:"relative"}} className={styles.card_content}>
                   {prizeResult.name}
+                </div>
+                {prizeResult.existing && (
+                  <div className={styles.overlay}>
+                    <p>当選！</p>
+                  </div>
+                )}
               </div>
-             </div>
             ))}
         </div>
       </div>
