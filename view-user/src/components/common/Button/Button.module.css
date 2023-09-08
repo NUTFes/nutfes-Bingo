@@ -23,6 +23,7 @@
 
 .s {
   font-size: x-small;
+  padding:0.1rem;
 }
 
 
@@ -32,7 +33,7 @@
 
 
 .square {
-  border-radius: 0.5rem;
+  border-radius: 0.4rem;
 }
 
 .primary:hover {
