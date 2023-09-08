@@ -15,9 +15,16 @@
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  font-size: clamp(1rem, calc(100vw / 18 ) , 3rem);
+  font-size: clamp(1rem, calc(100vw / 20 ) , 3rem);
   font-weight: bold;
   color: #07033E;
+}
+
+.frame_title_button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .card_frame {
