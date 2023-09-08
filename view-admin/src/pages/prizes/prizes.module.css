@@ -34,10 +34,6 @@
   font-weight: 700;
 }
 
-.title img {
-  filter: brightness(0) invert(1);
-}
-
 .title_button {
   display: flex;
   align-items: center;

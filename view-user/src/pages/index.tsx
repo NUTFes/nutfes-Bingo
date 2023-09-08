@@ -35,7 +35,7 @@ const Page: NextPage = () => {
       </Modal>
       <Header user="">
         <div className={styles.main}>
-        <Button size="m" shape="circle" onClick={() => router.push("./prize")}>
+        <Button size="m" shape="circle" onClick={() => router.push("./prizes")}>
             <div className={styles.buttonContents}>
               <Image
                 src="/GiftBox.svg"
