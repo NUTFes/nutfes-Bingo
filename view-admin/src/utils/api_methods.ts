@@ -1,4 +1,4 @@
-import { ApolloClient, InMemoryCache, HttpLink, ApolloLink, gql } from "@apollo/client";
+import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
 import { WebSocketLink } from "@apollo/client/link/ws";
 
 const wsLink = new WebSocketLink({
