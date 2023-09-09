@@ -1,45 +1,18 @@
 import { ApolloClient, InMemoryCache, HttpLink, ApolloLink, gql } from "@apollo/client";
 import { WebSocketLink } from "@apollo/client/link/ws";
-import { SubscriptionClient } from "subscriptions-transport-ws";
 
-// const httpLink = new HttpLink({
-//   uri: "http://localhost:8080/v1/graphql"
-// });
-
-// const middlewareLink = new ApolloLink((operation, forward) => {
-//   operation.setContext(({Headers = {} }) => ({
-//     Headers: {
-//       ...Headers,
-//       "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET,
-//     }
-//   }));
-
-//   return forward(operation);
-// });
-
-const wsLink = new WebSocketLink(
-  new SubscriptionClient(process.env.WS_API_URL + "/v1/graphql", {
+const wsLink = new WebSocketLink({
+  uri: process.env.WS_API_URL + "/v1/graphql",
+  options: {
     reconnect: true,
     connectionParams: {
       headers: {
-        "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET,
-      },
-    },
-  })
-);
-
-// const wsLink = new WebSocketLink({
-//   uri: process.env.WS_API_URL + "/v1/graphql",
-//   options: {
-//     reconnect: true,
-//     connectionParams: {
-//       headers: {
-//         "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET
-//       }
-//     }
-//   },
-//   reconnect: true,
-// });
+        "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET
+      }
+    }
+  },
+  reconnect: true,
+});
 
 const client = new ApolloClient({
   link: wsLink,
@@ -172,9 +145,7 @@ export async function subscriptionBingoPrize(): Promise<BingoPrize[]> {
       query: gql`
         subscription MySubscription {
           bingo_prize {
-            image
             existing
-            name
             id
           }
         }
@@ -203,6 +174,8 @@ export async function getBingoPrize(): Promise<BingoPrize[]> {
         query MyQuery {
           bingo_prize {
             image
+            existing
+            name
             id
           }
         }
