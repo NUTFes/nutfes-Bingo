@@ -21,15 +21,15 @@ const Page: NextPage = () => {
   useEffect(() => {
     async function fetchBingoPrizes() {
       try {
-        const getData: BingoPrize[] = await getBingoPrize();
-        if (getData) {
-          setBingoPrize(getData);
-        }
-
-        // const response: BingoPrize[] = await subscriptionBingoPrize();
-        // if (response) {
-        //   setBingoPrize(response);
+        // const getData: BingoPrize[] = await getBingoPrize();
+        // if (getData) {
+        //   setBingoPrize(getData);
         // }
+
+        const response: BingoPrize[] = await subscriptionBingoPrize();
+        if (response) {
+          setBingoPrize(response);
+        }
       } catch (error) {
         console.error("データの取得中にエラーが発生しました:", error);
       }
