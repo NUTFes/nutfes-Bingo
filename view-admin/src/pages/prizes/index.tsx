@@ -6,7 +6,6 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import {
   BingoPrize,
-  updatePrizeExisting,
   subscriptionBingoPrize,
   getBingoPrize,
 } from "@/utils/api_methods";
@@ -14,22 +13,28 @@ import {
 const Page: NextPage = () => {
   const router = useRouter();
   const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // getしてきた画像
-  const [prizeExisting, setPrizeExisting] = useState<boolean>(false);
-  const [prizeID, setPrizeID] = useState<number>(0);
-
 
   useEffect(() => {
     async function fetchBingoPrizes() {
       try {
-        // const getData: BingoPrize[] = await getBingoPrize();
-        // if (getData) {
-        //   setBingoPrize(getData);
-        // }
-
-        const response: BingoPrize[] = await subscriptionBingoPrize();
-        if (response) {
-          setBingoPrize(response);
+        const getData: BingoPrize[] = await getBingoPrize();
+        if (getData) {
+          setBingoPrize(getData);
         }
+
+        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
+        setBingoPrize((prevBingoPrize) => {
+          return prevBingoPrize.map((prize, index) => {
+            if (prize.id === subscriptionData[index].id) {
+              console.log(bingoPrize);
+              return {
+                ...prize,
+                existing: subscriptionData[index].existing,
+              };
+            }
+            return prize;
+          })
+        })
       } catch (error) {
         console.error("データの取得中にエラーが発生しました:", error);
       }
