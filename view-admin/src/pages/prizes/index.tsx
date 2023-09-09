@@ -8,6 +8,7 @@ import {
   BingoPrize,
   updatePrizeExisting,
   subscriptionBingoPrize,
+  getBingoPrize,
 } from "@/utils/api_methods";
 
 const Page: NextPage = () => {
@@ -16,18 +17,19 @@ const Page: NextPage = () => {
   const [prizeExisting, setPrizeExisting] = useState<boolean>(false);
   const [prizeID, setPrizeID] = useState<number>(0);
 
-  const updateExisting = () => {
-    updatePrizeExisting(prizeID, prizeExisting);
-    console.log(prizeID, prizeExisting);
-  };
 
   useEffect(() => {
     async function fetchBingoPrizes() {
       try {
-        const response: BingoPrize[] = await subscriptionBingoPrize();
-        if (response) {
-          setBingoPrize(response);
+        const getData: BingoPrize[] = await getBingoPrize();
+        if (getData) {
+          setBingoPrize(getData);
         }
+
+        // const response: BingoPrize[] = await subscriptionBingoPrize();
+        // if (response) {
+        //   setBingoPrize(response);
+        // }
       } catch (error) {
         console.error("データの取得中にエラーが発生しました:", error);
       }
