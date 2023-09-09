@@ -144,7 +144,6 @@ export async function subscriptionBingoPrize(): Promise<BingoPrize[]> {
       query: gql`
         subscription MySubscription {
           bingo_prize {
-            image
             existing
             name
             id
@@ -175,8 +174,6 @@ export async function getBingoPrize(): Promise<BingoPrize[]> {
         query MyQuery {
           bingo_prize {
             image
-            existing
-            name
             id
           }
         }
