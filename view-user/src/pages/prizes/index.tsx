@@ -23,16 +23,7 @@ const Page: NextPage = () => {
 
         const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
         setBingoPrize((prevBingoPrize) => {
-          return prevBingoPrize.map((prize, index) => {
-            if (prize.id === subscriptionData[index].id) {
-              console.log(bingoPrize);
-              return {
-                ...prize,
-                existing: subscriptionData[index].existing,
-              };
-            }
-            return prize;
-          })
+          return [...prevBingoPrize];
         })
       } catch (error) {
         console.error("データの取得中にエラーが発生しました:", error);
