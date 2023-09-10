@@ -23,8 +23,8 @@ const Page: NextPage = () => {
         }
 
         const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
-        setBingoPrize((prevBingoPrize) => {
-          return [...prevBingoPrize];
+        setBingoPrize((BingoPrize) => {
+          return [...BingoPrize];
         })
       } catch (error) {
         console.error("データの取得中にエラーが発生しました:", error);
