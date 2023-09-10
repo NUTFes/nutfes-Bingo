@@ -68,18 +68,11 @@ export const BingoResult = (props: BingoResultProps) => {
           <p>BINGO Number</p>
           <div className={styles.frame_title_button}>
             <Button
-              size="s"
+              size="xm"
               shape="square"
-              onClick={() => setResultChange(true)}
+              onClick={() => setResultChange(!resultChange)}
             >
-              抽選順
-            </Button>
-            <Button
-              size="s"
-              shape="square"
-              onClick={() => setResultChange(false)}
-            >
-              昇　順
+              {resultChange ? "番号順": "抽選順"}
             </Button>
           </div>
         </div>
