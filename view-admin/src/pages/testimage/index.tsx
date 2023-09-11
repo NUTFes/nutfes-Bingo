@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
 import { useState, useCallback, useEffect } from "react";
 import styles from "@/styles/Home.module.css";
-import { BingoPrize, createBingoPrize, postBingoPrize, subscriptionBingoPrize, updatePrizeExisting} from "@/utils/api_methods";
+import { BingoPrize, createBingoPrize, getBingoPrize, postBingoPrize, updatePrizeExisting} from "@/utils/api_methods";
 
 const Page: NextPage = () => {
   // アップロードした画像ファイルから取得したbase64
@@ -14,7 +14,7 @@ const Page: NextPage = () => {
   useEffect(() => {
     async function fetchBingoPrizes() {
       try {
-        const response: BingoPrize[] = await subscriptionBingoPrize();
+        const response: BingoPrize[] = await getBingoPrize();
         if (response) {
           setBingoPrize(response);
         }
@@ -63,9 +63,11 @@ const Page: NextPage = () => {
     console.log(prizeID,prizeExisting);
   };
 
-  const insertPrize = () => {
+  const insertPrize = async () => {
     postBingoPrize(prizeExisting, displayImage, prizeName);
-    console.log(prizeExisting, displayImage, prizeName)
+    setDisplayImage("");
+    setPrizeName("");
+    setPrizeExisting(false);
   }
 
   return (
@@ -81,6 +83,7 @@ const Page: NextPage = () => {
         type="text"
         name="name"
         placeholder="景品名"
+        value={prizeName}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrizeName(e.target.value)}
         />
         <h1>
