@@ -101,7 +101,7 @@ const Page: NextPage = () => {
           <div className={styles.main}>
             <Button size="l" shape="circle" onClick={() => ""}>
               <div className={styles.buttonContents}>
-                <Link className={styles.link} href="/testimage">
+                <Link className={styles.link} href="/postPrizes">
                   景品画像
                 </Link>
               </div>
@@ -203,7 +203,7 @@ const Page: NextPage = () => {
           Log in
         </Button>
       </div>
-    </div>  
+    </div>
   );
 };
 
