@@ -6,6 +6,7 @@
 
 .main {
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   overflow-x: scroll;
@@ -19,7 +20,7 @@
 
 .title {
   color: #ffffff;
-  font-size: 5vw;
+  font-size: 6vw;
   font-style: normal;
   font-weight: 700;
   line-height: 0;
@@ -40,9 +41,21 @@
   padding: 0.9rem 0rem 0.5rem 1rem;
 }
 
-@media (min-width: 1225px) {
+@media (min-width: 1300px) {
   .title p {
     font-size: 3rem;
     margin: 1rem;
+  }
+}
+
+@media (max-width: 1300px) {
+  .main {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 1300px) and (min-width: 700px) {
+  .title {
+    font-size: 3vw;
   }
 }

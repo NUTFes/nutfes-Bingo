@@ -99,7 +99,7 @@ const Page: NextPage = () => {
         <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} />
         <Header user="Admin">
           <div className={styles.main}>
-            <Button size="l" shape="circle" onClick={() => ""}>
+            <Button size="m" shape="circle" onClick={() => ""}>
               <div className={styles.buttonContents}>
                 <Link className={styles.link} href="/postPrizes">
                   景品画像
