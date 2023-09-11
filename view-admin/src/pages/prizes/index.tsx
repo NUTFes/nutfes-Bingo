@@ -39,7 +39,7 @@ const Page: NextPage = () => {
   const [searchDone, setSearchDone] = useState(false);
   useEffect(() => {
     if (searchDone) {
-      const elements = Array.from(document.querySelectorAll("p"));
+      const elements = Array.from(document.querySelectorAll("div"));
       elements.forEach((element) => {
         if (
           element &&
