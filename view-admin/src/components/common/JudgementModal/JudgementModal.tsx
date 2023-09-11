@@ -71,25 +71,11 @@ const Modal = ({
     fetchBingoNumbers();
   }, [bingoNumbers]);
 
-  function BingoJudgement() {
-    if (isIncluded) {
-      return (
-        <>
-          <div className={styles.jugementResults}>
-            <p>BINGO</p>
-          </div>
-        </>
-      );
-    } else {
-      return (
-        <>
-          <div className={styles.jugementResults}>
-            <p>NotYet!</p>
-          </div>
-        </>
-      );
-    }
-  }
+  const BingoJudgement = () => (
+    <div className={styles.jugementResults}>
+      <p>{isIncluded ? "BINGO" : "NotYet!"}</p>
+    </div>
+  );
 
   return (
     <>
