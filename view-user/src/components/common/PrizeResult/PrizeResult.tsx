@@ -9,9 +9,9 @@ interface PrizeResultProps {
 }
 
 export const PrizeResult = (props: PrizeResultProps) => {
-  const [isVisible, setIsVisible] = useState(true);
-  const toggleVisibility = () => {
-    setIsVisible(!isVisible);
+  const [isImageVisible, setIsImageVisible] = useState(true);
+  const imageVisibility = () => {
+    setIsImageVisible(false);
   };
   return (
     <div className={styles.content_wrapper}>
@@ -20,7 +20,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
           <Image src="/GiftBox.svg" alt="GiftBox" width={19} height={19} />
           Prize List
         </div>
-        <div id="loading" className={isVisible ? styles.visible : styles.hidden}></div>
+        <div id="loading" className={isImageVisible ? styles.visible : styles.hidden}></div>
         <div className={styles.card_frame}>
           {[...props.prizeResult]
             .sort((a, b) => a.id - b.id)
@@ -39,7 +39,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
                     alt="PrizeImage"
                     fill
                     style={{ objectFit: "cover" }}
-                    onLoad={toggleVisibility}
+                    onLoadingComplete={imageVisibility}
                   />
                 </div>
                 <div
