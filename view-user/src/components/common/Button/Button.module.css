@@ -16,6 +16,11 @@
   padding: 0.8rem 1.5rem;
 }
 
+.xm {
+  font-size: x-small;
+  padding: 0.5rem 1.5rem;
+}
+
 .m {
   font-size: medium;
   padding: 0.4rem 1rem;
@@ -23,6 +28,7 @@
 
 .s {
   font-size: x-small;
+  padding:0.1rem;
 }
 
 
@@ -32,7 +38,7 @@
 
 
 .square {
-  border-radius: 0.5rem;
+  border-radius: 0.4rem;
 }
 
 .primary:hover {
