@@ -102,7 +102,7 @@ const Page: NextPage = () => {
             <Button size="m" shape="circle" onClick={() => ""}>
               <div className={styles.buttonContents}>
                 <Link className={styles.link} href="/testimage">
-                  景品画像
+                  景品追加
                 </Link>
               </div>
             </Button>
