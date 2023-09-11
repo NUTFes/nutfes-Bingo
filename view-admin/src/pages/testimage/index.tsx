@@ -65,7 +65,6 @@ const Page: NextPage = () => {
 
   const insertPrize = async () => {
     postBingoPrize(prizeExisting, displayImage, prizeName);
-    // setBingoPrize(await getBingoPrize());
     setDisplayImage("");
     setPrizeName("");
     setPrizeExisting(false);
@@ -84,6 +83,7 @@ const Page: NextPage = () => {
         type="text"
         name="name"
         placeholder="景品名"
+        value={prizeName}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrizeName(e.target.value)}
         />
         <h1>
