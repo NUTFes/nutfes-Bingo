@@ -18,7 +18,8 @@ const Modal = ({
     100, 100, 100, 100, 100,
   ]);
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
-  const [isIncluded, setIsIncluded] = useState(false);
+  const [isIncluded, setIsIncluded] = useState<boolean>(false);
+  const [isJudgementClicked, setIsJudgementClicked] = useState<boolean>(false);
 
   const handleInputChange = (
     index: number,
@@ -42,12 +43,18 @@ const Modal = ({
       inputElementArray[i].value = "";
     }
     setIsIncluded(false);
+    setIsJudgementClicked(false);
   };
 
   const checkInclusion = () => {
-    if (inputValues.every(number => bingoNumbers.map(num => num.data).includes(number))) {
+    if (
+      inputValues.every((number) =>
+        bingoNumbers.map((num) => num.data).includes(number)
+      )
+    ) {
       setIsIncluded(true);
     }
+    setIsJudgementClicked(true);
   };
 
   useEffect(() => {
@@ -63,6 +70,12 @@ const Modal = ({
     }
     fetchBingoNumbers();
   }, [bingoNumbers]);
+
+  const BingoJudgement = () => (
+    <div className={styles.jugementResults}>
+      <p>{isIncluded ? "BINGO" : "NotYet!"}</p>
+    </div>
+  );
 
   return (
     <>
@@ -120,15 +133,7 @@ const Modal = ({
                 >
                   リセット
                 </button>
-                {isIncluded ? (
-                  <div className={styles.jugementResults}>
-                    <p>BINGO</p>
-                  </div>
-                ) : (
-                  <div className={styles.jugementResults}>
-                    <p>NotYet!</p>
-                  </div>
-                )}
+                {isJudgementClicked && <BingoJudgement />}
               </div>
             </div>
           </div>
