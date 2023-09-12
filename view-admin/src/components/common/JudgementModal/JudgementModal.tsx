@@ -47,8 +47,9 @@ const Modal = ({
   };
 
   const checkInclusion = () => {
+    const remainingNumbers = inputValues.filter((number) => number !== 0);
     if (
-      inputValues.every((number) =>
+      remainingNumbers.every((number) =>
         bingoNumbers.map((num) => num.data).includes(number)
       )
     ) {
