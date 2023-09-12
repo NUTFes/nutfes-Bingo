@@ -101,8 +101,8 @@ const Page: NextPage = () => {
           <div className={styles.main}>
             <Button size="m" shape="circle" onClick={() => ""}>
               <div className={styles.buttonContents}>
-                <Link className={styles.link} href="/testimage">
-                  景品追加
+                <Link className={styles.link} href="/postPrizes">
+                  景品画像
                 </Link>
               </div>
             </Button>
