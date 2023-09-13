@@ -6,28 +6,26 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import {
   BingoPrize,
-  updatePrizeExisting,
   subscriptionBingoPrize,
+  getBingoPrize,
 } from "@/utils/api_methods";
 
 const Page: NextPage = () => {
   const router = useRouter();
   const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // getしてきた画像
-  const [prizeExisting, setPrizeExisting] = useState<boolean>(false);
-  const [prizeID, setPrizeID] = useState<number>(0);
-
-  const updateExisting = () => {
-    updatePrizeExisting(prizeID, prizeExisting);
-    console.log(prizeID, prizeExisting);
-  };
 
   useEffect(() => {
     async function fetchBingoPrizes() {
       try {
-        const response: BingoPrize[] = await subscriptionBingoPrize();
-        if (response) {
-          setBingoPrize(response);
+        const getData: BingoPrize[] = await getBingoPrize();
+        if (getData) {
+          setBingoPrize(getData);
         }
+
+        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
+        setBingoPrize((BingoPrize) => {
+          return [...BingoPrize];
+        });
       } catch (error) {
         console.error("データの取得中にエラーが発生しました:", error);
       }
@@ -36,27 +34,19 @@ const Page: NextPage = () => {
     fetchBingoPrizes();
   }, [bingoPrize]);
 
-  // 景品の文字検索機能 pタグの要素を取得しています。
+  // 景品の文字検索機能 divタグの要素を取得しています。
   const [searchText, setSearchText] = useState("");
-  const [searchDone, setSearchDone] = useState(false);
-  useEffect(() => {
-    if (searchDone) {
-      const elements = Array.from(document.querySelectorAll("p"));
-      elements.forEach((element) => {
-        if (
-          element &&
-          element.textContent &&
-          element.textContent.includes(searchText)
-        ) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      });
-    }
-    setSearchDone(false);
-  }, [searchText, searchDone]);
-
   const handleSearch = () => {
-    setSearchDone(true);
+    const elements = Array.from(document.querySelectorAll("div"));
+    elements.forEach((element) => {
+      if (
+        element &&
+        element.textContent &&
+        element.textContent.includes(searchText)
+      ) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
   };
 
   return (
@@ -70,10 +60,6 @@ const Page: NextPage = () => {
       </Header>
       <div className={styles.title}>
         <div className={styles.title_button}>
-          {/* <Button size="m" shape="circle" onClick={toggleSelectAll}>
-            {selectedNumbers.length === 31 ? "すべて選択解除" : "すべて選択"}
-          </Button>
-        </div> */}
           <input
             className={styles.search_box}
             type="text"

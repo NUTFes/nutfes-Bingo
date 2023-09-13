@@ -22,6 +22,14 @@
   white-space: nowrap;
 }
 
+.title:hover {
+  color: #c0b4d7ff;
+}
+
+.title:active {
+  color: #ffffff;
+}
+
 .title p {
   padding: 0.9rem 0rem 0.5rem 1rem;
 }

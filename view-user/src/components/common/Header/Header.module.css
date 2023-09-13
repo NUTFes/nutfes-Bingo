@@ -20,3 +20,11 @@
     display: inline-block;
     white-space:nowrap;
 }
+
+.title:hover {
+    color: #c0b4d7ff;
+  }
+
+.title:active {
+color: #ffffff;
+}

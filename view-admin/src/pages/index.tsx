@@ -73,13 +73,12 @@ const Page: NextPage = () => {
   async function createMethod(data: number | null) {
     if (data != null) {
       const newBingoNumber = await createBingoNumber(data);
-      reset({submitNumber: null})
+      reset({ submitNumber: null });
       if (newBingoNumber) {
         console.log("Bingo number created:", newBingoNumber);
       } else {
         console.error("Failed to create bingo number.");
       }
-
     }
   }
 
@@ -101,18 +100,26 @@ const Page: NextPage = () => {
           <div className={styles.main}>
             <Button size="m" shape="circle" onClick={() => ""}>
               <div className={styles.buttonContents}>
-                <Link className={styles.link} href="/testimage">
+                <Link className={styles.link} href="/postPrizes">
                   景品追加
                 </Link>
               </div>
             </Button>
-            <Button size="m" shape="circle" onClick={() => router.push("/prizes")}>
+            <Button
+              size="m"
+              shape="circle"
+              onClick={() => router.push("/prizes")}
+            >
               <p>景品管理</p>
             </Button>
             <Button size="m" shape="circle" onClick={isopenBool}>
               <p>ビンゴ正誤判定</p>
             </Button>
-            <Button size="m" shape="circle" onClick={() => signOut({ callbackUrl: "/" })}>
+            <Button
+              size="m"
+              shape="circle"
+              onClick={() => signOut({ callbackUrl: "/" })}
+            >
               <CgLogOut className={styles.buttonIcon} />
               <p>ログアウト</p>
             </Button>
