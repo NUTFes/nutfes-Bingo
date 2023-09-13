@@ -25,7 +25,7 @@ const Page: NextPage = () => {
         const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
         setBingoPrize((BingoPrize) => {
           return [...BingoPrize];
-        })
+        });
       } catch (error) {
         console.error("データの取得中にエラーが発生しました:", error);
       }
@@ -34,7 +34,7 @@ const Page: NextPage = () => {
     fetchBingoPrizes();
   }, [bingoPrize]);
 
-    // 景品の文字検索機能 divタグの要素を取得しています。
+  // 景品の文字検索機能 divタグの要素を取得しています。
   const [searchText, setSearchText] = useState("");
   const handleSearch = () => {
     const elements = Array.from(document.querySelectorAll("div"));
@@ -60,10 +60,6 @@ const Page: NextPage = () => {
       </Header>
       <div className={styles.title}>
         <div className={styles.title_button}>
-          {/* <Button size="m" shape="circle" onClick={toggleSelectAll}>
-            {selectedNumbers.length === 31 ? "すべて選択解除" : "すべて選択"}
-          </Button>
-        </div> */}
           <input
             className={styles.search_box}
             type="text"
