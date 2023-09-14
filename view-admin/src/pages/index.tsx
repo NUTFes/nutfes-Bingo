@@ -18,8 +18,7 @@ import {
   deleteBingoNumber,
   subscriptionBingoNumber,
 } from "@/utils/api_methods";
-import { atom, useRecoilState } from "recoil";
-import { recoilPersist } from "recoil-persist";
+import { useRecoilState } from "recoil";
 import { bingoNumbersState } from "./atom";
 
 interface formData {
