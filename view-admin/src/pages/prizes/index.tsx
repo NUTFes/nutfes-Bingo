@@ -9,10 +9,14 @@ import {
   subscriptionBingoPrize,
   getBingoPrize,
 } from "@/utils/api_methods";
+import { bingoPrizesState } from "../atom";
+import { useRecoilState } from "recoil";
 
 const Page: NextPage = () => {
   const router = useRouter();
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // getしてきた画像
+  // const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // getしてきた画像
+
+  const [bingoPrize, setBingoPrize] = useRecoilState(bingoPrizesState);
 
   useEffect(() => {
     async function fetchBingoPrizes() {
