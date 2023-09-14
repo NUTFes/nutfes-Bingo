@@ -18,6 +18,9 @@ import {
   deleteBingoNumber,
   subscriptionBingoNumber,
 } from "@/utils/api_methods";
+import { atom, useRecoilState } from "recoil";
+import { recoilPersist } from "recoil-persist";
+import { bingoNumbersState } from "./atom";
 
 interface formData {
   submitNumber: number | null;
@@ -28,9 +31,11 @@ interface formData {
 const Page: NextPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
-  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
+  // const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
   const [isOpened, setIsOpened] = useState<boolean>(false);
   const isopenBool = () => setIsOpened(!isOpened);
+  
+  const [bingoNumbers, setBingoNumbers] = useRecoilState(bingoNumbersState)
 
   const {
     register,
