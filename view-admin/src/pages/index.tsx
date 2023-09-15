@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { useForm, SubmitHandler } from "react-hook-form";
 import styles from "@/styles/Home.module.css";
 import type { NextPage } from "next";
-import Link from "next/link";
 import {
   Header,
   BingoResult,
@@ -98,12 +97,12 @@ const Page: NextPage = () => {
         <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} />
         <Header user="Admin">
           <div className={styles.main}>
-            <Button size="m" shape="circle" onClick={() => ""}>
-              <div className={styles.buttonContents}>
-                <Link className={styles.link} href="/postPrizes">
-                  景品追加
-                </Link>
-              </div>
+            <Button
+              size="m"
+              shape="circle"
+              onClick={() => router.push("/postPrizes")}
+            >
+              <p>景品追加</p>
             </Button>
             <Button
               size="m"
