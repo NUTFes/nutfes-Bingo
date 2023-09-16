@@ -27,7 +27,7 @@ const Page: NextPage = () => {
     }
 
     fetchBingoNumbers();
-  }, [bingoNumbers]);
+  }, [bingoNumbers, setBingoNumbers]);
 
   return (
     <div className={styles.container}>
