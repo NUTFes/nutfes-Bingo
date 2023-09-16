@@ -54,7 +54,7 @@ export async function subscriptionBingoNumber(): Promise<BingoNumber[]> {
   try {
     const response = await client.subscribe({
       query: gql`
-        subscription MySubscription {
+        subscription AdminNumberSubscription {
           bingo_number {
             data
             id
@@ -143,7 +143,7 @@ export async function subscriptionBingoPrize(): Promise<BingoPrize[]> {
   try {
     const response = await client.subscribe({
       query: gql`
-        subscription MySubscription {
+        subscription AdminExistingSubscription {
           bingo_prize {
             existing
             id
