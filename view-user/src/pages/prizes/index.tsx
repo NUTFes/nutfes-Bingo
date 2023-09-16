@@ -4,34 +4,53 @@ import Image from "next/image";
 import { Header, Button, PrizeResult } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import { BingoPrize,
+import {
+  BingoPrize,
   subscriptionBingoPrize,
   getBingoPrize,
- } from "@/utils/api_methods";
+} from "@/utils/api_methods";
+import { bingoPrizesState } from "../atom";
+import { useRecoilState } from "recoil";
 
 const Page: NextPage = () => {
   const router = useRouter();
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // get
+  const [bingoPrize, setBingoPrize] = useRecoilState(bingoPrizesState);
 
   useEffect(() => {
-    async function fetchBingoPrizes() {
+    async function getPrizesImage() {
       try {
         const getData: BingoPrize[] = await getBingoPrize();
         if (getData) {
           setBingoPrize(getData);
+          console.log("getPrizeImageした");
         }
-
-        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
-        setBingoPrize((BingoPrize) => {
-          return [...BingoPrize];
-        })
       } catch (error) {
         console.error("データの取得中にエラーが発生しました:", error);
       }
     }
+    getPrizesImage();
+  }, []);
 
-    fetchBingoPrizes();
-  }, [bingoPrize]);
+  useEffect(() => {
+    async function subscriptionBingoExisting() {
+      try {
+        // サブスクリプションを使用してデータを取得
+        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
+
+        setBingoPrize((oldPrize) => {
+          // existing プロパティを subscriptionData の値で上書き
+          const updatedPrizes = oldPrize.map((prize) => {
+            const matchingSubscriptionPrize = subscriptionData.find((subscriptionPrize) => subscriptionPrize.id === prize.id);  // oldPrizeとsubscriptionDataのidが一致するものを探して上書きする
+            return matchingSubscriptionPrize ? { ...prize, existing: matchingSubscriptionPrize.existing } : prize;
+          });
+          return updatedPrizes;
+        });
+      } catch (error) {
+        console.error("データの取得中にエラーが発生しました:", error);
+      }
+    }
+    subscriptionBingoExisting();
+  }, [bingoPrize, setBingoPrize]);
 
   return (
     <div className={styles.container}>

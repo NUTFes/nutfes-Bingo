@@ -14,29 +14,43 @@ import { useRecoilState } from "recoil";
 
 const Page: NextPage = () => {
   const router = useRouter();
-  // const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // getしてきた画像
-
   const [bingoPrize, setBingoPrize] = useRecoilState(bingoPrizesState);
 
   useEffect(() => {
-    async function fetchBingoPrizes() {
+    async function getPrizesImage() {
       try {
         const getData: BingoPrize[] = await getBingoPrize();
         if (getData) {
           setBingoPrize(getData);
+          console.log("getPrizeImageした");
         }
+      } catch (error) {
+        console.error("データの取得中にエラーが発生しました:", error);
+      }
+    }
+    getPrizesImage();
+  }, []);
 
+  useEffect(() => {
+    async function subscriptionBingoExisting() {
+      try {
+        // サブスクリプションを使用してデータを取得
         const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
-        setBingoPrize((BingoPrize) => {
-          return [...BingoPrize];
+
+        setBingoPrize((oldPrize) => {
+          // existing プロパティを subscriptionData の値で上書き
+          const updatedPrizes = oldPrize.map((prize) => {
+            const matchingSubscriptionPrize = subscriptionData.find((subscriptionPrize) => subscriptionPrize.id === prize.id);  // oldPrizeとsubscriptionDataのidが一致するものを探して上書きする
+            return matchingSubscriptionPrize ? { ...prize, existing: matchingSubscriptionPrize.existing } : prize;
+          });
+          return updatedPrizes;
         });
       } catch (error) {
         console.error("データの取得中にエラーが発生しました:", error);
       }
     }
-
-    fetchBingoPrizes();
-  }, [bingoPrize]);
+    subscriptionBingoExisting();
+  }, [bingoPrize, setBingoPrize]);
 
   // 景品の文字検索機能 divタグの要素を取得しています。
   const [searchText, setSearchText] = useState("");
