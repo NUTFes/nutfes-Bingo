@@ -29,7 +29,7 @@ const Page: NextPage = () => {
       }
     }
     getPrizesImage();
-  }, []);
+  }, []); // このuseEffectはページ読み込み時に1度だけ実行したい
 
   useEffect(() => {
     async function subscriptionBingoExisting() {
