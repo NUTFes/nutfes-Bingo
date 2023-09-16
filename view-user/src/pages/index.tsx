@@ -5,12 +5,14 @@ import Image from "next/image";
 import styles from "@/styles/Home.module.css";
 import { Header, Modal, BingoResult, Button } from "@/components/common";
 import { useRouter } from "next/router";
+import { bingoNumbersState } from "./atom";
+import { useRecoilState } from "recoil";
 
 const Page: NextPage = () => {
   const [isOpened, setIsOpened] = useState(false);
   const router = useRouter();
   const isopenBool = () => setIsOpened(!isOpened);
-  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
+  const [bingoNumbers, setBingoNumbers] = useRecoilState(bingoNumbersState);
 
   useEffect(() => {
     async function fetchBingoNumbers() {
