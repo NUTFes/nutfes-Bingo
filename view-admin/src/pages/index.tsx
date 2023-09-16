@@ -72,7 +72,7 @@ const Page: NextPage = () => {
       }
     }
     fetchBingoNumbers();
-  }, [bingoNumbers]);
+  }, [bingoNumbers, setBingoNumbers]);
 
   async function createMethod(data: number | null) {
     if (data != null) {
