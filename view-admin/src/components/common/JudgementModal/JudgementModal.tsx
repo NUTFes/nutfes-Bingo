@@ -1,23 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styles from "./JudgementModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
-import { BingoNumber, subscriptionBingoNumber } from "@/utils/api_methods";
+import { BingoNumber } from "@/utils/api_methods";
 
 interface ModalProps {
   isOpened: boolean;
   canCloseByClickingBackground?: boolean;
   setIsOpened: (isOpened: boolean) => void;
+  bingoNumbers: BingoNumber[];
 }
 
 const Modal = ({
   isOpened,
   canCloseByClickingBackground = true,
   setIsOpened,
+  bingoNumbers,
 }: ModalProps) => {
   const [inputValues, setInputValues] = useState<number[]>([
     100, 100, 100, 100, 100,
   ]);
-  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
   const [isIncluded, setIsIncluded] = useState<boolean>(false);
   const [isJudgementClicked, setIsJudgementClicked] = useState<boolean>(false);
 
@@ -42,6 +43,8 @@ const Modal = ({
     for (let i = 0; i < inputElementArray.length; i++) {
       inputElementArray[i].value = "";
     }
+    setInputValues(inputValues.map(() => 100));
+    console.log(inputValues)
     setIsIncluded(false);
     setIsJudgementClicked(false);
   };
@@ -57,20 +60,6 @@ const Modal = ({
     }
     setIsJudgementClicked(true);
   };
-
-  useEffect(() => {
-    async function fetchBingoNumbers() {
-      try {
-        const response: BingoNumber[] = await subscriptionBingoNumber();
-        if (response) {
-          setBingoNumbers(response);
-        }
-      } catch (error) {
-        console.error("データの取得中にエラーが発生しました:", error);
-      }
-    }
-    fetchBingoNumbers();
-  }, [bingoNumbers]);
 
   const BingoJudgement = () => (
     <div className={styles.jugementResults}>

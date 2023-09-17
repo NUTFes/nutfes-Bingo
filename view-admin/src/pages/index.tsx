@@ -94,7 +94,7 @@ const Page: NextPage = () => {
   if (session) {
     return (
       <div className={styles.container}>
-        <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} />
+        <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} bingoNumbers={bingoNumbers}/>
         <Header user="Admin">
           <div className={styles.main}>
             <Button
