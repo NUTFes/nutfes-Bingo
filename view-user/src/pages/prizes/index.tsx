@@ -4,33 +4,50 @@ import Image from "next/image";
 import { Header, Button, PrizeResult } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import { BingoPrize,
+import {
+  BingoPrize,
   subscriptionBingoPrize,
   getBingoPrize,
- } from "@/utils/api_methods";
+} from "@/utils/api_methods";
 
 const Page: NextPage = () => {
   const router = useRouter();
   const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // get
 
   useEffect(() => {
-    async function fetchBingoPrizes() {
+    async function getPrizeImage() {
       try {
         const getData: BingoPrize[] = await getBingoPrize();
         if (getData) {
           setBingoPrize(getData);
+          console.log("getPrize");
         }
-
-        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
-        setBingoPrize((BingoPrize) => {
-          return [...BingoPrize];
-        })
       } catch (error) {
-        console.error("データの取得中にエラーが発生しました:", error);
+        console.log("データの取得中にえらーが発生しました:", error);
       }
     }
+    getPrizeImage();
+  }, []);
 
-    fetchBingoPrizes();
+  useEffect(() => {
+    async function subscriptionBingoExisting() {
+      try {
+        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
+        setBingoPrize((oldPrize) => {
+          // existing プロパティを subscriptionData で更新
+          const updatedPrizes = oldPrize.map((prize) => {
+            const matchingSubscriptionPrize = subscriptionData.find(
+              (subscriptionPrize) => subscriptionPrize.id === prize.id
+            ); // oldPrizeとsubscriptionDataのidが一致するものを探して上書き
+            return matchingSubscriptionPrize
+              ? { ...prize, existing: matchingSubscriptionPrize.existing }
+              : prize;
+          });
+          return updatedPrizes;
+        });
+      } catch (error) {}
+    }
+    subscriptionBingoExisting();
   }, [bingoPrize]);
 
   return (
