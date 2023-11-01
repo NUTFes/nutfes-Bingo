@@ -18,35 +18,12 @@
   object-fit: cover;
   padding: 40px;
   overflow: hidden;
-  background-color: #c67979;
-  box-shadow: 0 0 0 3.56rem #d9d9d9;
+  backdrop-filter: blur(1rem);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 5px;
   animation: zoomIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) 1 forwards;
   will-change: transform, opacity;
 }
-
-.number {
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
-    align-items: center;
-    color: #d9d9d9;
-    font-size: clamp(2rem, 2vw, 3rem);
-    font-weight: 700;
-    font-feature-settings: "palt" 1;
-  }
-
-  .number p {
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
-    align-items: center;
-    color: #d9d9d9;
-    font-size: clamp(0.5rem, 50vw,16rem);
-    font-weight: 700;
-    font-feature-settings: "palt" 1;
-    line-height: 1;
-  }
 
 @keyframes zoomIn {
   0% {
@@ -64,7 +41,7 @@
   top: 9px;
   right: 10px;
   padding: 0;
-  font-size: 2.7rem;
+  font-size: 1.4rem;
   line-height: 1;
   color: #d9d9d9;
   cursor: pointer;

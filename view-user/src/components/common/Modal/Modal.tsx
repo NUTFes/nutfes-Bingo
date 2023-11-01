@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import styles from "./Modal.module.css";
-import { RxCrossCircled } from "react-icons/rx"
+import { RxCross1 } from "react-icons/rx"
 
 interface ModalProps {
   children: ReactNode;
@@ -26,9 +26,9 @@ const Modal = ({
         <div className={styles.wrapper}>
           <div className={styles.content}>
             <button className={styles.btnClose} onClick={closeModal}>
-              <RxCrossCircled />
+              <RxCross1 />
             </button>
-            <p className={styles.number}>{children}</p>
+            {children}
           </div>
           {canCloseByClickingBackground && (
             <div className={styles.background} onClick={closeModal} />
