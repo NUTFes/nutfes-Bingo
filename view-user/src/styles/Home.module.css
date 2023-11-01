@@ -10,6 +10,18 @@
   padding: 0.5rem 1rem;
 }
 
+.languageBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color:#D95B7F;
+  font-size: clamp(2rem, calc(100vw / 20 ) , 3rem);
+}
+
+.languageBlock p {
+  background-color: #07033E;
+}
+
 .btnOpen {
   padding: 0.9em 2em;
   border: 0.2rem solid #fff;

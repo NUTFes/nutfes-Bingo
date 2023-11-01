@@ -11,10 +11,33 @@ import { en } from "./locales/en";
 const Page: NextPage = () => {
   const { locale } = useRouter()
   const t = locale === "ja" ? ja : en;
-  const [isOpened, setIsOpened] = useState(false);
+  const [isOpened, setIsOpened] = useState(true);
   const router = useRouter();
   const isopenBool = () => setIsOpened(!isOpened);
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
+
+  useEffect(() => {
+    const storedIsOpened = localStorage.getItem("isOpened");
+    if (storedIsOpened !== null) {
+      setIsOpened(JSON.parse(storedIsOpened));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("isOpened", JSON.stringify(isOpened));
+  }, [isOpened]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.removeItem("isOpened");
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchBingoNumbers() {
@@ -34,8 +57,16 @@ const Page: NextPage = () => {
   return (
     <div className={styles.container}>
       <Modal isOpened={isOpened} setisOpened={setIsOpened}>
-        抽選された番号
-        <p></p>
+        <div className={styles.languageBlock}>
+          <p onClick={() => {
+            router.push("/", "/", {locale: "ja"})
+            setIsOpened(false);
+          }}>日本語</p>
+          <p onClick={() => {
+            router.push("/", "/", {locale: "en"})
+            setIsOpened(false);
+            }}>English</p>
+        </div>
       </Modal>
       <Header user="">
         <div className={styles.main}>
