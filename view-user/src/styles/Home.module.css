@@ -15,7 +15,7 @@
   flex-direction: column;
   gap: 0.5rem;
   color:#D95B7F;
-  font-size: clamp(2rem, calc(100vw / 20 ) , 3rem);
+  font-size: clamp(3rem, calc(100vw / 20 ) , 5rem);
 }
 
 .languageBlock p {
