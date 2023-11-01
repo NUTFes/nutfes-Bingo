@@ -5,8 +5,12 @@ import Image from "next/image";
 import styles from "@/styles/Home.module.css";
 import { Header, Modal, BingoResult, Button } from "@/components/common";
 import { useRouter } from "next/router";
+import { ja } from "./locales/ja";
+import { en } from "./locales/en";
 
 const Page: NextPage = () => {
+  const { locale } = useRouter()
+  const t = locale === "ja" ? ja : en;
   const [isOpened, setIsOpened] = useState(false);
   const router = useRouter();
   const isopenBool = () => setIsOpened(!isOpened);
@@ -43,7 +47,7 @@ const Page: NextPage = () => {
                 width={19}
                 height={19}
               />
-              Prize
+              {t.PRIZE_BUTTON}
             </div>
           </Button>
           <button type="button" onClick={isopenBool} className={styles.btnOpen}>

@@ -3,12 +3,17 @@ import { ReactNode, useState } from "react";
 import styles from "./PrizeResult.module.css";
 import { BingoPrize, updatePrizeExisting } from "@/utils/api_methods";
 import Image from "next/image";
+import { useRouter } from 'next/router'
+import { ja } from "@/pages/locales/ja";
+import { en } from "@/pages/locales/en";
 
 interface PrizeResultProps {
   prizeResult: BingoPrize[];
 }
 
 export const PrizeResult = (props: PrizeResultProps) => {
+  const { locale } = useRouter()
+  const t = locale === "ja" ? ja : en;
   const [isImageVisible, setIsImageVisible] = useState(true);
   const imageVisibility = () => {
     setIsImageVisible(false);
@@ -18,7 +23,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
       <div className={styles.container}>
         <div className={styles.frame_title}>
           <Image src="/GiftBox.svg" alt="GiftBox" width={19} height={19} />
-          Prize List
+          {t.SUB_TITLE_PRIZE}
         </div>
         <div id="loading" className={isImageVisible ? styles.visible : styles.hidden}></div>
         <div className={styles.card_frame}>
@@ -50,7 +55,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
                 </div>
                 {prizeResult.existing && (
                   <div className={styles.overlay}>
-                    <p>当選！</p>
+                    <p>{t.WINNING_OVERRAY}</p>
                   </div>
                 )}
               </div>

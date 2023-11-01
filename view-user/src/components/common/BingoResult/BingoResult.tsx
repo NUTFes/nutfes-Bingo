@@ -4,12 +4,17 @@ import styles from "./BingoResult.module.css";
 import { BingoIcon, Button } from "@/components/common";
 import { BingoNumber } from "@/utils/api_methods";
 import { useState } from "react";
+import { useRouter } from 'next/router'
+import { ja } from "@/pages/locales/ja";
+import { en } from "@/pages/locales/en";
 
 interface BingoResultProps {
   bingoResultNumber: BingoNumber[];
 }
 
 export const BingoResult = (props: BingoResultProps) => {
+  const { locale } = useRouter()
+  const t = locale === "ja" ? ja : en;
   const [resultChange, setResultChange] = useState<boolean>(true);
   const copiedArray = [...props.bingoResultNumber];
   const sortCopiedArray = [...props.bingoResultNumber];
@@ -65,14 +70,14 @@ export const BingoResult = (props: BingoResultProps) => {
       <div className={styles.container}>
         <div className={styles.frame_title}>
           <Image src="/BingoCard.svg" alt="BingoCard" width={20} height={20} />
-          <p>BINGO Number</p>
+          <p>{t.SUB_TITLE_NUMBER}</p>
           <div className={styles.frame_title_button}>
             <Button
               size="xm"
               shape="square"
               onClick={() => setResultChange(!resultChange)}
             >
-              {resultChange ? "番号順": "抽選順"}
+              {resultChange ? <p>{t.NUMBER_ORDER_BUTTON}</p> : <p>{t.LOTTERY_ORDER_BUTTON}</p>}
             </Button>
           </div>
         </div>
