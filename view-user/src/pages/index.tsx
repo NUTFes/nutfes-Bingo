@@ -7,6 +7,7 @@ import { Header, Modal, BingoResult, Button } from "@/components/common";
 import { useRouter } from "next/router";
 import { ja } from "./locales/ja";
 import { en } from "./locales/en";
+import { MdTranslate } from "react-icons/md";
 
 const Page: NextPage = () => {
   const { locale } = useRouter()
@@ -96,6 +97,11 @@ const Page: NextPage = () => {
         </div>
       </Header>
       <BingoResult bingoResultNumber={bingoNumbers} />
+      <Button size="null" shape="null" onClick={() => setIsOpened(true)}>
+        <div className={styles.iconButton}>
+          <MdTranslate size={35} />
+        </div>
+      </Button>
     </div>
   );
 };
