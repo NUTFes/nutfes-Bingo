@@ -58,14 +58,26 @@ const Page: NextPage = () => {
     <div className={styles.container}>
       <Modal isOpened={isOpened} setisOpened={setIsOpened}>
         <div className={styles.languageBlock}>
-          <p onClick={() => {
-            router.push("/", "/", {locale: "ja"})
-            setIsOpened(false);
-          }}>日本語</p>
-          <p onClick={() => {
-            router.push("/", "/", {locale: "en"})
-            setIsOpened(false);
-            }}>English</p>
+            <div className={styles.language}>
+              <p
+                onClick={() => {
+                  router.push('/', '/', { locale: 'ja' });
+                  setIsOpened(false);
+                }}
+              >
+                日本語
+              </p>
+            </div>
+            <div className={styles.language}>
+              <p
+                onClick={() => {
+                  router.push('/', '/', { locale: 'en' });
+                  setIsOpened(false);
+                }}
+              >
+                English
+              </p>
+            </div>
         </div>
       </Modal>
       <Header user="">
