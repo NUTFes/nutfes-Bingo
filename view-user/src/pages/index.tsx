@@ -81,9 +81,6 @@ const Page: NextPage = () => {
               {t.PRIZE_BUTTON}
             </div>
           </Button>
-          <button type="button" onClick={isopenBool} className={styles.btnOpen}>
-            最新の番号を表示
-          </button>
         </div>
       </Header>
       <BingoResult bingoResultNumber={bingoNumbers} />
