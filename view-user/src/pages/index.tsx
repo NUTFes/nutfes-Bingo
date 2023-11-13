@@ -16,6 +16,7 @@ const Page: NextPage = () => {
   const router = useRouter();
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
 
+  // 最初のrendrer時だけ実行してモーダルの再表示を防止する。
   useEffect(() => {
     const storedIsOpened = localStorage.getItem("isOpened");
     if (storedIsOpened !== null) {
@@ -23,10 +24,13 @@ const Page: NextPage = () => {
     }
   }, []);
 
+  // isOpenedの状態をもとにlocalStorageを更新する。
+  // localStorageにbooleanが保存できないため、json形式に変換して保存する。
   useEffect(() => {
     localStorage.setItem("isOpened", JSON.stringify(isOpened));
   }, [isOpened]);
 
+  // ページのリロード前にlocalStorageを削除する。
   useEffect(() => {
     const handleBeforeUnload = () => {
       localStorage.removeItem("isOpened");
