@@ -14,7 +14,6 @@ const Page: NextPage = () => {
   const t = locale === "ja" ? ja : en;
   const [isOpened, setIsOpened] = useState(true);
   const router = useRouter();
-  const isopenBool = () => setIsOpened(!isOpened);
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
 
   useEffect(() => {
