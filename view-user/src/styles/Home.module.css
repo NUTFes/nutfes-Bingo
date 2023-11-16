@@ -10,23 +10,24 @@
   padding: 0.5rem 1rem;
 }
 
-.btnOpen {
-  padding: 0.9em 2em;
-  border: 0.2rem solid #fff;
-  border-radius: 0.5rem;
-  box-shadow: 0 0 0 0.2rem #333333;
-  background-color: #333333;
-  color: #fff;
-  font-weight: 600;
-  font-size: 1rem;
-  margin-right: 1rem;
-  white-space:nowrap;
+.languageBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color:#D95B7F;
+  font-size: clamp(2.5rem, calc(100vw / 20 ) , 5rem);
 }
 
-.btnOpen:hover {
-  background-color: whitesmoke;
-  color: var(--primary);
-  transition: 0.25s;
+.language {
+  display: flex;
+  justify-content: center;
+  background-color: #07033E;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+}
+
+.languageBlock p {
+  background-color: #07033E;
 }
 
 .main {
@@ -47,6 +48,24 @@
   align-items: center;
   justify-content: center;
   gap: 0.3rem;
+}
+
+.iconButton {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  color: #D95B7F;
+  border: solid 0.13rem #ffffffd5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: rgba(18, 36, 99, 1);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  z-index: 1;
 }
 
 @media screen and (max-width: 900px) {

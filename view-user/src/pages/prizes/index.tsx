@@ -9,8 +9,12 @@ import {
   subscriptionBingoPrize,
   getBingoPrize,
 } from "@/utils/api_methods";
+import { ja } from "../locales/ja";
+import { en } from "../locales/en";
 
 const Page: NextPage = () => {
+  const { locale } = useRouter()
+  const t = locale === "ja" ? ja : en;
   const router = useRouter();
   const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // get
 
@@ -62,7 +66,7 @@ const Page: NextPage = () => {
                 width={25}
                 height={25}
               />
-              Number
+              {t.NUMBER_BUTTON}
             </div>
           </Button>
         </div>

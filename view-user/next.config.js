@@ -11,4 +11,8 @@ module.exports = {
     WS_API_URL: process.env.WS_API_URL,
     X_HASURA_ADMIN_SECRET: process.env.HASURA_GRAPHQL_ADMIN_SECRET,
   },
+  i18n: {
+    locales: ["ja", "en"],
+    defaultLocale: "ja",
+  },
 };
