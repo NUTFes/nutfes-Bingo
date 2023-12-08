@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styles from "./JudgementModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
 import { BingoNumber } from "@/utils/api_methods";
+import Select from "react-select";
 
 interface ModalProps {
   isOpened: boolean;
@@ -60,6 +61,10 @@ const Modal = ({
     }
     setIsJudgementClicked(true);
   };
+ 
+  const BingoNumberdatas = bingoNumbers.map(BingoNumber => BingoNumber.data);
+
+  const slectedbingoNumbers = BingoNumberdatas.map(number => ({ value: number, label: number }));
 
   const BingoJudgement = () => (
     <div className={styles.jugementResults}>
@@ -78,31 +83,11 @@ const Modal = ({
             <div className={styles.title}>ビンゴ正誤判定</div>
             <div className={styles.contents}>
               <div className={styles.inputForm}>
-                <input
-                  type="number"
-                  className={styles.inputNum}
-                  onChange={(e) => handleInputChange(0, e)}
+                <Select
+                  isMulti
+                  options={slectedbingoNumbers}
                 />
-                <input
-                  type="number"
-                  className={styles.inputNum}
-                  onChange={(e) => handleInputChange(1, e)}
-                />
-                <input
-                  type="number"
-                  className={styles.inputNum}
-                  onChange={(e) => handleInputChange(2, e)}
-                />
-                <input
-                  type="number"
-                  className={styles.inputNum}
-                  onChange={(e) => handleInputChange(3, e)}
-                />
-                <input
-                  type="number"
-                  className={styles.inputNum}
-                  onChange={(e) => handleInputChange(4, e)}
-                />
+                
               </div>
               <div className={styles.explanation}>
                 <p>5つの番号を入力してください</p>
