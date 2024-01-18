@@ -54,7 +54,7 @@ const Page: NextPage = () => {
   // 景品の文字検索機能 divタグの要素を取得しています。
   const [searchText, setSearchText] = useState("");
   const handleSearch = () => {
-   const elements = Array.from(document.querySelectorAll("div"));
+   const elements = Array.from(document.querySelectorAll("#card_content"));
    const instance = new Mark(document.body);
    instance.unmark();
    elements.forEach((element) => {
