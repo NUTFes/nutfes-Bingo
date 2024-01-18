@@ -51,23 +51,30 @@ const Page: NextPage = () => {
     subscriptionBingoExisting();
   }, [bingoPrize]);
 
-  // 景品の文字検索機能 divタグの要素を取得しています。
-  const [searchText, setSearchText] = useState("");
-  const handleSearch = () => {
-   const elements = Array.from(document.querySelectorAll("#card_content"));
-   const instance = new Mark(document.body);
-   instance.unmark();
-   elements.forEach((element) => {
-     if (
-       element &&
-       element.textContent &&
-       element.textContent.includes(searchText)
-     ) {
-       element.scrollIntoView({ behavior: "smooth", block: "center" });
-       instance.mark(searchText);
-     }
-   });
-  };
+// 景品の文字検索機能 divタグの要素を取得しています。
+const [searchText, setSearchText] = useState("");
+const handleSearch = () => {
+  const elements = Array.from(document.querySelectorAll("#card_content"));
+
+  // #card_content要素が存在するか確認
+  const cardContentElement = document.querySelector("#card_content");
+  if (cardContentElement) {
+    const instance = new Mark(cardContentElement);
+    instance.unmark();
+    elements.forEach((element) => {
+      if (
+        element &&
+        element.textContent &&
+        element.textContent.includes(searchText)
+      ) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        instance.mark(searchText);
+      }
+    });
+  }
+};
+
+
 
   return (
     <div className={styles.container}>
