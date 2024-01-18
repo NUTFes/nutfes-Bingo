@@ -43,6 +43,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
                 <div
                   style={{ position: "relative" }}
                   className={styles.card_content}
+                  id="card_content"
                 ><p>{prizeResult.name}</p>
                 </div>
                 {prizeResult.existing && (
