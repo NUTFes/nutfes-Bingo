@@ -82,6 +82,11 @@ const Page: NextPage = () => {
             placeholder="検索..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
           />
           <button className={styles.search_button} onClick={handleSearch}>
             検索
