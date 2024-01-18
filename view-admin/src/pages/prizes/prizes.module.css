@@ -228,3 +228,7 @@
   vertical-align: middle;
   margin-right: 2rem;
 }
+
+.highlight {
+  background-color: yellow;
+ }

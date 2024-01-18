@@ -9,6 +9,7 @@ import {
   subscriptionBingoPrize,
   getBingoPrize,
 } from "@/utils/api_methods";
+import  Mark  from 'mark.js';
 
 const Page: NextPage = () => {
   const router = useRouter();
@@ -53,16 +54,19 @@ const Page: NextPage = () => {
   // 景品の文字検索機能 divタグの要素を取得しています。
   const [searchText, setSearchText] = useState("");
   const handleSearch = () => {
-    const elements = Array.from(document.querySelectorAll("div"));
-    elements.forEach((element) => {
-      if (
-        element &&
-        element.textContent &&
-        element.textContent.includes(searchText)
-      ) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    });
+   const elements = Array.from(document.querySelectorAll("div"));
+   const instance = new Mark(document.body);
+   instance.unmark();
+   elements.forEach((element) => {
+     if (
+       element &&
+       element.textContent &&
+       element.textContent.includes(searchText)
+     ) {
+       element.scrollIntoView({ behavior: "smooth", block: "center" });
+       instance.mark(searchText);
+     }
+   });
   };
 
   return (
