@@ -101,7 +101,7 @@ const Page: NextPage = () => {
           </button>
         </div>
       </div>
-      <PrizeResult prizeResult={searchText === "" ? bingoPrize : searchResults} />
+      <PrizeResult prizeResult={searchText !== "" && searchResults.length > 0 ? searchResults : bingoPrize} />
     </div>
   );
 };
