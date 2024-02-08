@@ -23,7 +23,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
           {[...props.prizeResult]
             .sort((a, b) => a.id - b.id)
             .map((prizeResult) => (
-              <div className={styles.card} key={prizeResult.id}>
+              <div className={styles.card} key={prizeResult.id} id={`prize-${prizeResult.id}`}>
                 <div
                   style={{
                     position: "relative",
@@ -40,11 +40,8 @@ export const PrizeResult = (props: PrizeResultProps) => {
                     onLoadingComplete={imageVisibility}
                   />
                 </div>
-                <div
-                  style={{ position: "relative" }}
-                  className={styles.card_content}
-                >
-                  {prizeResult.name}
+                <div className={styles.card_content}>
+                  <p>{prizeResult.name}</p>
                 </div>
                 {prizeResult.existing && (
                   <div className={styles.overlay}>
