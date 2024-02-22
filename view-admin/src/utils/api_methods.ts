@@ -1,19 +1,21 @@
 import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
-import { WebSocketLink } from "@apollo/client/link/ws";
+import { createClient } from "graphql-ws";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 
-const wsLink = new WebSocketLink({
-  uri: process.env.WS_API_URL + "/v1/graphql",
-  options: {
-    reconnect: true,
-    connectionParams: {
-      headers: {
-        "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET
-      }
-    }
+// ヘッダーにx-hasura-admin-secretを設定する
+const wsClient = createClient({
+  url: process.env.WS_API_URL + "/v1/graphql",
+  connectionParams: {
+    headers: {
+      "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET,
+    },
   },
-  reconnect: true,
 });
 
+// ヘッダーを含んだwebsocketリンクを作成
+const wsLink = new GraphQLWsLink(wsClient);
+
+// apollo clientを作成
 const client = new ApolloClient({
   link: wsLink,
   cache: new InMemoryCache(),
@@ -77,9 +79,7 @@ export async function subscriptionBingoNumber(): Promise<BingoNumber[]> {
   }
 }
 
-export async function createBingoNumber(
-  data: number
-): Promise<BingoNumber[]> {
+export async function createBingoNumber(data: number): Promise<BingoNumber[]> {
   try {
     const response = await client.mutate({
       mutation: gql`
@@ -98,9 +98,7 @@ export async function createBingoNumber(
   }
 }
 
-export async function deleteBingoNumber(
-  data: number
-): Promise<BingoNumber[]> {
+export async function deleteBingoNumber(data: number): Promise<BingoNumber[]> {
   try {
     const response = await client.mutate({
       mutation: gql`
@@ -118,14 +116,12 @@ export async function deleteBingoNumber(
     return [];
   }
 }
-export async function createBingoPrize(
-  image: string
-): Promise<string> {
+export async function createBingoPrize(image: string): Promise<string> {
   try {
     const response = await client.mutate({
       mutation: gql`
         mutation MyMutation($image: String!) {
-          insert_bingo_prize_one(object: {image: $image}) {
+          insert_bingo_prize_one(object: { image: $image }) {
             id
           }
         }
@@ -135,7 +131,7 @@ export async function createBingoPrize(
     return response.data.insert_bingo_prize_one;
   } catch (error) {
     console.error("Error creating bingo_prize image:", error);
-    return ""
+    return "";
   }
 }
 
@@ -153,16 +149,16 @@ export async function subscriptionBingoPrize(): Promise<BingoPrize[]> {
     });
     return new Promise<BingoPrize[]>((resolve, reject) => {
       response.subscribe({
-        next: response => resolve(response.data.bingo_prize),
-        error: error => {
-          console.error('Subscription error:', error);
+        next: (response) => resolve(response.data.bingo_prize),
+        error: (error) => {
+          console.error("Subscription error:", error);
           reject(error);
         },
       });
     });
   } catch (error) {
-    console.error('Error fetching data:', error);
-    return[];
+    console.error("Error fetching data:", error);
+    return [];
   }
 }
 
@@ -184,41 +180,47 @@ export async function getBingoPrize(): Promise<BingoPrize[]> {
     return response.data.bingo_prize;
   } catch (error) {
     console.error("Error fetching data:", error);
-    return []
+    return [];
   }
 }
 
 export async function postBingoPrize(
   existing: boolean,
   image: string,
-  name: string, 
+  name: string,
 ): Promise<BingoPrize[]> {
   try {
     const response = await client.mutate({
       mutation: gql`
-      mutation MyMutation($existing: Boolean!, $image: String!, $name: String!) {
-        insert_bingo_prize(objects: {existing: $existing, image: $image, name: $name}) {
-          returning {
-            existing
-            id
-            image
-            name
+        mutation MyMutation(
+          $existing: Boolean!
+          $image: String!
+          $name: String!
+        ) {
+          insert_bingo_prize(
+            objects: { existing: $existing, image: $image, name: $name }
+          ) {
+            returning {
+              existing
+              id
+              image
+              name
+            }
           }
         }
-      }
-    `,
-    variables: { existing,image,name },
+      `,
+      variables: { existing, image, name },
     });
     return response.data.insert_bingo_prize;
   } catch (error) {
     console.error("Error creating bingo prize:", error);
-    return []
+    return [];
   }
 }
 
 export async function updatePrizeExisting(
   id: number,
-  newExistingValue: boolean
+  newExistingValue: boolean,
 ): Promise<BingoPrize | null> {
   try {
     const response = await client.mutate({
