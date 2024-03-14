@@ -3,54 +3,54 @@ import styles from "./prizes.module.css";
 import { Header, Button, PrizeResult } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect, useRef } from "react";
+import { useQuery, useSubscription } from "@apollo/client";
 import {
-  BingoPrize,
-  subscriptionBingoPrize,
-  getBingoPrize,
-} from "@/utils/api_methods";
+  bingoPrizeGet as BPG,
+  bingoPrizeSubscriptionExisting as BPSE,
+  bingoPrizeUpdateExisiting as BPUE,
+} from "../api/schema";
+
+export interface BingoPrize {
+  id: number;
+  name: string;
+  existing: boolean;
+  image: string;
+}
 
 const Page: NextPage = () => {
   const router = useRouter();
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // getしてきた画像
+  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState<BingoPrize[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  const { data: query } = useQuery(BPG);
+  const { data: subscription } = useSubscription(BPSE);
+
+
+  //getは初回のみ
   useEffect(() => {
-    async function getPrizeImage() {
-      try {
-        const getData: BingoPrize[] = await getBingoPrize();
-        if (getData) {
-          setBingoPrize(getData);
-          console.log("getPrize");
-        }
-      } catch (error) {
-        console.error("データの取得中にエラーが発生しました:", error);
-      }
+    if (query) {
+      setBingoPrize(query.bingo_prize);
     }
-    getPrizeImage();
   }, []);
 
+  //これはトグルで発火させてる
   useEffect(() => {
-    async function subscriptionBingoExisting() {
-      try {
-        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
-        setBingoPrize((oldPrize) => {
-          // existing プロパティを subscriptionData で更新
-          const updatedPrizes = oldPrize.map((prize) => {
-            const matchingSubscriptionPrize = subscriptionData.find(
-              (subscriptionPrize) => subscriptionPrize.id === prize.id
-            ); // oldPrizeとsubscriptionDataのidが一致するものを探して上書き
-            return matchingSubscriptionPrize
-              ? { ...prize, existing: matchingSubscriptionPrize.existing }
-              : prize;
-          });
-          return updatedPrizes;
-        });
-      } catch (error) {}
+    if (subscription && subscription.existing) {
+      // console.log(bingoPrize);
+      const existingData = subscription.existing;
+      // bingoPrizeのexistingプロパティの値を更新
+      setBingoPrize((Prizes) =>
+        Prizes.map((prize) => ({
+          ...prize, // 他のプロパティは変更しない
+          existing:
+            existingData.find((item: BingoPrize) => item.id === prize.id)
+              ?.existing || prize.existing,
+        }))
+      );
     }
-    subscriptionBingoExisting();
-  }, [bingoPrize]);
+  }, [subscription]);
 
   useEffect(() => {
     if (searchText === "") {
@@ -67,8 +67,13 @@ const Page: NextPage = () => {
   const handleSearch = () => {
     const searchInput = searchRef.current;
     if (searchInput && searchResults.length > 0) {
-      const firstResultElement = document.getElementById(`prize-${searchResults[0].id}`);
-      firstResultElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const firstResultElement = document.getElementById(
+        `prize-${searchResults[0].id}`
+      );
+      firstResultElement?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
   };
 
@@ -101,7 +106,13 @@ const Page: NextPage = () => {
           </button>
         </div>
       </div>
-      <PrizeResult prizeResult={searchText !== "" && searchResults.length > 0 ? searchResults : bingoPrize} />
+      <PrizeResult
+        prizeResult={
+          searchText !== "" && searchResults.length > 0
+            ? searchResults
+            : bingoPrize
+        }
+      />
     </div>
   );
 };
