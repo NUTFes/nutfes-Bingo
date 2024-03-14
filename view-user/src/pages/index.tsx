@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { getBingoNumber, BingoNumber, subscriptionBingoNumber } from "@/utils/api_methods";
+import {
+  getBingoNumber,
+  BingoNumber,
+  subscriptionBingoNumber,
+} from "@/utils/api_methods";
 import type { NextPage } from "next";
 import Image from "next/image";
 import styles from "@/styles/Home.module.css";
@@ -10,7 +14,7 @@ import { en } from "./locales/en";
 import { MdTranslate } from "react-icons/md";
 
 const Page: NextPage = () => {
-  const { locale } = useRouter()
+  const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
   const [isOpened, setIsOpened] = useState(true);
   const router = useRouter();
@@ -62,38 +66,37 @@ const Page: NextPage = () => {
     <div className={styles.container}>
       <Modal isOpened={isOpened} setisOpened={setIsOpened}>
         <div className={styles.languageBlock}>
-            <div className={styles.language}>
-              <p
-                onClick={() => {
-                  router.push('/', '/', { locale: 'ja' });
-                  setIsOpened(false);
-                }}
-              >
-                日本語
-              </p>
-            </div>
-            <div className={styles.language}>
-              <p
-                onClick={() => {
-                  router.push('/', '/', { locale: 'en' });
-                  setIsOpened(false);
-                }}
-              >
-                English
-              </p>
-            </div>
+          <div className={styles.language}>
+            <p
+              onClick={() => {
+                router.push("/", "/", { locale: "ja" });
+                setIsOpened(false);
+              }}
+            >
+              日本語
+            </p>
+          </div>
+          <div className={styles.language}>
+            <p
+              onClick={() => {
+                router.push("/", "/", { locale: "en" });
+                setIsOpened(false);
+              }}
+            >
+              English
+            </p>
+          </div>
         </div>
       </Modal>
       <Header user="">
         <div className={styles.main}>
-        <Button size="m" shape="circle" onClick={() => router.push("./prizes")}>
+          <Button
+            size="m"
+            shape="circle"
+            onClick={() => router.push("./prizes")}
+          >
             <div className={styles.buttonContents}>
-              <Image
-                src="/GiftBox.svg"
-                alt="GiftBox"
-                width={19}
-                height={19}
-              />
+              <Image src="/GiftBox.svg" alt="GiftBox" width={19} height={19} />
               {t.PRIZE_BUTTON}
             </div>
           </Button>
