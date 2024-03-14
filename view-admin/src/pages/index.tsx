@@ -3,12 +3,22 @@ import { useRouter } from "next/router";
 import { useForm, SubmitHandler } from "react-hook-form";
 import styles from "@/styles/Home.module.css";
 import type { NextPage } from "next";
-import { Header, BingoResult, Button, JudgementModal } from "@/components/common";
+import {
+  Header,
+  BingoResult,
+  Button,
+  JudgementModal,
+} from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
 import { useEffect, useState } from "react";
-import { createBingoNumber, deleteBingoNumber } from "@/utils/api_methods";
+// import { createBingoNumber, deleteBingoNumber } from "@/utils/api_methods";
 
-import { gql, useSubscription } from "@apollo/client";
+import { useMutation, useSubscription } from "@apollo/client";
+import {
+  bingoNumberSubscription as BNS,
+  bingoNumberCreate as BNC,
+  bingoNumberDelete as BND,
+} from "./api/schema";
 
 interface formData {
   submitNumber: number | null;
@@ -21,18 +31,10 @@ interface BingoNumber {
   data: number;
 }
 
-const BINGO_NUMBER_SUBSCRIPTION = gql`
-  subscription MySubscription {
-    bingo_number {
-      data
-      id
-    }
-  }
-`;
-
 const Page: NextPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
+
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
   const [isOpened, setIsOpened] = useState<boolean>(false);
   const isopenBool = () => setIsOpened(!isOpened);
@@ -45,24 +47,33 @@ const Page: NextPage = () => {
     formState: { errors },
   } = useForm<formData>();
 
+  //apolo clientのmutaitionとsubscriptionの宣言
+  const { data, loading, error } = useSubscription(BNS);
+  const [createNumber] = useMutation(BNC);
+  const [deleteNumber] = useMutation(BND);
+
+  //番号の追加
   const handleSubmitCreate: SubmitHandler<formData> = () => {
     const { submitNumber } = getValues();
-    createMethod(submitNumber);
+    if (submitNumber !== null) {
+      createNumber({ variables: { data: submitNumber } });
+      reset({ submitNumber: null });
+    }
   };
 
-  const handleSubmitDelete = async () => {
+  //番号の削除
+  const handleSubmitDelete = () => {
     const { inputedNumber, selectedNumber } = getValues();
     if (inputedNumber) {
-      deleteMethod(inputedNumber);
+      deleteNumber({ variables: { data: inputedNumber } });
       reset({ inputedNumber: null });
     } else if (selectedNumber) {
-      deleteMethod(selectedNumber);
+      deleteNumber({ variables: { data: selectedNumber } });
       reset({ selectedNumber: null });
     }
   };
 
-  const { data, loading, error } = useSubscription(BINGO_NUMBER_SUBSCRIPTION);
-
+  //subscriptionを行うためのuseEffect
   useEffect(() => {
     if (data) {
       setBingoNumbers(data.bingo_number);
@@ -70,44 +81,38 @@ const Page: NextPage = () => {
     }
   }, [data]);
 
-  async function createMethod(data: number | null) {
-    if (data != null) {
-      const newBingoNumber = await createBingoNumber(data);
-      reset({ submitNumber: null });
-      if (newBingoNumber) {
-        console.log("Bingo number created:", newBingoNumber);
-      } else {
-        console.error("Failed to create bingo number.");
-      }
-    }
-  }
-
-  async function deleteMethod(data: number) {
-    const deletedBingoNumber = await deleteBingoNumber(data);
-    reset();
-    if (deletedBingoNumber) {
-      console.log("Bingo number deleted:", deletedBingoNumber);
-    } else {
-      console.error("Failed to delete bingo number.");
-    }
-  }
-
   // if (session) {
   return (
     <div className={styles.container}>
-      <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} bingoNumbers={bingoNumbers} />
+      <JudgementModal
+        isOpened={isOpened}
+        setIsOpened={setIsOpened}
+        bingoNumbers={bingoNumbers}
+      />
       <Header user="Admin">
         <div className={styles.main}>
-          <Button size="m" shape="circle" onClick={() => router.push("/postPrizes")}>
+          <Button
+            size="m"
+            shape="circle"
+            onClick={() => router.push("/postPrizes")}
+          >
             <p>景品追加</p>
           </Button>
-          <Button size="m" shape="circle" onClick={() => router.push("/prizes")}>
+          <Button
+            size="m"
+            shape="circle"
+            onClick={() => router.push("/prizes")}
+          >
             <p>景品管理</p>
           </Button>
           <Button size="m" shape="circle" onClick={isopenBool}>
             <p>ビンゴ正誤判定</p>
           </Button>
-          <Button size="m" shape="circle" onClick={() => signOut({ callbackUrl: "/" })}>
+          <Button
+            size="m"
+            shape="circle"
+            onClick={() => signOut({ callbackUrl: "/" })}
+          >
             <CgLogOut className={styles.buttonIcon} />
             <p>ログアウト</p>
           </Button>
@@ -128,7 +133,11 @@ const Page: NextPage = () => {
                   placeholder="番号を入力"
                   className={styles.inputForm}
                 />
-                {errors.submitNumber && <div className={styles.errormessage}>1~99の番号を入力してください</div>}
+                {errors.submitNumber && (
+                  <div className={styles.errormessage}>
+                    1~99の番号を入力してください
+                  </div>
+                )}
               </div>
               <button type="submit" className={styles.Button}>
                 送信
@@ -151,10 +160,15 @@ const Page: NextPage = () => {
                 onChange={() => reset({ selectedNumber: null })}
               />
               {(errors.inputedNumber || errors.selectedNumber) && (
-                <div className={styles.errormessage}>1~99の番号を入力してください</div>
+                <div className={styles.errormessage}>
+                  1~99の番号を入力してください
+                </div>
               )}
             </div>
-            <select {...register("selectedNumber")} onChange={() => reset({ inputedNumber: null })}>
+            <select
+              {...register("selectedNumber")}
+              onChange={() => reset({ inputedNumber: null })}
+            >
               <option value="" hidden>
                 選択してください
               </option>
@@ -164,7 +178,11 @@ const Page: NextPage = () => {
                 </option>
               ))}
             </select>
-            <button type="button" className={styles.Button} onClick={handleSubmitDelete}>
+            <button
+              type="button"
+              className={styles.Button}
+              onClick={handleSubmit(handleSubmitDelete)}
+            >
               送信
             </button>
           </div>
