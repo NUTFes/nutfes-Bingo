@@ -3,12 +3,8 @@ import styles from "./prizes.module.css";
 import { Header, Button, PrizeResult } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useSubscription } from "@apollo/client";
-import {
-  bingoPrizeGet as BPG,
-  bingoPrizeSubscriptionExisting as BPSE,
-  bingoPrizeUpdateExisiting as BPUE,
-} from "../api/schema";
+import { useQuery } from "@apollo/client";
+import { bingoPrizeGet as BPG } from "../api/schema";
 
 export interface BingoPrize {
   id: number;
@@ -25,32 +21,12 @@ const Page: NextPage = () => {
   const searchRef = useRef<HTMLInputElement>(null);
 
   const { data: query } = useQuery(BPG);
-  const { data: subscription } = useSubscription(BPSE);
 
-
-  //getは初回のみ
   useEffect(() => {
     if (query) {
       setBingoPrize(query.bingo_prize);
     }
   }, []);
-
-  //これはトグルで発火させてる
-  useEffect(() => {
-    if (subscription && subscription.existing) {
-      // console.log(bingoPrize);
-      const existingData = subscription.existing;
-      // bingoPrizeのexistingプロパティの値を更新
-      setBingoPrize((Prizes) =>
-        Prizes.map((prize) => ({
-          ...prize, // 他のプロパティは変更しない
-          existing:
-            existingData.find((item: BingoPrize) => item.id === prize.id)
-              ?.existing || prize.existing,
-        }))
-      );
-    }
-  }, [subscription]);
 
   useEffect(() => {
     if (searchText === "") {
@@ -112,6 +88,7 @@ const Page: NextPage = () => {
             ? searchResults
             : bingoPrize
         }
+        setBingoPrize={setBingoPrize}
       />
     </div>
   );
