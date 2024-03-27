@@ -26,7 +26,7 @@ interface formData {
   selectedNumber: number | null;
 }
 
-interface BingoNumber {
+export interface BingoNumber {
   id: number;
   data: number;
 }

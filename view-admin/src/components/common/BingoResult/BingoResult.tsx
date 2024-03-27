@@ -1,7 +1,7 @@
 import React from "react";
 import { ReactNode } from "react";
 import styles from "./BingoResult.module.css";
-import { BingoNumber } from "@/utils/api_methods";
+import { BingoNumber } from "@/pages";
 
 interface BingoResultProps {
   bingoResultNumber: BingoNumber[];
