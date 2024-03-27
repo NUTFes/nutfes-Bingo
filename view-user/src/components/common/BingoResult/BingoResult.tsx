@@ -2,12 +2,11 @@ import React from "react";
 import Image from "next/image";
 import styles from "./BingoResult.module.css";
 import { BingoIcon, Button } from "@/components/common";
-import { BingoNumber } from "@/utils/api_methods";
 import { useState } from "react";
 import { useRouter } from 'next/router'
 import { ja } from "@/pages/locales/ja";
 import { en } from "@/pages/locales/en";
-
+import { BingoNumber } from "@/pages";
 interface BingoResultProps {
   bingoResultNumber: BingoNumber[];
 }
