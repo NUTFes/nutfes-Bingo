@@ -4,82 +4,79 @@ import Image from "next/image";
 import { Header, Button, PrizeResult, Modal } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import {
-  BingoPrize,
-  subscriptionBingoPrize,
-  getBingoPrize,
-} from "@/utils/api_methods";
 import { ja } from "../locales/ja";
 import { en } from "../locales/en";
 import { MdTranslate } from "react-icons/md";
+import { useQuery, useSubscription } from "@apollo/client";
+import {
+  bingoPrizeGet as BPG,
+  bingoPrizeSubscriptionExisting as BPSE,
+} from "../api/schema";
+import { useRecoilState } from "recoil";
+import { bingoPrizeState } from "../Atom/atom";
+
+export interface BingoPrize {
+  id: number;
+  name: string;
+  existing: boolean;
+  image: string;
+}
 
 const Page: NextPage = () => {
-  const { locale } = useRouter()
+  const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
   const [isOpened, setIsOpened] = useState(false);
   const router = useRouter();
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // get
+  const [bingoPrize, setBingoPrize] = useRecoilState(bingoPrizeState);
+
+  const { data: query } = useQuery(BPG);
+  const { data: subscription } = useSubscription(BPSE);
 
   useEffect(() => {
-    async function getPrizeImage() {
-      try {
-        const getData: BingoPrize[] = await getBingoPrize();
-        if (getData) {
-          setBingoPrize(getData);
-          console.log("getPrize");
-        }
-      } catch (error) {
-        console.log("データの取得中にえらーが発生しました:", error);
-      }
+    if (query) {
+      setBingoPrize(query.bingo_prize);
     }
-    getPrizeImage();
-  }, []);
+  });
 
   useEffect(() => {
-    async function subscriptionBingoExisting() {
-      try {
-        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
-        setBingoPrize((oldPrize) => {
-          // existing プロパティを subscriptionData で更新
-          const updatedPrizes = oldPrize.map((prize) => {
-            const matchingSubscriptionPrize = subscriptionData.find(
-              (subscriptionPrize) => subscriptionPrize.id === prize.id
-            ); // oldPrizeとsubscriptionDataのidが一致するものを探して上書き
-            return matchingSubscriptionPrize
-              ? { ...prize, existing: matchingSubscriptionPrize.existing }
-              : prize;
-          });
-          return updatedPrizes;
-        });
-      } catch (error) {}
+    if (subscription) {
+      setBingoPrize((prizes) =>
+        prizes.map((prize) => ({
+          ...prize,
+          existing:
+            subscription.bingo_prize.find(
+              (subscriptionPrize: BingoPrize) =>
+                subscriptionPrize.id === prize.id
+            )?.existing || prize.existing,
+        }))
+      );
     }
-    subscriptionBingoExisting();
-  }, [bingoPrize]);
+  }, [subscription]);
 
   return (
     <div className={styles.container}>
       <Modal isOpened={isOpened} setisOpened={setIsOpened}>
         <div className={styles.languageBlock}>
-            <div className={styles.language}>
-              <p
-                onClick={() => {
-                  router.push('/prizes', '/prizes', { locale: 'ja' });
-                  setIsOpened(false);
-                }}
-              >
-                日本語
-              </p>
-            </div>
-            <div className={styles.language}>
-              <p
-                onClick={() => {
-                  router.push('/prizes', '/prizes', { locale: 'en' });
-                  setIsOpened(false);
-                }}
-              >
-                English
-              </p>
-            </div>
+          <div className={styles.language}>
+            <p
+              onClick={() => {
+                router.push("/prizes", "/prizes", { locale: "ja" });
+                setIsOpened(false);
+              }}
+            >
+              日本語
+            </p>
+          </div>
+          <div className={styles.language}>
+            <p
+              onClick={() => {
+                router.push("/prizes", "/prizes", { locale: "en" });
+                setIsOpened(false);
+              }}
+            >
+              English
+            </p>
+          </div>
         </div>
       </Modal>
       <Header user="">

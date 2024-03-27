@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "./JudgementModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
-import { BingoNumber } from "@/utils/api_methods";
+import { BingoNumber } from "@/pages";
 
 interface ModalProps {
   isOpened: boolean;

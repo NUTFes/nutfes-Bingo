@@ -1,12 +1,14 @@
 import React from "react";
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import styles from "./PrizeResult.module.css";
-import { BingoPrize, updatePrizeExisting } from "@/utils/api_methods";
+import { BingoPrize } from "@/pages/prizes";
 import Image from "next/image";
-
+import { useMutation } from "@apollo/client";
+import { bingoPrizeUpdateExisiting as BPUE } from "@/pages/api/schema";
 
 interface PrizeResultProps {
   prizeResult: BingoPrize[];
+  setBingoPrize: React.Dispatch<React.SetStateAction<BingoPrize[]>>;
 }
 
 export const PrizeResult = (props: PrizeResultProps) => {
@@ -14,16 +16,35 @@ export const PrizeResult = (props: PrizeResultProps) => {
   const imageVisibility = () => {
     setIsImageVisible(false);
   };
+
+  const [updatePrize] = useMutation(BPUE);
+
+  const handleToggleChange = (id: number, existing: boolean) => {
+    updatePrize({ variables: { id: id, existing: existing } });
+    props.setBingoPrize((prev) =>
+      prev.map((prize) =>
+        prize.id === id ? { ...prize, existing: existing } : prize
+      )
+    );
+  };
+
   return (
     <div className={styles.content_wrapper}>
       <div className={styles.container}>
         <div className={styles.frame_title}>景品一覧</div>
-        <div id="loading" className={isImageVisible ? styles.visible : styles.hidden}></div>
+        <div
+          id="loading"
+          className={isImageVisible ? styles.visible : styles.hidden}
+        ></div>
         <div className={styles.card_frame}>
           {[...props.prizeResult]
             .sort((a, b) => a.id - b.id)
             .map((prizeResult) => (
-              <div className={styles.card} key={prizeResult.id} id={`prize-${prizeResult.id}`}>
+              <div
+                className={styles.card}
+                key={prizeResult.id}
+                id={`prize-${prizeResult.id}`}
+              >
                 <div
                   style={{
                     position: "relative",
@@ -55,15 +76,14 @@ export const PrizeResult = (props: PrizeResultProps) => {
                       className={styles.toggle_input}
                       type="checkbox"
                       checked={prizeResult.existing}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        console.log(prizeResult.id, e.target.checked);
-                        updatePrizeExisting(prizeResult.id, e.target.checked);
-                      }}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleToggleChange(prizeResult.id, e.target.checked)
+                      }
                     />
                     <label htmlFor="toggle" className={styles.toggle_label} />
+                  </div>
                 </div>
-                </div>
-            </div>
+              </div>
             ))}
         </div>
       </div>

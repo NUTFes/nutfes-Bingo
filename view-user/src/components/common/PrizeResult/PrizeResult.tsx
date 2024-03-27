@@ -1,18 +1,18 @@
 import React from "react";
 import { ReactNode, useState } from "react";
 import styles from "./PrizeResult.module.css";
-import { BingoPrize, updatePrizeExisting } from "@/utils/api_methods";
 import Image from "next/image";
-import { useRouter } from 'next/router'
+import { useRouter } from "next/router";
 import { ja } from "@/pages/locales/ja";
 import { en } from "@/pages/locales/en";
+import { BingoPrize } from "@/pages/prizes";
 
 interface PrizeResultProps {
   prizeResult: BingoPrize[];
 }
 
 export const PrizeResult = (props: PrizeResultProps) => {
-  const { locale } = useRouter()
+  const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
   const [isImageVisible, setIsImageVisible] = useState(true);
   const imageVisibility = () => {
@@ -25,7 +25,10 @@ export const PrizeResult = (props: PrizeResultProps) => {
           <Image src="/GiftBox.svg" alt="GiftBox" width={19} height={19} />
           {t.SUB_TITLE_PRIZE}
         </div>
-        <div id="loading" className={isImageVisible ? styles.visible : styles.hidden}></div>
+        <div
+          id="loading"
+          className={isImageVisible ? styles.visible : styles.hidden}
+        ></div>
         <div className={styles.card_frame}>
           {[...props.prizeResult]
             .sort((a, b) => a.id - b.id)

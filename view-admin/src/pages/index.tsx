@@ -11,12 +11,14 @@ import {
 } from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
 import { useEffect, useState } from "react";
+// import { createBingoNumber, deleteBingoNumber } from "@/utils/api_methods";
+
+import { useMutation, useSubscription } from "@apollo/client";
 import {
-  BingoNumber,
-  createBingoNumber,
-  deleteBingoNumber,
-  subscriptionBingoNumber,
-} from "@/utils/api_methods";
+  bingoNumberSubscription as BNS,
+  bingoNumberCreate as BNC,
+  bingoNumberDelete as BND,
+} from "./api/schema";
 
 interface formData {
   submitNumber: number | null;
@@ -24,9 +26,15 @@ interface formData {
   selectedNumber: number | null;
 }
 
+export interface BingoNumber {
+  id: number;
+  data: number;
+}
+
 const Page: NextPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
+
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
   const [isOpened, setIsOpened] = useState<boolean>(false);
   const isopenBool = () => setIsOpened(!isOpened);
@@ -39,165 +47,150 @@ const Page: NextPage = () => {
     formState: { errors },
   } = useForm<formData>();
 
+  //apolo clientのmutaitionとsubscriptionの宣言
+  const { data, loading, error } = useSubscription(BNS);
+  const [createNumber] = useMutation(BNC);
+  const [deleteNumber] = useMutation(BND);
+
+  //番号の追加
   const handleSubmitCreate: SubmitHandler<formData> = () => {
     const { submitNumber } = getValues();
-    createMethod(submitNumber);
+    if (submitNumber !== null) {
+      createNumber({ variables: { data: submitNumber } });
+      reset({ submitNumber: null });
+    }
   };
 
-  const handleSubmitDelete = async () => {
+  //番号の削除
+  const handleSubmitDelete = () => {
     const { inputedNumber, selectedNumber } = getValues();
     if (inputedNumber) {
-      deleteMethod(inputedNumber);
+      deleteNumber({ variables: { data: inputedNumber } });
       reset({ inputedNumber: null });
     } else if (selectedNumber) {
-      deleteMethod(selectedNumber);
+      deleteNumber({ variables: { data: selectedNumber } });
       reset({ selectedNumber: null });
     }
   };
 
+  //subscriptionを行うためのuseEffect
   useEffect(() => {
-    async function fetchBingoNumbers() {
-      try {
-        const response: BingoNumber[] = await subscriptionBingoNumber();
-        if (response) {
-          setBingoNumbers(response);
-        }
-      } catch (error) {
-        console.error("データの取得中にエラーが発生しました:", error);
-      }
+    if (data) {
+      setBingoNumbers(data.bingo_number);
     }
-    fetchBingoNumbers();
-  }, [bingoNumbers]);
-
-  async function createMethod(data: number | null) {
-    if (data != null) {
-      const newBingoNumber = await createBingoNumber(data);
-      reset({ submitNumber: null });
-      if (newBingoNumber) {
-        console.log("Bingo number created:", newBingoNumber);
-      } else {
-        console.error("Failed to create bingo number.");
-      }
-    }
-  }
-
-  async function deleteMethod(data: number) {
-    const deletedBingoNumber = await deleteBingoNumber(data);
-    reset();
-    if (deletedBingoNumber) {
-      console.log("Bingo number deleted:", deletedBingoNumber);
-    } else {
-      console.error("Failed to delete bingo number.");
-    }
-  }
+  }, [data]);
 
   // if (session) {
-    return (
-      <div className={styles.container}>
-        <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} bingoNumbers={bingoNumbers}/>
-        <Header user="Admin">
-          <div className={styles.main}>
-            <Button
-              size="m"
-              shape="circle"
-              onClick={() => router.push("/postPrizes")}
-            >
-              <p>景品追加</p>
-            </Button>
-            <Button
-              size="m"
-              shape="circle"
-              onClick={() => router.push("/prizes")}
-            >
-              <p>景品管理</p>
-            </Button>
-            <Button size="m" shape="circle" onClick={isopenBool}>
-              <p>ビンゴ正誤判定</p>
-            </Button>
-            <Button
-              size="m"
-              shape="circle"
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
-              <CgLogOut className={styles.buttonIcon} />
-              <p>ログアウト</p>
-            </Button>
-          </div>
-        </Header>
-        <div className={styles.form}>
-          <div className={styles.frame}>
-            <p>抽選した番号を入力</p>
-            <form onSubmit={handleSubmit(handleSubmitCreate)}>
-              <div className={styles.item}>
-                <div className={styles.flexerror}>
-                  <input
-                    {...register("submitNumber", {
-                      max: 99,
-                      min: 1,
-                    })}
-                    type="number"
-                    placeholder="番号を入力"
-                    className={styles.inputForm}
-                  />
-                  {errors.submitNumber && (
-                    <div className={styles.errormessage}>
-                      1~99の番号を入力してください
-                    </div>
-                  )}
-                </div>
-                <button type="submit" className={styles.Button}>
-                  送信
-                </button>
-              </div>
-            </form>
-          </div>
-          <div className={styles.frame}>
-            <p className={styles.centerText}>抽選した番号を削除</p>
+  return (
+    <div className={styles.container}>
+      <JudgementModal
+        isOpened={isOpened}
+        setIsOpened={setIsOpened}
+        bingoNumbers={bingoNumbers}
+      />
+      <Header user="Admin">
+        <div className={styles.main}>
+          <Button
+            size="m"
+            shape="circle"
+            onClick={() => router.push("/postPrizes")}
+          >
+            <p>景品追加</p>
+          </Button>
+          <Button
+            size="m"
+            shape="circle"
+            onClick={() => router.push("/prizes")}
+          >
+            <p>景品管理</p>
+          </Button>
+          <Button size="m" shape="circle" onClick={isopenBool}>
+            <p>ビンゴ正誤判定</p>
+          </Button>
+          <Button
+            size="m"
+            shape="circle"
+            onClick={() => signOut({ callbackUrl: "/" })}
+          >
+            <CgLogOut className={styles.buttonIcon} />
+            <p>ログアウト</p>
+          </Button>
+        </div>
+      </Header>
+      <div className={styles.form}>
+        <div className={styles.frame}>
+          <p>抽選した番号を入力</p>
+          <form onSubmit={handleSubmit(handleSubmitCreate)}>
             <div className={styles.item}>
               <div className={styles.flexerror}>
                 <input
-                  {...register("inputedNumber", {
+                  {...register("submitNumber", {
                     max: 99,
                     min: 1,
                   })}
                   type="number"
                   placeholder="番号を入力"
                   className={styles.inputForm}
-                  onChange={() => reset({ selectedNumber: null })}
                 />
-                {(errors.inputedNumber || errors.selectedNumber) && (
+                {errors.submitNumber && (
                   <div className={styles.errormessage}>
                     1~99の番号を入力してください
                   </div>
                 )}
               </div>
-              <select
-                {...register("selectedNumber")}
-                onChange={() => reset({ inputedNumber: null })}
-              >
-                <option value="" hidden>
-                  選択してください
-                </option>
-                {[...bingoNumbers].reverse().map((number, index) => (
-                  <option key={index} value={number.data}>
-                    {number.data}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className={styles.Button}
-                onClick={handleSubmitDelete}
-              >
+              <button type="submit" className={styles.Button}>
                 送信
               </button>
             </div>
+          </form>
+        </div>
+        <div className={styles.frame}>
+          <p className={styles.centerText}>抽選した番号を削除</p>
+          <div className={styles.item}>
+            <div className={styles.flexerror}>
+              <input
+                {...register("inputedNumber", {
+                  max: 99,
+                  min: 1,
+                })}
+                type="number"
+                placeholder="番号を入力"
+                className={styles.inputForm}
+                onChange={() => reset({ selectedNumber: null })}
+              />
+              {(errors.inputedNumber || errors.selectedNumber) && (
+                <div className={styles.errormessage}>
+                  1~99の番号を入力してください
+                </div>
+              )}
+            </div>
+            <select
+              {...register("selectedNumber")}
+              onChange={() => reset({ inputedNumber: null })}
+            >
+              <option value="" hidden>
+                選択してください
+              </option>
+              {[...bingoNumbers].reverse().map((number, index) => (
+                <option key={index} value={number.data}>
+                  {number.data}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className={styles.Button}
+              onClick={handleSubmit(handleSubmitDelete)}
+            >
+              送信
+            </button>
           </div>
         </div>
-        <BingoResult bingoResultNumber={bingoNumbers} />
       </div>
-    );
-  }
+      <BingoResult bingoResultNumber={bingoNumbers} />
+    </div>
+  );
+};
 
 //   return (
 //     <div className={styles.loginContainer}>
