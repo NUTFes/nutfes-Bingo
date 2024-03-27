@@ -77,7 +77,6 @@ const Page: NextPage = () => {
   useEffect(() => {
     if (data) {
       setBingoNumbers(data.bingo_number);
-      console.log("Bingo numbers updated:", data.bingo_number);
     }
   }, [data]);
 
