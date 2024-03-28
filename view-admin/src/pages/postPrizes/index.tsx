@@ -1,11 +1,11 @@
 import type { NextPage } from "next";
 import { useState, useCallback, useEffect } from "react";
-import styles from "@/styles/Home.module.css";
+import styles from "./postPrizes.module.css";
 import { Header } from "@/components/common";
 import {
   BingoPrize,
   postBingoPrize,
-  subscriptionBingoPrize,
+  getBingoPrize,
   updatePrizeExisting,
 } from "@/utils/api_methods";
 
@@ -18,19 +18,12 @@ const Page: NextPage = () => {
   const [prizeID, setPrizeID] = useState<number>(0);
 
   useEffect(() => {
-    async function fetchBingoPrizes() {
-      try {
-        const response: BingoPrize[] = await subscriptionBingoPrize();
-        if (response) {
-          setBingoPrize(response);
-        }
-      } catch (error) {
-        console.error("データの取得中にエラーが発生しました:", error);
-      }
+    async function getPrizeImage() {
+      const getData: BingoPrize[] = await getBingoPrize();
+      setBingoPrize(getData);
     }
-
-    fetchBingoPrizes();
-  }, [bingoPrize]);
+    getPrizeImage();
+  }, []);
 
   /**
    * ファイルアップロードインプット変更時ハンドラ
@@ -101,7 +94,19 @@ const Page: NextPage = () => {
       <div className={styles.img}>
         {[...bingoPrize].map((data, index) => (
           // eslint-disable-next-line react/jsx-key, @next/next/no-img-element
-          <img src={data.image} alt="" style={{ width: "30%" }}></img>
+          <div className={styles.bingoPrizes}>
+            <picture>
+              <source srcSet={data.image} media="(min-width: 1024px)" width="300" height="300" type="image/png"/>
+              <img
+                src={data.image}
+                alt=""
+                width="100"
+                height="100"
+                style={{ objectFit: "cover" }}
+              />
+            </picture>
+            <p>{data.name}</p>
+          </div>
         ))}
       </div>
       <h1>update処理</h1>

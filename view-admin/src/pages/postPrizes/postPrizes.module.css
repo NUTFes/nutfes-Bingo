@@ -1,0 +1,17 @@
+.container {
+    min-height: 100vh;
+    background-color: aliceblue;
+    background-image: linear-gradient(180deg, #d95b7f, #856db2, #07033e);
+  }
+
+.img {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(30%, 300px), 2fr));
+    max-width: 100vw;
+  }
+
+.bingoPrizes {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }

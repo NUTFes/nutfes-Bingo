@@ -148,10 +148,9 @@
 }
 
 .errormessage {
-  color:black;
-  border:1px red;
+  color: black;
+  border: 1px red;
   font-size: small;
-
 }
 
 .flexerror {
@@ -198,7 +197,7 @@
   color: #333;
   font-weight: 600;
   font-size: 1rem;
-  white-space:nowrap;
+  white-space: nowrap;
 }
 
 .btnOpen:hover {
@@ -215,15 +214,11 @@
   color: #333;
   font-weight: 700;
   font-size: 1rem;
-  white-space:nowrap;
+  white-space: nowrap;
 }
 
 .btnOpen:hover {
   background-color: #a28bab;
   color: var(--primary);
   transition: 0.25s;
-}
-
-.img {
-  max-width: 100vw;
 }
