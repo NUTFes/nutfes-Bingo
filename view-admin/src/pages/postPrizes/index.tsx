@@ -58,7 +58,7 @@ const Page: NextPage = () => {
   const insertPrize = () => {
     console.error("押されたよ");
     if (displayImage === "" || prizeName === "") {
-      alert("写真のアップロードと景品名の設定をしてください");
+      alert("写真のアップロードと景品名の設定をしてください。");
       return;
     }
     postBingoPrize(prizeExisting, displayImage, prizeName);
@@ -68,6 +68,7 @@ const Page: NextPage = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    alert("景品を追加しました。");
   };
 
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
