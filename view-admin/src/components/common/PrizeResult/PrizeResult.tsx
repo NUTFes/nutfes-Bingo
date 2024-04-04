@@ -1,19 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
+import { ReactNode, useState } from "react";
 import styles from "./PrizeResult.module.css";
 import { BingoPrize, updatePrizeExisting } from "@/utils/api_methods";
 import Image from "next/image";
 
+
 interface PrizeResultProps {
   prizeResult: BingoPrize[];
-  showOverlay: boolean;
-  showToggle: boolean;
 }
 
-export const PrizeResult = ({
-  prizeResult,
-  showOverlay = true,
-  showToggle = true,
-}: PrizeResultProps) => {
+export const PrizeResult = (props: PrizeResultProps) => {
   const [isImageVisible, setIsImageVisible] = useState(true);
   const imageVisibility = () => {
     setIsImageVisible(false);
@@ -22,19 +18,12 @@ export const PrizeResult = ({
     <div className={styles.content_wrapper}>
       <div className={styles.container}>
         <div className={styles.frame_title}>景品一覧</div>
-        <div
-          id="loading"
-          className={isImageVisible ? styles.visible : styles.hidden}
-        ></div>
+        <div id="loading" className={isImageVisible ? styles.visible : styles.hidden}></div>
         <div className={styles.card_frame}>
-          {[...prizeResult]
+          {[...props.prizeResult]
             .sort((a, b) => a.id - b.id)
             .map((prizeResult) => (
-              <div
-                className={styles.card}
-                key={prizeResult.id}
-                id={`prize-${prizeResult.id}`}
-              >
+              <div className={styles.card} key={prizeResult.id} id={`prize-${prizeResult.id}`}>
                 <div
                   style={{
                     position: "relative",
@@ -54,29 +43,27 @@ export const PrizeResult = ({
                 <div className={styles.card_content}>
                   <p>{prizeResult.name}</p>
                 </div>
-                {showOverlay && prizeResult.existing && (
+                {prizeResult.existing && (
                   <div className={styles.overlay}>
                     <p>当選！</p>
                   </div>
                 )}
-                {showToggle && (
-                  <div className={styles.toggle_container}>
-                    <div className={styles.toggle_button}>
-                      <input
-                        id="toggle"
-                        className={styles.toggle_input}
-                        type="checkbox"
-                        checked={prizeResult.existing}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          console.log(prizeResult.id, e.target.checked);
-                          updatePrizeExisting(prizeResult.id, e.target.checked);
-                        }}
-                      />
-                      <label htmlFor="toggle" className={styles.toggle_label} />
-                    </div>
-                  </div>
-                )}
-              </div>
+                <div className={styles.toggle_container}>
+                  <div className={styles.toggle_button}>
+                    <input
+                      id="toggle"
+                      className={styles.toggle_input}
+                      type="checkbox"
+                      checked={prizeResult.existing}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        console.log(prizeResult.id, e.target.checked);
+                        updatePrizeExisting(prizeResult.id, e.target.checked);
+                      }}
+                    />
+                    <label htmlFor="toggle" className={styles.toggle_label} />
+                </div>
+                </div>
+            </div>
             ))}
         </div>
       </div>
