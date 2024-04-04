@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { ReactNode, useState } from "react";
 import styles from "./PrizeResult.module.css";
 import { BingoPrize } from "@/pages/prizes";
 import Image from "next/image";
