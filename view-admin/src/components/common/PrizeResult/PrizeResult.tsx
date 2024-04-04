@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import styles from "./PrizeResult.module.css";
 import { BingoPrize } from "@/pages/prizes";
 import Image from "next/image";
@@ -9,6 +8,8 @@ import { bingoPrizeUpdateExisiting as BPUE } from "@/pages/api/schema";
 interface PrizeResultProps {
   prizeResult: BingoPrize[];
   setBingoPrize: React.Dispatch<React.SetStateAction<BingoPrize[]>>;
+  showOverlay: boolean;
+  showToggle: boolean;
 }
 
 export const PrizeResult = (props: PrizeResultProps) => {
@@ -23,8 +24,8 @@ export const PrizeResult = (props: PrizeResultProps) => {
     updatePrize({ variables: { id: id, existing: existing } });
     props.setBingoPrize((prev) =>
       prev.map((prize) =>
-        prize.id === id ? { ...prize, existing: existing } : prize
-      )
+        prize.id === id ? { ...prize, existing: existing } : prize,
+      ),
     );
   };
 
@@ -64,25 +65,27 @@ export const PrizeResult = (props: PrizeResultProps) => {
                 <div className={styles.card_content}>
                   <p>{prizeResult.name}</p>
                 </div>
-                {prizeResult.existing && (
+                {props.showOverlay && prizeResult.existing && (
                   <div className={styles.overlay}>
                     <p>当選！</p>
                   </div>
                 )}
-                <div className={styles.toggle_container}>
-                  <div className={styles.toggle_button}>
-                    <input
-                      id="toggle"
-                      className={styles.toggle_input}
-                      type="checkbox"
-                      checked={prizeResult.existing}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleToggleChange(prizeResult.id, e.target.checked)
-                      }
-                    />
-                    <label htmlFor="toggle" className={styles.toggle_label} />
+                {props.showToggle && (
+                  <div className={styles.toggle_container}>
+                    <div className={styles.toggle_button}>
+                      <input
+                        id="toggle"
+                        className={styles.toggle_input}
+                        type="checkbox"
+                        checked={prizeResult.existing}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          handleToggleChange(prizeResult.id, e.target.checked)
+                        }
+                      />
+                      <label htmlFor="toggle" className={styles.toggle_label} />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ))}
         </div>
