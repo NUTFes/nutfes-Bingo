@@ -63,6 +63,11 @@ const Page: NextPage = () => {
     }
     postBingoPrize(prizeExisting, displayImage, prizeName);
     console.log(prizeExisting, displayImage, prizeName);
+    setDisplayImage("");
+    setPrizeName("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
@@ -135,6 +140,7 @@ const Page: NextPage = () => {
           <div className={styles.input_details}>
             <h2>景品名を入力</h2>
             <input
+              value={prizeName}
               className={styles.input_form}
               type="text"
               name="name"
