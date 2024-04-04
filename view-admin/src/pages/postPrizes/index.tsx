@@ -1,20 +1,21 @@
+/* eslint-disable @next/next/no-img-element */
 import type { NextPage } from "next";
-import { useState, useCallback } from "react";
-import styles from "@/styles/Home.module.css";
-import { Header } from "@/components/common";
+import { useState, useCallback, useRef, useEffect } from "react";
+import styles from "@/pages/postPrizes/postPrizes.module.css";
+import { Header, PrizeResult } from "@/components/common";
 import { BingoPrize } from "../prizes";
 import { bingoPrizeCreate as BPC } from "../api/schema";
 import { useMutation } from "@apollo/client";
+import { IoCloudUploadOutline } from "react-icons/io5";
 
 const Page: NextPage = () => {
   // アップロードした画像ファイルから取得したbase64
-  const [prizeImage, setPrizeImage] = useState<string>(""); // imagedata base64
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
+  const [displayImage, setDisplayImage] = useState<string>(""); // imagedata base64
   const [prizeName, setPrizeName] = useState<string>("");
   const [prizeExisting, setPrizeExisting] = useState<boolean>(false);
+  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
 
   const [postPrize] = useMutation(BPC);
-
   /**
    * ファイルアップロードインプット変更時ハンドラ
    */
@@ -35,81 +36,126 @@ const Page: NextPage = () => {
       reader.readAsDataURL(file);
       reader.onload = () => {
         // base64に変換した結果をstateにセットする
-        setPrizeImage(reader.result as string);
+        setDisplayImage(reader.result as string);
       };
     },
-    []
+    [],
   );
 
   const insertPrize = () => {
+    console.error("押されたよ");
+    if (displayImage === "" || prizeName === "") {
+      alert("写真のアップロードと景品名の設定をしてください");
+      return;
+    }
     postPrize({
       variables: {
         existing: prizeExisting,
-        image: prizeImage,
+        image: displayImage,
         name: prizeName,
       },
     });
-    console.log(prizeExisting, prizeImage, prizeName);
-    setPrizeExisting(false);
-    setPrizeImage("");
-    setPrizeName("");
-    const formName = document.getElementById("Name");
-    const formImageName = document.getElementById("ImageName");
-    const formCheckbox = document.getElementById("Checkbox");
-    if (
-      formCheckbox instanceof HTMLInputElement &&
-      formCheckbox.type === "checkbox"
-    ) {
-      formCheckbox.checked = false;
-    }
-    if (formName instanceof HTMLInputElement) {
-      formName.value = "";
-    }
-    if (formImageName instanceof HTMLInputElement) {
-      formImageName.value = "";
-    }
+  };
+
+  const [isDragOver, setIsDragOver] = useState<boolean>(false);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        const file = files[0];
+        handlerChangeImageFileInput({
+          target: { files: [file] },
+        } as any);
+      }
+    },
+    [handlerChangeImageFileInput],
+  );
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   return (
     <div className={styles.container}>
-      <Header user="Admin">Post Prizes</Header>
-      <div>
-        <input
-          id="Checkbox"
-          type="checkbox"
-          name="existing"
-          onChange={() => setPrizeExisting(!prizeExisting)}
-        />
-        <label htmlFor="existing">当選</label>
-        <input
-          id="Name"
-          type="text"
-          name="name"
-          placeholder="景品名"
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setPrizeName(e.target.value)
-          }
-        />
-        <h1>アップロードした画像をbase64変換</h1>
-        <input
-          id="ImageName"
-          type="file"
-          onChange={handlerChangeImageFileInput}
-        />
-        <input type="submit" value="送信" onClick={insertPrize} />
-        <img
-          src={(prizeImage as string) || ""}
-          alt=""
-          width="100px"
-          height="100px"
-        />
+      <Header user="Admin">
+        <button></button>
+      </Header>
+      <div className={styles.input_group}>
+        <div className={styles.input_group_content}>
+          <div>
+            <h2>登録する画像を選択</h2>
+            <div
+              className={
+                isDragOver ? styles.drop_area_drag_over : styles.drop_area
+              }
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={triggerFileInput}
+            >
+              <div className={styles.input_center_item}>
+                <IoCloudUploadOutline size="4rem" />
+                ここに画像をドラッグ&ドロップ
+              </div>
+            </div>
+            <input
+              type="file"
+              onChange={handlerChangeImageFileInput}
+              ref={fileInputRef}
+            />
+          </div>
+          <div className={styles.input_details}>
+            <h2>景品名を入力</h2>
+            <input
+              className={styles.input_form}
+              type="text"
+              name="name"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setPrizeName(e.target.value)
+              }
+            />
+          </div>
+        </div>
+        <div className={styles.preview_group_content}>
+          <h2>景品プレビュー</h2>
+          <img
+            src={(displayImage as string) || "image-placeholder.png"}
+            alt=""
+          />
+          <input
+            className={styles.button}
+            type="submit"
+            value="送信"
+            onClick={insertPrize}
+          />
+        </div>
       </div>
-      <div className={styles.img}>
-        {[...bingoPrize].map((data, index) => (
-          // eslint-disable-next-line react/jsx-key, @next/next/no-img-element
-          <img src={data.image} alt="" style={{ width: "30%" }}></img>
-        ))}
-      </div>
+      <PrizeResult
+        prizeResult={bingoPrize}
+        setBingoPrize={setBingoPrize}
+        showToggle={false}
+        showOverlay={false}
+      />
     </div>
   );
 };
