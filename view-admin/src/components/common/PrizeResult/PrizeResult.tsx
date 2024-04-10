@@ -12,7 +12,11 @@ interface PrizeResultProps {
   showToggle: boolean;
 }
 
-export const PrizeResult = (props: PrizeResultProps) => {
+export const PrizeResult = ({
+  prizeResult,
+  showOverlay = true,
+  showToggle = true,
+}: PrizeResultProps) => {
   const [isImageVisible, setIsImageVisible] = useState(true);
   const imageVisibility = () => {
     setIsImageVisible(false);
@@ -38,7 +42,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
           className={isImageVisible ? styles.visible : styles.hidden}
         ></div>
         <div className={styles.card_frame}>
-          {[...props.prizeResult]
+          {[...prizeResult]
             .sort((a, b) => a.id - b.id)
             .map((prizeResult) => (
               <div
