@@ -40,7 +40,7 @@ const Page: NextPage = () => {
 
   useEffect(() => {
     if (subscription) {
-      setBingoPrize((prizes) =>
+      setBingoPrize((prizes: BingoPrize[]) =>
         prizes.map((prize) => ({
           ...prize,
           existing:
