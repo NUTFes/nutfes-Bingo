@@ -34,8 +34,8 @@ const Page: NextPage = () => {
     } else {
       setSearchResults(
         bingoPrize.filter((prize) =>
-          prize.name.toLowerCase().includes(searchText.toLowerCase())
-        )
+          prize.name.toLowerCase().includes(searchText.toLowerCase()),
+        ),
       );
     }
   }, [searchText, bingoPrize]);
@@ -44,7 +44,7 @@ const Page: NextPage = () => {
     const searchInput = searchRef.current;
     if (searchInput && searchResults.length > 0) {
       const firstResultElement = document.getElementById(
-        `prize-${searchResults[0].id}`
+        `prize-${searchResults[0].id}`,
       );
       firstResultElement?.scrollIntoView({
         behavior: "smooth",
@@ -89,6 +89,8 @@ const Page: NextPage = () => {
             : bingoPrize
         }
         setBingoPrize={setBingoPrize}
+        showOverlay={true}
+        showToggle={true}
       />
     </div>
   );

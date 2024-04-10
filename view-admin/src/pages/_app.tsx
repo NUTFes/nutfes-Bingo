@@ -1,18 +1,23 @@
-import '@/styles/globals.css';
-import type { AppProps } from 'next/app';
-import { ApolloProvider, ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
-import { createClient } from 'graphql-ws';
-import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
-import { SessionProvider } from 'next-auth/react';
-import { useEffect } from 'react';
+import "@/styles/globals.css";
+import type { AppProps } from "next/app";
+import {
+  ApolloProvider,
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+} from "@apollo/client";
+import { createClient } from "graphql-ws";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { SessionProvider } from "next-auth/react";
+import { useEffect } from "react";
 
 // ヘッダーに x-hasura-admin-secret を設定する
 const wsClient = createClient({
-  url: process.env.WS_API_URL + '/v1/graphql',
+  url: process.env.WS_API_URL + "/v1/graphql",
   connectionParams: {
     headers: {
-      'x-hasura-admin-secret': process.env.X_HASURA_ADMIN_SECRET
-    }
+      "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET,
+    },
   },
 });
 

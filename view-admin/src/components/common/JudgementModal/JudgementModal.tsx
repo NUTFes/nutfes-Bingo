@@ -24,7 +24,7 @@ const Modal = ({
 
   const handleInputChange = (
     index: number,
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const newValue = parseInt(event.target.value);
     const newInputValues = [...inputValues];
@@ -44,7 +44,7 @@ const Modal = ({
       inputElementArray[i].value = "";
     }
     setInputValues(inputValues.map(() => 100));
-    console.log(inputValues)
+    console.log(inputValues);
     setIsIncluded(false);
     setIsJudgementClicked(false);
   };
@@ -53,7 +53,7 @@ const Modal = ({
     const remainNumbers = inputValues.filter((number) => number !== 0);
     if (
       remainNumbers.every((number) =>
-        bingoNumbers.map((num) => num.data).includes(number)
+        bingoNumbers.map((num) => num.data).includes(number),
       )
     ) {
       setIsIncluded(true);
