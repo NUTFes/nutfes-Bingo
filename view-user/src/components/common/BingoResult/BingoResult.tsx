@@ -3,7 +3,7 @@ import Image from "next/image";
 import styles from "./BingoResult.module.css";
 import { BingoIcon, Button } from "@/components/common";
 import { useState } from "react";
-import { useRouter } from 'next/router'
+import { useRouter } from "next/router";
 import { ja } from "@/pages/locales/ja";
 import { en } from "@/pages/locales/en";
 import { BingoNumber } from "@/pages";
@@ -12,7 +12,7 @@ interface BingoResultProps {
 }
 
 export const BingoResult = (props: BingoResultProps) => {
-  const { locale } = useRouter()
+  const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
   const [resultChange, setResultChange] = useState<boolean>(true);
   const copiedArray = [...props.bingoResultNumber];
@@ -76,7 +76,11 @@ export const BingoResult = (props: BingoResultProps) => {
               shape="square"
               onClick={() => setResultChange(!resultChange)}
             >
-              {resultChange ? <p>{t.NUMBER_ORDER_BUTTON}</p> : <p>{t.LOTTERY_ORDER_BUTTON}</p>}
+              {resultChange ? (
+                <p>{t.NUMBER_ORDER_BUTTON}</p>
+              ) : (
+                <p>{t.LOTTERY_ORDER_BUTTON}</p>
+              )}
             </Button>
           </div>
         </div>

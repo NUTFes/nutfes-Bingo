@@ -46,9 +46,9 @@ const Page: NextPage = () => {
           existing:
             subscription.bingo_prize.find(
               (subscriptionPrize: BingoPrize) =>
-                subscriptionPrize.id === prize.id
+                subscriptionPrize.id === prize.id,
             )?.existing || prize.existing,
-        }))
+        })),
       );
     }
   }, [subscription]);

@@ -16,20 +16,20 @@ export interface BingoNumber {
 }
 
 const Page: NextPage = () => {
-  const { locale } = useRouter()
+  const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
   const [isOpened, setIsOpened] = useState(true);
   const router = useRouter();
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
 
-  const {data} = useSubscription(BNS);
+  const { data } = useSubscription(BNS);
 
-    //subscriptionを行うためのuseEffect
-    useEffect(() => {
-      if (data) {
-        setBingoNumbers(data.bingo_number);
-      }
-    }, [data]);
+  //subscriptionを行うためのuseEffect
+  useEffect(() => {
+    if (data) {
+      setBingoNumbers(data.bingo_number);
+    }
+  }, [data]);
 
   // 最初のrendrer時だけ実行してモーダルの再表示を防止する。
   useEffect(() => {
@@ -62,38 +62,37 @@ const Page: NextPage = () => {
     <div className={styles.container}>
       <Modal isOpened={isOpened} setisOpened={setIsOpened}>
         <div className={styles.languageBlock}>
-            <div className={styles.language}>
-              <p
-                onClick={() => {
-                  router.push('/', '/', { locale: 'ja' });
-                  setIsOpened(false);
-                }}
-              >
-                日本語
-              </p>
-            </div>
-            <div className={styles.language}>
-              <p
-                onClick={() => {
-                  router.push('/', '/', { locale: 'en' });
-                  setIsOpened(false);
-                }}
-              >
-                English
-              </p>
-            </div>
+          <div className={styles.language}>
+            <p
+              onClick={() => {
+                router.push("/", "/", { locale: "ja" });
+                setIsOpened(false);
+              }}
+            >
+              日本語
+            </p>
+          </div>
+          <div className={styles.language}>
+            <p
+              onClick={() => {
+                router.push("/", "/", { locale: "en" });
+                setIsOpened(false);
+              }}
+            >
+              English
+            </p>
+          </div>
         </div>
       </Modal>
       <Header user="">
         <div className={styles.main}>
-        <Button size="m" shape="circle" onClick={() => router.push("./prizes")}>
+          <Button
+            size="m"
+            shape="circle"
+            onClick={() => router.push("./prizes")}
+          >
             <div className={styles.buttonContents}>
-              <Image
-                src="/GiftBox.svg"
-                alt="GiftBox"
-                width={19}
-                height={19}
-              />
+              <Image src="/GiftBox.svg" alt="GiftBox" width={19} height={19} />
               {t.PRIZE_BUTTON}
             </div>
           </Button>
