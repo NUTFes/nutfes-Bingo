@@ -4,8 +4,8 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import styles from "@/pages/postPrizes/postPrizes.module.css";
 import { Header, PrizeResult } from "@/components/common";
 import { BingoPrize } from "../prizes";
-import { bingoPrizeCreate as BPC } from "../api/schema";
-import { useMutation } from "@apollo/client";
+import { bingoPrizeGet as BPG, bingoPrizeCreate as BPC } from "../api/schema";
+import { useQuery, useMutation } from "@apollo/client";
 import { IoCloudUploadOutline } from "react-icons/io5";
 
 const Page: NextPage = () => {
@@ -15,7 +15,15 @@ const Page: NextPage = () => {
   const [prizeExisting, setPrizeExisting] = useState<boolean>(false);
   const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
 
+  const { data: query } = useQuery(BPG);
   const [postPrize] = useMutation(BPC);
+
+  useEffect(() => {
+    if (query) {
+      setBingoPrize(query.bingo_prize);
+    }
+  }, []);
+
   /**
    * ファイルアップロードインプット変更時ハンドラ
    */
