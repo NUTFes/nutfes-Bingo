@@ -3,54 +3,30 @@ import styles from "./prizes.module.css";
 import { Header, Button, PrizeResult } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect, useRef } from "react";
-import {
-  BingoPrize,
-  subscriptionBingoPrize,
-  getBingoPrize,
-} from "@/utils/api_methods";
+import { useQuery } from "@apollo/client";
+import { bingoPrizeGet as BPG } from "../api/schema";
+
+export interface BingoPrize {
+  id: number;
+  name: string;
+  existing: boolean;
+  image: string;
+}
 
 const Page: NextPage = () => {
   const router = useRouter();
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // getしてきた画像
+  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState<BingoPrize[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    async function getPrizeImage() {
-      try {
-        const getData: BingoPrize[] = await getBingoPrize();
-        if (getData) {
-          setBingoPrize(getData);
-          console.log("getPrize");
-        }
-      } catch (error) {
-        console.error("データの取得中にエラーが発生しました:", error);
-      }
-    }
-    getPrizeImage();
-  }, []);
+  const { data: query } = useQuery(BPG);
 
   useEffect(() => {
-    async function subscriptionBingoExisting() {
-      try {
-        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
-        setBingoPrize((oldPrize) => {
-          // existing プロパティを subscriptionData で更新
-          const updatedPrizes = oldPrize.map((prize) => {
-            const matchingSubscriptionPrize = subscriptionData.find(
-              (subscriptionPrize) => subscriptionPrize.id === prize.id
-            ); // oldPrizeとsubscriptionDataのidが一致するものを探して上書き
-            return matchingSubscriptionPrize
-              ? { ...prize, existing: matchingSubscriptionPrize.existing }
-              : prize;
-          });
-          return updatedPrizes;
-        });
-      } catch (error) {}
+    if (query) {
+      setBingoPrize(query.bingo_prize);
     }
-    subscriptionBingoExisting();
-  }, [bingoPrize]);
+  }, []);
 
   useEffect(() => {
     if (searchText === "") {
@@ -58,8 +34,8 @@ const Page: NextPage = () => {
     } else {
       setSearchResults(
         bingoPrize.filter((prize) =>
-          prize.name.toLowerCase().includes(searchText.toLowerCase())
-        )
+          prize.name.toLowerCase().includes(searchText.toLowerCase()),
+        ),
       );
     }
   }, [searchText, bingoPrize]);
@@ -67,8 +43,13 @@ const Page: NextPage = () => {
   const handleSearch = () => {
     const searchInput = searchRef.current;
     if (searchInput && searchResults.length > 0) {
-      const firstResultElement = document.getElementById(`prize-${searchResults[0].id}`);
-      firstResultElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const firstResultElement = document.getElementById(
+        `prize-${searchResults[0].id}`,
+      );
+      firstResultElement?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
   };
 
@@ -101,7 +82,16 @@ const Page: NextPage = () => {
           </button>
         </div>
       </div>
-      <PrizeResult prizeResult={searchText !== "" && searchResults.length > 0 ? searchResults : bingoPrize} />
+      <PrizeResult
+        prizeResult={
+          searchText !== "" && searchResults.length > 0
+            ? searchResults
+            : bingoPrize
+        }
+        setBingoPrize={setBingoPrize}
+        showOverlay={true}
+        showToggle={true}
+      />
     </div>
   );
 };

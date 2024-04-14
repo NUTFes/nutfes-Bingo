@@ -3,15 +3,26 @@ import type { NextPage } from "next";
 import { useState, useCallback, useRef, useEffect } from "react";
 import styles from "@/pages/postPrizes/postPrizes.module.css";
 import { Header, PrizeResult } from "@/components/common";
+import { BingoPrize } from "../prizes";
+import { bingoPrizeGet as BPG, bingoPrizeCreate as BPC } from "../api/schema";
+import { useQuery, useMutation } from "@apollo/client";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import { BingoPrize, getBingoPrize, postBingoPrize } from "@/utils/api_methods";
 
 const Page: NextPage = () => {
   // アップロードした画像ファイルから取得したbase64
   const [displayImage, setDisplayImage] = useState<string>(""); // imagedata base64
   const [prizeName, setPrizeName] = useState<string>("");
   const [prizeExisting, setPrizeExisting] = useState<boolean>(false);
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // getしてきた画像
+  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
+
+  const { data: query } = useQuery(BPG);
+  const [postPrize] = useMutation(BPC);
+
+  useEffect(() => {
+    if (query) {
+      setBingoPrize(query.bingo_prize);
+    }
+  }, []);
 
   /**
    * ファイルアップロードインプット変更時ハンドラ
@@ -34,26 +45,10 @@ const Page: NextPage = () => {
       reader.onload = () => {
         // base64に変換した結果をstateにセットする
         setDisplayImage(reader.result as string);
-        // console.log(reader.result)
-        // createBingoPrize(reader.result as string)
       };
     },
     [],
   );
-  useEffect(() => {
-    async function getPrizeImage() {
-      try {
-        const getData: BingoPrize[] = await getBingoPrize();
-        if (getData) {
-          setBingoPrize(getData);
-          console.log("getPrize");
-        }
-      } catch (error) {
-        console.error("データの取得中にエラーが発生しました:", error);
-      }
-    }
-    getPrizeImage();
-  }, []);
 
   const insertPrize = () => {
     console.error("押されたよ");
@@ -61,8 +56,13 @@ const Page: NextPage = () => {
       alert("写真のアップロードと景品名の設定をしてください。");
       return;
     }
-    postBingoPrize(prizeExisting, displayImage, prizeName);
-    console.log(prizeExisting, displayImage, prizeName);
+    postPrize({
+      variables: {
+        existing: prizeExisting,
+        image: displayImage,
+        name: prizeName,
+      },
+    });
     setDisplayImage("");
     setPrizeName("");
     if (fileInputRef.current) {
@@ -167,6 +167,7 @@ const Page: NextPage = () => {
       </div>
       <PrizeResult
         prizeResult={bingoPrize}
+        setBingoPrize={setBingoPrize}
         showToggle={false}
         showOverlay={false}
       />

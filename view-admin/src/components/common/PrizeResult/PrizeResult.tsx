@@ -1,23 +1,34 @@
 import React, { useState } from "react";
 import styles from "./PrizeResult.module.css";
-import { BingoPrize, updatePrizeExisting } from "@/utils/api_methods";
+import { BingoPrize } from "@/pages/prizes";
 import Image from "next/image";
+import { useMutation } from "@apollo/client";
+import { bingoPrizeUpdateExisiting as BPUE } from "@/pages/api/schema";
 
 interface PrizeResultProps {
   prizeResult: BingoPrize[];
+  setBingoPrize: React.Dispatch<React.SetStateAction<BingoPrize[]>>;
   showOverlay: boolean;
   showToggle: boolean;
 }
 
-export const PrizeResult = ({
-  prizeResult,
-  showOverlay = true,
-  showToggle = true,
-}: PrizeResultProps) => {
+export const PrizeResult = (props: PrizeResultProps) => {
   const [isImageVisible, setIsImageVisible] = useState(true);
   const imageVisibility = () => {
     setIsImageVisible(false);
   };
+
+  const [updatePrize] = useMutation(BPUE);
+
+  const handleToggleChange = (id: number, existing: boolean) => {
+    updatePrize({ variables: { id: id, existing: existing } });
+    props.setBingoPrize((prev) =>
+      prev.map((prize) =>
+        prize.id === id ? { ...prize, existing: existing } : prize,
+      ),
+    );
+  };
+
   return (
     <div className={styles.content_wrapper}>
       <div className={styles.container}>
@@ -27,7 +38,7 @@ export const PrizeResult = ({
           className={isImageVisible ? styles.visible : styles.hidden}
         ></div>
         <div className={styles.card_frame}>
-          {[...prizeResult]
+          {[...props.prizeResult]
             .sort((a, b) => a.id - b.id)
             .map((prizeResult) => (
               <div
@@ -54,12 +65,12 @@ export const PrizeResult = ({
                 <div className={styles.card_content}>
                   <p>{prizeResult.name}</p>
                 </div>
-                {showOverlay && prizeResult.existing && (
+                {props.showOverlay && prizeResult.existing && (
                   <div className={styles.overlay}>
                     <p>当選！</p>
                   </div>
                 )}
-                {showToggle && (
+                {props.showToggle && (
                   <div className={styles.toggle_container}>
                     <div className={styles.toggle_button}>
                       <input
@@ -67,10 +78,9 @@ export const PrizeResult = ({
                         className={styles.toggle_input}
                         type="checkbox"
                         checked={prizeResult.existing}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          console.log(prizeResult.id, e.target.checked);
-                          updatePrizeExisting(prizeResult.id, e.target.checked);
-                        }}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          handleToggleChange(prizeResult.id, e.target.checked)
+                        }
                       />
                       <label htmlFor="toggle" className={styles.toggle_label} />
                     </div>
