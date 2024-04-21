@@ -1,1 +1,1 @@
-export {default} from "./JudgementModal"
+export { default } from "./JudgementModal";

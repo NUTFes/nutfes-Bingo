@@ -6,4 +6,4 @@ export const en = {
   NUMBER_ORDER_BUTTON: "Num Order",
   LOTTERY_ORDER_BUTTON: "Lott Order",
   WINNING_OVERRAY: "Won!",
-}
+};

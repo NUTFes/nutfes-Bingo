@@ -12,9 +12,9 @@ const Header = ({ children, user }: HeaderProps) => {
   return (
     <div className={styles.container}>
       <div className={styles.main}>
-          <div className={styles.title} onClick={() => router.push("/")}>
-            <p>NUTFES BINGO {user}</p>
-          </div>
+        <div className={styles.title} onClick={() => router.push("/")}>
+          <p>NUTFES BINGO {user}</p>
+        </div>
         <div>{children}</div>
       </div>
     </div>

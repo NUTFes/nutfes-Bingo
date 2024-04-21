@@ -17,8 +17,8 @@ const Button = (props: ButtonProps) => {
             styles.primary,
             styles[props.size],
             styles[props.shape],
-            )}
-            onClick={props.onClick}
+          )}
+          onClick={props.onClick}
         >
           {props.children}
         </button>
