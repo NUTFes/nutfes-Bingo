@@ -1,1 +1,1 @@
-export {default} from "./PrizeResult"
+export { default } from "./PrizeResult";

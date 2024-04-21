@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import styles from "./Modal.module.css";
-import { RxCross1 } from "react-icons/rx"
+import { RxCross1 } from "react-icons/rx";
 
 interface ModalProps {
   children: ReactNode;
@@ -15,7 +15,6 @@ const Modal = ({
   canCloseByClickingBackground = true,
   setisOpened,
 }: ModalProps) => {
-
   const closeModal = () => {
     setisOpened(false);
   };

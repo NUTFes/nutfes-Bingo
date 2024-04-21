@@ -6,4 +6,4 @@ export const ja = {
   NUMBER_ORDER_BUTTON: "番号順",
   LOTTERY_ORDER_BUTTON: "抽選順",
   WINNING_OVERRAY: "当選！",
-}
+};
