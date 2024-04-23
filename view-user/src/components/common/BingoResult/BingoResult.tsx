@@ -3,8 +3,8 @@ import Image from "next/image";
 import styles from "./BingoResult.module.css";
 import { BingoIcon, Button } from "@/components/common";
 import { useRouter } from "next/router";
-import { ja } from "@/pages/locales/ja";
-import { en } from "@/pages/locales/en";
+import { ja } from "@/locales/ja";
+import { en } from "@/locales/en";
 import { BingoNumber } from "@/pages";
 interface BingoResultProps {
   bingoResultNumber: BingoNumber[];

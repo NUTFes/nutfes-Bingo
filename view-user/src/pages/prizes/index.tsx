@@ -4,8 +4,8 @@ import Image from "next/image";
 import { Header, Button, PrizeResult, Modal } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import { ja } from "../locales/ja";
-import { en } from "../locales/en";
+import { ja } from "../../locales/ja";
+import { en } from "../../locales/en";
 import { MdTranslate } from "react-icons/md";
 import { useQuery, useSubscription } from "@apollo/client";
 import {
@@ -13,7 +13,7 @@ import {
   bingoPrizeSubscriptionExisting as BPSE,
 } from "../api/schema";
 import { useRecoilState } from "recoil";
-import { bingoPrizeState } from "../Atom/atom";
+import { bingoPrizeState } from "../../Atom/atom";
 
 export interface BingoPrize {
   id: number;
