@@ -11,12 +11,14 @@ import { Header, Modal, BingoResult, Button } from "@/components/common";
 import { useRouter } from "next/router";
 import { ja } from "./locales/ja";
 import { en } from "./locales/en";
-import { MdTranslate } from "react-icons/md";
+import { MdTranslate, MdQuestionMark } from "react-icons/md";
+import HelpModal from "@/components/common/HelpModal/HelpModal";
 
 const Page: NextPage = () => {
   const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
   const [isOpened, setIsOpened] = useState(true);
+  const [isHelpModalOpened, setIsHelpModalOpened] = useState(false);
   const router = useRouter();
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
 
@@ -88,6 +90,10 @@ const Page: NextPage = () => {
           </div>
         </div>
       </Modal>
+      <HelpModal
+        isOpened={isHelpModalOpened}
+        setIsOpened={setIsHelpModalOpened}
+      />
       <Header user="">
         <div className={styles.main}>
           <Button
@@ -106,6 +112,15 @@ const Page: NextPage = () => {
       <Button size="null" shape="null" onClick={() => setIsOpened(true)}>
         <div className={styles.iconButton}>
           <MdTranslate size={35} />
+        </div>
+      </Button>
+      <Button
+        size="null"
+        shape="null"
+        onClick={() => setIsHelpModalOpened(true)}
+      >
+        <div className={styles.helpIconButton}>
+          <MdQuestionMark size={35} />
         </div>
       </Button>
     </div>

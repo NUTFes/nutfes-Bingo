@@ -11,12 +11,14 @@ import {
 } from "@/utils/api_methods";
 import { ja } from "../locales/ja";
 import { en } from "../locales/en";
-import { MdTranslate } from "react-icons/md";
+import { MdQuestionMark, MdTranslate } from "react-icons/md";
+import HelpModal from "@/components/common/HelpModal/HelpModal";
 
 const Page: NextPage = () => {
-  const { locale } = useRouter()
+  const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
   const [isOpened, setIsOpened] = useState(false);
+  const [isHelpModalOpened, setIsHelpModalOpened] = useState(false);
   const router = useRouter();
   const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // get
 
@@ -43,7 +45,7 @@ const Page: NextPage = () => {
           // existing プロパティを subscriptionData で更新
           const updatedPrizes = oldPrize.map((prize) => {
             const matchingSubscriptionPrize = subscriptionData.find(
-              (subscriptionPrize) => subscriptionPrize.id === prize.id
+              (subscriptionPrize) => subscriptionPrize.id === prize.id,
             ); // oldPrizeとsubscriptionDataのidが一致するものを探して上書き
             return matchingSubscriptionPrize
               ? { ...prize, existing: matchingSubscriptionPrize.existing }
@@ -60,28 +62,32 @@ const Page: NextPage = () => {
     <div className={styles.container}>
       <Modal isOpened={isOpened} setisOpened={setIsOpened}>
         <div className={styles.languageBlock}>
-            <div className={styles.language}>
-              <p
-                onClick={() => {
-                  router.push('/prizes', '/prizes', { locale: 'ja' });
-                  setIsOpened(false);
-                }}
-              >
-                日本語
-              </p>
-            </div>
-            <div className={styles.language}>
-              <p
-                onClick={() => {
-                  router.push('/prizes', '/prizes', { locale: 'en' });
-                  setIsOpened(false);
-                }}
-              >
-                English
-              </p>
-            </div>
+          <div className={styles.language}>
+            <p
+              onClick={() => {
+                router.push("/prizes", "/prizes", { locale: "ja" });
+                setIsOpened(false);
+              }}
+            >
+              日本語
+            </p>
+          </div>
+          <div className={styles.language}>
+            <p
+              onClick={() => {
+                router.push("/prizes", "/prizes", { locale: "en" });
+                setIsOpened(false);
+              }}
+            >
+              English
+            </p>
+          </div>
         </div>
       </Modal>
+      <HelpModal
+        isOpened={isHelpModalOpened}
+        setIsOpened={setIsHelpModalOpened}
+      />
       <Header user="">
         <div className={styles.main}>
           <Button size="m" shape="circle" onClick={() => router.push("/")}>
@@ -101,6 +107,15 @@ const Page: NextPage = () => {
       <Button size="null" shape="null" onClick={() => setIsOpened(true)}>
         <div className={styles.iconButton}>
           <MdTranslate size={35} />
+        </div>
+      </Button>
+      <Button
+        size="null"
+        shape="null"
+        onClick={() => setIsHelpModalOpened(true)}
+      >
+        <div className={styles.helpIconButton}>
+          <MdQuestionMark size={35} />
         </div>
       </Button>
     </div>
