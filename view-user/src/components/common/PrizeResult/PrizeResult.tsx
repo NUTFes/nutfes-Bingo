@@ -2,8 +2,8 @@ import React, { ReactNode, useState } from "react";
 import styles from "./PrizeResult.module.css";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { ja } from "@/pages/locales/ja";
-import { en } from "@/pages/locales/en";
+import { ja } from "@/locales/ja";
+import { en } from "@/locales/en";
 import { BingoPrize } from "@/pages/prizes";
 
 interface PrizeResultProps {
