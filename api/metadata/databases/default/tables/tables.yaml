@@ -1,3 +1,4 @@
 - "!include public_bingo_number.yaml"
 - "!include public_bingo_prize.yaml"
 - "!include public_prize_image.yaml"
+- "!include public_page_counter.yaml"
