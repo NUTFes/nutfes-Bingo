@@ -23,6 +23,11 @@
   margin: 1rem 2rem 0rem;
 }
 
+.counter {
+  margin: 1rem 1rem 1rem 2rem;
+  font-weight: bold
+}
+
 .inputForm {
   width: 300px;
   border-radius: 0.25rem;
@@ -148,10 +153,9 @@
 }
 
 .errormessage {
-  color:black;
-  border:1px red;
+  color: black;
+  border: 1px red;
   font-size: small;
-
 }
 
 .flexerror {
@@ -208,7 +212,7 @@
   color: #333;
   font-weight: 600;
   font-size: 1rem;
-  white-space:nowrap;
+  white-space: nowrap;
 }
 
 .btnOpen:hover {
@@ -225,7 +229,7 @@
   color: #333;
   font-weight: 700;
   font-size: 1rem;
-  white-space:nowrap;
+  white-space: nowrap;
 }
 
 .btnOpen:hover {

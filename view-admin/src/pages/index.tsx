@@ -1,4 +1,4 @@
-import { useMutation, useSubscription } from "@apollo/client";
+import { useMutation, useQuery, useSubscription } from "@apollo/client";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -17,6 +17,8 @@ import {
   bingoNumberSubscription as BNS,
   bingoNumberCreate as BNC,
   bingoNumberDelete as BND,
+  SetCounterValue,
+  GetCounterValue,
 } from "./api/schema";
 import { BingoNumber } from "@/type/common";
 
@@ -60,6 +62,20 @@ const Page: NextPage = () => {
   const { data, loading, error } = useSubscription(BNS);
   const [createNumber] = useMutation(BNC);
   const [deleteNumber] = useMutation(BND);
+  const [counterValue, setCounterValue] = useState<number>(0);
+  const [maxCounterValue, setMaxCounterValue] = useState<number>(0);
+  const [updateCounterValue] = useMutation(SetCounterValue);
+  const { data: maxValue } = useQuery(GetCounterValue, {
+    variables: { id: 2 },
+  });
+  const {
+    data: counterData,
+    startPolling,
+    stopPolling,
+  } = useQuery(GetCounterValue, {
+    variables: { id: 1 },
+    notifyOnNetworkStatusChange: true,
+  });
 
   //番号の追加
   const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
@@ -88,6 +104,52 @@ const Page: NextPage = () => {
       setBingoNumbers(data.bingo_number);
     }
   }, [data]);
+
+  useEffect(() => {
+    startPolling(1000);
+    return () => stopPolling();
+  }, [startPolling, stopPolling]);
+
+  useEffect(() => {
+    if (
+      counterData &&
+      counterData.page_counter &&
+      counterData.page_counter[0]
+    ) {
+      const newCounterValue = counterData.page_counter[0].counter;
+      setCounterValue(newCounterValue);
+      if (newCounterValue > maxCounterValue) {
+        setMaxCounterValue(newCounterValue);
+      }
+    }
+  }, [counterData]);
+
+  useEffect(() => {
+    if (maxValue && maxValue.page_counter && maxValue.page_counter[0]) {
+      const initialMaxValue = maxValue.page_counter[0].counter;
+      setMaxCounterValue(initialMaxValue);
+    }
+  }, [maxValue]);
+
+  useEffect(() => {
+    if (
+      counterData &&
+      counterData.page_counter &&
+      counterData.page_counter[0]
+    ) {
+      const newCounterValue = counterData.page_counter[0].counter;
+      setCounterValue(newCounterValue);
+      if (newCounterValue > maxCounterValue) {
+        setMaxCounterValue(newCounterValue);
+        updateCounterValue({
+          variables: {
+            id: 2,
+            newCounterValue: newCounterValue,
+          },
+        });
+      }
+    }
+  }, [counterData, maxCounterValue, updateCounterValue]);
 
   // if (session) {
   return (
@@ -126,6 +188,11 @@ const Page: NextPage = () => {
           </Button>
         </div>
       </Header>
+      <div className={styles.counter}>
+        <p>
+          同時接続数: {counterValue} (最高値: {maxCounterValue})
+        </p>
+      </div>
       <div className={styles.form}>
         <div className={styles.frame}>
           <p>抽選した番号を入力</p>
