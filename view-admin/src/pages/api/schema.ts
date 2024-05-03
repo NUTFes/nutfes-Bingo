@@ -197,3 +197,35 @@ export const prizeImageDelete = gql`
     }
   }
 `;
+
+export const GetCounterValue = gql`
+  query GetCounterById($id: Int!) {
+    page_counter(where: { id: { _eq: $id } }) {
+      id
+      counter
+    }
+  }
+`;
+
+export const SetCounterValue = gql`
+  mutation UpdateCounter($id: Int!, $newCounterValue: Int!) {
+    update_page_counter_by_pk(
+      pk_columns: { id: $id }
+      _set: { counter: $newCounterValue }
+    ) {
+      id
+      counter
+    }
+  }
+`;
+
+export const UpsertPageCounter = gql`
+  mutation UpsertPageCounter($id: Int!, $counter: Int!) {
+    insert_page_counter(
+      objects: { id: $id, counter: $counter }
+      on_conflict: { constraint: page_counter_pkey, update_columns: counter }
+    ) {
+      affected_rows
+    }
+  }
+`;

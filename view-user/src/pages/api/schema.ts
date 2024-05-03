@@ -197,3 +197,25 @@ export const prizeImageDelete = gql`
     }
   }
 `;
+
+export const IncrementCounter = gql`
+  mutation IncrementCounter {
+    update_page_counter(where: { id: { _eq: 1 } }, _inc: { counter: 1 }) {
+      affected_rows
+      returning {
+        counter
+      }
+    }
+  }
+`;
+
+export const DecrementCounter = gql`
+  mutation IncrementCounter {
+    update_page_counter(where: { id: { _eq: 1 } }, _inc: { counter: -1 }) {
+      affected_rows
+      returning {
+        counter
+      }
+    }
+  }
+`;
