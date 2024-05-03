@@ -7,9 +7,10 @@ import { useRouter } from "next/router";
 import { ja } from "../locales/ja";
 import { en } from "../locales/en";
 import { MdTranslate } from "react-icons/md";
-import { useSubscription } from "@apollo/client";
+import { useMutation, useQuery, useSubscription } from "@apollo/client";
 import { bingoNumberSubscription as BNS } from "./api/schema";
 import { BingoNumber } from "@/type/common";
+import { IncrementCounter, DecrementCounter } from "@/pages/api/schema";
 
 const Page: NextPage = () => {
   const { locale } = useRouter();
@@ -19,6 +20,9 @@ const Page: NextPage = () => {
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
 
   const { data } = useSubscription(BNS);
+
+  const [incrementCounter] = useMutation(IncrementCounter);
+  const [decrementCounter] = useMutation(DecrementCounter);
 
   //subscriptionを行うためのuseEffect
   useEffect(() => {
@@ -47,6 +51,19 @@ const Page: NextPage = () => {
       localStorage.removeItem("isOpened");
     };
 
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  useEffect(() => {
+    incrementCounter();
+
+    const handleBeforeUnload = () => {
+      decrementCounter();
+    };
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
