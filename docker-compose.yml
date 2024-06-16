@@ -37,9 +37,6 @@ services:
       curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash &&
       graphql-engine serve
       "
-    depends_on:
-      db:
-        condition: service_healthy
 
   view-user:
     image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
