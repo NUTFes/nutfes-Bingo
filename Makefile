@@ -1,6 +1,3 @@
-build:
-	docker compose build
-
 run:
 	docker compose up -d
 	sleep 10
@@ -22,9 +19,6 @@ db-apply-prod:
 	docker-compose -f docker-compose.prod.yml exec api hasura metadata apply
 	docker-compose -f docker-compose.prod.yml exec api hasura migrate apply --database-name default
 	docker-compose -f docker-compose.prod.yml exec api hasura metadata reload
-
-build-prod:
-	docker-compose -f docker-compose.prod.yml build
 
 run-prod:
 	docker-compose -f docker-compose.prod.yml up -d

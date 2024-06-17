@@ -1,58 +1,64 @@
-version: "3"
 services:
   db:
     image: postgres:12
     container_name: "bingo_db"
-    volumes: [db-data:/var/lib/postgresql/data]
+    volumes: 
+      - db-data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: bingo_db
       POSTGRES_USER: bingo
       POSTGRES_PASSWORD: password
       POSTGRES_HOST_AUTH_METHOD: trust
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test:
+        - "CMD-SHELL"
+        - "pg_isready"
       interval: 10s
       timeout: 5s
       retries: 5
 
   api: # hasura
-    build:
-      context: .
-      dockerfile: .docker/api.Dockerfile
+    image: hasura/graphql-engine:v2.36.6@sha256:3fc234510962e66d5ca7db16734b8796a16fb729953915861953e974f976f30f
     container_name: "bingo_api"
-    ports: ["8080:8080"]
-    volumes: [./api:/tmp/hasura-project]
+    ports: 
+      - "8080:8080"
+    volumes: 
+      - ./api:/hasura/api
+    working_dir: /hasura/api
     env_file:
       - ./settings/bingo.env
     environment:
-      # HASURA_GRAPHQL_MIGRATIONS_DIR: /tmp/hasura-projectmigrations/
       HASURA_GRAPHQL_ENABLE_CONSOLE: true
       HASURA_GRAPHQL_DATABASE_URL: "postgres://bingo:password@db:5432/bingo_db"
       HASURA_GRAPHQL_DEV_MODE: true
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-    depends_on:
-      db:
-        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash &&
+      graphql-engine serve
+      "
 
   view-user:
-    build:
-      context: .
-      dockerfile: .docker/view-user.Dockerfile
+    image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
     container_name: "view-user"
-    volumes: [./view-user:/app]
-    command: sh -c "npm install && npm run dev"
-    ports: ["3000:3000"]
+    volumes: 
+      - ./view-user:/app
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev"
+    ports:
+      - "3000:3000"
     env_file:
       - ./settings/bingo.env
+    stdin_open: true
+    tty: true
 
   view-admin:
-    build:
-      context: .
-      dockerfile: .docker/view-admin.Dockerfile
+    image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
     container_name: "view-admin"
     volumes:
       - ./view-admin:/app
-    command: sh -c "npm install && npm run dev"
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev"
     ports:
       - "3001:3000"
     env_file:
