@@ -1,18 +1,19 @@
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import Matter from "matter-js";
 
 const Home = () => {
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!scene.current) {
       return;
     }
 
-    const { Engine, Render, World, Bodies, Events } = Matter;
+    const { Engine, Render, Runner, Bodies, Composite } = Matter;
 
     const engine = Engine.create();
+
     render.current = Render.create({
       element: scene.current,
       engine: engine,
@@ -31,17 +32,36 @@ const Home = () => {
       60,
       { isStatic: true },
     );
-    World.add(engine.world, [ground]);
 
+    const rightWall = Bodies.rectangle(
+      window.innerWidth,
+      window.innerHeight / 2,
+      10,
+      window.innerHeight,
+      { isStatic: true },
+    );
+
+    const leftWall = Bodies.rectangle(
+      0,
+      window.innerHeight / 2,
+      10,
+      window.innerHeight,
+      { isStatic: true },
+    );
+
+    Composite.add(engine.world, [ground, leftWall, rightWall]);
     Render.run(render.current);
-    Engine.run(engine);
+
+    const runner = Runner.create();
+    Runner.run(runner, engine);
 
     const images = ["1.jpeg", "2.jpeg", "3.jpeg", "4.jpeg", "5.jpeg", "6.jpeg"];
 
     const addRandomCircle = () => {
       const x = Math.random() * window.innerWidth;
       const image = images[Math.floor(Math.random() * images.length)];
-      const circle = Bodies.circle(x, 0, 30, {
+      const circle = Bodies.circle(x, 0, 70, {
+        restitution: 0.8,
         render: {
           sprite: {
             texture: image,
@@ -50,33 +70,24 @@ const Home = () => {
           },
         },
       });
-      World.add(engine.world, circle);
+
+      Composite.add(engine.world, circle);
+
+      setTimeout(() => {
+        Composite.remove(engine.world, circle);
+      }, 5000);
     };
 
-    const interval = setInterval(addRandomCircle, 2000);
-
-    const handleResize = () => {
-      if (render.current) {
-        render.current.canvas.width = window.innerWidth;
-        render.current.canvas.height = window.innerHeight;
-        Render.lookAt(render.current, {
-          min: { x: 0, y: 0 },
-          max: { x: window.innerWidth, y: window.innerHeight },
-        });
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
+    const interval = setInterval(addRandomCircle, 500);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener("resize", handleResize);
+
       if (render.current) {
         Matter.Render.stop(render.current);
       }
-      Matter.World.clear(engine.world, true);
+      Matter.Composite.clear(engine.world, true);
       Matter.Engine.clear(engine);
-      // biome-ignore lint/complexity/useOptionalChain: <explanation>
       if (render.current && render.current.canvas) {
         render.current.canvas.remove();
         render.current.textures = {};
