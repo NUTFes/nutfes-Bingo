@@ -137,10 +137,23 @@ const Page: NextPage = () => {
                     1~99の番号を入力してください
                   </div>
                 )}
-              </div>
-              <button type="submit" className={styles.Button}>
+              </div>               
+              {/* <button type="submit" className={styles.Button}>
                 送信
-              </button>
+              </button> */}
+
+               {!errors.submitNumber && (
+                  <button type="submit" className={styles.Button}>
+                  送信
+                  </button>
+                )}
+                  
+              {errors.submitNumber && (
+                  <button type="submit" className={styles.dummyButton}>
+                  送信
+                  </button>
+                )}
+
             </div>
           </form>
         </div>
