@@ -138,9 +138,17 @@ const Page: NextPage = () => {
                   </div>
                 )}
               </div>
-              <button type="submit" className={styles.Button}>
-                送信
-              </button>
+
+              {!errors.submitNumber && (
+                  <button type="submit" className={styles.Button}>
+                    送信
+                  </button>
+              )}
+              {errors.submitNumber && (
+                    <button type="submit" className={styles.dummyButton}>
+                      送信
+                    </button>
+              )}
             </div>
           </form>
         </div>
