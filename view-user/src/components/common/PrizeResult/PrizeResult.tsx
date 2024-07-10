@@ -13,9 +13,24 @@ interface PrizeResultProps {
 export const PrizeResult = (props: PrizeResultProps) => {
   const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
-  const hasValidData = props.prizeResult.some(
-    (prize) => prize.id !== 0 || prize.name !== "" || prize.image !== "",
-  );
+  
+  const [hasValidData, setHasValidData] = useState(false);
+
+  useEffect(() => {
+    const validData = props.prizeResult.some(
+      (prize) => prize.id !== 0 || prize.name !== "" || prize.image !== ""
+    );
+
+    if (validData) {
+      setHasValidData(true);
+    } else {
+      const timer = setTimeout(() => {
+        setHasValidData(true);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [props.prizeResult]);
 
   return (
     <div className={styles.content_wrapper}>
