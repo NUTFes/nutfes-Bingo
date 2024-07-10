@@ -13,22 +13,9 @@ interface PrizeResultProps {
 export const PrizeResult = (props: PrizeResultProps) => {
   const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
-  const [isImageVisible, setIsImageVisible] = useState(false);
-  const [loadedImages, setLoadedImages] = useState(0);
-  const totalImages = props.prizeResult.filter((prize) => prize.image).length;
-
-  useEffect(() => {
-    if (
-      (loadedImages === totalImages && totalImages > 0) ||
-      totalImages === 0
-    ) {
-      setIsImageVisible(true);
-    }
-  }, [loadedImages, totalImages]);
-
-  const handleImageLoad = () => {
-    setLoadedImages((prevCount) => prevCount + 1);
-  };
+  const hasValidData = props.prizeResult.some(
+    (prize) => prize.id !== 0 || prize.name !== "" || prize.image !== "",
+  );
 
   return (
     <div className={styles.content_wrapper}>
@@ -37,8 +24,8 @@ export const PrizeResult = (props: PrizeResultProps) => {
           <Image src="/GiftBox.svg" alt="GiftBox" width={19} height={19} />
           {t.SUB_TITLE_PRIZE}
         </div>
-        {!isImageVisible && <div id="loading" className={styles.visible}></div>}
-        {isImageVisible && (
+        {!hasValidData && <div id="loading" className={styles.visible}></div>}
+        {hasValidData && (
           <div className={styles.card_frame}>
             {[...props.prizeResult]
               .sort((a, b) => a.id - b.id)
@@ -57,7 +44,6 @@ export const PrizeResult = (props: PrizeResultProps) => {
                       alt="PrizeImage"
                       fill
                       style={{ objectFit: "cover" }}
-                      onLoadingComplete={handleImageLoad}
                     />
                   </div>
                   <div
