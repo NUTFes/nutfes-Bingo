@@ -17,7 +17,6 @@ const Page: NextPage = () => {
   const [prizeNameJp, setPrizeNameJp] = useState<string>("");
   const [prizeNameEn, setPrizeNameEn] = useState<string>("");
   const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
-  const [prizeImage, setPrizeImage] = useState<PrizeImage[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState({ uploadImageURL: "", type: "" });
