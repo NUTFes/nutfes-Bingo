@@ -5,13 +5,7 @@ import { useRouter } from "next/router";
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@apollo/client";
 import { bingoPrizeGet as BPG } from "../api/schema";
-
-export interface BingoPrize {
-  id: number;
-  name: string;
-  existing: boolean;
-  image: string;
-}
+import { BingoPrize } from "@/type/common";
 
 const Page: NextPage = () => {
   const router = useRouter();
@@ -27,6 +21,7 @@ const Page: NextPage = () => {
       setBingoPrize(query.bingo_prize);
     }
   }, []);
+  // console.log(bingoPrize);
 
   useEffect(() => {
     if (searchText === "") {
@@ -34,7 +29,7 @@ const Page: NextPage = () => {
     } else {
       setSearchResults(
         bingoPrize.filter((prize) =>
-          prize.name.toLowerCase().includes(searchText.toLowerCase()),
+          prize.nameJp.toLowerCase().includes(searchText.toLowerCase()),
         ),
       );
     }
