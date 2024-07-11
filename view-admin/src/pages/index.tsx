@@ -11,8 +11,6 @@ import {
 } from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
 import { useEffect, useState } from "react";
-// import { createBingoNumber, deleteBingoNumber } from "@/utils/api_methods";
-
 import { useMutation, useSubscription } from "@apollo/client";
 import {
   bingoNumberSubscription as BNS,
@@ -20,8 +18,11 @@ import {
   bingoNumberDelete as BND,
 } from "./api/schema";
 
-interface formData {
+interface formDataCreate {
   submitNumber: number | null;
+}
+
+interface formDataDelete {
   inputedNumber: number | null;
   selectedNumber: number | null;
 }
@@ -40,36 +41,47 @@ const Page: NextPage = () => {
   const isopenBool = () => setIsOpened(!isOpened);
 
   const {
-    register,
-    handleSubmit,
-    getValues,
-    reset,
-    formState: { errors },
-  } = useForm<formData>();
+    register: registerCreate,
+    handleSubmit: handleSubmitCreate,
+    getValues: getValuesCreate,
+    reset: resetCreate,
+    formState: { errors: errorsCreate },
+  } = useForm<formDataCreate>({
+    mode: "onChange",
+  });
 
-  //apolo clientのmutaitionとsubscriptionの宣言
+  const {
+    register: registerDelete,
+    handleSubmit: handleSubmitDelete,
+    getValues: getValuesDelete,
+    reset: resetDelete,
+    formState: { errors: errorsDelete },
+  } = useForm<formDataDelete>({
+    mode: "onChange",
+  });
+
   const { data, loading, error } = useSubscription(BNS);
   const [createNumber] = useMutation(BNC);
   const [deleteNumber] = useMutation(BND);
 
   //番号の追加
-  const handleSubmitCreate: SubmitHandler<formData> = () => {
-    const { submitNumber } = getValues();
+  const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
+    const { submitNumber } = getValuesCreate();
     if (submitNumber !== null) {
       createNumber({ variables: { data: submitNumber } });
-      reset({ submitNumber: null });
+      resetCreate({ submitNumber: null });
     }
   };
 
   //番号の削除
-  const handleSubmitDelete = () => {
-    const { inputedNumber, selectedNumber } = getValues();
+  const onSubmitDelete = () => {
+    const { inputedNumber, selectedNumber } = getValuesDelete();
     if (inputedNumber) {
       deleteNumber({ variables: { data: inputedNumber } });
-      reset({ inputedNumber: null });
+      resetDelete({ inputedNumber: null });
     } else if (selectedNumber) {
       deleteNumber({ variables: { data: selectedNumber } });
-      reset({ selectedNumber: null });
+      resetDelete({ selectedNumber: null });
     }
   };
 
@@ -120,19 +132,20 @@ const Page: NextPage = () => {
       <div className={styles.form}>
         <div className={styles.frame}>
           <p>抽選した番号を入力</p>
-          <form onSubmit={handleSubmit(handleSubmitCreate)}>
+          <form onSubmit={handleSubmitCreate(onSubmitCreate)}>
             <div className={styles.item}>
               <div className={styles.flexerror}>
                 <input
-                  {...register("submitNumber", {
-                    max: 99,
-                    min: 1,
-                  })}
                   type="number"
                   placeholder="番号を入力"
                   className={styles.inputForm}
+                  {...registerCreate("submitNumber", {
+                    valueAsNumber: true,
+                    max: 99,
+                    min: 1,
+                  })}
                 />
-                {errors.submitNumber && (
+                {errorsCreate.submitNumber && (
                   <div className={styles.errormessage}>
                     1~99の番号を入力してください
                   </div>
@@ -149,24 +162,23 @@ const Page: NextPage = () => {
           <div className={styles.item}>
             <div className={styles.flexerror}>
               <input
-                {...register("inputedNumber", {
-                  max: 99,
-                  min: 1,
-                })}
                 type="number"
                 placeholder="番号を入力"
                 className={styles.inputForm}
-                onChange={() => reset({ selectedNumber: null })}
+                {...registerDelete("inputedNumber", {
+                  max: 99,
+                  min: 1,
+                })}
               />
-              {(errors.inputedNumber || errors.selectedNumber) && (
+              {(errorsDelete.inputedNumber || errorsDelete.selectedNumber) && (
                 <div className={styles.errormessage}>
                   1~99の番号を入力してください
                 </div>
               )}
             </div>
             <select
-              {...register("selectedNumber")}
-              onChange={() => reset({ inputedNumber: null })}
+              {...registerDelete("selectedNumber")}
+              onChange={() => resetDelete({ inputedNumber: null })}
             >
               <option value="" hidden>
                 選択してください
@@ -180,7 +192,7 @@ const Page: NextPage = () => {
             <button
               type="button"
               className={styles.Button}
-              onClick={handleSubmit(handleSubmitDelete)}
+              onClick={handleSubmitDelete(onSubmitDelete)}
             >
               送信
             </button>
