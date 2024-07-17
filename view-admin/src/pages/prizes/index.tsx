@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@apollo/client";
 import { bingoPrizeGet as BPG } from "../api/schema";
-import { BingoPrize} from "@/type/common";
+import { BingoPrize } from "@/type/common";
 
 const Page: NextPage = () => {
   const router = useRouter();
