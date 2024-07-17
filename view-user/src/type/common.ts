@@ -10,10 +10,10 @@ export interface BingoPrize {
   nameJp: string;
   nameEn?: string;
   isWon: boolean;
-  imageId: string;
+  imageId: number;
   createdAt?: string;
   updatedAt?: string;
-  prizeImage?: PrizeImage[];
+  prizeImage?: PrizeImage;
 }
 
 export interface PrizeImage {
