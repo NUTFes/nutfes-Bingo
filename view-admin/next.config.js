@@ -13,5 +13,22 @@ const nextConfig = {
     NEXT_PUBLIC_SECRET_KEY: process.env.NEXT_PUBLIC_SECRET_KEY,
     NEXT_PUBLIC_BUCKET_NAME: process.env.NEXT_PUBLIC_BUCKET_NAME,
   },
+  // TODO:next/Imageに直したい。
+  // images: {
+  //   remotePatterns: [
+  //     {
+  //       protocol: "http",
+  //       hostname: "localhost",
+  //       port: "9000",
+  //       pathname: "/bingo/**",
+  //     },
+  //     {
+  //       protocol: "http",
+  //       hostname: "127.0.0.1",
+  //       port: "9000",
+  //       pathname: "/bingo/**",
+  //     },
+  //   ],
+  // },
 };
 module.exports = nextConfig;
