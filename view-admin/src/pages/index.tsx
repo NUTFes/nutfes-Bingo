@@ -154,9 +154,13 @@ const Page: NextPage = () => {
               <button
                 type="submit"
                 className={
-                  errors.submitNumber ? styles.not_hover_Button : styles.Button
-                  }
-              >送信</button>
+                  errorsCreate.submitNumber
+                    ? styles.not_hover_Button
+                    : styles.Button
+                }
+              >
+                送信
+              </button>
             </div>
           </form>
         </div>
@@ -195,8 +199,10 @@ const Page: NextPage = () => {
             <button
               type="button"
               className={
-                (errors.inputedNumber || errors.selectedNumber) ? styles.not_hover_Button : styles.Button
-                }
+                errorsDelete.inputedNumber || errorsDelete.selectedNumber
+                  ? styles.not_hover_Button
+                  : styles.Button
+              }
               onClick={handleSubmitDelete(onSubmitDelete)}
             >
               送信
