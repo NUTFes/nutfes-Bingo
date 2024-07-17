@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@apollo/client";
 import { bingoPrizeGet as BPG } from "../api/schema";
-import { BingoPrize } from "@/type/common";
+import { BingoPrize} from "@/type/common";
 
 const Page: NextPage = () => {
   const router = useRouter();
@@ -14,14 +14,39 @@ const Page: NextPage = () => {
   const [searchResults, setSearchResults] = useState<BingoPrize[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const { data: query } = useQuery(BPG);
+  const { data: query } = useQuery<{ bingo_prize: BingoPrize[] }>(BPG);
+
+  // useEffect(() => {
+  //   if (query && query.bingo_prize) {
+  //     setBingoPrize(query.bingo_prize);
+  //   }
+  // }, [query]);
 
   useEffect(() => {
-    if (query) {
-      setBingoPrize(query.bingo_prize);
+    if (query && query.bingo_prize) {
+      // データ変換処理を追加
+      const transformedData = query.bingo_prize.map((item: any) => ({
+        id: item.id,
+        nameJp: item.nameJp,
+        nameEn: item.nameEn,
+        isWon: item.isWon,
+        imageId: item.imageId,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        prizeImage: item.prize_image
+          ? {
+              id: item.prize_image.id,
+              bucketName: item.prize_image.bucketName,
+              fileName: item.prize_image.fileName,
+              fileType: item.prize_image.fileType,
+              createdAt: item.prize_image.created_at,
+              updatedAt: item.prize_image.updated_at,
+            }
+          : undefined,
+      }));
+      setBingoPrize(transformedData);
     }
   }, []);
-  // console.log(bingoPrize);
 
   useEffect(() => {
     if (searchText === "") {
