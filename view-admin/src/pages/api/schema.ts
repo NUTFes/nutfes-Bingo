@@ -46,19 +46,19 @@ export const bingoNumberSubscription = gql`
 export const bingoPrizeGet = gql`
   query MyQuery {
     bingo_prize {
-      created_at
       id
-      imageId
-      isWon
-      nameEn
       nameJp
+      nameEn
+      isWon
+      imageId
+      created_at
       updated_at
       prize_image {
+        id
         bucketName
         fileName
-        created_at
         fileType
-        id
+        created_at
         updated_at
       }
     }

@@ -1,4 +1,3 @@
-//スキーマの定義
 import { gql } from "@apollo/client";
 
 //ビンゴ番号の取得(Get)
@@ -22,7 +21,7 @@ export const bingoNumberCreate = gql`
   }
 `;
 
-//ビンゴ番号の削除(delete)
+//ビンゴ番号の削除(Delete)
 export const bingoNumberDelete = gql`
   mutation MyMutation($number: Int!) {
     delete_bingo_number(where: { number: { _eq: $number } }) {
@@ -56,9 +55,9 @@ export const bingoPrizeGet = gql`
       updated_at
       prize_image {
         bucketName
-        fimeName
+        fileName
         created_at
-        fimeType
+        fileType
         id
         updated_at
       }
@@ -66,17 +65,17 @@ export const bingoPrizeGet = gql`
   }
 `;
 
-// ビンゴ景品の削除(delete) returnで返したimageIdを画像削除に使う
-export const bingoPrizeDelet = gql`
-  mutation MyMutation {
-    delete_bingo_prize_by_pk($id: Int!) {
+//ビンゴ景品の削除(Delete)
+export const bingoPrizeDelete = gql`
+  mutation MyMutation($id: Int!) {
+    delete_bingo_prize_by_pk(id: $id) {
       imageId
     }
   }
 `;
 
 //ビンゴ景品の継続取得(Subscription)
-export const bingoPrizeSubscriptionExisting = gql`
+export const bingoPrizeSubscriptionIsWon = gql`
   subscription MySubscription {
     bingo_prize {
       created_at
@@ -91,9 +90,9 @@ export const bingoPrizeSubscriptionExisting = gql`
 export const bingoPrizeCreate = gql`
   mutation MyMutation(
     $isWon: Boolean!
-    $image: String!
+    $imageId: Int!
     $nameJp: String!
-    $nameEn: string!
+    $nameEn: String!
   ) {
     insert_bingo_prize(
       objects: {
@@ -126,32 +125,33 @@ export const bingoPrizeCreateImage = gql`
 //ビンゴ景品の当選確認(Update)
 export const bingoPrizeUpdateIsWon = gql`
   mutation UpdateBingoPrize($id: Int!, $isWon: Boolean!) {
-    update_bingo_prize_by_pk(
-      pk_columns: { id: $id }
-      _set: { isWon: $eisWon }
+    update_bingo_prize_by_pk(pk_columns: { id: $id }, _set: { isWon: $isWon }) {
+      id
+      isWon
+    }
+  }
+`;
+
+//画像の追加(Post)
+export const prizeImageCreate = gql`
+  mutation MyMutation(
+    $bucketName: String!
+    $fileName: String!
+    $fileType: String!
+  ) {
+    insert_prize_image_one(
+      object: {
+        bucketName: $bucketName
+        fileName: $fileName
+        fileType: $fileType
+      }
     ) {
       id
-      name
-      isWon
-      imageId
-      nameJp
-      nameEn
     }
   }
 `;
 
-// 画像の追加(post)
-export const prizeImageCreate = gql`
-  mutaiton MyMutation($bucketName: string!, $fileName: string!, $fileType: string!) {
-    insert_prize_image_one(object: {bucketName: $bucketName, fimeName: $fileName, fimeType: $fileType})
-  } {
-    returing {
-      id
-    }
-  }
-`;
-
-// idとprizeIdの紐づけ
+//idとprizeIdの紐づけ
 export const bingoPrizeToPrizeImage = gql`
   mutation UpdateBingoPrize($imageId: Int!, $id: Int!) {
     update_bingo_prize_by_pk(
@@ -164,26 +164,35 @@ export const bingoPrizeToPrizeImage = gql`
   }
 `;
 
-// 画像の更新(update)
+//画像の更新(Update)
 export const prizeImageUpdate = gql`
-  mutation MyMutation {
+  mutation MyMutation(
+    $id: Int!
+    $fileName: String!
+    $bucketName: String!
+    $fileType: String!
+  ) {
     update_prize_image_by_pk(
-    pk_columns: { $id: Int! }
-    _set: { fileName: $fileName, bucketName: $bucketName, fileType: $fileType}
+      pk_columns: { id: $id }
+      _set: {
+        fileName: $fileName
+        bucketName: $bucketName
+        fileType: $fileType
+      }
     ) {
-      fimeName
+      fileName
       bucketName
-      fimeType
+      fileType
       updated_at
       id
     }
   }
 `;
 
-// 画像の削除(delete)
+//画像の削除(Delete)
 export const prizeImageDelete = gql`
-  mutation MyMutation {
-    delete_prize_image_by_pk($id: Int!) {
+  mutation MyMutation($id: Int!) {
+    delete_prize_image_by_pk(id: $id) {
       id
     }
   }
