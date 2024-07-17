@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styles from "./PrizeResult.module.css";
-import { BingoPrize, PrizeImage } from "@/type/common";
+import { BingoPrize} from "@/type/common";
 import Image from "next/image";
 import { useMutation } from "@apollo/client";
 import { bingoPrizeUpdateIsWon as BPUIW } from "@/pages/api/schema";
@@ -21,17 +21,17 @@ export const PrizeResult = (props: PrizeResultProps) => {
   const [updatePrize] = useMutation(BPUIW);
   const bingoPrizes: BingoPrize[] = props.prizeResult;
 
-  const imageURLs = bingoPrizes.map((prize: BingoPrize) => {
-    if (prize.prizeImage && prize.prizeImage.length > 0) {
-      prize.prizeImage.map((image: PrizeImage) => {
-        const bucketName = image.bucketName;
-        const fileName = image.fileName;
-        return `http://127.0.0.1:9000/${bucketName}/${fileName}`;
-      });
+  // imageURLs を string[] 型にするための修正
+  const imageURLs: string[] = bingoPrizes.map((prize: BingoPrize) => {
+    if (prize.prizeImage) {
+      const image = prize.prizeImage;
+      const bucketName = image.bucketName;
+      const fileName = image.fileName;
+      return `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${bucketName}/${fileName}`;
+    } else {
+      return "";
     }
   });
-
-  console.log(imageURLs); // imageURLsを確認するためのログ出力
 
   const handleToggleChange = (id: number, isWon: boolean) => {
     updatePrize({ variables: { id: id, isWon: isWon } });
@@ -66,13 +66,20 @@ export const PrizeResult = (props: PrizeResultProps) => {
                     height: "100%",
                   }}
                 >
-                  <Image
+                  {/* <Image
                     src={imageURLs && imageURLs[index]}
                     className={styles.image}
                     alt="PrizeImage"
                     fill
                     style={{ objectFit: "cover" }}
                     onLoadingComplete={imageVisibility}
+                  /> */}
+                  <img
+                    src={imageURLs && imageURLs[index]}
+                    className="image"
+                    alt="PrizeImage"
+                    style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                    onLoad={imageVisibility}
                   />
                 </div>
                 <div className={styles.card_content}>
