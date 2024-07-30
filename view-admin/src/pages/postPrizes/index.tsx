@@ -11,24 +11,27 @@ import {
   prizeImageCreate as PIC,
 } from "../api/schema";
 import { IoCloudUploadOutline } from "react-icons/io5";
+import { useRouter } from "next/router";
 
 const Page: NextPage = () => {
-  // アップロードした画像ファイルから取得したbase64
+  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
   const [prizeNameJp, setPrizeNameJp] = useState<string>("");
   const [prizeNameEn, setPrizeNameEn] = useState<string>("");
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState({ uploadImageURL: "", type: "" });
   const [bucketName, setBucketName] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
   const [fileType, setFileType] = useState<string>("");
+
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { data: query } = useQuery(BPG);
   const [postPrize] = useMutation(BPC);
   const [postImage] = useMutation(PIC);
+
+  const router = useRouter();
 
   // useEffect(() => {
   //   if (query) {
@@ -83,10 +86,6 @@ const Page: NextPage = () => {
   };
 
   const insertPrize = async (imageId: number) => {
-    if (prizeNameJp === "") {
-      alert("写真のアップロードと景品名の設定をしてください。");
-      return;
-    }
     postPrize({
       variables: {
         isWon: false,
@@ -120,6 +119,12 @@ const Page: NextPage = () => {
   const postMinio = async () => {
     if (!imageFile) {
       return alert("画像を選択してください");
+    }
+    if (prizeNameJp === "") {
+      alert("景品名を入力してください。");
+      setIsLoading(false);
+      router.reload();
+      return;
     }
     const formData = new FormData();
     formData.append("file", imageFile);
