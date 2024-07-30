@@ -65,7 +65,7 @@ const Page: NextPage = () => {
   const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
     const { submitNumber } = getValuesCreate();
     if (submitNumber !== null) {
-      createNumber({ variables: { data: submitNumber } });
+      createNumber({ variables: { number: submitNumber } });
       resetCreate({ submitNumber: null });
     }
   };
@@ -74,10 +74,10 @@ const Page: NextPage = () => {
   const onSubmitDelete = () => {
     const { inputedNumber, selectedNumber } = getValuesDelete();
     if (inputedNumber) {
-      deleteNumber({ variables: { data: inputedNumber } });
+      deleteNumber({ variables: { number: inputedNumber } });
       resetDelete({ inputedNumber: null });
     } else if (selectedNumber) {
-      deleteNumber({ variables: { data: selectedNumber } });
+      deleteNumber({ variables: { number: selectedNumber } });
       resetDelete({ selectedNumber: null });
     }
   };
