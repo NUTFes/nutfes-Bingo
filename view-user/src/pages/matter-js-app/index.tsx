@@ -1,6 +1,19 @@
 import { useEffect, useRef } from "react";
 import Matter from "matter-js";
 
+const images = [
+  "/ReactionIcon/angry.png",
+  "/ReactionIcon/cracker.png",
+  "/ReactionIcon/crap.png",
+  "/ReactionIcon/good.png",
+  "/ReactionIcon/heart.png",
+  "/ReactionIcon/peace.png",
+  "/ReactionIcon/sad.png",
+  "/ReactionIcon/skull.png",
+  "/ReactionIcon/smile.png",
+  "/ReactionIcon/surprise.png",
+];
+
 const Home = () => {
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
@@ -54,19 +67,6 @@ const Home = () => {
 
     const runner = Runner.create();
     Runner.run(runner, engine);
-
-    const images = [
-      "/ReactionIcon/angry.png",
-      "/ReactionIcon/cracker.png",
-      "/ReactionIcon/crap.png",
-      "/ReactionIcon/good.png",
-      "/ReactionIcon/heart.png",
-      "/ReactionIcon/peace.png",
-      "/ReactionIcon/sad.png",
-      "/ReactionIcon/skull.png",
-      "/ReactionIcon/smile.png",
-      "/ReactionIcon/surprise.png",
-    ];
 
     const addRandomCircle = () => {
       const x = Math.random() * window.innerWidth;
