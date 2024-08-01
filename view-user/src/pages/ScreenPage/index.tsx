@@ -14,7 +14,7 @@ const images = [
   "/ReactionIcon/surprise.png",
 ];
 
-const Home = () => {
+const ScreenPage = () => {
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
 
@@ -40,26 +40,26 @@ const Home = () => {
 
     const ground = Bodies.rectangle(
       window.innerWidth / 2,
-      window.innerHeight - 30,
+      window.innerHeight,
       window.innerWidth + 10,
-      60,
-      { isStatic: true },
+      10,
+      { isStatic: true, render: { visible: false } },
     );
 
     const rightWall = Bodies.rectangle(
       window.innerWidth,
       window.innerHeight / 2,
-      10,
+      1,
       window.innerHeight,
-      { isStatic: true },
+      { isStatic: true, render: { visible: false } },
     );
 
     const leftWall = Bodies.rectangle(
       0,
       window.innerHeight / 2,
-      10,
+      1,
       window.innerHeight,
-      { isStatic: true },
+      { isStatic: true, render: { visible: false } },
     );
 
     Composite.add(engine.world, [ground, leftWall, rightWall]);
@@ -125,4 +125,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default ScreenPage;
