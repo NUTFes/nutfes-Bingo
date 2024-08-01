@@ -55,7 +55,18 @@ const Home = () => {
     const runner = Runner.create();
     Runner.run(runner, engine);
 
-    const images = ["1.jpeg", "2.jpeg", "3.jpeg", "4.jpeg", "5.jpeg", "6.jpeg"];
+    const images = [
+      "/ReactionIcon/angry.png",
+      "/ReactionIcon/cracker.png",
+      "/ReactionIcon/crap.png",
+      "/ReactionIcon/good.png",
+      "/ReactionIcon/heart.png",
+      "/ReactionIcon/peace.png",
+      "/ReactionIcon/sad.png",
+      "/ReactionIcon/skull.png",
+      "/ReactionIcon/smile.png",
+      "/ReactionIcon/surprise.png",
+    ];
 
     const addRandomCircle = () => {
       const x = Math.random() * window.innerWidth;
@@ -65,8 +76,8 @@ const Home = () => {
         render: {
           sprite: {
             texture: image,
-            xScale: 0.5,
-            yScale: 0.5,
+            xScale: 0.2,
+            yScale: 0.2,
           },
         },
       });
