@@ -6,8 +6,8 @@ import {
   InMemoryCache,
   HttpLink,
 } from "@apollo/client";
-import { createClient } from "graphql-ws";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 import { SessionProvider } from "next-auth/react";
 import { useEffect } from "react";
 

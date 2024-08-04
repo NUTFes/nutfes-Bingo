@@ -5,7 +5,7 @@ import { BingoIcon, Button } from "@/components/common";
 import { useRouter } from "next/router";
 import { ja } from "@/locales/ja";
 import { en } from "@/locales/en";
-import { BingoNumber } from "@/pages";
+import { BingoNumber } from "@/type/common";
 interface BingoResultProps {
   bingoResultNumber: BingoNumber[];
 }
@@ -18,7 +18,7 @@ export const BingoResult = (props: BingoResultProps) => {
   const sortCopiedArray = [...props.bingoResultNumber];
   const firstBingoNumber = copiedArray.pop();
   const sortFirstBingoNumber = sortCopiedArray
-    .sort((a, b) => a.data - b.data)
+    .sort((a, b) => a.number - b.number)
     .shift();
 
   function ResultNumber() {
@@ -26,14 +26,14 @@ export const BingoResult = (props: BingoResultProps) => {
       return (
         <>
           <div className={styles.card_frame}>
-            <div className={styles.large_card}>{firstBingoNumber?.data}</div>
+            <div className={styles.large_card}>{firstBingoNumber?.number}</div>
             <div className={styles.small_card_frame}>
               {[...props.bingoResultNumber]
                 .slice(0, -1)
                 .reverse()
                 .map((num, index) => (
                   <div className={styles.small_card} key={index}>
-                    <div>{num.data}</div>
+                    <div>{num.number}</div>
                   </div>
                 ))}
             </div>
@@ -45,15 +45,15 @@ export const BingoResult = (props: BingoResultProps) => {
         <>
           <div className={styles.card_frame}>
             <div className={styles.large_card}>
-              {sortFirstBingoNumber?.data}
+              {sortFirstBingoNumber?.number}
             </div>
             <div className={styles.small_card_frame}>
               {[...props.bingoResultNumber]
-                .sort((a, b) => a.data - b.data)
+                .sort((a, b) => a.number - b.number)
                 .slice(1)
                 .map((num, index) => (
                   <div className={styles.small_card} key={index}>
-                    <div>{num.data}</div>
+                    <div>{num.number}</div>
                   </div>
                 ))}
             </div>
