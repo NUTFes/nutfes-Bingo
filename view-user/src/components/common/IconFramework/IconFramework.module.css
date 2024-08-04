@@ -30,7 +30,11 @@
   border: 2px solid #FF3342;
 }
 
-.color_inversion {
-  color: white;
+.iconContainer.color_inversion {
   background-color: #FF3342;
+}
+
+.iconContainer.color_inversion .icon,
+.iconContainer.color_inversion .text {
+  color: white;
 }
