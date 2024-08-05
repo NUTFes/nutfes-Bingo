@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import type { NextPage } from "next";
+import React from "react";
 import { IconFramework } from "@/components/common";
 import { BiGift } from "react-icons/bi";
 import { useRouter } from "next/router";
@@ -17,7 +16,7 @@ const PrizesIcon = () => {
     <IconFramework
       icon={<BiGift />}
       text="Prizes"
-      outline={true}
+      outline
       onClick={() => handleClick()}
     />
   );
