@@ -8,7 +8,7 @@ const PrizesIcon = () => {
 
   const handleClick = () => {
     if (typeof window !== "undefined") {
-      router.push("/");
+      router.push("/prizes");
     }
   };
 
