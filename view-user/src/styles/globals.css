@@ -8,3 +8,10 @@ body {
 body::-webkit-scrollbar {
   display:none;
 }
+
+@font-face {
+  font-family: 'Silom';
+  src: url('/fonts/Silom.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
