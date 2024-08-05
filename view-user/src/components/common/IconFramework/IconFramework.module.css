@@ -4,13 +4,13 @@
   align-items: center;
   justify-content: center;
   background-color: white;
-  /* 375pxを基準にした場合の10px */
-  padding: 2.67vw;
-  border-radius: 2.67vw;
-  /* 375pxを基準にした場合の54px */
-  width: 14.4vw;
-  height: 14.4vw;
-  font-size: 14.4vw;
+  /* 320pxを基準にした場合の10px */
+  padding: 3.125vw;
+  border-radius: 3.125vw;
+  /* 320pxを基準にした場合の54px */
+  width: 16.875vw;
+  height: 16.875vw;
+  font-size: 16.875vw;
   border: none;
   outline: none;
 }
@@ -32,7 +32,7 @@
 }
 
 .outline {
-  border: 0.53vw solid #ff3342;
+  border: 1.25vw solid #ff3342;
 }
 
 .iconContainer.color_inversion {
