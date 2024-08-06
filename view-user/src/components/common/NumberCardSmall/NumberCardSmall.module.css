@@ -1,0 +1,17 @@
+.container {
+  width: 20.0vw;
+  height: 20.0vw;
+  border: 1.25vw solid #ff3342;
+  background: linear-gradient(135deg, #FFF 50%, #FFEEB1 51%);
+  border-radius: 3.125vw;
+  box-sizing: border-box;
+  box-shadow: 0.9375vw 0.9375vw 0px #ff3342;
+}
+
+.number {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 11.25vw;
+  color: #ff3342;
+}

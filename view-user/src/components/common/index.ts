@@ -7,3 +7,4 @@ export { default as Modal } from "./Modal";
 export { default as Button } from "./Button";
 export { default as BingoIcon } from "./BingoIcon";
 export { default as PrizeResult } from "./PrizeResult";
+export { default as NumberCardSmall } from "./NumberCardSmall";
