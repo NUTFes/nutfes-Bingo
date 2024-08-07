@@ -60,6 +60,11 @@ CREATE SEQUENCE public.prize_image_id_seq
     NO MAXVALUE
     CACHE 1;
 ALTER SEQUENCE public.prize_image_id_seq OWNED BY public.prize_image.id;
+ALTER SEQUENCE public.bingo_prize_id_seq OWNED BY public.bingo_prize.id;
+CREATE TABLE public.page_counter (
+    id integer DEFAULT 0 NOT NULL,
+    counter integer DEFAULT 0 NOT NULL
+);
 ALTER TABLE ONLY public.bingo_number ALTER COLUMN id SET DEFAULT nextval('public.bingo_number_id_seq'::regclass);
 ALTER TABLE ONLY public.bingo_prize ALTER COLUMN id SET DEFAULT nextval('public.bingo_prize_id_seq'::regclass);
 ALTER TABLE ONLY public.prize_image ALTER COLUMN id SET DEFAULT nextval('public.prize_image_id_seq'::regclass);
@@ -69,6 +74,8 @@ ALTER TABLE ONLY public.bingo_prize
     ADD CONSTRAINT bingo_prize_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.prize_image
     ADD CONSTRAINT prize_image_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.page_counter
+    ADD CONSTRAINT page_counter_pkey PRIMARY KEY (id);
 CREATE TRIGGER set_public_bingo_number_updated_at BEFORE UPDATE ON public.bingo_number FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_bingo_number_updated_at ON public.bingo_number IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 CREATE TRIGGER set_public_bingo_prize_updated_at BEFORE UPDATE ON public.bingo_prize FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
