@@ -145,9 +145,6 @@ const ScreenPage = () => {
           width: 100vw;
           height: 100vh;
         }
-        canvas {
-          border: 1px solid #000;
-        }
         button {
           padding: 10px;
         }
