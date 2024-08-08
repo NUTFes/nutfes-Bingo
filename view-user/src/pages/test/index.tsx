@@ -1,5 +1,5 @@
 // pages/index.tsx
-import React from "react";
+import React, { useState } from "react";
 import { NumberCardSmall, PrizeCard } from "@/components/common";
 import ReactionStampModal from "@/components/common/ReactionStampModal";
 
@@ -42,11 +42,20 @@ const images = [
 const testPosition: string = "50%";
 
 const HomePage: React.FC = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
   return (
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
       {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-      <ReactionStampModal position={testPosition} images={images} />
+      <button onClick={toggleModal}>モーダルボタン</button>
+      {isModalOpen && (
+        <ReactionStampModal position={testPosition} images={images} />
+      )}
     </div>
   );
 };
