@@ -1,6 +1,6 @@
 // pages/index.tsx
 import React from "react";
-import { NumberCardSmall, PrizeCard } from "@/components/common";
+import { NumberCardSmall, PrizeCard, NumberCardLarge } from "@/components/common";
 
 const testBingoNumber = {
   id: 17,
@@ -31,7 +31,8 @@ const HomePage: React.FC = () => {
   return (
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
-      <PrizeCard BingoPrize={testBingoPrize}></PrizeCard>
+      {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
+      <NumberCardLarge BingoNumber={testBingoNumber}></NumberCardLarge>
     </div>
   );
 };
