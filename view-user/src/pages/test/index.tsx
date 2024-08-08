@@ -28,13 +28,25 @@ const testBingoPrize = {
   prizeImage: testPrizeImage,
 };
 
+const images = [
+  { src: "/ReactionIcon/crap.png", alt: "crap icon" },
+  { src: "/ReactionIcon/good.png", alt: " good icon" },
+  { src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
+  { src: "/ReactionIcon/heart.png", alt: "heart icon" },
+  { src: "/ReactionIcon/smile.png", alt: "smile icon" },
+  { src: "/ReactionIcon/angry.png", alt: "angry icon" },
+  { src: "/ReactionIcon/skull.png", alt: "skull icon" },
+  { src: "/ReactionIcon/surprise.png", alt: "surprise icon" },
+];
+
+const testPosition: string = "left";
+
 const HomePage: React.FC = () => {
-  const testProps: string = "left";
   return (
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
       {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-      <ReactionStampModal position={testProps} />
+      <ReactionStampModal position={testPosition} images={images} />
     </div>
   );
 };
