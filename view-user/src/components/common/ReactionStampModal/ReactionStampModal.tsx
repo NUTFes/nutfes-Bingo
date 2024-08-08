@@ -12,8 +12,11 @@ interface ReactionStampModalProps {
 }
 
 const ReactionStampModal: React.FC<ReactionStampModalProps> = (props) => {
+  const bubbleLeftPosition: React.CSSProperties = {
+    "--bubble-left-position": props.position,
+  } as React.CSSProperties;
   return (
-    <div className={`${styles.bubble} ${styles[props.position || "left"]}`}>
+    <div className={styles.bubble} style={bubbleLeftPosition}>
       <div className={styles.grid}>
         {props.images.map((image, index) => (
           <button key={index} className={styles.iconButton}>

@@ -39,7 +39,7 @@ const images = [
   { src: "/ReactionIcon/surprise.png", alt: "surprise icon" },
 ];
 
-const testPosition: string = "left";
+const testPosition: string = "50%";
 
 const HomePage: React.FC = () => {
   return (

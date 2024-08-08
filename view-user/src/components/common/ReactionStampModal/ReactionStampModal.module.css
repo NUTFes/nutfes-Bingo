@@ -39,14 +39,9 @@
   margin-left: -2.1875vw;
 }
 
-.left:before,
-.left:after {
-  left: 27%;
-}
-
-.center::before,
-.center::after {
-  left: 50%;
+.bubble:before,
+.bubble:after {
+  left: var(--bubble-left-position, 50%);
 }
 
 .grid {
