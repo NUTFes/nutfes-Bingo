@@ -1,0 +1,79 @@
+.bubble {
+  width: 87.5vw;
+  height: 50.9vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background: #ffffff;
+  box-shadow: 1.09375vw 1.09375vw 0px 0px #ff3341;
+  border-radius: 5.46875vw;
+  border: #ff3341 solid 1.640625vw;
+  padding: 1rem;
+}
+
+.bubble:before {
+  content: "";
+  position: absolute;
+  width: 0;
+  z-index: 0;
+  border-style: solid;
+  border-color: #ff3341 transparent;
+  border-width: 7.9296875vw 3.828125vw 0;
+  bottom: -8.75vw;
+  margin-left: -3.828125vw;
+  display: block;
+  filter: drop-shadow(0.546875vw 1.09375vw #ff3341);
+}
+
+.bubble:after {
+  content: "";
+  position: absolute;
+  display: block;
+  width: 0;
+  z-index: 1;
+  border-style: solid;
+  border-color: #ffffff transparent;
+  border-width: 6.2890625vw 2.1875vw 0;
+  bottom: -6.015625vw;
+  margin-left: -2.1875vw;
+}
+
+.left:before,
+.left:after {
+  left: 27%;
+}
+
+.center::before,
+.center::after {
+  left: 50%;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  justify-items: center;
+  align-items: center;
+}
+
+.iconButton {
+  position: relative;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.iconButton:hover {
+  background-color: #cbcbcb;
+}
+
+.iconButton:active {
+  background-color: #007bff1a;
+}
