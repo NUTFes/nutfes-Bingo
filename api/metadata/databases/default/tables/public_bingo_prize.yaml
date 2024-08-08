@@ -1,3 +1,13 @@
 table:
   name: bingo_prize
   schema: public
+object_relationships:
+  - name: prize_image
+    using:
+      manual_configuration:
+        column_mapping:
+          imageId: id
+        insertion_order: null
+        remote_table:
+          name: prize_image
+          schema: public

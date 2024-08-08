@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import styles from "./PrizeResult.module.css";
-import { BingoPrize } from "@/pages/prizes";
+import { BingoPrize} from "@/type/common";
 import Image from "next/image";
 import { useMutation } from "@apollo/client";
-import { bingoPrizeUpdateExisiting as BPUE } from "@/pages/api/schema";
+import { bingoPrizeUpdateIsWon as BPUIW } from "@/pages/api/schema";
 
 interface PrizeResultProps {
   prizeResult: BingoPrize[];
@@ -18,13 +18,26 @@ export const PrizeResult = (props: PrizeResultProps) => {
     setIsImageVisible(false);
   };
 
-  const [updatePrize] = useMutation(BPUE);
+  const [updatePrize] = useMutation(BPUIW);
+  const bingoPrizes: BingoPrize[] = props.prizeResult;
 
-  const handleToggleChange = (id: number, existing: boolean) => {
-    updatePrize({ variables: { id: id, existing: existing } });
+  // imageURLs を string[] 型にするための修正
+  const imageURLs: string[] = bingoPrizes.map((prize: BingoPrize) => {
+    if (prize.prizeImage) {
+      const image = prize.prizeImage;
+      const bucketName = image.bucketName;
+      const fileName = image.fileName;
+      return `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${bucketName}/${fileName}`;
+    } else {
+      return "";
+    }
+  });
+
+  const handleToggleChange = (id: number, isWon: boolean) => {
+    updatePrize({ variables: { id: id, isWon: isWon } });
     props.setBingoPrize((prev) =>
       prev.map((prize) =>
-        prize.id === id ? { ...prize, existing: existing } : prize,
+        prize.id === id ? { ...prize, isWon: isWon } : prize,
       ),
     );
   };
@@ -40,7 +53,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
         <div className={styles.card_frame}>
           {[...props.prizeResult]
             .sort((a, b) => a.id - b.id)
-            .map((prizeResult) => (
+            .map((prizeResult, index) => (
               <div
                 className={styles.card}
                 key={prizeResult.id}
@@ -53,19 +66,26 @@ export const PrizeResult = (props: PrizeResultProps) => {
                     height: "100%",
                   }}
                 >
-                  <Image
-                    src={prizeResult.image}
+                  {/* <Image
+                    src={imageURLs && imageURLs[index]}
                     className={styles.image}
                     alt="PrizeImage"
                     fill
                     style={{ objectFit: "cover" }}
                     onLoadingComplete={imageVisibility}
+                  /> */}
+                  <img
+                    src={imageURLs && imageURLs[index]}
+                    className="image"
+                    alt="PrizeImage"
+                    style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                    onLoad={imageVisibility}
                   />
                 </div>
                 <div className={styles.card_content}>
-                  <p>{prizeResult.name}</p>
+                  <p>{prizeResult.nameJp}</p>
                 </div>
-                {props.showOverlay && prizeResult.existing && (
+                {props.showOverlay && prizeResult.isWon && (
                   <div className={styles.overlay}>
                     <p>当選！</p>
                   </div>
@@ -77,7 +97,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
                         id="toggle"
                         className={styles.toggle_input}
                         type="checkbox"
-                        checked={prizeResult.existing}
+                        checked={prizeResult.isWon}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           handleToggleChange(prizeResult.id, e.target.checked)
                         }

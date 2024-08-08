@@ -9,11 +9,7 @@ import { en } from "../locales/en";
 import { MdTranslate } from "react-icons/md";
 import { useSubscription } from "@apollo/client";
 import { bingoNumberSubscription as BNS } from "./api/schema";
-
-export interface BingoNumber {
-  id: number;
-  data: number;
-}
+import { BingoNumber } from "@/type/common";
 
 const Page: NextPage = () => {
   const { locale } = useRouter();

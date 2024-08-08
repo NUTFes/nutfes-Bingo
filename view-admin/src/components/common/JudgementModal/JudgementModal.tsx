@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "./JudgementModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
-import { BingoNumber } from "@/pages";
+import { BingoNumber } from "@/type/common";
 
 interface ModalProps {
   isOpened: boolean;
@@ -53,7 +53,7 @@ const Modal = ({
     const remainNumbers = inputValues.filter((number) => number !== 0);
     if (
       remainNumbers.every((number) =>
-        bingoNumbers.map((num) => num.data).includes(number),
+        bingoNumbers.map((num) => num.number).includes(number),
       )
     ) {
       setIsIncluded(true);

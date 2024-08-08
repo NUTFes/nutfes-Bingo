@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import styles from "./BingoResult.module.css";
-import { BingoNumber } from "@/pages";
+import { BingoNumber } from "@/type/common";
 
 interface BingoResultProps {
   bingoResultNumber: BingoNumber[];
@@ -14,7 +14,7 @@ export const BingoResult = (props: BingoResultProps) => {
         <div className={styles.card_frame}>
           {[...props.bingoResultNumber].reverse().map((num, index) => (
             <div className={styles.card} key={index}>
-              <div className={styles.card_content}> {num.data}</div>
+              <div className={styles.card_content}> {num.number}</div>
             </div>
           ))}
         </div>
