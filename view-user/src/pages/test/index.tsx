@@ -1,6 +1,7 @@
 // pages/index.tsx
 import React from "react";
 import { NumberCardSmall, PrizeCard } from "@/components/common";
+import ReactionStampModal from "@/components/common/ReactionStampModal";
 
 const testBingoNumber = {
   id: 17,
@@ -28,10 +29,12 @@ const testBingoPrize = {
 };
 
 const HomePage: React.FC = () => {
+  const testProps: string = "left";
   return (
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
-      <PrizeCard BingoPrize={testBingoPrize}></PrizeCard>
+      {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
+      <ReactionStampModal position={testProps} />
     </div>
   );
 };
