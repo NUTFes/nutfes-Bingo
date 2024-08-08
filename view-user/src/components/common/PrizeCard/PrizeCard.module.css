@@ -4,7 +4,6 @@
 }
 
 .card {
-  /* TODO　cardのみにオーバレイがかかっているがどうするべきか意見が欲しい。 */
   position: relative;
   width: 25vw;
   height: 25vw;
@@ -15,7 +14,6 @@
 }
 
 .image {
-  /* TODO　画像の丸みとカードの丸みが合わない。。。 */
   overflow: hidden;
   width: 100%;
   height: 100%;
@@ -31,6 +29,7 @@
 }
 
 .overlay {
+  /* TODO オーバーレイのcssを改良する */
   position: absolute;
   top: 0;
   left: 0;
