@@ -1,0 +1,29 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 62.5vw;
+  height: 62.5vw;
+  border: 1.25vw solid #ff3342;
+  background: linear-gradient(135deg, #FFF 50%, #FFEEB1 51%);
+  border-radius: 3.125vw;
+  box-sizing: border-box;
+  box-shadow: 0.9375vw 0.9375vw 0px #ff3342;
+}
+
+.number {
+  font-size: 31.25vw;
+  color: #ff3342;
+}
+
+@media (min-width: 1024px) {
+  .container {
+    width: 533px;
+    height: 533px;
+    box-shadow: 7px 7px 0px #ff3342;
+  }
+
+  .number {
+    font-size: 150px;
+  }
+}
