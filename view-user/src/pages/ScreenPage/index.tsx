@@ -73,7 +73,7 @@ const ScreenPage = () => {
       window.innerWidth / 2,
       window.innerHeight,
       window.innerWidth + 10,
-      10,
+      20,
       { isStatic: true, render: { visible: false } },
     );
 
