@@ -1,7 +1,10 @@
 // pages/index.tsx
 import React, { useState } from "react";
-import { NumberCardSmall, PrizeCard } from "@/components/common";
-import ReactionStampModal from "@/components/common/ReactionStampModal";
+import {
+  NumberCardSmall,
+  PrizeCard,
+  ReactionStampModal,
+} from "@/components/common";
 
 const testBingoNumber = {
   id: 17,
