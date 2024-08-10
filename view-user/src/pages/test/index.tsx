@@ -9,25 +9,6 @@ import {
 } from "@/components/common";
 import { BingoNumber } from "@/type/common";
 
-const testPrizeImage = {
-  id: 17,
-  bucketName: "bingo",
-  fileName: "クラス図0.png",
-  fileType: "image/png",
-  createdAt: "2024-8-6",
-  updatedAt: "2024-8-6",
-};
-const testBingoPrize = {
-  id: 17,
-  nameJp: "nameJpです",
-  nameEn: "nameEnです",
-  isWon: true,
-  imageId: 17,
-  createdAt: "2024-8-6",
-  updatedAt: "2024-8-6",
-  prizeImage: testPrizeImage,
-};
-
 const testBingoNumbers: BingoNumber[] = [
   { id: 1, number: 1, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
   { id: 2, number: 2, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
