@@ -14,7 +14,7 @@ const Header = () => {
     <div className={styles.container}>
       <div className={styles.main}>
         <img className={styles.logo} src="./Bingo_logo.png" alt="sample" />
-        <div className={styles.icon}><IoHelpCircleOutline /></div>
+        <button className={styles.icon}><IoHelpCircleOutline /></button>
       </div>
     </div>
   );
