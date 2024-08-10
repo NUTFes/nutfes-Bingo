@@ -13,3 +13,4 @@ export { default as NumberCardSmall } from "./NumberCardSmall";
 export { default as PrizeCard } from "./PrizeCard";
 export { default as NumberCardList } from "./NumberCardList";
 export { default as ReactionStampModal } from "./ReactionStampModal";
+export { default as ReachIcon } from "./ReachIcon";
