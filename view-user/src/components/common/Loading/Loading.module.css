@@ -1,0 +1,26 @@
+/* Loading */
+.container {
+  background-color: white;
+  margin: 9.375vw;
+  border-radius: 10vw;
+}
+
+.main {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+  height: 95vh;
+  border-radius: 10vw;
+  border: 5px solid #ff3342;
+}
+
+.logo {
+  align-items: center;
+  width: 50vw;
+}
+
+.icon {
+  color: #ff3342;
+  font-size: 9.375vw;
+}
