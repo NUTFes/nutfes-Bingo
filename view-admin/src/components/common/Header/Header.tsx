@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import styles from "./Header.module.css";
 import { useRouter } from "next/router";
+import { IoHelpCircleOutline } from "react-icons/io5";
 
 interface HeaderProps {
   children: ReactNode;
@@ -13,9 +14,9 @@ const Header = ({ children, user }: HeaderProps) => {
     <div className={styles.container}>
       <div className={styles.main}>
         <div className={styles.title} onClick={() => router.push("/")}>
-          <p>NUTFES BINGO {user}</p>
+          <p>NUTFES  {user}</p>
         </div>
-        <div>{children}</div>
+        <div><IoHelpCircleOutline /></div>
       </div>
     </div>
   );

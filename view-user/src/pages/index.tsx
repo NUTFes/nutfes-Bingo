@@ -80,8 +80,8 @@ const Page: NextPage = () => {
           </div>
         </div>
       </Modal>
-      <Header user="">
-        <div className={styles.main}>
+      <Header>
+        {/* <div className={styles.main}>
           <Button
             size="m"
             shape="circle"
@@ -92,7 +92,7 @@ const Page: NextPage = () => {
               {t.PRIZE_BUTTON}
             </div>
           </Button>
-        </div>
+        </div> */}
       </Header>
       <BingoResult bingoResultNumber={bingoNumbers} />
       <Button size="null" shape="null" onClick={() => setIsOpened(true)}>
