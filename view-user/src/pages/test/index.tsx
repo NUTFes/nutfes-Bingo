@@ -1,5 +1,5 @@
 // pages/index.tsx
-import React from "react";
+import React, { useState } from "react";
 import {
   NumberCardSmall,
   PrizeCard,
