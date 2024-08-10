@@ -11,13 +11,19 @@ import {
 import { createClient } from "graphql-ws";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { RecoilRoot } from "recoil";
+import localFont from "next/font/local";
+
+const silom = localFont({
+  src: "../../public/fonts/Silom.ttf",
+  variable: "--font-silom",
+});
 
 // ヘッダーにx-hasura-admin-secretを設定する
 const wsClient = createClient({
   url: process.env.WS_API_URL + "/v1/graphql",
   connectionParams: {
     headers: {
-      "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET,
+      "x-hasura-admin-secret": process.env.HASURA_GRAPHQL_ADMIN_SECRET,
     },
   },
 });
@@ -31,13 +37,15 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
-const inter = Inter({ subsets: ["latin"] });
+// const inter = Inter({ subsets: ["latin"] });
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ApolloProvider client={client}>
       <RecoilRoot>
-        <Component {...pageProps} />
+        <main className={silom.className}>
+          <Component {...pageProps} />
+        </main>
       </RecoilRoot>
     </ApolloProvider>
   );

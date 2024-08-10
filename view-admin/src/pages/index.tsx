@@ -42,7 +42,7 @@ const Page: NextPage = () => {
     handleSubmit: handleSubmitCreate,
     getValues: getValuesCreate,
     reset: resetCreate,
-    formState: { errors: errorsCreate },
+    formState: { errors: errorsCreate, isValid: isValidCreateSubmit },
   } = useForm<formDataCreate>({
     mode: "onChange",
   });
@@ -52,7 +52,7 @@ const Page: NextPage = () => {
     handleSubmit: handleSubmitDelete,
     getValues: getValuesDelete,
     reset: resetDelete,
-    formState: { errors: errorsDelete },
+    formState: { errors: errorsDelete, isValid: isValidCreateDelete },
   } = useForm<formDataDelete>({
     mode: "onChange",
   });
@@ -150,6 +150,7 @@ const Page: NextPage = () => {
               </div>
               <button
                 type="submit"
+                disabled={!isValidCreateSubmit}
                 className={
                   errorsCreate.submitNumber
                     ? styles.not_hover_Button
@@ -195,6 +196,7 @@ const Page: NextPage = () => {
             </select>
             <button
               type="button"
+              disabled={!isValidCreateDelete}
               className={
                 errorsDelete.inputedNumber || errorsDelete.selectedNumber
                   ? styles.not_hover_Button
