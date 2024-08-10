@@ -5,15 +5,10 @@ import {
   PrizeCard,
   NumberCardList,
   ReactionStampModal,
+  ReactionsIcon,
 } from "@/components/common";
 import { BingoNumber } from "@/type/common";
 
-const testBingoNumber = {
-  id: 17,
-  number: 52,
-  createdAt: "2024-08-01",
-  updatedAt: "2024-08-01",
-};
 const testPrizeImage = {
   id: 17,
   bucketName: "bingo",
@@ -53,7 +48,7 @@ const images = [
   { src: "/ReactionIcon/smile.png", alt: "smile icon" },
   { src: "/ReactionIcon/angry.png", alt: "angry icon" },
   { src: "/ReactionIcon/skull.png", alt: "skull icon" },
-  { src: "/ReactionIcon/surprise.png", alt: "surprise icon" },
+  { src: "/ReactionIcon/sad.png", alt: "sad icon" },
 ];
 
 const testPosition: string = "50%";
@@ -61,16 +56,12 @@ const testPosition: string = "50%";
 const HomePage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
-  };
-
   return (
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
       {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-      <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
-      <button onClick={toggleModal}>モーダルボタン</button>
+      {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} /> */}
+      <ReactionsIcon isOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
       )}
