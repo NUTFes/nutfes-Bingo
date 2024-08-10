@@ -1,5 +1,6 @@
 .container {
   display: grid;
+  justify-content: center;
   grid-template-columns: repeat(3, 20vw);
   grid-gap: 3.5vw;
 }
