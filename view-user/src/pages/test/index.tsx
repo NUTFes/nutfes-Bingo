@@ -49,7 +49,7 @@ const HomePage: React.FC = () => {
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
       {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-      <NumberCardList firstNumber={false} bingoNumber={testBingoNumbers} />
+      <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
     </div>
   );
 };
