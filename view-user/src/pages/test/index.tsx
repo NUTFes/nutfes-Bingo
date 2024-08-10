@@ -1,6 +1,10 @@
 // pages/index.tsx
-import React from "react";
-import { NumberCardSmall, PrizeCard } from "@/components/common";
+import React, { useState } from "react";
+import {
+  NumberCardSmall,
+  PrizeCard,
+  ReactionStampModal,
+} from "@/components/common";
 
 const testBingoNumber = {
   id: 17,
@@ -27,11 +31,34 @@ const testBingoPrize = {
   prizeImage: testPrizeImage,
 };
 
+const images = [
+  { src: "/ReactionIcon/crap.png", alt: "crap icon" },
+  { src: "/ReactionIcon/good.png", alt: " good icon" },
+  { src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
+  { src: "/ReactionIcon/heart.png", alt: "heart icon" },
+  { src: "/ReactionIcon/smile.png", alt: "smile icon" },
+  { src: "/ReactionIcon/angry.png", alt: "angry icon" },
+  { src: "/ReactionIcon/skull.png", alt: "skull icon" },
+  { src: "/ReactionIcon/surprise.png", alt: "surprise icon" },
+];
+
+const testPosition: string = "50%";
+
 const HomePage: React.FC = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
   return (
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
-      <PrizeCard BingoPrize={testBingoPrize}></PrizeCard>
+      {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
+      <button onClick={toggleModal}>モーダルボタン</button>
+      {isModalOpen && (
+        <ReactionStampModal position={testPosition} images={images} />
+      )}
     </div>
   );
 };
