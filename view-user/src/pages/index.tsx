@@ -80,7 +80,7 @@ const Page: NextPage = () => {
           </div>
         </div>
       </Modal>
-      <Header></Header>
+      <Header />
       <BingoResult bingoResultNumber={bingoNumbers} />
       <Button size="null" shape="null" onClick={() => setIsOpened(true)}>
         <div className={styles.iconButton}>
