@@ -4,33 +4,9 @@ import {
   PrizeCard,
   NumberCardList,
   ReactionStampModal,
+  BackIcon,
 } from "@/components/common";
 import { BingoNumber } from "@/type/common";
-
-const testBingoNumber = {
-  id: 17,
-  number: 52,
-  createdAt: "2024-08-01",
-  updatedAt: "2024-08-01",
-};
-const testPrizeImage = {
-  id: 17,
-  bucketName: "bingo",
-  fileName: "クラス図0.png",
-  fileType: "image/png",
-  createdAt: "2024-8-6",
-  updatedAt: "2024-8-6",
-};
-const testBingoPrize = {
-  id: 17,
-  nameJp: "nameJpです",
-  nameEn: "nameEnです",
-  isWon: true,
-  imageId: 17,
-  createdAt: "2024-8-6",
-  updatedAt: "2024-8-6",
-  prizeImage: testPrizeImage,
-};
 
 const testBingoNumbers: BingoNumber[] = [
   { id: 1, number: 1, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
@@ -68,11 +44,12 @@ const HomePage: React.FC = () => {
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
       {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-      <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
+      {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
       <button onClick={toggleModal}>モーダルボタン</button>
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
-      )}
+      )} */}
+      <BackIcon />
     </div>
   );
 };
