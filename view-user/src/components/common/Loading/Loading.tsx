@@ -8,7 +8,8 @@ const Loading = () => {
     <div className={styles.container}>
       <div className={styles.main}>
         <img className={styles.logo} src="./Bingo_logo.png" alt="sample" />
-        <AiOutlineLoading3Quarters className={styles.icon} />
+        {/* <div className={styles.loader}>Loading...</div> */}
+        <AiOutlineLoading3Quarters className={styles.loader} />
       </div>
     </div>
   );
