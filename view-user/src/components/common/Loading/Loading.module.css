@@ -1,13 +1,13 @@
-/* Loading */
 .container {
   background-color: white;
   margin: 9.375vw;
   border-radius: 10vw;
+  filter: drop-shadow(1.25vw 1.25vw 0px #ff3342);
 }
 
 .main {
   display: flex;
-  flex-flow: column;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 95vh;
@@ -24,6 +24,7 @@
 .loader:after {
   align-items: center;
 }
+
 .loader {
   margin: 60px auto;
   font-size: 10vw;

@@ -1,6 +1,5 @@
-import React, { ReactNode } from "react";
+import React from "react";
 import styles from "./Loading.module.css";
-import { useRouter } from "next/router";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 const Loading = () => {
