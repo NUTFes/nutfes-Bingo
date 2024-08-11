@@ -6,8 +6,8 @@ import {
   InMemoryCache,
   HttpLink,
 } from "@apollo/client";
-import { createClient } from "graphql-ws";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 import { SessionProvider } from "next-auth/react";
 import { useEffect } from "react";
 
@@ -16,7 +16,7 @@ const wsClient = createClient({
   url: process.env.WS_API_URL + "/v1/graphql",
   connectionParams: {
     headers: {
-      "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET,
+      "x-hasura-admin-secret": process.env.HASURA_GRAPHQL_ADMIN_SECRET,
     },
   },
 });

@@ -1,3 +1,4 @@
+import { useMutation, useSubscription } from "@apollo/client";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -11,12 +12,13 @@ import {
 } from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
 import { useEffect, useState } from "react";
-import { useMutation, useSubscription } from "@apollo/client";
+
 import {
   bingoNumberSubscription as BNS,
   bingoNumberCreate as BNC,
   bingoNumberDelete as BND,
 } from "./api/schema";
+import { BingoNumber } from "@/type/common";
 
 interface formDataCreate {
   submitNumber: number | null;
@@ -25,11 +27,6 @@ interface formDataCreate {
 interface formDataDelete {
   inputedNumber: number | null;
   selectedNumber: number | null;
-}
-
-export interface BingoNumber {
-  id: number;
-  data: number;
 }
 
 const Page: NextPage = () => {
@@ -68,7 +65,7 @@ const Page: NextPage = () => {
   const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
     const { submitNumber } = getValuesCreate();
     if (submitNumber !== null) {
-      createNumber({ variables: { data: submitNumber } });
+      createNumber({ variables: { number: submitNumber } });
       resetCreate({ submitNumber: null });
     }
   };
@@ -77,10 +74,10 @@ const Page: NextPage = () => {
   const onSubmitDelete = () => {
     const { inputedNumber, selectedNumber } = getValuesDelete();
     if (inputedNumber) {
-      deleteNumber({ variables: { data: inputedNumber } });
+      deleteNumber({ variables: { number: inputedNumber } });
       resetDelete({ inputedNumber: null });
     } else if (selectedNumber) {
-      deleteNumber({ variables: { data: selectedNumber } });
+      deleteNumber({ variables: { number: selectedNumber } });
       resetDelete({ selectedNumber: null });
     }
   };
@@ -191,9 +188,9 @@ const Page: NextPage = () => {
               <option value="" hidden>
                 選択してください
               </option>
-              {[...bingoNumbers].reverse().map((number, index) => (
-                <option key={index} value={number.data}>
-                  {number.data}
+              {[...bingoNumbers].reverse().map((bingoNumber, index) => (
+                <option key={index} value={bingoNumber.number}>
+                  {bingoNumber.number}
                 </option>
               ))}
             </select>
