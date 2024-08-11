@@ -19,10 +19,16 @@
   align-items: center;
   width: 50vw;
 }
-
+/* .icon {
+  transform: rotate(3.142rad);
+  font-size: 10vw;
+} */
 .loader,
 .loader:after {
   align-items: center;
+  /* border-radius: 50%;
+  width: 10em;
+  height: 10em; */
 }
 .loader {
   margin: 60px auto;
@@ -30,6 +36,10 @@
   position: relative;
   text-indent: -9999em;
   color: #ff3342;
+  /* border-top: 1.1em solid rgba(200, 200, 200, 0.3);
+  border-right: 1.1em solid rgba(200, 200, 200, 0.3);
+  border-bottom: 1.1em solid rgba(200, 200, 200, 0.3);
+  border-left: 1.1em solid #ff3342; */
   -webkit-transform: translateZ(0);
   -ms-transform: translateZ(0);
   transform: translateZ(0);
