@@ -1,0 +1,43 @@
+.toggleContainer {
+  position: relative;
+  display: flex;
+  width: 31.25vw;
+  height: 9.375vw;
+  background-color: #ffffff;
+  border: 2px solid #ff3342;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.toggleButton {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-family: "Noto Sans JP", sans-serif;
+  font-weight: 700;
+  font-size: 2.4vw;
+  line-height: 100%;
+  font-style: normal;
+  color: #ff3342;
+  background-color: transparent;
+  border: none;
+  z-index: 1;
+}
+
+.active {
+  color: #ffffff;
+}
+
+.motionDiv {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  background-color: #ff3342;
+  border: solid #ffffff;
+  border-radius: 20px;
+}
