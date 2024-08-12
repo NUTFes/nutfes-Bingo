@@ -6,6 +6,7 @@ import {
   ReactionStampModal,
 } from "@/components/common";
 import { BingoNumber } from "@/type/common";
+import ToggleButton from "@/components/common/ToggleButton";
 
 const testBingoNumber = {
   id: 17,
@@ -68,11 +69,28 @@ const HomePage: React.FC = () => {
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
       {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-      <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
-      <button onClick={toggleModal}>モーダルボタン</button>
+      {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} /> */}
+      {/* <button onClick={toggleModal}>モーダルボタン</button> */}
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
       )}
+      <div>
+        <ToggleButton onClick={toggleModal}>
+          <span>日本語</span>
+          <span>English</span>
+        </ToggleButton>
+        <ToggleButton>
+          <span>抽選順</span>
+          <span>昇順</span>
+        </ToggleButton>
+        <ToggleButton>
+          <span>
+            Call <br />
+            Order
+          </span>
+          <span>Number Order</span>
+        </ToggleButton>
+      </div>
     </div>
   );
 };
