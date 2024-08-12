@@ -4,8 +4,8 @@
   width: 31.25vw;
   height: 9.375vw;
   background-color: #ffffff;
-  border: 2px solid #ff3342;
-  border-radius: 20px;
+  border: 0.625vw solid #ff3342;
+  border-radius: 6.25vw;
   overflow: hidden;
   cursor: pointer;
 }
@@ -38,6 +38,6 @@
   left: 0;
   width: 50%;
   background-color: #ff3342;
-  border: solid #ffffff;
-  border-radius: 20px;
+  border: solid 0.625vw #ffffff;
+  border-radius: 6.25vw;
 }
