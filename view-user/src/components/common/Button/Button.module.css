@@ -1,48 +1,10 @@
-.primary {
-  background: rgba(255, 255, 255, 0.70);
-  border: 1px solid #333333;
-  color: #07033E;
-  text-align: center;
-  cursor: pointer;
-  align-items: center;
-  display: flex;
-  flex-flow: column;
+.button {
   justify-content: center;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-}
-
-.l {
-  font-size: x-large;
-  padding: 0.8rem 1.5rem;
-}
-
-.xm {
-  font-size: x-small;
-  padding: 0.5rem 1.5rem;
-}
-
-.m {
-  font-size: medium;
-  padding: 0.4rem 1rem;
-}
-
-.s {
-  font-size: x-small;
-  padding:0.1rem;
-}
-
-
-.circle {
-  border-radius: 0.625rem;
-}
-
-
-.square {
-  border-radius: 0.4rem;
-}
-
-.primary:hover {
-  background-color: whitesmoke;
-  color: var(--primary);
-  transition: 0.25s;
+  align-items: center;
+  font-weight: bold;
+  border-radius: 1vw;
+  border: 1vw solid #ff3342;
+  width: 25vw;
+  height: 5.6vh;
+  margin: 1vw;
 }
