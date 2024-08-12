@@ -4,9 +4,9 @@ import {
   PrizeCard,
   NumberCardList,
   ReactionStampModal,
+  ToggleButton,
 } from "@/components/common";
 import { BingoNumber } from "@/type/common";
-import ToggleButton from "@/components/common/ToggleButton";
 
 const testBingoNumber = {
   id: 17,
