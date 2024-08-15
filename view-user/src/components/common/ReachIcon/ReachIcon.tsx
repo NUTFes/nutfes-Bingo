@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "./ReachIcon.module.css";
 import classNames from "classnames";
-import { StyleRegistry } from "styled-jsx";
+import Image from "next/image";
 
 const ReachIcon = () => {
   const [colorInversion, setColorInversion] = useState<boolean>(false);
@@ -16,11 +16,13 @@ const ReachIcon = () => {
       })}
       onClick={handleClick}
     >
-      <img
-        src={colorInversion ? "/reach-icon-inversion.svg" : "/reach-icon.svg"}
-        alt="Reach Icon"
-        className={styles.icon}
-      />
+      <div className={styles.icon}>
+        <Image
+          src={colorInversion ? "/reach-icon-inversion.svg" : "/reach-icon.svg"}
+          alt="Reach Icon"
+          layout="fill"
+        />
+      </div>
       <span className={styles.text}>REACH</span>
     </button>
   );
