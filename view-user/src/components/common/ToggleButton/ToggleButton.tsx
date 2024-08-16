@@ -7,9 +7,7 @@ interface ToggleButtonProps {
   onClick?: () => void;
 }
 
-const ToggleButton: React.FC<ToggleButtonProps> = (
-  props: ToggleButtonProps,
-) => {
+const ToggleButton = (props: ToggleButtonProps) => {
   const [isActive, setIsActive] = useState(false);
 
   const toggleState = () => {
