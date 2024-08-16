@@ -23,12 +23,7 @@ const Modal = ({
     <>
       {isOpened && (
         <div className={styles.wrapper}>
-          <div className={styles.content}>
-            <button className={styles.btnClose} onClick={closeModal}>
-              <RxCross1 />
-            </button>
-            {children}
-          </div>
+          <div className={styles.content}>{children}</div>
           {canCloseByClickingBackground && (
             <div className={styles.background} onClick={closeModal} />
           )}
