@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "@/components/common/Button";
+import { Button } from "@/components/common";
 
 // ボタンの動作確認用の関数
 const clickCheck = function () {
