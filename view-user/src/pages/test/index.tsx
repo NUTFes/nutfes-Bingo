@@ -8,20 +8,11 @@ const clickCheck = function () {
 
 const App = () => {
   return (
-    <div
-      style={{
-        height: "100vh",
-        width: "100vw",
-        display: "flex",
-        flexFlow: "column",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Button inversion={true}>
+    <div>
+      <Button inversion={false}>
         <div>はい</div>
       </Button>
-      <Button inversion={false}>
+      <Button inversion={true}>
         <div>いいえ</div>
       </Button>
     </div>
