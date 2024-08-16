@@ -1,4 +1,19 @@
-.button {
+.selected_button {
+  color: white;
+  background-color: #ff3342;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  border-radius: 1vw;
+  border: 1vw solid #ff3342;
+  width: 25vw;
+  height: 5.6vh;
+  margin: 1vw;
+}
+
+.not_selected_button {
+  color: #ff3342;
+  background-color: white;
   justify-content: center;
   align-items: center;
   font-weight: bold;

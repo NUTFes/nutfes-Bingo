@@ -1,26 +1,22 @@
-import React from "react";
+// import React from "react";
+import React, { FC, ReactNode } from "react";
 import styles from "./Button.module.css";
 
-type ButtonProps = {
-  text: string;
-  textColor: string;
-  backgroundColor: string;
+interface ButtonProps {
+  children: ReactNode;
+  inversion: boolean;
   onClick?: () => void;
-};
+}
 
-const Button: React.FC<ButtonProps> = ({
-  text,
-  textColor,
-  backgroundColor,
-  onClick,
-}) => {
+const Button: FC<ButtonProps> = ({ children, inversion, onClick }) => {
   return (
     <button
-      className={styles.button}
-      style={{ backgroundColor: backgroundColor, color: textColor }}
+      className={
+        inversion ? styles.selected_button : styles.not_selected_button
+      }
       onClick={onClick}
     >
-      {text}
+      {children}
     </button>
   );
 };

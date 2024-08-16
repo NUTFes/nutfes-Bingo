@@ -18,18 +18,12 @@ const App = () => {
         alignItems: "center",
       }}
     >
-      <Button
-        text="はい"
-        textColor="#ff3342"
-        backgroundColor="white"
-        onClick={clickCheck}
-      />
-      <Button
-        text="いいえ"
-        textColor="white"
-        backgroundColor="#ff3342"
-        onClick={clickCheck}
-      />
+      <Button inversion={true}>
+        <div>はい</div>
+      </Button>
+      <Button inversion={false}>
+        <div>いいえ</div>
+      </Button>
     </div>
   );
 };
