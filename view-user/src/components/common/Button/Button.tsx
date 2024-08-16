@@ -8,15 +8,15 @@ interface ButtonProps {
   onClick?: () => void;
 }
 
-const Button: FC<ButtonProps> = ({ children, inversion, onClick }) => {
+const Button: React.FC<ButtonProps> = (props) => {
   return (
     <button
       className={
-        inversion ? styles.selected_button : styles.not_selected_button
+        props.inversion ? styles.selected_button : styles.not_selected_button
       }
-      onClick={onClick}
+      onClick={props.onClick}
     >
-      {children}
+      {props.children}
     </button>
   );
 };
