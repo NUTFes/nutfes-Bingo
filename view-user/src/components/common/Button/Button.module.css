@@ -1,25 +1,29 @@
 .selected_button {
-  color: white;
-  background-color: #ff3342;
+  display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: bold;
+  font-weight: 700;
   border-radius: 1vw;
   border: 1vw solid #ff3342;
+  color: white;
+  background-color: #ff3342;
   width: 25vw;
   height: 5.6vh;
-  margin: 1vw;
+  padding: 1vw;
+  font-family: "Noto Sans JP";
 }
 
 .not_selected_button {
-  color: #ff3342;
-  background-color: white;
+  display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: bold;
+  font-weight: 700;
   border-radius: 1vw;
   border: 1vw solid #ff3342;
+  color: #ff3342;
+  background-color: white;
   width: 25vw;
   height: 5.6vh;
-  margin: 1vw;
+  padding: 1vw;
+  font-family: "Noto Sans JP";
 }
