@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   NumberCardList,
   ReactionStampModal,
+  ToggleButton,
   ReachIcon,
   PrizeCardList,
   PrizeCard,
