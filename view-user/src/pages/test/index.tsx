@@ -2,71 +2,11 @@ import React, { useState } from "react";
 import {
   NumberCardList,
   ReactionStampModal,
+  ReachIcon,
   PrizeCardList,
   PrizeCard,
 } from "@/components/common";
 import { BingoNumber, BingoPrize, PrizeImage } from "@/type/common";
-
-const testPrizeImage = {
-  id: 17,
-  bucketName: "bingo",
-  fileName: "クラス図0.png",
-  fileType: "image/png",
-  createdAt: "2024-8-6",
-  updatedAt: "2024-8-6",
-};
-const testBingoPrizes: BingoPrize[] = [
-  {
-    id: 17,
-    nameJp: "ああああああああああああああああああああああ",
-    nameEn: "nameEnです",
-    isWon: true,
-    imageId: 17,
-    createdAt: "2024-8-6",
-    updatedAt: "2024-8-6",
-    prizeImage: testPrizeImage,
-  },
-  {
-    id: 18,
-    nameJp: "nameJpです",
-    nameEn: "nameEnです",
-    isWon: true,
-    imageId: 17,
-    createdAt: "2024-8-6",
-    updatedAt: "2024-8-6",
-    prizeImage: testPrizeImage,
-  },
-  {
-    id: 19,
-    nameJp: "nameJpです",
-    nameEn: "nameEnです",
-    isWon: true,
-    imageId: 17,
-    createdAt: "2024-8-6",
-    updatedAt: "2024-8-6",
-    prizeImage: testPrizeImage,
-  },
-  {
-    id: 20,
-    nameJp: "nameJpです",
-    nameEn: "nameEnです",
-    isWon: true,
-    imageId: 17,
-    createdAt: "2024-8-6",
-    updatedAt: "2024-8-6",
-    prizeImage: testPrizeImage,
-  },
-  {
-    id: 21,
-    nameJp: "特上大盛豚骨ミソスープラーメン・改",
-    nameEn: "nameEnです",
-    isWon: true,
-    imageId: 17,
-    createdAt: "2024-8-6",
-    updatedAt: "2024-8-6",
-    prizeImage: testPrizeImage,
-  },
-];
 
 const testBingoNumbers: BingoNumber[] = [
   { id: 1, number: 1, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
@@ -109,6 +49,7 @@ const HomePage: React.FC = () => {
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
       )} */}
+      <ReachIcon />
       <PrizeCardList BingoPrize={testBingoPrizes} />
     </div>
   );
