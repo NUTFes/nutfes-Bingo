@@ -12,6 +12,8 @@ export { default as IconFramework } from "./IconFramework";
 export { default as PrizesIcon } from "./PrizesIcon";
 export { default as NumberCardSmall } from "./NumberCardSmall";
 export { default as PrizeCard } from "./PrizeCard";
+export { default as PrizeCardList } from "./PrizeCardList";
 export { default as NumberCardList } from "./NumberCardList";
 export { default as ReactionStampModal } from "./ReactionStampModal";
 export { default as ToggleButton } from "./ToggleButton";
+export { default as ReachIcon } from "./ReachIcon";

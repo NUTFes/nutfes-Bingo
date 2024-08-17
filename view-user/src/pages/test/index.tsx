@@ -1,37 +1,13 @@
 import React, { useState } from "react";
 import {
-  NumberCardSmall,
-  PrizeCard,
   NumberCardList,
   ReactionStampModal,
   ToggleButton,
+  ReachIcon,
+  PrizeCardList,
+  PrizeCard,
 } from "@/components/common";
-import { BingoNumber } from "@/type/common";
-
-const testBingoNumber = {
-  id: 17,
-  number: 52,
-  createdAt: "2024-08-01",
-  updatedAt: "2024-08-01",
-};
-const testPrizeImage = {
-  id: 17,
-  bucketName: "bingo",
-  fileName: "クラス図0.png",
-  fileType: "image/png",
-  createdAt: "2024-8-6",
-  updatedAt: "2024-8-6",
-};
-const testBingoPrize = {
-  id: 17,
-  nameJp: "nameJpです",
-  nameEn: "nameEnです",
-  isWon: true,
-  imageId: 17,
-  createdAt: "2024-8-6",
-  updatedAt: "2024-8-6",
-  prizeImage: testPrizeImage,
-};
+import { BingoNumber, BingoPrize, PrizeImage } from "@/type/common";
 
 const testBingoNumbers: BingoNumber[] = [
   { id: 1, number: 1, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
@@ -69,28 +45,13 @@ const HomePage: React.FC = () => {
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
       {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-      {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} /> */}
-      {/* <button onClick={toggleModal}>モーダルボタン</button> */}
+      {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
+      <button onClick={toggleModal}>モーダルボタン</button>
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
-      )}
-      <div>
-        <ToggleButton onClick={toggleModal}>
-          <span>日本語</span>
-          <span>English</span>
-        </ToggleButton>
-        <ToggleButton>
-          <span>抽選順</span>
-          <span>昇順</span>
-        </ToggleButton>
-        <ToggleButton>
-          <span>
-            Call <br />
-            Order
-          </span>
-          <span>Number Order</span>
-        </ToggleButton>
-      </div>
+      )} */}
+      <ReachIcon />
+      <PrizeCardList BingoPrize={testBingoPrizes} />
     </div>
   );
 };
