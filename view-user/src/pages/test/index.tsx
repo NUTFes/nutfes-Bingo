@@ -1,13 +1,12 @@
-// pages/index.tsx
 import React, { useState } from "react";
 import {
-  NumberCardSmall,
-  PrizeCard,
   NumberCardList,
   ReactionStampModal,
   ReachIcon,
+  PrizeCardList,
+  PrizeCard,
 } from "@/components/common";
-import { BingoNumber } from "@/type/common";
+import { BingoNumber, BingoPrize, PrizeImage } from "@/type/common";
 
 const testBingoNumbers: BingoNumber[] = [
   { id: 1, number: 1, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
@@ -51,6 +50,7 @@ const HomePage: React.FC = () => {
         <ReactionStampModal position={testPosition} images={images} />
       )} */}
       <ReachIcon />
+      <PrizeCardList BingoPrize={testBingoPrizes} />
     </div>
   );
 };

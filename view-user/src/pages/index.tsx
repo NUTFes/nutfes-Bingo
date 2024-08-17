@@ -80,20 +80,7 @@ const Page: NextPage = () => {
           </div>
         </div>
       </Modal>
-      <Header user="">
-        <div className={styles.main}>
-          <Button
-            size="m"
-            shape="circle"
-            onClick={() => router.push("./prizes")}
-          >
-            <div className={styles.buttonContents}>
-              <Image src="/GiftBox.svg" alt="GiftBox" width={19} height={19} />
-              {t.PRIZE_BUTTON}
-            </div>
-          </Button>
-        </div>
-      </Header>
+      <Header />
       <BingoResult bingoResultNumber={bingoNumbers} />
       <Button size="null" shape="null" onClick={() => setIsOpened(true)}>
         <div className={styles.iconButton}>
