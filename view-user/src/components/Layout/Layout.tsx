@@ -27,7 +27,6 @@ interface LayoutProps {
 
 const Layout = (props: LayoutProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [isReachIconVisible, setReachIconVisible] = useState(true);
 
   // 初回レンダリング時に localStorage から状態を読み込む
@@ -44,38 +43,44 @@ const Layout = (props: LayoutProps) => {
   };
 
   const Icons = (pageName: any) => {
+    let icons = [];
     switch (pageName) {
       case "/":
-        return (
-          <>
-            {/* todo Prizes,reactions, reach,settings */}
-            <PrizesIcon />
-            <PrizesIcon />
-            {isReachIconVisible && <ReachIcon onClick={handleReachIconClick} />}
-            <PrizesIcon />
-          </>
-        );
+        // todoprizes,reactions,reach,settings
+        icons = [
+          <PrizesIcon key="prize1" />,
+          <PrizesIcon key="prize2" />,
+          isReachIconVisible && (
+            <ReachIcon key="reach" onClick={handleReachIconClick} />
+          ),
+          <PrizesIcon key="prize3" />,
+        ];
+        break;
       case "/prizes":
-        return (
-          <>
-            {/* todo back,reactions, reach,settings */}
-            <PrizesIcon />
-            {isReachIconVisible && <ReachIcon onClick={handleReachIconClick} />}
-            <PrizesIcon />
-            <PrizesIcon />
-          </>
-        );
+        // todo back,reactions, reach,settings
+        icons = [
+          <PrizesIcon key="prize1" />,
+          isReachIconVisible && (
+            <ReachIcon key="reach" onClick={handleReachIconClick} />
+          ),
+          <PrizesIcon key="prize2" />,
+          <PrizesIcon key="prize3" />,
+        ];
+        break;
       default:
-        return (
-          <>
-            <PrizesIcon />
-            {isReachIconVisible && <ReachIcon onClick={handleReachIconClick} />}
-            <PrizesIcon />
-            <PrizesIcon />
-          </>
-        );
+        icons = [
+          <PrizesIcon key="prize1" />,
+          isReachIconVisible && (
+            <ReachIcon key="reach" onClick={handleReachIconClick} />
+          ),
+          <PrizesIcon key="prize2" />,
+          <PrizesIcon key="prize3" />,
+        ];
     }
+    return icons.filter(Boolean);
   };
+
+  const iconElements = Icons(props.pageName);
 
   return (
     <div>
@@ -84,7 +89,9 @@ const Layout = (props: LayoutProps) => {
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
       )}
-      <NavigationBar>{Icons(props.pageName)}</NavigationBar>
+      <NavigationBar isCentered={iconElements.length <= 3}>
+        {iconElements}
+      </NavigationBar>
     </div>
   );
 };
