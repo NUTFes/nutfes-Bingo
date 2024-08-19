@@ -15,6 +15,7 @@ const App: React.FC = () => {
   return (
     <div>
       <Modal isOpened={isModalOpened} setisOpened={setIsModalOpened}>
+        <p>リーチしましたか</p>
         <div>
           <button onClick={closeModal}>はい</button>
         </div>

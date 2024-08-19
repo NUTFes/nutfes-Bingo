@@ -2,7 +2,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
   position: fixed;
   top: 0;
   left: 0;
@@ -12,28 +11,14 @@
   contain: content;
 }
 
-.content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-flow: column;
-  z-index: 50;
-  box-sizing: border-box;
-  object-fit: cover;
-  padding: 10vw;
-  overflow: hidden;
-  background-color: white;
-  border: 1vw solid #ff3342;
-  filter: drop-shadow(1.25vw 1.25vw 0px #ff3342);
-  border-radius: 7.14vw;
-  border-radius: 7.14vw;
+.content p {
   font-family: "Noto Sans JP";
   font-size: 6vw;
   font-style: normal;
   font-weight: 700;
   line-height: normal;
-  animation: zoomIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) 1 forwards;
-  will-change: transform, opacity;
+  color: var(--Main-Color, #ff3342);
+  text-align: center;
 }
 
 @media screen and (min-width: 1024px) {
