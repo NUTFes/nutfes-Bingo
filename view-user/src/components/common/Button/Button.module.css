@@ -14,18 +14,8 @@
 }
 
 .selected_button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: 700;
-  border-radius: 1vw;
-  border: 1vw solid #ff3342;
   color: #ff3342;
   background-color: white;
-  width: 25vw;
-  height: 5.6vh;
-  padding: 1vw;
-  font-family: "Noto Sans JP";
 }
 
 @media screen and (min-width: 1024px) {
@@ -45,18 +35,8 @@
   }
 
   .selected_button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 700;
-    border-radius: 1vw;
-    border: 0.3vw solid #ff3342;
     color: #ff3342;
     background-color: white;
-    width: 25vw;
-    height: 5.6vh;
-    padding: 1vw;
-    font-family: "Noto Sans JP";
   }
 }
 
