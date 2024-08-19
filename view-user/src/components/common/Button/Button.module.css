@@ -20,18 +20,7 @@
 
 @media screen and (min-width: 1024px) {
   .not_selected_button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 700;
-    border-radius: 1vw;
     border: 0.3vw solid #ff3342;
-    color: white;
-    background-color: #ff3342;
-    width: 25vw;
-    height: 5.6vh;
-    padding: 1vw;
-    font-family: "Noto Sans JP";
   }
 
   .selected_button {
