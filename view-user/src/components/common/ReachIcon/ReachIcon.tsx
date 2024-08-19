@@ -3,10 +3,15 @@ import styles from "./ReachIcon.module.css";
 import classNames from "classnames";
 import Image from "next/image";
 
-const ReachIcon = () => {
+interface ReachIconProps {
+  onClick: () => void;
+}
+
+const ReachIcon = (props: ReachIconProps) => {
   const [colorInversion, setColorInversion] = useState<boolean>(false);
   const handleClick = () => {
     setColorInversion(!colorInversion);
+    props.onClick();
     //TODO 後でモーダルの開閉を追加する
   };
   return (
