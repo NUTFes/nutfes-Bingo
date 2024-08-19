@@ -9,7 +9,7 @@ const clickCheck = function () {
 const App = () => {
   return (
     <div>
-      <Button inversion={false}>
+      <Button>
         <div>はい</div>
       </Button>
       <Button inversion={true}>
