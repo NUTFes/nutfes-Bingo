@@ -8,6 +8,7 @@ import {
   PrizeCard,
   NavigationBar,
   PrizesIcon,
+  ReachCount,
 } from "@/components/common";
 import Layout from "@/components/Layout";
 import { BingoNumber, BingoPrize, PrizeImage } from "@/type/common";
@@ -25,6 +26,8 @@ const testBingoNumbers: BingoNumber[] = [
   { id: 9, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
 ];
 
+const testNumber: number = 8;
+
 const HomePage: React.FC = () => {
   const router = useRouter();
   const pageName = router.pathname;
@@ -40,10 +43,10 @@ const HomePage: React.FC = () => {
       )} */}
       {/* <ReachIcon /> */}
       {/* <PrizeCardList BingoPrize={testBingoPrizes} /> */}
-      <Layout pageName={pageName}>hello</Layout>
+      {/* <Layout pageName={pageName}>hello</Layout> */}
+      <ReachCount count={testNumber} />
     </div>
   );
 };
 
 export default HomePage;
-
