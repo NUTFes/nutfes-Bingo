@@ -8,7 +8,7 @@ const BackIcon = () => {
 
   const handleClick = () => {
     if (typeof window !== "undefined") {
-      router.push("/");
+      router.back();
     }
   };
 
