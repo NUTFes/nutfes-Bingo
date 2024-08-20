@@ -1,0 +1,36 @@
+.reachIcon {
+  background-color: #ff3342;
+  color: white;
+  padding: 1vw;
+  width: 34.810625vw;
+  height: 18.565625vw;
+  border: none;
+  border-radius: 12.5vw;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.icon {
+  width: 13vw;
+  height: 13vw;
+  position: absolute;
+  top: 7%;
+  left: 11%;
+}
+
+.text {
+  font-size: 4.375vw;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 100%;
+  font-family: "Noto Sans Jp";
+  margin-left: 13.5vw;
+}
+
+.color_inversion {
+  background-color: white;
+  color: #ff3342;
+}
