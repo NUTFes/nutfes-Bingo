@@ -42,7 +42,7 @@ const Layout = (props: LayoutProps) => {
     localStorage.setItem("isReachIconVisible", "false");
   };
 
-  const Icons = (pageName: any) => {
+  const Icons = (pageName: string) => {
     let icons = [];
     switch (pageName) {
       case "/":
