@@ -18,3 +18,4 @@ export { default as ReactionStampModal } from "./ReactionStampModal";
 export { default as ToggleButton } from "./ToggleButton";
 export { default as ReachIcon } from "./ReachIcon";
 export { default as NavigationBar } from "./NavigationBar";
+export { default as ReachCount } from "./ReachCount";
