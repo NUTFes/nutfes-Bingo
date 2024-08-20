@@ -1,4 +1,4 @@
-.not_selected_button {
+.button {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,30 +13,25 @@
   font-family: "Noto Sans JP";
 }
 
-.selected_button {
+.inversion {
   color: #ff3342;
   background-color: white;
 }
 
+.button:active {
+  background-color: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1vw rgba(102, 102, 102, 0.2);
+  transform: translateY(4px);
+}
+
 @media screen and (min-width: 1024px) {
-  .not_selected_button {
+  .button {
     border: 0.3vw solid #ff3342;
   }
 
-  .selected_button {
-    color: #ff3342;
-    background-color: white;
+  .button:active {
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 3px rgba(102, 102, 102, 0.2);
+    transform: translateY(4px);
   }
-}
-
-.selected_button:active {
-  background-color: rgba(0, 0, 0, 0.5);
-  box-shadow: 0 5px #666;
-  transform: translateY(4px);
-}
-
-.not_selected_button:active {
-  background-color: rgba(0, 0, 0, 0.5);
-  box-shadow: 0 5px #666;
-  transform: translateY(4px);
 }

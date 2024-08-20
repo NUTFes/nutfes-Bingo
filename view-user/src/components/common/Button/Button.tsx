@@ -11,11 +11,8 @@ interface ButtonProps {
 const Button: React.FC<ButtonProps> = (props) => {
   return (
     <button
-      // className={classNames(styles.selected_button, {
-      //   [styles.not_selected_button]: props.inversion,
-      // })}
-      className={classNames(styles.not_selected_button, {
-        [styles.selected_button]: props.inversion,
+      className={classNames(styles.button, {
+        [styles.inversion]: props.inversion,
       })}
       onClick={props.onClick}
     >
