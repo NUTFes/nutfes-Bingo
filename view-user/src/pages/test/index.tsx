@@ -29,21 +29,21 @@ const HomePage: React.FC = () => {
   const router = useRouter();
   const pageName = router.pathname;
 
-const App = () => {
-  return (
-    <div>
-      {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
-      {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-      {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
+  const App = () => {
+    return (
+      <div>
+        {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
+        {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
+        {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
       <button onClick={toggleModal}>モーダルボタン</button>
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
       )} */}
-      {/* <ReachIcon /> */}
-      {/* <PrizeCardList BingoPrize={testBingoPrizes} /> */}
-      <Layout pageName={pageName}>hello</Layout>
-    </div>
-  );
+        {/* <ReachIcon /> */}
+        {/* <PrizeCardList BingoPrize={testBingoPrizes} /> */}
+        <Layout pageName={pageName}>hello</Layout>
+      </div>
+    );
+  };
 };
-
 export default HomePage;
