@@ -15,6 +15,7 @@ export { default as PrizeCard } from "./PrizeCard";
 export { default as PrizeCardList } from "./PrizeCardList";
 export { default as NumberCardList } from "./NumberCardList";
 export { default as ReactionStampModal } from "./ReactionStampModal";
+export { default as BackIcon } from "./BackIcon";
 export { default as ToggleButton } from "./ToggleButton";
 export { default as ReachIcon } from "./ReachIcon";
 export { default as NavigationBar } from "./NavigationBar";
