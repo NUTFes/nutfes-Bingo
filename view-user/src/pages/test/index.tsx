@@ -8,6 +8,7 @@ import {
   PrizeCard,
   NavigationBar,
   PrizesIcon,
+  ReachCount,
 } from "@/components/common";
 import Layout from "@/components/Layout";
 import { BingoNumber, BingoPrize, PrizeImage } from "@/type/common";
@@ -25,25 +26,27 @@ const testBingoNumbers: BingoNumber[] = [
   { id: 9, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
 ];
 
+const testNumber: number = 8;
+
 const HomePage: React.FC = () => {
   const router = useRouter();
   const pageName = router.pathname;
 
-  const App = () => {
-    return (
-      <div>
-        {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
-        {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-        {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
+  return (
+    <div>
+      {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
+      {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
+      {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
       <button onClick={toggleModal}>モーダルボタン</button>
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
       )} */}
-        {/* <ReachIcon /> */}
-        {/* <PrizeCardList BingoPrize={testBingoPrizes} /> */}
-        <Layout pageName={pageName}>hello</Layout>
-      </div>
-    );
-  };
+      {/* <ReachIcon /> */}
+      {/* <PrizeCardList BingoPrize={testBingoPrizes} /> */}
+      {/* <Layout pageName={pageName}>hello</Layout> */}
+      <ReachCount count={testNumber} />
+    </div>
+  );
 };
+
 export default HomePage;
