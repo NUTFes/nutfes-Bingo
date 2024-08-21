@@ -1,12 +1,18 @@
 import React, { useState } from "react";
 import {
-  NumberCardSmall,
-  PrizeCard,
   NumberCardList,
   ReactionStampModal,
-  SettingsIcon,
+  ToggleButton,
+  ReachIcon,
+  PrizeCardList,
+  PrizeCard,
+  NavigationBar,
+  PrizesIcon,
+  ReachCount,
 } from "@/components/common";
-import { BingoNumber } from "@/type/common";
+import Layout from "@/components/Layout";
+import { BingoNumber, BingoPrize, PrizeImage } from "@/type/common";
+import { useRouter } from "next/router";
 
 const testBingoNumbers: BingoNumber[] = [
   { id: 1, number: 1, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
@@ -20,25 +26,11 @@ const testBingoNumbers: BingoNumber[] = [
   { id: 9, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
 ];
 
-const images = [
-  { src: "/ReactionIcon/crap.png", alt: "crap icon" },
-  { src: "/ReactionIcon/good.png", alt: " good icon" },
-  { src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
-  { src: "/ReactionIcon/heart.png", alt: "heart icon" },
-  { src: "/ReactionIcon/smile.png", alt: "smile icon" },
-  { src: "/ReactionIcon/angry.png", alt: "angry icon" },
-  { src: "/ReactionIcon/skull.png", alt: "skull icon" },
-  { src: "/ReactionIcon/surprise.png", alt: "surprise icon" },
-];
+const testNumber: number = 8;
 
-const testPosition: string = "50%";
-
-const HomePage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
-  };
+const HomePage: React.FC = () => {
+  const router = useRouter();
+  const pageName = router.pathname;
 
   return (
     <div>
@@ -49,7 +41,10 @@ const HomePage = () => {
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
       )} */}
-      <SettingsIcon />
+      {/* <ReachIcon /> */}
+      {/* <PrizeCardList BingoPrize={testBingoPrizes} /> */}
+      {/* <Layout pageName={pageName}>hello</Layout> */}
+      <ReachCount count={testNumber} />
     </div>
   );
 };

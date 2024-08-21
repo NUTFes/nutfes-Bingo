@@ -1,0 +1,41 @@
+.reachCountContainer {
+  width: 40vw;
+  height: 17.75vw;
+  background-color: #ff3342;
+  border-radius: 2.85vw;
+  display: flex;
+  position: relative;
+  font-family: "Noto Sans JP";
+}
+
+.reachIcon {
+  width: 11vw;
+  height: 11vw;
+  position: absolute;
+  top: 2%;
+  left: 12.2%;
+}
+
+.reachText {
+  position: absolute;
+  bottom: 4%;
+  left: 6%;
+  color: #ffffff;
+  font-size: 4vw;
+}
+
+.count {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 17.5vw;
+  height: 11vw;
+  border-radius: 5.5vw;
+  position: absolute;
+  top: 18%;
+  left: 46%;
+  color: #ff3342;
+  background-color: #ffffff;
+  font-size: 6.7vw;
+  line-height: 102%;
+}
