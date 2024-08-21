@@ -12,6 +12,7 @@ export { default as IconFramework } from "./IconFramework";
 export { default as PrizesIcon } from "./PrizesIcon";
 export { default as ReactionsIcon } from "./ReactionsIcon";
 export { default as NumberCardSmall } from "./NumberCardSmall";
+export { default as NumberCardLarge } from "./NumberCardLarge";
 export { default as PrizeCard } from "./PrizeCard";
 export { default as PrizeCardList } from "./PrizeCardList";
 export { default as NumberCardList } from "./NumberCardList";
