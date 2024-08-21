@@ -23,7 +23,7 @@ const wsClient = createClient({
   url: process.env.WS_API_URL + "/v1/graphql",
   connectionParams: {
     headers: {
-      "x-hasura-admin-secret": process.env.X_HASURA_ADMIN_SECRET,
+      "x-hasura-admin-secret": process.env.HASURA_GRAPHQL_ADMIN_SECRET,
     },
   },
 });
