@@ -6,16 +6,17 @@ interface IconFrameworkProps {
   icon: ReactNode;
   text: string;
   outline?: boolean;
+  inversion?: boolean;
   onClick?: () => void;
 }
 
 const IconFramework = (props: IconFrameworkProps) => {
-  const [clicked, setClicked] = useState<boolean>(false);
-  const [colorInversion, setColorInversion] = useState<boolean>(false);
+  const [colorInversion, setColorInversion] = useState<boolean>(
+    props.inversion ?? false,
+  );
 
   const handleClick = () => {
     setColorInversion(!colorInversion);
-    setClicked(true);
     if (props.onClick) {
       props.onClick();
     }
@@ -28,7 +29,6 @@ const IconFramework = (props: IconFrameworkProps) => {
         [styles.color_inversion]: colorInversion,
       })}
       onClick={handleClick}
-      disabled={clicked}
     >
       <div className={styles.icon}>{props.icon}</div>
       <span className={styles.text}>{props.text}</span>
