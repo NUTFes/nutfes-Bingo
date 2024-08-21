@@ -44,18 +44,13 @@ const PrizeCard = (props: PrizeCardProps) => {
             }}
           />
         </div>
-        <div
-          style={{ position: "relative" }}
-          className={classNames(styles.text, styles.center)}
-        >
-          {bingoPrize.nameJp}
-        </div>
         {bingoPrize.isWon && (
           <div className={classNames(styles.overlay, styles.center)}>
             <p className={styles.center}>{t.WINNING_OVERRAY}</p>
           </div>
         )}
       </div>
+      <p className={styles.text}>{bingoPrize.nameJp}</p>
     </div>
   );
 };

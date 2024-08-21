@@ -1,13 +1,18 @@
-// pages/index.tsx
 import React, { useState } from "react";
 import {
-  NumberCardSmall,
-  PrizeCard,
   NumberCardList,
   ReactionStampModal,
-  ReactionsIcon,
+  ToggleButton,
+  ReachIcon,
+  PrizeCardList,
+  PrizeCard,
+  NavigationBar,
+  PrizesIcon,
+  ReachCount,
 } from "@/components/common";
-import { BingoNumber } from "@/type/common";
+import Layout from "@/components/Layout";
+import { BingoNumber, BingoPrize, PrizeImage } from "@/type/common";
+import { useRouter } from "next/router";
 
 const testBingoNumbers: BingoNumber[] = [
   { id: 1, number: 1, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
@@ -21,31 +26,25 @@ const testBingoNumbers: BingoNumber[] = [
   { id: 9, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
 ];
 
-const images = [
-  { src: "/ReactionIcon/crap.png", alt: "crap icon" },
-  { src: "/ReactionIcon/good.png", alt: " good icon" },
-  { src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
-  { src: "/ReactionIcon/heart.png", alt: "heart icon" },
-  { src: "/ReactionIcon/smile.png", alt: "smile icon" },
-  { src: "/ReactionIcon/angry.png", alt: "angry icon" },
-  { src: "/ReactionIcon/skull.png", alt: "skull icon" },
-  { src: "/ReactionIcon/sad.png", alt: "sad icon" },
-];
-
-const testPosition: string = "50%";
+const testNumber: number = 8;
 
 const HomePage: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter();
+  const pageName = router.pathname;
 
   return (
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
       {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-      {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} /> */}
-      <ReactionsIcon isOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+      {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
+      <button onClick={toggleModal}>モーダルボタン</button>
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
-      )}
+      )} */}
+      {/* <ReachIcon /> */}
+      {/* <PrizeCardList BingoPrize={testBingoPrizes} /> */}
+      {/* <Layout pageName={pageName}>hello</Layout> */}
+      <ReachCount count={testNumber} />
     </div>
   );
 };
