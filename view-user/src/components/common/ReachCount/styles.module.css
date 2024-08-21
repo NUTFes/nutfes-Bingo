@@ -5,6 +5,7 @@
   border-radius: 2.85vw;
   display: flex;
   position: relative;
+  font-family: "Noto Sans JP";
 }
 
 .reachIcon {
@@ -21,7 +22,6 @@
   left: 6%;
   color: #ffffff;
   font-size: 4vw;
-  font-family: "Noto Sans JP";
 }
 
 .count {
@@ -37,6 +37,5 @@
   color: #ff3342;
   background-color: #ffffff;
   font-size: 6.7vw;
-  font-family: "Noto Sans JP";
   line-height: 102%;
 }
