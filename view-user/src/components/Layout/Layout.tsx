@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ReachIcon,
-  NavigationBar,
   PrizesIcon,
+  BackIcon,
+  ReactionsIcon,
+  SettingsIcon,
   ReactionStampModal,
+  NavigationBar,
   Header,
 } from "@/components/common";
 
@@ -18,18 +21,27 @@ const images = [
   { src: "/ReactionIcon/sad.png", alt: "sad icon" },
 ];
 
-const testPosition: string = "50%";
-
 interface LayoutProps {
   children: React.ReactNode;
   pageName: string;
 }
 
 const Layout = (props: LayoutProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isReachIconVisible, setReachIconVisible] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
+  const [navBarHeight, setNavBarHeight] = useState<string>();
+  const navRef = useRef<HTMLDivElement>(null);
+  const position: string = isReachIconVisible ? "29%" : "50%";
 
-  // 初回レンダリング時に localStorage から状態を読み込む
+  // navBarの高さをstring型で渡す
+  useEffect(() => {
+    if (navRef.current) {
+      const height = navRef.current.getBoundingClientRect().height;
+      setNavBarHeight(height.toString());
+    }
+  }, []);
+
+  // localStorageから状態を読み込む
   useEffect(() => {
     const storedVisibility = localStorage.getItem("isReachIconVisible");
     if (storedVisibility !== null) {
@@ -46,35 +58,45 @@ const Layout = (props: LayoutProps) => {
     let icons = [];
     switch (pageName) {
       case "/":
-        // todoprizes,reactions,reach,settings
         icons = [
-          <PrizesIcon key="prize1" />,
-          <PrizesIcon key="prize2" />,
+          <PrizesIcon key="prize" />,
+          <ReactionsIcon
+            isOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            key="reaction"
+          />,
           isReachIconVisible && (
             <ReachIcon key="reach" onClick={handleReachIconClick} />
           ),
-          <PrizesIcon key="prize3" />,
+          <SettingsIcon key="settings" />,
         ];
         break;
       case "/prizes":
-        // todo back,reactions, reach,settings
         icons = [
-          <PrizesIcon key="prize1" />,
+          <BackIcon key="back" />,
+          <ReactionsIcon
+            isOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            key="reaction"
+          />,
           isReachIconVisible && (
             <ReachIcon key="reach" onClick={handleReachIconClick} />
           ),
-          <PrizesIcon key="prize2" />,
-          <PrizesIcon key="prize3" />,
+          <SettingsIcon key="settings" />,
         ];
         break;
       default:
         icons = [
-          <PrizesIcon key="prize1" />,
+          <PrizesIcon key="prize" />,
+          <ReactionsIcon
+            isOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+            key="reaction"
+          />,
           isReachIconVisible && (
             <ReachIcon key="reach" onClick={handleReachIconClick} />
           ),
-          <PrizesIcon key="prize2" />,
-          <PrizesIcon key="prize3" />,
+          <SettingsIcon key="settings" />,
         ];
     }
     return icons.filter(Boolean);
@@ -84,12 +106,16 @@ const Layout = (props: LayoutProps) => {
 
   return (
     <div>
+      {isModalOpen && (
+        <ReactionStampModal
+          position={position}
+          height={navBarHeight}
+          images={images}
+        />
+      )}
       <Header />
       <main>{props.children}</main>
-      {isModalOpen && (
-        <ReactionStampModal position={testPosition} images={images} />
-      )}
-      <NavigationBar isCentered={iconElements.length <= 3}>
+      <NavigationBar ref={navRef} isCentered={iconElements.length <= 3}>
         {iconElements}
       </NavigationBar>
     </div>
