@@ -43,8 +43,8 @@ const HomePage: React.FC = () => {
       )} */}
       {/* <ReachIcon /> */}
       {/* <PrizeCardList BingoPrize={testBingoPrizes} /> */}
-      {/* <Layout pageName={pageName}>hello</Layout> */}
-      <ReachCount count={testNumber} />
+      <Layout pageName={pageName}>hello</Layout>
+      {/* <ReachCount count={testNumber} /> */}
     </div>
   );
 };
