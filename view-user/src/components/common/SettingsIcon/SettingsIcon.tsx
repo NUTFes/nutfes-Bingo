@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { IconFramework } from "@/components/common";
 import { IoIosSettings } from "react-icons/io";
 
-const SettingIcon = () => {
+const SettingsIcon = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const handleClick = () => {
     // TODO Modalの開閉を行う
@@ -18,4 +18,4 @@ const SettingIcon = () => {
   );
 };
 
-export default SettingIcon;
+export default SettingsIcon;

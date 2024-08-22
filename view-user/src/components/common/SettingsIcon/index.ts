@@ -1,1 +1,1 @@
-export { default } from "./SettingIcon";
+export { default } from "./SettingsIcon";
