@@ -32,6 +32,7 @@ services:
       HASURA_GRAPHQL_DATABASE_URL: "postgres://bingo:password@db:5432/bingo_db"
       HASURA_GRAPHQL_DEV_MODE: true
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: "naming_convention"
     entrypoint: >
       sh -c "
       curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash &&

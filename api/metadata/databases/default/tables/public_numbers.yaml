@@ -1,0 +1,3 @@
+table:
+  name: numbers
+  schema: public
