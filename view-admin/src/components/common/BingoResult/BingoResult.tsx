@@ -1,9 +1,9 @@
 import React, { ReactNode } from "react";
 import styles from "./BingoResult.module.css";
-import { BingoNumber } from "@/type/common";
+import { SubscribeListNumbersSubscription } from "@/type/graphql";
 
 interface BingoResultProps {
-  bingoResultNumber: BingoNumber[];
+  bingoResultNumber: SubscribeListNumbersSubscription["numbers"];
 }
 
 export const BingoResult = (props: BingoResultProps) => {
