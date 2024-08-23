@@ -66,3 +66,9 @@ jobs:
       - name: Auto assignee
         if: toJSON(github.event.pull_request.assignees) == '[]'
         run: gh pr edit ${{ env.PR_NUMBER }} --add-assignee ${{ env.PR_ASSIGNEE }}
+
+      # PRをプロジェクトに追加
+      - name: Add PR to Project
+        run: |
+          PROJECT_ID=$(gh project view NUTFes/nutfes-Bingo --json id --jq '.id')
+          gh project item add $PROJECT_ID --content-id ${{ github.event.pull_request.node_id }}
