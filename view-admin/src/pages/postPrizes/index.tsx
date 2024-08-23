@@ -4,17 +4,25 @@ import type { NextPage } from "next";
 import { useState, useCallback, useRef, useEffect } from "react";
 import styles from "@/pages/postPrizes/postPrizes.module.css";
 import { Header, PrizeResult, Loading } from "@/components/common";
-import { BingoPrize, PrizeImage } from "@/type/common";
 import {
-  bingoPrizeGet as BPG,
-  bingoPrizeCreate as BPC,
-  prizeImageCreate as PIC,
-} from "../api/schema";
+  GetListPrizesDocument,
+  CreateOnePrizeDocument,
+  CreateOneImageDocument,
+} from "@/type/graphql";
+import type {
+  GetListPrizesQuery,
+  CreateOneImageMutation,
+  CreateOnePrizeMutation,
+  CreateOneImageMutationVariables,
+  CreateOnePrizeMutationVariables,
+} from "@/type/graphql";
+
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { useRouter } from "next/router";
 
 const Page: NextPage = () => {
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]);
+  // prettier-ignore
+  const [bingoPrize, setBingoPrize] = useState<GetListPrizesQuery["prizes"]>([]);
   const [prizeNameJp, setPrizeNameJp] = useState<string>("");
   const [prizeNameEn, setPrizeNameEn] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -27,42 +35,23 @@ const Page: NextPage = () => {
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const { data: query } = useQuery(BPG);
-  const [postPrize] = useMutation(BPC);
-  const [postImage] = useMutation(PIC);
+  const { data } = useQuery<GetListPrizesQuery>(GetListPrizesDocument);
+  const [postPrize] = useMutation<
+    CreateOnePrizeMutation,
+    CreateOnePrizeMutationVariables
+  >(CreateOnePrizeDocument);
+  const [postImage] = useMutation<
+    CreateOneImageMutation,
+    CreateOneImageMutationVariables
+  >(CreateOneImageDocument);
 
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (query) {
-  //     setBingoPrize(query.bingo_prize);
-  //   }
-  // }, []);
-
   useEffect(() => {
-    if (query && query.bingo_prize) {
-      // データ変換処理を追加
-      const transformedData = query.bingo_prize.map((item: any) => ({
-        id: item.id,
-        nameJp: item.nameJp,
-        nameEn: item.nameEn,
-        isWon: item.isWon,
-        imageId: item.imageId,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-        prizeImage: item.prize_image
-          ? {
-              id: item.prize_image.id,
-              bucketName: item.prize_image.bucketName,
-              fileName: item.prize_image.fileName,
-              fileType: item.prize_image.fileType,
-              createdAt: item.prize_image.created_at,
-              updatedAt: item.prize_image.updated_at,
-            }
-          : undefined,
-      }));
+    if (data) {
+      setBingoPrize(data.prizes);
     }
-  }, []);
+  }, [data]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const targetFile = e.target.files![0]!;
@@ -112,8 +101,10 @@ const Page: NextPage = () => {
       },
     });
     // ここでimageIdをuseStateに設定する
-    const imageId = result.data.insert_prize_image_one.id;
-    insertPrize(imageId);
+    const imageId = result.data?.insertImagesOne?.id;
+    if (imageId) {
+      insertPrize(imageId);
+    }
   };
 
   const postMinio = async () => {
