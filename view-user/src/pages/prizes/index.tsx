@@ -112,7 +112,6 @@ const Page: NextPage = () => {
             </div>
           </div>
         </Modal>
-        {/* pageNameに何を入れればいいか分からない */}
         <Layout pageName="/prizes/index.ts">
           <PrizeCardList BingoPrize={bingoPrize} />
         </Layout>
