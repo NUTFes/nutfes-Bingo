@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import styles from "./PrizeResult.module.css";
-import { BingoPrize} from "@/type/common";
-import Image from "next/image";
+import { BingoPrize } from "@/type/common";
 import { useMutation } from "@apollo/client";
 import { bingoPrizeUpdateIsWon as BPUIW } from "@/pages/api/schema";
 
@@ -25,7 +24,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
   const imageURLs: string[] = bingoPrizes.map((prize: BingoPrize) => {
     if (prize.prizeImage) {
       const image = prize.prizeImage;
-      const bucketName = image.bucketName;
+      const bucketName = `bingo/${image.bucketName}`;
       const fileName = image.fileName;
       return `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${bucketName}/${fileName}`;
     } else {
@@ -78,7 +77,11 @@ export const PrizeResult = (props: PrizeResultProps) => {
                     src={imageURLs && imageURLs[index]}
                     className="image"
                     alt="PrizeImage"
-                    style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                    style={{
+                      objectFit: "cover",
+                      width: "100%",
+                      height: "100%",
+                    }}
                     onLoad={imageVisibility}
                   />
                 </div>
