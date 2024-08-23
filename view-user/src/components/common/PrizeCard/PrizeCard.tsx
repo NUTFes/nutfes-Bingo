@@ -18,9 +18,10 @@ const PrizeCard = (props: PrizeCardProps) => {
 
   const bingoPrize = props.BingoPrize;
   const prizeImage = bingoPrize.prizeImage;
+  const fileName = `bingo/${prizeImage?.fileName}`;
 
   const imageURL: string = prizeImage
-    ? `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${prizeImage.bucketName}/${prizeImage.fileName}`
+    ? `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${prizeImage.bucketName}/${fileName}`
     : "";
 
   return (
