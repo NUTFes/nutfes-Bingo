@@ -21,8 +21,9 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 import { useRouter } from "next/router";
 
 const Page: NextPage = () => {
-  // prettier-ignore
-  const [bingoPrize, setBingoPrize] = useState<GetListPrizesQuery["prizes"]>([]);
+  const [bingoPrize, setBingoPrize] = useState<GetListPrizesQuery["prizes"]>(
+    [],
+  );
   const [prizeNameJp, setPrizeNameJp] = useState<string>("");
   const [prizeNameEn, setPrizeNameEn] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);

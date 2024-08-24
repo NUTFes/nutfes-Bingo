@@ -26,8 +26,10 @@ const Page: NextPage = () => {
   const [isLodaing, setIsLoading] = useState<boolean>(true);
 
   const { data: query } = useQuery<GetListPrizesQuery>(GetListPrizesDocument);
-  // prettier-ignore
-  const { data: subscription } = useSubscription<SubscribeListPrizesIsWonSubscription>(SubscribeListPrizesIsWonDocument);
+  const { data: subscription } =
+    useSubscription<SubscribeListPrizesIsWonSubscription>(
+      SubscribeListPrizesIsWonDocument,
+    );
 
   useEffect(() => {
     if (query) {

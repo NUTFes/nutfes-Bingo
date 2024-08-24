@@ -9,11 +9,13 @@ import type { GetListPrizesQuery } from "@/type/graphql";
 
 const Page: NextPage = () => {
   const router = useRouter();
-  // prettier-ignore
-  const [bingoPrize, setBingoPrize] = useState<GetListPrizesQuery["prizes"]>([]);
+  const [bingoPrize, setBingoPrize] = useState<GetListPrizesQuery["prizes"]>(
+    [],
+  );
   const [searchText, setSearchText] = useState("");
-  // prettier-ignore
-  const [searchResults, setSearchResults] = useState<GetListPrizesQuery["prizes"]>([]);
+  const [searchResults, setSearchResults] = useState<
+    GetListPrizesQuery["prizes"]
+  >([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const { data } = useQuery<GetListPrizesQuery>(GetListPrizesDocument);

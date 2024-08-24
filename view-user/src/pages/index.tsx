@@ -16,8 +16,9 @@ const Page: NextPage = () => {
   const t = locale === "ja" ? ja : en;
   const [isOpened, setIsOpened] = useState(true);
   const router = useRouter();
-  // prettier-ignore
-  const [bingoNumbers, setBingoNumbers] = useState<SubscribeListNumbersSubscription["numbers"]>([]);
+  const [bingoNumbers, setBingoNumbers] = useState<
+    SubscribeListNumbersSubscription["numbers"]
+  >([]);
 
   const { data } = useSubscription(SubscribeListNumbersDocument);
 

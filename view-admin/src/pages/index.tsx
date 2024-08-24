@@ -32,8 +32,9 @@ const Page: NextPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
-  // prettier-ignore
-  const [bingoNumbers, setBingoNumbers] = useState<SubscribeListNumbersSubscription["numbers"]>([]);
+  const [bingoNumbers, setBingoNumbers] = useState<
+    SubscribeListNumbersSubscription["numbers"]
+  >([]);
   const [isOpened, setIsOpened] = useState<boolean>(false);
   const isopenBool = () => setIsOpened(!isOpened);
 
@@ -56,8 +57,9 @@ const Page: NextPage = () => {
   } = useForm<formDataDelete>({
     mode: "onChange",
   });
-  // prettier-ignore
-  const { data, loading, error } = useSubscription(SubscribeListNumbersDocument);
+  const { data, loading, error } = useSubscription(
+    SubscribeListNumbersDocument,
+  );
   const [createNumber] = useMutation(CreateOneNumberDocument);
   const [deleteNumber] = useMutation(DeleteOneNumberDocument);
 

@@ -11,8 +11,9 @@ import type {
 
 interface PrizeResultProps {
   prizeResult: GetListPrizesQuery["prizes"];
-  // prettier-ignore
-  setBingoPrize: React.Dispatch<React.SetStateAction<GetListPrizesQuery["prizes"]>>;
+  setBingoPrize: React.Dispatch<
+    React.SetStateAction<GetListPrizesQuery["prizes"]>
+  >;
   showOverlay: boolean;
   showToggle: boolean;
 }
@@ -23,8 +24,10 @@ export const PrizeResult = (props: PrizeResultProps) => {
     setIsImageVisible(false);
   };
 
-  // prettier-ignore
-  const [updatePrize] = useMutation<UpdateOnePrizeIsWonMutation, UpdateOnePrizeIsWonMutationVariables>(UpdateOnePrizeIsWonDocument);
+  const [updatePrize] = useMutation<
+    UpdateOnePrizeIsWonMutation,
+    UpdateOnePrizeIsWonMutationVariables
+  >(UpdateOnePrizeIsWonDocument);
 
   // TODO ENDPONT のスペリングミスを修正
   // imageURLs を string[] 型にするための修正
@@ -83,7 +86,11 @@ export const PrizeResult = (props: PrizeResultProps) => {
                     src={imageURLs && imageURLs[index]}
                     className="image"
                     alt="PrizeImage"
-                    style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                    style={{
+                      objectFit: "cover",
+                      width: "100%",
+                      height: "100%",
+                    }}
                     onLoad={imageVisibility}
                   />
                 </div>
