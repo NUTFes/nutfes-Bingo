@@ -1,15 +1,18 @@
+.horizontalCenter {
+  display: flex;
+  justify-content: center;
+}
+
 .bubble {
   width: 87.5vw;
   height: 50.9vw;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
+  position: absolute;
   background: #ffffff;
   box-shadow: 1.09375vw 1.09375vw 0px 0px #ff3341;
   border-radius: 5.46875vw;
   border: #ff3341 solid 1.640625vw;
   padding: 1rem;
+  z-index: 100;
 }
 
 .bubble:before {
