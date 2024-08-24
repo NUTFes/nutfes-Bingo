@@ -4,9 +4,9 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 const Loading = () => {
   return (
-    <div className={styles.container}>
-      <div className={styles.main}>
-        <img className={styles.logo} src="./Bingo_logo.png" alt="sample" />
+    <div className={styles.overlay}>
+      <div className={styles.container}>
+        <img className={styles.logo} src="./Bingo_logo.png" alt="logo" />
         <AiOutlineLoading3Quarters className={styles.loader} />
       </div>
     </div>

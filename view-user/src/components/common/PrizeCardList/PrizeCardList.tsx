@@ -12,9 +12,11 @@ const PrizeCardList = (props: PrizeCardListProps) => {
 
   return (
     <div className={styles.container}>
-      {BingoPrizes.map((prize) => (
-        <PrizeCard key={prize.id} BingoPrize={prize} />
-      ))}
+      <div className={styles.frame}>
+        {BingoPrizes.map((prize) => (
+          <PrizeCard key={prize.id} BingoPrize={prize} />
+        ))}
+      </div>
     </div>
   );
 };
