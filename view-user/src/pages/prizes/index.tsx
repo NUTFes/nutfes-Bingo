@@ -1,19 +1,10 @@
 import type { NextPage } from "next";
 import styles from "./prizes.module.css";
-import Image from "next/image";
-import {
-  Header,
-  Button,
-  PrizeResult,
-  Modal,
-  PrizeCardList,
-  Loading,
-} from "@/components/common";
+import { PrizeCardList, Loading } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { ja } from "../../locales/ja";
 import { en } from "../../locales/en";
-import { MdTranslate } from "react-icons/md";
 import { useQuery, useSubscription } from "@apollo/client";
 import {
   bingoPrizeGet as BPG,
@@ -88,31 +79,7 @@ const Page: NextPage = () => {
     <>
       {isLodaing && <Loading />}
       <div className={styles.container}>
-        <Modal isOpened={isOpened} setisOpened={setIsOpened}>
-          <div className={styles.languageBlock}>
-            <div className={styles.language}>
-              <p
-                onClick={() => {
-                  router.push("/prizes", "/prizes", { locale: "ja" });
-                  setIsOpened(false);
-                }}
-              >
-                日本語
-              </p>
-            </div>
-            <div className={styles.language}>
-              <p
-                onClick={() => {
-                  router.push("/prizes", "/prizes", { locale: "en" });
-                  setIsOpened(false);
-                }}
-              >
-                English
-              </p>
-            </div>
-          </div>
-        </Modal>
-        <Layout pageName="/prizes/index.ts">
+        <Layout pageName="/prizes">
           <PrizeCardList BingoPrize={bingoPrize} />
         </Layout>
       </div>

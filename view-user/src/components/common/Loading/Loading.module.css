@@ -1,11 +1,3 @@
-.container {
-  background-color: white;
-  margin: 9.375vw;
-  border-radius: 10vw;
-  filter: drop-shadow(1.25vw 1.25vw 0px #ff3342);
-  width: 90vw;
-}
-
 .overlay {
   width: 100%;
   height: 100%;
@@ -16,14 +8,17 @@
   justify-content: center;
 }
 
-.main {
+.container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 95vh;
+  width: 85vw;
   border-radius: 10vw;
   border: 5px solid #ff3342;
+  background-color: white;
+  filter: drop-shadow(1.25vw 1.25vw 0px #ff3342);
 }
 
 .logo {
