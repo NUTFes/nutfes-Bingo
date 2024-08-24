@@ -8,22 +8,23 @@ import { ja } from "../locales/ja";
 import { en } from "../locales/en";
 import { MdTranslate } from "react-icons/md";
 import { useSubscription } from "@apollo/client";
-import { bingoNumberSubscription as BNS } from "./api/schema";
-import { BingoNumber } from "@/type/common";
+import { SubscribeListNumbersDocument } from "@/type/graphql";
+import type { SubscribeListNumbersSubscription } from "@/type/graphql";
 
 const Page: NextPage = () => {
   const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
   const [isOpened, setIsOpened] = useState(true);
   const router = useRouter();
-  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
+  // prettier-ignore
+  const [bingoNumbers, setBingoNumbers] = useState<SubscribeListNumbersSubscription["numbers"]>([]);
 
-  const { data } = useSubscription(BNS);
+  const { data } = useSubscription(SubscribeListNumbersDocument);
 
   //subscriptionを行うためのuseEffect
   useEffect(() => {
     if (data) {
-      setBingoNumbers(data.bingo_number);
+      setBingoNumbers(data.numbers);
     }
   }, [data]);
 
