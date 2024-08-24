@@ -1,7 +1,9 @@
 import { atom } from "recoil";
-import { BingoPrize } from "@/type/common";
+import type { GetListPrizesQuery } from "@/type/graphql";
+import { create } from "domain";
+import { updateContextWithCliFlags } from "@graphql-codegen/cli";
 
-export const bingoPrizeState = atom<BingoPrize[]>({
+export const bingoPrizeState = atom<GetListPrizesQuery["prizes"]>({
   key: "bingoPrizeState",
   default: [
     {
@@ -9,7 +11,14 @@ export const bingoPrizeState = atom<BingoPrize[]>({
       nameJp: "",
       nameEn: "",
       isWon: false,
-      imageId: 0,
+      image: {
+        id: 0,
+        bucketName: "",
+        fileName: "",
+        fileType: "",
+        createdAt: "",
+        updatedAt: "",
+      },
       createdAt: "",
       updatedAt: "",
     },

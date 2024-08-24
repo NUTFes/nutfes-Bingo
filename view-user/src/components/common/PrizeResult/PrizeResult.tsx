@@ -4,10 +4,10 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { ja } from "@/locales/ja";
 import { en } from "@/locales/en";
-import { BingoPrize } from "@/type/common";
+import { GetListPrizesQuery } from "@/type/graphql";
 
 interface PrizeResultProps {
-  prizeResult: BingoPrize[];
+  prizeResult: GetListPrizesQuery["prizes"];
 }
 
 export const PrizeResult = (props: PrizeResultProps) => {
@@ -15,9 +15,10 @@ export const PrizeResult = (props: PrizeResultProps) => {
   const t = locale === "ja" ? ja : en;
 
   const [hasValidData, setHasValidData] = useState(false);
+  const bingoPrizes: GetListPrizesQuery["prizes"] = props.prizeResult;
 
   useEffect(() => {
-    const validData = props.prizeResult.some(
+    const validData = bingoPrizes.some(
       (prize) => prize.id !== 0 || prize.nameJp !== "",
     );
 
@@ -30,26 +31,24 @@ export const PrizeResult = (props: PrizeResultProps) => {
 
       return () => clearTimeout(timer);
     }
-  }, [props.prizeResult]);
+  }, [bingoPrizes]);
 
   const [isImageVisible, setIsImageVisible] = useState(true);
   const imageVisibility = () => {
     setIsImageVisible(false);
   };
 
-  const bingoPrizes: BingoPrize[] = props.prizeResult;
-
   // imageURLs を string[] 型にするための修正
-  const imageURLs: string[] = bingoPrizes.map((prize: BingoPrize) => {
-    if (prize.prizeImage) {
-      const image = prize.prizeImage;
-      const bucketName = image.bucketName;
-      const fileName = image.fileName;
-      return `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${bucketName}/${fileName}`;
-    } else {
-      return "";
-    }
-  });
+  const imageURLs: string[] = [...bingoPrizes]
+    .sort((a, b) => a.id - b.id)
+    .map((prize: GetListPrizesQuery["prizes"][number]) => {
+      if (prize.image) {
+        const { bucketName, fileName } = prize.image;
+        return `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${bucketName}/${fileName}`;
+      } else {
+        return "";
+      }
+    });
 
   return (
     <div className={styles.content_wrapper}>
@@ -66,10 +65,10 @@ export const PrizeResult = (props: PrizeResultProps) => {
               className={isImageVisible ? styles.visible : styles.hidden}
             ></div>
             <div className={styles.card_frame}>
-              {[...props.prizeResult]
+              {[...bingoPrizes]
                 .sort((a, b) => a.id - b.id)
-                .map((prizeResult, index) => (
-                  <div className={styles.card} key={prizeResult.id}>
+                .map((prize, index) => (
+                  <div className={styles.card} key={prize.id}>
                     <div
                       style={{
                         position: "relative",
@@ -101,9 +100,9 @@ export const PrizeResult = (props: PrizeResultProps) => {
                       style={{ position: "relative" }}
                       className={styles.card_content}
                     >
-                      {prizeResult.nameJp}
+                      {prize.nameJp}
                     </div>
-                    {prizeResult.isWon && (
+                    {prize.isWon && (
                       <div className={styles.overlay}>
                         <p>{t.WINNING_OVERRAY}</p>
                       </div>
