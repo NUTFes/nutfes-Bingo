@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import styles from "./Layout.module.css";
 import {
   ReachIcon,
   PrizesIcon,
@@ -30,14 +31,20 @@ const Layout = (props: LayoutProps) => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
   const [navBarHeight, setNavBarHeight] = useState<string>();
+  const [headerHeight, setHeaderHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const position: string = isReachIconVisible ? "29%" : "50%";
 
-  // navBarの高さをstring型で渡す
-  useEffect(() => {
+  // navBar,headerの高さをstring型で渡す
+  useLayoutEffect(() => {
     if (navRef.current) {
-      const height = navRef.current.getBoundingClientRect().height;
-      setNavBarHeight(height.toString());
+      const navHeight = navRef.current.getBoundingClientRect().height;
+      setNavBarHeight(navHeight.toString());
+    }
+    if (headerRef.current) {
+      const headerHeight = headerRef.current.getBoundingClientRect().height;
+      setHeaderHeight((headerHeight + headerHeight / 10).toString());
     }
   }, []);
 
@@ -113,8 +120,13 @@ const Layout = (props: LayoutProps) => {
           images={images}
         />
       )}
-      <Header />
-      <main>{props.children}</main>
+      <Header ref={headerRef} />
+      <main
+        style={{ paddingTop: `${headerHeight}px` }}
+        className={styles.content}
+      >
+        {props.children}
+      </main>
       <NavigationBar ref={navRef} isCentered={iconElements.length <= 3}>
         {iconElements}
       </NavigationBar>

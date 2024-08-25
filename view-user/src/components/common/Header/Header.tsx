@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { forwardRef } from "react";
 import styles from "./Header.module.css";
 import { useRouter } from "next/router";
 import { IoHelpCircleOutline } from "react-icons/io5";
@@ -8,10 +8,10 @@ const goHelpe = function () {
   console.log("1");
 };
 
-const Header = () => {
+const Header = forwardRef<HTMLDivElement>((props, ref) => {
   const router = useRouter();
   return (
-    <div className={styles.container}>
+    <div ref={ref} className={styles.container}>
       <div className={styles.main}>
         <img
           className={styles.logo}
@@ -25,6 +25,7 @@ const Header = () => {
       </div>
     </div>
   );
-};
+});
+Header.displayName = "Header";
 
 export default Header;
