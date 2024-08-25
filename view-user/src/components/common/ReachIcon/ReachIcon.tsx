@@ -16,6 +16,12 @@ const ReachIcon = (props: ReachIconProps) => {
     props.setIsReachModalOpen(!props.isOpen);
   };
 
+  useEffect(() => {
+    if (!props.isOpen) {
+      setColorInversion(false);
+    }
+  }, [props.isOpen]);
+
   return (
     <button
       className={classNames(styles.reachIcon, {
