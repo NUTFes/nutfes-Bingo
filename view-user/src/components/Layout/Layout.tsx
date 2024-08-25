@@ -38,7 +38,7 @@ interface LayoutProps {
 const Layout = (props: LayoutProps) => {
   const [isReactionModalOpen, setIsReactionModalOpen] =
     useState<boolean>(false);
-  const [isReachModalOpen, setIsReacgModalOpen] = useState<boolean>(false);
+  const [isReachModalOpen, setIsReachModalOpen] = useState<boolean>(false);
   const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
   const [isFlag, setIsFlag] = useState<boolean>(false);
   const [navBarHeight, setNavBarHeight] = useState<string>();
@@ -82,7 +82,7 @@ const Layout = (props: LayoutProps) => {
 
     setReachIconVisible(false);
     localStorage.setItem("isReachIconVisible", "false");
-    setIsReacgModalOpen(!isReachModalOpen);
+    setIsReachModalOpen(!isReachModalOpen);
   };
 
   const Icons = (pageName: string) => {
@@ -100,7 +100,7 @@ const Layout = (props: LayoutProps) => {
             <ReachIcon
               key="reach"
               isOpen={isReachModalOpen}
-              setIsReachModalOpen={setIsReacgModalOpen}
+              setIsReachModalOpen={setIsReachModalOpen}
               onClick={handleReachIconClick}
             />
           ),
@@ -113,7 +113,7 @@ const Layout = (props: LayoutProps) => {
           <ReachIcon
             key="reach"
             isOpen={isReachModalOpen}
-            setIsReachModalOpen={setIsReacgModalOpen}
+            setIsReachModalOpen={setIsReachModalOpen}
             onClick={handleReachIconClick}
           />,
           isReachIconVisible && (
@@ -138,7 +138,7 @@ const Layout = (props: LayoutProps) => {
             <ReachIcon
               key="reach"
               isOpen={isReachModalOpen}
-              setIsReachModalOpen={setIsReacgModalOpen}
+              setIsReachModalOpen={setIsReachModalOpen}
               onClick={handleReachIconClick}
             />
           ),
@@ -161,13 +161,13 @@ const Layout = (props: LayoutProps) => {
         />
       )}
       {isReachModalOpen && (
-        <Modal isOpened={isReachModalOpen} setisOpened={setIsReacgModalOpen}>
+        <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
           <div className={styles.reachModal}>
             <p>リーチしましたか？</p>
             <Button inversion onClick={handleReachIconClick}>
               はい
             </Button>
-            <Button onClick={() => setIsReacgModalOpen(!isReachModalOpen)}>
+            <Button onClick={() => setIsReachModalOpen(!isReachModalOpen)}>
               いいえ
             </Button>
           </div>
