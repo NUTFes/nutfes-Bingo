@@ -6,7 +6,7 @@
 .bubble {
   width: 87.5vw;
   height: 50.9vw;
-  position: absolute;
+  position: fixed;
   background: #ffffff;
   box-shadow: 1.09375vw 1.09375vw 0px 0px #ff3341;
   border-radius: 5.46875vw;
