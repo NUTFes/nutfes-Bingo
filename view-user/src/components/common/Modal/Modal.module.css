@@ -16,6 +16,7 @@
   align-items: center;
   justify-content: center;
   flex-flow: column;
+  gap: 2vw;
   z-index: 50;
   box-sizing: border-box;
   object-fit: cover;
@@ -54,6 +55,7 @@
     align-items: center;
     justify-content: center;
     flex-flow: column;
+    gap: 1vw;
     z-index: 50;
     box-sizing: border-box;
     object-fit: cover;
