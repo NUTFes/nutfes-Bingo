@@ -17,6 +17,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-flow: column;
+  gap: 2vw;
   z-index: 50;
   box-sizing: border-box;
   padding: 10vw;
@@ -40,6 +42,14 @@
 
 @media screen and (min-width: 1024px) {
   .content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-flow: column;
+    gap: 1vw;
+    z-index: 50;
+    box-sizing: border-box;
+    object-fit: cover;
     padding: 5vw;
     border-radius: 1vw;
   }
