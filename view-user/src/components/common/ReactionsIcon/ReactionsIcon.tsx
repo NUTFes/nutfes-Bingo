@@ -4,11 +4,11 @@ import { FaRegFaceSmile } from "react-icons/fa6";
 
 interface ReactionsIconProps {
   isOpen: boolean;
-  setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsReactionModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 const ReactionsIcon = (props: ReactionsIconProps) => {
   const handleClick = () => {
-    props.setIsModalOpen(!props.isOpen);
+    props.setIsReactionModalOpen(!props.isOpen);
   };
 
   return (
