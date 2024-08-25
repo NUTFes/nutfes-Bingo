@@ -4,7 +4,7 @@
 
 <!-- 対応したIssue番号を記載 -->
 
-resolve #0
+- resolve #0
 
 # 概要
 
