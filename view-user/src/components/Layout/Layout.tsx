@@ -84,7 +84,7 @@ const Layout = (props: LayoutProps) => {
     localStorage.setItem("isReachIconVisible", "false");
     setIsReacgModalOpen(!isReachModalOpen);
   };
-  
+
   const Icons = (pageName: string) => {
     let icons = [];
     switch (pageName) {
@@ -162,7 +162,7 @@ const Layout = (props: LayoutProps) => {
       )}
       {isReachModalOpen && (
         <Modal isOpened={isReachModalOpen} setisOpened={setIsReacgModalOpen}>
-          <>
+          <div className={styles.reachModal}>
             <p>リーチしましたか？</p>
             <Button inversion onClick={handleReachIconClick}>
               はい
@@ -170,7 +170,7 @@ const Layout = (props: LayoutProps) => {
             <Button onClick={() => setIsReacgModalOpen(!isReachModalOpen)}>
               いいえ
             </Button>
-          </>
+          </div>
         </Modal>
       )}
       <Header />
