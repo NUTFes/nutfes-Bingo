@@ -9,6 +9,8 @@ import {
   ReactionStampModal,
   NavigationBar,
   Header,
+  Modal,
+  Button,
 } from "@/components/common";
 
 const images = [
@@ -28,7 +30,9 @@ interface LayoutProps {
 }
 
 const Layout = (props: LayoutProps) => {
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isReactionModalOpen, setIsReactionModalOpen] =
+    useState<boolean>(false);
+  const [isReachModalOpen, setIsReachModalOpen] = useState<boolean>(false);
   const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
@@ -51,8 +55,11 @@ const Layout = (props: LayoutProps) => {
   }, []);
 
   const handleReachIconClick = () => {
+    // todo リーチカウントAPIと繋ぎ込み
+
     setReachIconVisible(false);
     localStorage.setItem("isReachIconVisible", "false");
+    setIsReachModalOpen(!isReachModalOpen);
   };
 
   const Icons = (pageName: string) => {
@@ -62,12 +69,17 @@ const Layout = (props: LayoutProps) => {
         icons = [
           <PrizesIcon key="prize" />,
           <ReactionsIcon
-            isOpen={isModalOpen}
-            setIsModalOpen={setIsModalOpen}
+            isOpen={isReactionModalOpen}
+            setIsReactionModalOpen={setIsReactionModalOpen}
             key="reaction"
           />,
           isReachIconVisible && (
-            <ReachIcon key="reach" onClick={handleReachIconClick} />
+            <ReachIcon
+              key="reach"
+              isOpen={isReachModalOpen}
+              setIsReachModalOpen={setIsReachModalOpen}
+              onClick={handleReachIconClick}
+            />
           ),
           <SettingsIcon key="settings" />,
         ];
@@ -75,13 +87,18 @@ const Layout = (props: LayoutProps) => {
       case "/prizes":
         icons = [
           <BackIcon key="back" />,
-          <ReactionsIcon
-            isOpen={isModalOpen}
-            setIsModalOpen={setIsModalOpen}
-            key="reaction"
+          <ReachIcon
+            key="reach"
+            isOpen={isReachModalOpen}
+            setIsReachModalOpen={setIsReachModalOpen}
+            onClick={handleReachIconClick}
           />,
           isReachIconVisible && (
-            <ReachIcon key="reach" onClick={handleReachIconClick} />
+            <ReactionsIcon
+              isOpen={isReactionModalOpen}
+              setIsReactionModalOpen={setIsReactionModalOpen}
+              key="reaction"
+            />
           ),
           <SettingsIcon key="settings" />,
         ];
@@ -90,12 +107,17 @@ const Layout = (props: LayoutProps) => {
         icons = [
           <PrizesIcon key="prize" />,
           <ReactionsIcon
-            isOpen={isModalOpen}
-            setIsModalOpen={setIsModalOpen}
+            isOpen={isReactionModalOpen}
+            setIsReactionModalOpen={setIsReactionModalOpen}
             key="reaction"
           />,
           isReachIconVisible && (
-            <ReachIcon key="reach" onClick={handleReachIconClick} />
+            <ReachIcon
+              key="reach"
+              isOpen={isReachModalOpen}
+              setIsReachModalOpen={setIsReachModalOpen}
+              onClick={handleReachIconClick}
+            />
           ),
           <SettingsIcon key="settings" />,
         ];
@@ -107,12 +129,25 @@ const Layout = (props: LayoutProps) => {
 
   return (
     <div>
-      {isModalOpen && (
+      {isReactionModalOpen && (
         <ReactionStampModal
           position={position}
           height={navBarHeight}
           images={images}
         />
+      )}
+      {isReachModalOpen && (
+        <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
+          <div className={styles.reachModal}>
+            <p>リーチしましたか？</p>
+            <Button inversion onClick={handleReachIconClick}>
+              はい
+            </Button>
+            <Button onClick={() => setIsReachModalOpen(!isReachModalOpen)}>
+              いいえ
+            </Button>
+          </div>
+        </Modal>
       )}
       <Header />
       <main className={styles.content}>{props.children}</main>

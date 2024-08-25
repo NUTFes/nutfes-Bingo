@@ -5,17 +5,17 @@ interface ModalProps {
   children: ReactNode;
   isOpened: boolean;
   canCloseByClickingBackground?: boolean;
-  setisOpened: (isOpened: boolean) => void;
+  setIsOpened: (isOpened: boolean) => void;
 }
 
 const Modal = ({
   children,
   isOpened,
   canCloseByClickingBackground = true,
-  setisOpened,
+  setIsOpened,
 }: ModalProps) => {
   const closeModal = () => {
-    setisOpened(false);
+    setIsOpened(false);
   };
 
   return (
