@@ -10,68 +10,69 @@ BEGIN
   RETURN _new;
 END;
 $$;
-CREATE TABLE public.bingo_number (
+CREATE TABLE public.images (
     id integer NOT NULL,
-    number integer DEFAULT 0,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    bucket_name text DEFAULT '""'::text NOT NULL,
+    file_name text DEFAULT '""'::text NOT NULL,
+    file_type text DEFAULT '""'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
-COMMENT ON TABLE public.bingo_number IS 'ビンゴの出た数字を記録';
-CREATE SEQUENCE public.bingo_number_id_seq
+COMMENT ON TABLE public.images IS 'MinIOに保存された画像データのリンクを管理するテーブル';
+CREATE SEQUENCE public.images_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER SEQUENCE public.bingo_number_id_seq OWNED BY public.bingo_number.id;
-CREATE TABLE public.bingo_prize (
+ALTER SEQUENCE public.images_id_seq OWNED BY public.images.id;
+CREATE TABLE public.numbers (
     id integer NOT NULL,
-    "isWon" boolean DEFAULT false,
-    "imageId" integer,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    "nameJp" text,
-    "nameEn" text
+    number integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
-COMMENT ON TABLE public.bingo_prize IS 'ビンゴの景品データを格納';
-CREATE SEQUENCE public.bingo_prize_id_seq
+COMMENT ON TABLE public.numbers IS 'ビンゴの出た数字を記録';
+COMMENT ON COLUMN public.numbers.number IS 'ビンゴの数値データ';
+CREATE SEQUENCE public.numbers_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER SEQUENCE public.bingo_prize_id_seq OWNED BY public.bingo_prize.id;
-CREATE TABLE public.prize_image (
+ALTER SEQUENCE public.numbers_id_seq OWNED BY public.numbers.id;
+CREATE TABLE public.prizes (
     id integer NOT NULL,
-    "bucketName" text,
-    "fileName" text,
-    "fileType" text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+    is_won boolean DEFAULT false NOT NULL,
+    image_id integer DEFAULT '-1'::integer NOT NULL,
+    name_jp text DEFAULT '""'::text NOT NULL,
+    name_en text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
-COMMENT ON TABLE public.prize_image IS 'minioの画像データを保管する';
-CREATE SEQUENCE public.prize_image_id_seq
+COMMENT ON TABLE public.prizes IS 'ビンゴの景品データを格納';
+COMMENT ON COLUMN public.prizes.is_won IS '当選した景品はTrueになる';
+COMMENT ON COLUMN public.prizes.image_id IS 'imagesのidが入る';
+COMMENT ON COLUMN public.prizes.name_jp IS '景品の日本語名';
+COMMENT ON COLUMN public.prizes.name_en IS '景品の英語名';
+CREATE SEQUENCE public.prizes_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER SEQUENCE public.prize_image_id_seq OWNED BY public.prize_image.id;
-ALTER TABLE ONLY public.bingo_number ALTER COLUMN id SET DEFAULT nextval('public.bingo_number_id_seq'::regclass);
-ALTER TABLE ONLY public.bingo_prize ALTER COLUMN id SET DEFAULT nextval('public.bingo_prize_id_seq'::regclass);
-ALTER TABLE ONLY public.prize_image ALTER COLUMN id SET DEFAULT nextval('public.prize_image_id_seq'::regclass);
-ALTER TABLE ONLY public.bingo_number
-    ADD CONSTRAINT bingo_number_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.bingo_prize
-    ADD CONSTRAINT bingo_prize_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.prize_image
-    ADD CONSTRAINT prize_image_pkey PRIMARY KEY (id);
-CREATE TRIGGER set_public_bingo_number_updated_at BEFORE UPDATE ON public.bingo_number FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
-COMMENT ON TRIGGER set_public_bingo_number_updated_at ON public.bingo_number IS 'trigger to set value of column "updated_at" to current timestamp on row update';
-CREATE TRIGGER set_public_bingo_prize_updated_at BEFORE UPDATE ON public.bingo_prize FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
-COMMENT ON TRIGGER set_public_bingo_prize_updated_at ON public.bingo_prize IS 'trigger to set value of column "updated_at" to current timestamp on row update';
-CREATE TRIGGER set_public_prize_image_updated_at BEFORE UPDATE ON public.prize_image FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
-COMMENT ON TRIGGER set_public_prize_image_updated_at ON public.prize_image IS 'trigger to set value of column "updated_at" to current timestamp on row update';
+ALTER SEQUENCE public.prizes_id_seq OWNED BY public.prizes.id;
+ALTER TABLE ONLY public.images ALTER COLUMN id SET DEFAULT nextval('public.images_id_seq'::regclass);
+ALTER TABLE ONLY public.numbers ALTER COLUMN id SET DEFAULT nextval('public.numbers_id_seq'::regclass);
+ALTER TABLE ONLY public.prizes ALTER COLUMN id SET DEFAULT nextval('public.prizes_id_seq'::regclass);
+ALTER TABLE ONLY public.images
+    ADD CONSTRAINT images_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.numbers
+    ADD CONSTRAINT numbers_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.prizes
+    ADD CONSTRAINT prizes_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.prizes
+    ADD CONSTRAINT prizes_image_id_fkey FOREIGN KEY (image_id) REFERENCES public.images(id) ON UPDATE RESTRICT ON DELETE RESTRICT;

@@ -1,0 +1,7 @@
+table:
+  name: prizes
+  schema: public
+object_relationships:
+  - name: image
+    using:
+      foreign_key_constraint_on: image_id

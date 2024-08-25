@@ -12,13 +12,12 @@ import {
 } from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
 import { useEffect, useState } from "react";
-
 import {
-  bingoNumberSubscription as BNS,
-  bingoNumberCreate as BNC,
-  bingoNumberDelete as BND,
-} from "./api/schema";
-import { BingoNumber } from "@/type/common";
+  CreateOneNumberDocument,
+  DeleteOneNumberDocument,
+  SubscribeListNumbersDocument,
+} from "@/type/graphql";
+import type { SubscribeListNumbersSubscription } from "@/type/graphql";
 
 interface formDataCreate {
   submitNumber: number | null;
@@ -33,7 +32,9 @@ const Page: NextPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
+  const [bingoNumbers, setBingoNumbers] = useState<
+    SubscribeListNumbersSubscription["numbers"]
+  >([]);
   const [isOpened, setIsOpened] = useState<boolean>(false);
   const isopenBool = () => setIsOpened(!isOpened);
 
@@ -56,10 +57,11 @@ const Page: NextPage = () => {
   } = useForm<formDataDelete>({
     mode: "onChange",
   });
-
-  const { data, loading, error } = useSubscription(BNS);
-  const [createNumber] = useMutation(BNC);
-  const [deleteNumber] = useMutation(BND);
+  const { data, loading, error } = useSubscription(
+    SubscribeListNumbersDocument,
+  );
+  const [createNumber] = useMutation(CreateOneNumberDocument);
+  const [deleteNumber] = useMutation(DeleteOneNumberDocument);
 
   //番号の追加
   const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
@@ -85,7 +87,7 @@ const Page: NextPage = () => {
   //subscriptionを行うためのuseEffect
   useEffect(() => {
     if (data) {
-      setBingoNumbers(data.bingo_number);
+      setBingoNumbers(data.numbers);
     }
   }, [data]);
 

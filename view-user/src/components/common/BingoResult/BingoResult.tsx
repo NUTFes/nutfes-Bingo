@@ -5,9 +5,9 @@ import { BingoIcon, Button } from "@/components/common";
 import { useRouter } from "next/router";
 import { ja } from "@/locales/ja";
 import { en } from "@/locales/en";
-import { BingoNumber } from "@/type/common";
+import type { SubscribeListNumbersSubscription } from "@/type/graphql";
 interface BingoResultProps {
-  bingoResultNumber: BingoNumber[];
+  bingoResultNumber: SubscribeListNumbersSubscription["numbers"];
 }
 
 export const BingoResult = (props: BingoResultProps) => {

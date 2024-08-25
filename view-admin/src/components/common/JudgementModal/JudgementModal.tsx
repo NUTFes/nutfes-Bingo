@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import styles from "./JudgementModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
-import { BingoNumber } from "@/type/common";
+import { SubscribeListNumbersSubscription } from "@/type/graphql";
 
 interface ModalProps {
   isOpened: boolean;
   canCloseByClickingBackground?: boolean;
   setIsOpened: (isOpened: boolean) => void;
-  bingoNumbers: BingoNumber[];
+  bingoNumbers: SubscribeListNumbersSubscription["numbers"];
 }
 
 const Modal = ({

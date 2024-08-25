@@ -1,13 +1,19 @@
 import React, { useState } from "react";
 import styles from "./PrizeResult.module.css";
-import { BingoPrize} from "@/type/common";
 import Image from "next/image";
 import { useMutation } from "@apollo/client";
-import { bingoPrizeUpdateIsWon as BPUIW } from "@/pages/api/schema";
+import { UpdateOnePrizeIsWonDocument } from "@/type/graphql";
+import type {
+  UpdateOnePrizeIsWonMutation,
+  UpdateOnePrizeIsWonMutationVariables,
+  GetListPrizesQuery,
+} from "@/type/graphql";
 
 interface PrizeResultProps {
-  prizeResult: BingoPrize[];
-  setBingoPrize: React.Dispatch<React.SetStateAction<BingoPrize[]>>;
+  prizeResult: GetListPrizesQuery["prizes"];
+  setBingoPrize: React.Dispatch<
+    React.SetStateAction<GetListPrizesQuery["prizes"]>
+  >;
   showOverlay: boolean;
   showToggle: boolean;
 }
@@ -18,15 +24,17 @@ export const PrizeResult = (props: PrizeResultProps) => {
     setIsImageVisible(false);
   };
 
-  const [updatePrize] = useMutation(BPUIW);
-  const bingoPrizes: BingoPrize[] = props.prizeResult;
+  const [updatePrize] = useMutation<
+    UpdateOnePrizeIsWonMutation,
+    UpdateOnePrizeIsWonMutationVariables
+  >(UpdateOnePrizeIsWonDocument);
 
+  // TODO ENDPONT のスペリングミスを修正
   // imageURLs を string[] 型にするための修正
-  const imageURLs: string[] = bingoPrizes.map((prize: BingoPrize) => {
-    if (prize.prizeImage) {
-      const image = prize.prizeImage;
-      const bucketName = image.bucketName;
-      const fileName = image.fileName;
+  const imageURLs: string[] = props.prizeResult.map((prize) => {
+    if (prize.image) {
+      const { bucketName, fileName } = prize.image;
+      console.log(prize.image.bucketName);
       return `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${bucketName}/${fileName}`;
     } else {
       return "";
@@ -78,7 +86,11 @@ export const PrizeResult = (props: PrizeResultProps) => {
                     src={imageURLs && imageURLs[index]}
                     className="image"
                     alt="PrizeImage"
-                    style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                    style={{
+                      objectFit: "cover",
+                      width: "100%",
+                      height: "100%",
+                    }}
                     onLoad={imageVisibility}
                   />
                 </div>

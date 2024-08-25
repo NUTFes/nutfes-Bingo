@@ -1,10 +1,10 @@
 import React from "react";
 import NumberCardSmall from "../NumberCardSmall";
-import { BingoNumber } from "@/type/common";
+import type { SubscribeListNumbersSubscription } from "@/type/graphql";
 import styles from "./NumberCardList.module.css";
 
 interface NumberCardListProps {
-  bingoNumber: BingoNumber[];
+  bingoNumber: SubscribeListNumbersSubscription["numbers"];
   firstNumber?: boolean;
 }
 

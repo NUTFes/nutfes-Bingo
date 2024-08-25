@@ -1,13 +1,13 @@
 import React from "react";
 import styles from "./PrizeCard.module.css";
-import { BingoPrize } from "@/type/common";
+import type { GetListPrizesQuery } from "@/type/graphql";
 import { useRouter } from "next/router";
 import { ja } from "@/locales/ja";
 import { en } from "@/locales/en";
 import classNames from "classnames";
 
 interface PrizeCardProps {
-  BingoPrize: BingoPrize;
+  BingoPrize: GetListPrizesQuery["prizes"][number];
 }
 
 const PrizeCard = (props: PrizeCardProps) => {
@@ -17,7 +17,7 @@ const PrizeCard = (props: PrizeCardProps) => {
   const t = locale === "ja" ? ja : en;
 
   const bingoPrize = props.BingoPrize;
-  const prizeImage = bingoPrize.prizeImage;
+  const prizeImage = bingoPrize.image;
 
   const imageURL: string = prizeImage
     ? `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${prizeImage.bucketName}/${prizeImage.fileName}`

@@ -1,0 +1,69 @@
+# 景品の取得(Get)
+query GetListPrizes {
+  prizes {
+    id
+    isWon
+    nameJp
+    nameEn
+    createdAt
+    updatedAt
+    image {
+      id
+      bucketName
+      fileName
+      fileType
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+# 景品の削除(Delete)
+mutation DeleteOnePrize($id: Int!) {
+  deletePrizesByPk(id: $id) {
+    imageId
+  }
+}
+
+# 景品の継続取得(Subscription)
+subscription SubscribeListPrizesIsWon {
+  prizes {
+    id
+    isWon
+    createdAt
+    updatedAt
+  }
+}
+
+# 景品の追加(Create)
+mutation CreateOnePrize(
+  $isWon: Boolean!
+  $imageId: Int!
+  $nameJp: String!
+  $nameEn: String!
+) {
+  insertPrizes(
+    objects: {
+      isWon: $isWon
+      imageId: $imageId
+      nameJp: $nameJp
+      nameEn: $nameEn
+    }
+  ) {
+    returning {
+      id
+      isWon
+      imageId
+      nameJp
+      nameEn
+    }
+  }
+}
+
+# 景品の当選更新(Update)
+mutation UpdateOnePrizeIsWon($id: Int!, $isWon: Boolean!) {
+  updatePrizesByPk(pkColumns: { id: $id }, _set: { isWon: $isWon }) {
+    id
+    isWon
+  }
+}

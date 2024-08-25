@@ -1,0 +1,50 @@
+# 画像の追加(Post)
+mutation CreateOneImage(
+  $bucketName: String!
+  $fileName: String!
+  $fileType: String!
+) {
+  insertImagesOne(
+    object: {
+      bucketName: $bucketName
+      fileName: $fileName
+      fileType: $fileType
+    }
+  ) {
+    id
+  }
+}
+
+# idとprizeIdの紐づけ
+mutation RelateOneImageToPrize($imageId: Int!, $id: Int!) {
+  updatePrizesByPk(pkColumns: { id: $id }, _set: { imageId: $imageId }) {
+    id
+    imageId
+  }
+}
+
+# 画像の更新(Update)
+mutation UpdateOneImage(
+  $id: Int!
+  $bucketName: String!
+  $fileName: String!
+  $fileType: String!
+) {
+  updateImagesByPk(
+    pkColumns: { id: $id }
+    _set: { bucketName: $bucketName, fileName: $fileName, fileType: $fileType }
+  ) {
+    id
+    bucketName
+    fileName
+    fileType
+    updatedAt
+  }
+}
+
+# 画像の削除(Delete)
+mutation DeleteOneImage($id: Int!) {
+  deleteImagesByPk(id: $id) {
+    id
+  }
+}
