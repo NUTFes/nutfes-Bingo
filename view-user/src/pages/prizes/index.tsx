@@ -16,6 +16,7 @@ import type {
 } from "@/type/graphql";
 import { useRecoilState } from "recoil";
 import { bingoPrizeState } from "../../Atom/atom";
+import Layout from "@/components/Layout";
 
 const Page: NextPage = () => {
   const { locale } = useRouter();
