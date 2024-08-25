@@ -1,10 +1,10 @@
-import React, { ReactNode } from "react";
 import styles from "./Header.module.css";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import { IoHelpCircleOutline } from "react-icons/io5";
 
 // ボタンの動作確認用の関数（後でヘルプに飛ぶようにする）
-const goHelpe = function () {
+const goHelp = function () {
   console.log("1");
 };
 
@@ -13,13 +13,15 @@ const Header = () => {
   return (
     <div className={styles.container}>
       <div className={styles.main}>
-        <img
+        <Image
           className={styles.logo}
-          src="./Bingo_logo.png"
+          src="/Bingo_logo.png"
           alt="sample"
+          width={100}
+          height={100}
           onClick={() => router.push("/")}
         />
-        <button className={styles.icon} onClick={goHelpe}>
+        <button className={styles.icon} onClick={goHelp}>
           <IoHelpCircleOutline />
         </button>
       </div>

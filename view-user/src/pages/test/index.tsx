@@ -24,6 +24,18 @@ const testBingoNumbers: BingoNumber[] = [
   { id: 7, number: 7, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
   { id: 8, number: 8, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
   { id: 9, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 10, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 11, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 12, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 13, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 14, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 15, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 16, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 17, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 18, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 19, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 20, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
+  { id: 21, number: 9, createdAt: "2024-08-01", updatedAt: "2024-08-01" },
 ];
 
 const testNumber: number = 8;
@@ -36,14 +48,15 @@ const HomePage: React.FC = () => {
     <div>
       {/* <NumberCardSmall BingoNumber={testBingoNumber}></NumberCardSmall> */}
       {/* <PrizeCard BingoPrize={testBingoPrize}></PrizeCard> */}
-      {/* <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
-      <button onClick={toggleModal}>モーダルボタン</button>
+      {/* <button onClick={toggleModal}>モーダルボタン</button>
       {isModalOpen && (
         <ReactionStampModal position={testPosition} images={images} />
       )} */}
       {/* <ReachIcon /> */}
       {/* <PrizeCardList BingoPrize={testBingoPrizes} /> */}
-      <Layout pageName={pageName}>hello</Layout>
+      <Layout pageName={pageName}>
+        <NumberCardList firstNumber bingoNumber={testBingoNumbers} />
+      </Layout>
       {/* <ReachCount count={testNumber} /> */}
     </div>
   );

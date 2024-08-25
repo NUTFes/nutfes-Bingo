@@ -1,7 +1,8 @@
-/* Header */
 .container {
   width: 100vw;
   background-color: #ffffff;
+  position: sticky;
+  top: 0;
 }
 
 .main {

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import styles from "./Layout.module.css";
 import {
   ReachIcon,
   PrizesIcon,
@@ -34,10 +35,10 @@ const Layout = (props: LayoutProps) => {
   const position: string = isReachIconVisible ? "29%" : "50%";
 
   // navBarの高さをstring型で渡す
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (navRef.current) {
-      const height = navRef.current.getBoundingClientRect().height;
-      setNavBarHeight(height.toString());
+      const navHeight = navRef.current.getBoundingClientRect().height;
+      setNavBarHeight(navHeight.toString());
     }
   }, []);
 
@@ -114,7 +115,7 @@ const Layout = (props: LayoutProps) => {
         />
       )}
       <Header />
-      <main>{props.children}</main>
+      <main className={styles.content}>{props.children}</main>
       <NavigationBar ref={navRef} isCentered={iconElements.length <= 3}>
         {iconElements}
       </NavigationBar>
