@@ -186,19 +186,6 @@ const Layout = (props: LayoutProps) => {
           </div>
         </div>
       </Modal>
-      {isReachModalOpen && (
-        <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
-          <div className={styles.reachModal}>
-            <p>リーチしましたか？</p>
-            <Button inversion onClick={handleReachIconClick}>
-              はい
-            </Button>
-            <Button onClick={() => setIsReachModalOpen(!isReachModalOpen)}>
-              いいえ
-            </Button>
-          </div>
-        </Modal>
-      )}
       <Header />
       <main className={styles.content}>{props.children}</main>
       <NavigationBar ref={navRef} isCentered={iconElements.length <= 3}>
