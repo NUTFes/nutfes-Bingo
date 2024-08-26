@@ -24,5 +24,28 @@
 }
 
 .reachModal button {
-  margin-top: 1.5vw;
+  margin-top: 3vw;
+}
+
+.settingsModal,
+.settingsModal > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.settingsModal {
+  gap: 9vw;
+}
+
+.settingsModal p {
+  font-family: "Noto Sans JP";
+  font-size: 6vw;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  color: var(--Main-Color, #ff3342);
+  text-align: center;
+  margin-bottom: 3.5vw;
 }
