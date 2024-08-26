@@ -1,18 +1,11 @@
 import "@/styles/reset.css";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import { Inter } from "next/font/google";
-import {
-  ApolloProvider,
-  ApolloClient,
-  InMemoryCache,
-  HttpLink,
-} from "@apollo/client";
+import { ApolloProvider, ApolloClient, InMemoryCache } from "@apollo/client";
 import { createClient } from "graphql-ws";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { RecoilRoot } from "recoil";
 import localFont from "next/font/local";
-import { ResultChangeProvider } from "@/contexts/ResultChangeContext";
 
 const silom = localFont({
   src: "../../public/fonts/Silom.ttf",
@@ -44,11 +37,9 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <ApolloProvider client={client}>
       <RecoilRoot>
-        <ResultChangeProvider>
-          <main className={silom.className}>
-            <Component {...pageProps} />
-          </main>
-        </ResultChangeProvider>
+        <main className={silom.className}>
+          <Component {...pageProps} />
+        </main>
       </RecoilRoot>
     </ApolloProvider>
   );
