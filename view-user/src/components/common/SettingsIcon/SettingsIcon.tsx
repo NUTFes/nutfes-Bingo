@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IconFramework } from "@/components/common";
 import { IoIosSettings } from "react-icons/io";
-import { useEffect } from "react";
 
 interface SettingsIconProps {
   onClick?: () => void;
