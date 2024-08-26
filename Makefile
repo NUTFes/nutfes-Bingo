@@ -25,3 +25,12 @@ run-prod:
 	sleep 10
 	make db-apply-prod
 
+codegen/user:
+	docker compose run --rm view-user npm run codegen
+
+codegen/admin:
+	docker compose run --rm view-admin npm run codegen
+
+codegen:
+	docker compose run --rm view-user npm run codegen
+	docker compose run --rm view-admin npm run codegen
