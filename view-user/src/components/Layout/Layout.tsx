@@ -10,16 +10,22 @@ import {
   NavigationBar,
   Header,
 } from "@/components/common";
+import { UpdateOneTriggerFlagDocument } from "@/type/graphql";
+import type {
+  UpdateOneTriggerFlagMutation,
+  UpdateOneTriggerFlagMutationVariables,
+} from "@/type/graphql";
+import { useMutation } from "@apollo/client";
 
 const images = [
-  { src: "/ReactionIcon/crap.png", alt: "crap icon" },
-  { src: "/ReactionIcon/good.png", alt: " good icon" },
-  { src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
-  { src: "/ReactionIcon/heart.png", alt: "heart icon" },
-  { src: "/ReactionIcon/smile.png", alt: "smile icon" },
-  { src: "/ReactionIcon/angry.png", alt: "angry icon" },
-  { src: "/ReactionIcon/skull.png", alt: "skull icon" },
-  { src: "/ReactionIcon/sad.png", alt: "sad icon" },
+  { id: 1, src: "/ReactionIcon/crap.png", alt: "crap icon" },
+  { id: 2, src: "/ReactionIcon/good.png", alt: " good icon" },
+  { id: 3, src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
+  { id: 4, src: "/ReactionIcon/heart.png", alt: "heart icon" },
+  { id: 5, src: "/ReactionIcon/smile.png", alt: "smile icon" },
+  { id: 6, src: "/ReactionIcon/angry.png", alt: "angry icon" },
+  { id: 7, src: "/ReactionIcon/skull.png", alt: "skull icon" },
+  { id: 8, src: "/ReactionIcon/sad.png", alt: "sad icon" },
 ];
 
 interface LayoutProps {
@@ -30,9 +36,14 @@ interface LayoutProps {
 const Layout = (props: LayoutProps) => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
+  const [isFlag, setIsFlag] = useState<boolean>(false);
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
   const position: string = isReachIconVisible ? "29%" : "50%";
+  const [updateFlag] = useMutation<
+    UpdateOneTriggerFlagMutation,
+    UpdateOneTriggerFlagMutationVariables
+  >(UpdateOneTriggerFlagDocument);
 
   // navBarの高さをstring型で渡す
   useLayoutEffect(() => {
@@ -49,6 +60,18 @@ const Layout = (props: LayoutProps) => {
       setReachIconVisible(storedVisibility === "true");
     }
   }, []);
+
+  const handleReactionsiconClick = (id: number) => {
+    setIsFlag(true);
+
+    updateFlag({ variables: { id, trigger: true } });
+
+    // 0.5病後に戻す。これ以上はきついかも
+    setTimeout(() => {
+      setIsFlag(false);
+      updateFlag({ variables: { id, trigger: false } });
+    }, 500);
+  };
 
   const handleReachIconClick = () => {
     setReachIconVisible(false);
@@ -112,6 +135,7 @@ const Layout = (props: LayoutProps) => {
           position={position}
           height={navBarHeight}
           images={images}
+          onClick={handleReactionsiconClick}
         />
       )}
       <Header />
