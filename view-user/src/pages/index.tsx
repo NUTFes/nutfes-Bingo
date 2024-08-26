@@ -6,6 +6,8 @@ import { useSubscription } from "@apollo/client";
 import { SubscribeListNumbersDocument } from "@/type/graphql";
 import type { SubscribeListNumbersSubscription } from "@/type/graphql";
 import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
+import { ja } from "../locales/ja";
+import { en } from "../locales/en";
 
 type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
 
@@ -30,15 +32,11 @@ const Page: NextPage = () => {
   const { pathname: pageName, locale } = useRouter();
   const [language, setLanguage] = useState<string>(locale || "ja");
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
-  const [bingoNumbers, setBingoNumbers] = useState<BingoNumbers>([
-    {
-      number: 0,
-      id: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ]);
   const { data, loading } = useSubscription(SubscribeListNumbersDocument);
+  const t = locale === "ja" ? ja : en;
+  const [bingoNumbers, setBingoNumbers] = useState<
+    SubscribeListNumbersSubscription["numbers"]
+  >([]);
 
   const updateBingoNumbers = useCallback(() => {
     if (data) {
