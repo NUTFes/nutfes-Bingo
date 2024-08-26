@@ -1,9 +1,15 @@
 export const en = {
-  PRIZE_BUTTON: "Prize",
-  NUMBER_BUTTON: "Number",
-  SUB_TITLE_NUMBER: "BINGO Number",
-  SUB_TITLE_PRIZE: "Prize List",
-  NUMBER_ORDER_BUTTON: "Num Order",
-  LOTTERY_ORDER_BUTTON: "Lott Order",
-  WINNING_OVERRAY: "Won!",
+  reachModal: {
+    title: "Did you reach?",
+    yes: "Yes",
+    no: "No",
+  },
+  settingsModal: {
+    languageSelection: "Language Selection",
+    sortOrder: "Sort Order",
+    japanese: "Japanese",
+    english: "English",
+    drawOrder: "Draw Order",
+    ascending: "Ascending",
+  },
 };
