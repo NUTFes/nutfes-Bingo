@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useRouter } from "next/router";
 import styles from "./Layout.module.css";
 import {
   ReachIcon,
@@ -11,6 +12,7 @@ import {
   Header,
   Modal,
   Button,
+  ToggleButton,
 } from "@/components/common";
 import { UpdateOneTriggerFlagDocument } from "@/type/graphql";
 import type {
@@ -18,6 +20,7 @@ import type {
   UpdateOneTriggerFlagMutationVariables,
 } from "@/type/graphql";
 import { useMutation } from "@apollo/client";
+import { ja, en } from "@/locales";
 
 const images = [
   { id: 1, src: "/ReactionIcon/crap.png", alt: "crap icon" },
@@ -35,11 +38,18 @@ interface LayoutProps {
   pageName: string;
   isSortedAscending?: boolean;
   setIsSortedAscending?: (value: boolean) => void;
+  language: string;
+  setLanguage: (value: string) => void;
 }
 
 const Layout = (props: LayoutProps) => {
+  const router = useRouter();
+  const t = props.language === "ja" ? ja : en;
   const [isReactionModalOpen, setIsReactionModalOpen] =
     useState<boolean>(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] =
+    useState<boolean>(false);
+  const [isSortOrderActive, setIsSortOrderActive] = useState(false);
   const [isReachModalOpen, setIsReachModalOpen] = useState<boolean>(false);
   const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
   const [isFlag, setIsFlag] = useState<boolean>(false);
@@ -91,6 +101,12 @@ const Layout = (props: LayoutProps) => {
     if (props.setIsSortedAscending) {
       props.setIsSortedAscending(!props.isSortedAscending);
     }
+    setIsSortOrderActive(!isSortOrderActive);
+  };
+
+  const toggleLanguage = () => {
+    const newLocale = props.language === "ja" ? "en" : "ja";
+    router.push(router.pathname, router.asPath, { locale: newLocale });
   };
 
   const Icons = (pageName: string) => {
@@ -112,7 +128,11 @@ const Layout = (props: LayoutProps) => {
               onClick={handleReachIconClick}
             />
           ),
-          <SettingsIcon key="settings" onClick={toggleSortOrder} />,
+          <SettingsIcon
+            key="settings"
+            isOpen={isSettingsModalOpen}
+            setIsSettingsModalOpen={setIsSettingsModalOpen}
+          />,
         ];
         break;
       case "/prizes":
@@ -131,7 +151,11 @@ const Layout = (props: LayoutProps) => {
               key="reaction"
             />
           ),
-          <SettingsIcon key="settings" onClick={toggleSortOrder} />,
+          <SettingsIcon
+            key="settings"
+            isOpen={isSettingsModalOpen}
+            setIsSettingsModalOpen={setIsSettingsModalOpen}
+          />,
         ];
         break;
       default:
@@ -150,7 +174,11 @@ const Layout = (props: LayoutProps) => {
               onClick={handleReachIconClick}
             />
           ),
-          <SettingsIcon key="settings" onClick={toggleSortOrder} />,
+          <SettingsIcon
+            key="settings"
+            isOpen={isSettingsModalOpen}
+            setIsSettingsModalOpen={setIsSettingsModalOpen}
+          />,
         ];
     }
     return icons.filter(Boolean);
@@ -168,19 +196,44 @@ const Layout = (props: LayoutProps) => {
           onClick={handleReactionsiconClick}
         />
       )}
-      {isReachModalOpen && (
-        <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
-          <div className={styles.reachModal}>
-            <p>リーチしましたか？</p>
-            <Button inversion onClick={handleReachIconClick}>
-              はい
-            </Button>
-            <Button onClick={() => setIsReachModalOpen(!isReachModalOpen)}>
-              いいえ
-            </Button>
+      <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
+        <div className={styles.reachModal}>
+          <p>{t.reachModal.title}</p>
+          <Button inversion onClick={handleReachIconClick}>
+            {t.reachModal.yes}
+          </Button>
+          <Button onClick={() => setIsReachModalOpen(!isReachModalOpen)}>
+            {t.reachModal.no}
+          </Button>
+        </div>
+      </Modal>
+      <Modal
+        isOpened={isSettingsModalOpen}
+        setIsOpened={setIsSettingsModalOpen}
+      >
+        <div className={styles.settingsModal}>
+          <div>
+            <p>{t.settingsModal.languageSelection}</p>
+            <ToggleButton
+              isActive={props.language !== "ja"}
+              onClick={toggleLanguage}
+            >
+              <span>{t.settingsModal.japanese}</span>
+              <span>{t.settingsModal.english}</span>
+            </ToggleButton>
           </div>
-        </Modal>
-      )}
+          <div>
+            <p>{t.settingsModal.sortOrder}</p>
+            <ToggleButton
+              isActive={isSortOrderActive}
+              onClick={toggleSortOrder}
+            >
+              <span>{t.settingsModal.drawOrder}</span>
+              <span>{t.settingsModal.ascending}</span>
+            </ToggleButton>
+          </div>
+        </div>
+      </Modal>
       <Header />
       <main className={styles.content}>{props.children}</main>
       <NavigationBar ref={navRef} isCentered={iconElements.length <= 3}>
