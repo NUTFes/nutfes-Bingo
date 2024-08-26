@@ -10,6 +10,7 @@ interface SettingsIconProps {
 }
 const SettingsIcon = (props: SettingsIconProps) => {
   const [colorInversion, setColorInversion] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const handleClick = () => {
     if (props.onClick) {
