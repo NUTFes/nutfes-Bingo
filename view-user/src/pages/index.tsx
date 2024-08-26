@@ -6,8 +6,7 @@ import { useSubscription } from "@apollo/client";
 import { SubscribeListNumbersDocument } from "@/type/graphql";
 import type { SubscribeListNumbersSubscription } from "@/type/graphql";
 import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
-import { ja } from "../locales/ja";
-import { en } from "../locales/en";
+import { ja, en } from "@/locales";
 
 type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
 
