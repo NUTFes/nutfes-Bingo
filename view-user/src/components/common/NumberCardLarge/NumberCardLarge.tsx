@@ -9,7 +9,7 @@ interface NumberCardLargeProps {
 const NumberCardLarge = (props: NumberCardLargeProps) => {
   return (
     <div className={styles.container}>
-      <p>{props.bingoNumber.number}</p>
+      <div className={styles.number}>{props.bingoNumber.number}</div>
     </div>
   );
 };
