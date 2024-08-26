@@ -6,7 +6,7 @@ import { ja, en } from "@/locales";
 import { useSubscription } from "@apollo/client";
 import { SubscribeListNumbersDocument } from "@/type/graphql";
 import type { SubscribeListNumbersSubscription } from "@/type/graphql";
-import { Layout, NumberCardLarge, NumberCardList } from "@/components";
+import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
 
 const Page: NextPage = () => {
   const { pathname: pageName, locale } = useRouter();
@@ -15,7 +15,7 @@ const Page: NextPage = () => {
   const [bingoNumbers, setBingoNumbers] = useState<
     SubscribeListNumbersSubscription["numbers"]
   >([]);
-  const { data } = useSubscription(SubscribeListNumbersDocument);
+  const { data, loading } = useSubscription(SubscribeListNumbersDocument);
 
   // Subscription handling useEffect
   useEffect(() => {
@@ -43,6 +43,7 @@ const Page: NextPage = () => {
 
   return (
     <>
+      {loading && <Loading />}
       <Layout
         pageName={pageName}
         isSortedAscending={isSortedAscending}
