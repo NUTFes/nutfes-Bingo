@@ -1,13 +1,13 @@
 import React from "react";
 import styles from "./NumberCardLarge.module.css";
-import { BingoNumber } from "@/type/common";
+import { SubscribeListNumbersSubscription } from "@/type/graphql";
 
 interface NumberCardLargeProps {
-  BingoNumber: BingoNumber;
+  bingoNumber: SubscribeListNumbersSubscription["numbers"][number];
 }
 
 const NumberCardLarge = (props: NumberCardLargeProps) => {
-  const bingoNumber = props.BingoNumber;
+  const bingoNumber = props.bingoNumber;
   return (
     <div className={styles.container}>
       <div className={styles.number}>{bingoNumber.number}</div>
