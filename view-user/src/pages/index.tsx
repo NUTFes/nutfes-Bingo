@@ -1,14 +1,12 @@
 import type { NextPage } from "next";
-import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react";
 import styles from "@/styles/Home.module.css";
-import { NumberCardLarge, NumberCardList } from "@/components/common";
-import Layout from "@/components/Layout";
-import { ja } from "../locales/ja";
-import { en } from "../locales/en";
+import { ja, en } from "@/locales";
 import { useSubscription } from "@apollo/client";
 import { SubscribeListNumbersDocument } from "@/type/graphql";
 import type { SubscribeListNumbersSubscription } from "@/type/graphql";
+import { Layout, NumberCardLarge, NumberCardList } from "@/components";
 
 const Page: NextPage = () => {
   const { pathname: pageName, locale } = useRouter();
