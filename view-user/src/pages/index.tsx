@@ -11,7 +11,7 @@ import { SubscribeListNumbersDocument } from "@/type/graphql";
 import type { SubscribeListNumbersSubscription } from "@/type/graphql";
 
 const Page: NextPage = () => {
-  const { locale } = useRouter();
+  const { pathname: pageName, locale } = useRouter();
   const t = locale === "ja" ? ja : en;
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
   const [bingoNumbers, setBingoNumbers] = useState<
@@ -26,11 +26,18 @@ const Page: NextPage = () => {
     }
   }, [data]);
 
+  const defaultBingoNumber = {
+    number: 0,
+    id: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
   const copiedArray = [...bingoNumbers];
   const sortCopiedArray = [...bingoNumbers];
-  const firstBingoNumber = copiedArray.pop()?.number ?? 0;
+  const firstBingoNumber = copiedArray.pop() ?? defaultBingoNumber;
   const sortFirstBingoNumber =
-    sortCopiedArray.sort((a, b) => a.number - b.number).shift()?.number ?? 0;
+    sortCopiedArray.sort((a, b) => a.number - b.number).shift() ??
+    defaultBingoNumber;
 
   const displayBingoNumbers = isSortedAscending
     ? { large: firstBingoNumber, list: copiedArray.reverse() }
@@ -39,7 +46,7 @@ const Page: NextPage = () => {
   return (
     <>
       <Layout
-        pageName={""}
+        pageName={pageName}
         isSortedAscending={isSortedAscending}
         setIsSortedAscending={setIsSortedAscending}
       >
