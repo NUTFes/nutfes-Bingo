@@ -18,14 +18,14 @@
 
 @media (min-width: 1024px) {
   .container {
-    width: 16rem;
-    height: 16rem;
+    width: 8rem;
+    height: 8rem;
     border: 0.5rem solid #ff3342;
-    border-radius: 1.25rem;
-    box-shadow: 0.5rem 0.5rem 0rem #ff3342;
+    border-radius: 0.5rem;
+    box-shadow: 0.25rem 0.25rem 0rem #ff3342;
   }
 
   .number {
-    font-size: 10rem;
+    font-size: 5rem;
   }
 }
