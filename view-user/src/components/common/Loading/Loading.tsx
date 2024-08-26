@@ -1,4 +1,4 @@
-import React from "react";
+import Image from "next/image";
 import styles from "./Loading.module.css";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
@@ -6,7 +6,9 @@ const Loading = () => {
   return (
     <div className={styles.overlay}>
       <div className={styles.container}>
-        <img className={styles.logo} src="./Bingo_logo.png" alt="logo" />
+        <div className={styles.logo}>
+          <Image src="/Bingo_logo.png" alt="logo" fill objectFit="contain" />
+        </div>
         <AiOutlineLoading3Quarters className={styles.loader} />
       </div>
     </div>
