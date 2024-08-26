@@ -1,5 +1,22 @@
-import { useEffect, useRef } from "react";
+import type { NextPage } from "next";
+import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
 import Matter from "matter-js";
+import { useSubscription } from "@apollo/client";
+import {
+  SubscriotionStampTriggersDocument,
+  SubscribeListNumbersDocument,
+} from "@/type/graphql";
+import type {
+  SubscriotionStampTriggersSubscription,
+  SubscribeListNumbersSubscription,
+} from "@/type/graphql";
+import {
+  NumberCardLarge,
+  NumberCardList,
+  ReachCount,
+} from "@/components/common";
+import styles from "./screen.module.css";
 
 const images: { [key: string]: string } = {
   angry: "/ReactionIcon/angry.png",
@@ -14,10 +31,59 @@ const images: { [key: string]: string } = {
   surprise: "/ReactionIcon/surprise.png",
 };
 
-const ScreenPage = () => {
+const Page: NextPage = () => {
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
+  const [bingoNumbers, setBingoNumbers] = useState<
+    SubscribeListNumbersSubscription["numbers"]
+  >([]);
+  const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
+
+  const { data: numbers } = useSubscription(SubscribeListNumbersDocument);
+  const { data: triggers } =
+    useSubscription<SubscriotionStampTriggersSubscription>(
+      SubscriotionStampTriggersDocument,
+    );
+
+  //subscriptionを行うためのuseEffect
+  useEffect(() => {
+    if (numbers) {
+      setBingoNumbers(numbers.numbers);
+    }
+  }, [numbers]);
+
+  // 画像を降らせる
+  useEffect(() => {
+    triggers?.stampTriggers
+      .filter(
+        (stamp: SubscriotionStampTriggersSubscription["stampTriggers"][0]) =>
+          stamp.trigger,
+      )
+      .forEach(
+        (stamp: SubscriotionStampTriggersSubscription["stampTriggers"][0]) =>
+          addCircleById(stamp.name),
+      ); // フィルタしたものに対してaddCircleByIdを実行
+  }, [triggers?.stampTriggers]);
+
+  // 番号の表示 indexからもらった
+  // todo 同じ関数ならいい感じにしたいね
+  const defaultBingoNumber = {
+    number: 0,
+    id: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  const copiedArray = [...bingoNumbers];
+  const sortCopiedArray = [...bingoNumbers];
+  const firstBingoNumber = copiedArray.pop() ?? defaultBingoNumber;
+  const sortFirstBingoNumber =
+    sortCopiedArray.sort((a, b) => a.number - b.number).shift() ??
+    defaultBingoNumber;
+
+  const displayBingoNumbers = isSortedAscending
+    ? { large: firstBingoNumber, list: copiedArray.reverse() }
+    : { large: sortFirstBingoNumber, list: sortCopiedArray.slice(1) };
 
   const addCircleById = (key: string) => {
     if (!images[key]) {
@@ -65,7 +131,7 @@ const ScreenPage = () => {
         width: window.innerWidth,
         height: window.innerHeight,
         wireframes: false,
-        background: "#f0f0f0",
+        background: "transparent",
       },
     });
 
@@ -115,42 +181,21 @@ const ScreenPage = () => {
   }, []);
 
   return (
-    <div>
-      <section className="button-container">
-        <button onClick={() => addCircleById("angry")}>Angry</button>
-        <button onClick={() => addCircleById("cracker")}>Cracker</button>
-        <button onClick={() => addCircleById("crap")}>Crap</button>
-        <button onClick={() => addCircleById("good")}>Good</button>
-        <button onClick={() => addCircleById("heart")}>Heart</button>
-        <button onClick={() => addCircleById("peace")}>Peace</button>
-        <button onClick={() => addCircleById("sad")}>Sad</button>
-        <button onClick={() => addCircleById("skull")}>Skull</button>
-        <button onClick={() => addCircleById("smile")}>Smile</button>
-        <button onClick={() => addCircleById("surprise")}>Surprise</button>
-      </section>
-      <div ref={scene} />
-      <style jsx>{`
-        .button-container {
-          position: fixed;
-          top: 10px;
-          left: 10px;
-          display: flex;
-          flex-direction: row;
-          gap: 5px;
-        }
-        div {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          width: 100vw;
-          height: 100vh;
-        }
-        button {
-          padding: 10px;
-        }
-      `}</style>
+    <div className={styles.container}>
+      <div ref={scene} className={styles.scene} />
+      <div className={styles.overlay}>
+        <Image src="/Bingo_logo.png" alt="logo" width={300} height={300} />
+        <div className={styles.flex}>
+          <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
+          <div className={styles.column}>
+            <NumberCardList screen bingoNumber={displayBingoNumbers.list} />
+            {/* todo countはAPIとつなぎ込み */}
+            <ReachCount count={0} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default ScreenPage;
+export default Page;
