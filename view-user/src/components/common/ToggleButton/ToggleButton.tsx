@@ -1,28 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import styles from "./ToggleButton.module.css";
 
 interface ToggleButtonProps {
   children: [React.ReactNode, React.ReactNode];
-  onClick?: () => void;
+  isActive: boolean;
+  onClick: () => void;
 }
 
 const ToggleButton = (props: ToggleButtonProps) => {
-  const [isActive, setIsActive] = useState(false);
-
-  const toggleState = () => {
-    setIsActive(!isActive);
-    if (props.onClick) {
-      props.onClick();
-    }
-  };
-
   return (
-    <div className={styles.toggleContainer} onClick={toggleState}>
+    <div className={styles.toggleContainer} onClick={props.onClick}>
       <motion.div
         className={styles.motionDiv}
         initial={{ left: "0%" }}
-        animate={isActive ? { left: "50%" } : { left: "0%" }}
+        animate={props.isActive ? { left: "50%" } : { left: "0%" }}
         transition={{
           type: "spring",
           stiffness: 700,
@@ -30,11 +22,13 @@ const ToggleButton = (props: ToggleButtonProps) => {
         }}
       />
       <button
-        className={`${styles.toggleButton} ${!isActive && styles.active}`}
+        className={`${styles.toggleButton} ${!props.isActive && styles.active}`}
       >
         {props.children[0]}
       </button>
-      <button className={`${styles.toggleButton} ${isActive && styles.active}`}>
+      <button
+        className={`${styles.toggleButton} ${props.isActive && styles.active}`}
+      >
         {props.children[1]}
       </button>
     </div>
