@@ -1,95 +1,60 @@
-import React, { useEffect, useState } from "react";
 import type { NextPage } from "next";
-import Image from "next/image";
-import styles from "@/styles/Home.module.css";
-import { Header, Modal, BingoResult, Button } from "@/components/common";
 import { useRouter } from "next/router";
-import { ja } from "../locales/ja";
-import { en } from "../locales/en";
-import { MdTranslate } from "react-icons/md";
+import React, { useEffect, useState } from "react";
+import styles from "@/styles/Home.module.css";
+import { ja, en } from "@/locales";
 import { useSubscription } from "@apollo/client";
 import { SubscribeListNumbersDocument } from "@/type/graphql";
 import type { SubscribeListNumbersSubscription } from "@/type/graphql";
+import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
 
 const Page: NextPage = () => {
-  const { locale } = useRouter();
+  const { pathname: pageName, locale } = useRouter();
   const t = locale === "ja" ? ja : en;
-  const [isOpened, setIsOpened] = useState(true);
-  const router = useRouter();
+  const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
   const [bingoNumbers, setBingoNumbers] = useState<
     SubscribeListNumbersSubscription["numbers"]
   >([]);
+  const { data, loading } = useSubscription(SubscribeListNumbersDocument);
 
-  const { data } = useSubscription(SubscribeListNumbersDocument);
-
-  //subscriptionを行うためのuseEffect
+  // Subscription handling useEffect
   useEffect(() => {
     if (data) {
       setBingoNumbers(data.numbers);
     }
   }, [data]);
 
-  // 最初のrendrer時だけ実行してモーダルの再表示を防止する。
-  useEffect(() => {
-    const storedIsOpened = localStorage.getItem("isOpened");
-    if (storedIsOpened !== null) {
-      setIsOpened(JSON.parse(storedIsOpened));
-    }
-  }, []);
+  const defaultBingoNumber = {
+    number: 0,
+    id: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  const copiedArray = [...bingoNumbers];
+  const sortCopiedArray = [...bingoNumbers];
+  const firstBingoNumber = copiedArray.pop() ?? defaultBingoNumber;
+  const sortFirstBingoNumber =
+    sortCopiedArray.sort((a, b) => a.number - b.number).shift() ??
+    defaultBingoNumber;
 
-  // isOpenedの状態をもとにlocalStorageを更新する。
-  // localStorageにbooleanが保存できないため、json形式に変換して保存する。
-  useEffect(() => {
-    localStorage.setItem("isOpened", JSON.stringify(isOpened));
-  }, [isOpened]);
-
-  // ページのリロード前にlocalStorageを削除する。
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      localStorage.removeItem("isOpened");
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []);
+  const displayBingoNumbers = isSortedAscending
+    ? { large: firstBingoNumber, list: copiedArray.reverse() }
+    : { large: sortFirstBingoNumber, list: sortCopiedArray.slice(1) };
 
   return (
-    <div className={styles.container}>
-      <Modal isOpened={isOpened} setisOpened={setIsOpened}>
-        <div className={styles.languageBlock}>
-          <div className={styles.language}>
-            <p
-              onClick={() => {
-                router.push("/", "/", { locale: "ja" });
-                setIsOpened(false);
-              }}
-            >
-              日本語
-            </p>
-          </div>
-          <div className={styles.language}>
-            <p
-              onClick={() => {
-                router.push("/", "/", { locale: "en" });
-                setIsOpened(false);
-              }}
-            >
-              English
-            </p>
-          </div>
+    <>
+      {loading && <Loading />}
+      <Layout
+        pageName={pageName}
+        isSortedAscending={isSortedAscending}
+        setIsSortedAscending={setIsSortedAscending}
+      >
+        <div className={styles.numberCardLarge}>
+          <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
+          <NumberCardList bingoNumber={displayBingoNumbers.list} />
         </div>
-      </Modal>
-      <Header />
-      <BingoResult bingoResultNumber={bingoNumbers} />
-      <Button size="null" shape="null" onClick={() => setIsOpened(true)}>
-        <div className={styles.iconButton}>
-          <MdTranslate size={35} />
-        </div>
-      </Button>
-    </div>
+      </Layout>
+    </>
   );
 };
 

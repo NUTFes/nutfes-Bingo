@@ -2,10 +2,16 @@ import React, { useState } from "react";
 import { IconFramework } from "@/components/common";
 import { IoIosSettings } from "react-icons/io";
 
-const SettingsIcon = () => {
+interface SettingsIconProps {
+  onClick?: () => void;
+}
+const SettingsIcon = (props: SettingsIconProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+
   const handleClick = () => {
-    // TODO Modalの開閉を行う
+    if (props.onClick) {
+      props.onClick();
+    }
   };
 
   return (

@@ -1,6 +1,6 @@
 .content {
   overflow-y: auto;
-  padding-top: 2vw;
+  padding: 2vw 0vw 5vw 0vw;
   min-height: 100vh;
 }
 
