@@ -33,6 +33,8 @@ const images = [
 interface LayoutProps {
   children: React.ReactNode;
   pageName: string;
+  isSortedAscending?: boolean;
+  setIsSortedAscending?: (value: boolean) => void;
 }
 
 const Layout = (props: LayoutProps) => {
@@ -85,6 +87,12 @@ const Layout = (props: LayoutProps) => {
     setIsReachModalOpen(!isReachModalOpen);
   };
 
+  const toggleSortOrder = () => {
+    if (props.setIsSortedAscending) {
+      props.setIsSortedAscending(!props.isSortedAscending);
+    }
+  };
+
   const Icons = (pageName: string) => {
     let icons = [];
     switch (pageName) {
@@ -104,7 +112,7 @@ const Layout = (props: LayoutProps) => {
               onClick={handleReachIconClick}
             />
           ),
-          <SettingsIcon key="settings" />,
+          <SettingsIcon key="settings" onClick={toggleSortOrder} />,
         ];
         break;
       case "/prizes":
@@ -123,7 +131,7 @@ const Layout = (props: LayoutProps) => {
               key="reaction"
             />
           ),
-          <SettingsIcon key="settings" />,
+          <SettingsIcon key="settings" onClick={toggleSortOrder} />,
         ];
         break;
       default:
@@ -142,7 +150,7 @@ const Layout = (props: LayoutProps) => {
               onClick={handleReachIconClick}
             />
           ),
-          <SettingsIcon key="settings" />,
+          <SettingsIcon key="settings" onClick={toggleSortOrder} />,
         ];
     }
     return icons.filter(Boolean);
