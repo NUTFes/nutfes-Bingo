@@ -4,3 +4,9 @@
   grid-template-columns: repeat(3, 20vw);
   grid-gap: 3.5vw;
 }
+
+@media (min-width: 1024px) {
+  .container {
+    grid-template-columns: repeat(3, 15rem);
+  }
+}
