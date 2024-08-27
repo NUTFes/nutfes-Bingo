@@ -1,11 +1,37 @@
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import styles from "@/styles/Home.module.css";
 import { useSubscription } from "@apollo/client";
 import { SubscribeListNumbersDocument } from "@/type/graphql";
 import type { SubscribeListNumbersSubscription } from "@/type/graphql";
 import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
+
+const defaultBingoNumber = {
+  number: 0,
+  id: 0,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+const getFirstBingoNumber = (
+  bingoNumbers: SubscribeListNumbersSubscription["numbers"],
+) => bingoNumbers[bingoNumbers.length - 1] ?? defaultBingoNumber;
+
+const getSortedBingoNumber = (
+  bingoNumbers: SubscribeListNumbersSubscription["numbers"],
+) => [...bingoNumbers].sort((a, b) => a.number - b.number);
+
+const getDisplayBingoNumbers = (
+  isSortedAscending: boolean,
+  bingoNumbers: SubscribeListNumbersSubscription["numbers"],
+) => {
+  const firstBingoNumber = getFirstBingoNumber(bingoNumbers);
+  const sortedBingoNumber = getSortedBingoNumber(bingoNumbers);
+  return isSortedAscending
+    ? { large: firstBingoNumber, list: bingoNumbers.slice(0, -1).reverse() }
+    : { list: sortedBingoNumber };
+};
 
 const Page: NextPage = () => {
   const { pathname: pageName, locale } = useRouter();
@@ -16,33 +42,28 @@ const Page: NextPage = () => {
   >([]);
   const { data, loading } = useSubscription(SubscribeListNumbersDocument);
 
-  // Subscription handling useEffect
-  useEffect(() => {
+  const updateBingoNumbers = useCallback(() => {
     if (data) {
       setBingoNumbers(data.numbers);
     }
   }, [data]);
 
-  useEffect(() => {
+  const updateLanguage = useCallback(() => {
     setLanguage(locale || "ja");
   }, [locale]);
 
-  const defaultBingoNumber = {
-    number: 0,
-    id: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-  const copiedArray = [...bingoNumbers];
-  const sortCopiedArray = [...bingoNumbers];
-  const firstBingoNumber = copiedArray.pop() ?? defaultBingoNumber;
-  const sortFirstBingoNumber =
-    sortCopiedArray.sort((a, b) => a.number - b.number).shift() ??
-    defaultBingoNumber;
+  useEffect(() => {
+    updateBingoNumbers();
+  }, [updateBingoNumbers]);
 
-  const displayBingoNumbers = isSortedAscending
-    ? { large: firstBingoNumber, list: copiedArray.reverse() }
-    : { large: sortFirstBingoNumber, list: sortCopiedArray.slice(1) };
+  useEffect(() => {
+    updateLanguage();
+  }, [updateLanguage]);
+
+  const displayBingoNumbers = getDisplayBingoNumbers(
+    isSortedAscending,
+    bingoNumbers,
+  );
 
   return (
     <>
@@ -55,7 +76,9 @@ const Page: NextPage = () => {
         setLanguage={setLanguage}
       >
         <div className={styles.numberCardLarge}>
-          <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
+          {isSortedAscending && displayBingoNumbers.large && (
+            <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
+          )}
           <NumberCardList bingoNumber={displayBingoNumbers.list} />
         </div>
       </Layout>
