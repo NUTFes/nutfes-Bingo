@@ -9,9 +9,6 @@
   border-radius: 7vw;
   box-sizing: border-box;
   box-shadow: 1vw 1vw 0vw 0.9vw #ff3342;
-}
-
-.number {
   font-size: 31.25vw;
   font-style: normal;
   font-weight: 400;
@@ -21,14 +18,11 @@
 
 @media (min-width: 1024px) {
   .container {
-    width: 33.125rem;
-    height: 33.125rem;
+    width: 30vw;
+    height: 30vw;
     border: 1rem solid #ff3342;
     border-radius: 1.25rem;
     box-shadow: 0.5rem 0.5rem 0rem #ff3342;
-  }
-
-  .number {
-    font-size: 300px;
+    font-size: 15vw;
   }
 }
