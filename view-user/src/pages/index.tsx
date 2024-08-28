@@ -7,24 +7,17 @@ import { SubscribeListNumbersDocument } from "@/type/graphql";
 import type { SubscribeListNumbersSubscription } from "@/type/graphql";
 import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
 
-const defaultBingoNumber = {
-  number: 0,
-  id: 0,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
+type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
 
-const getFirstBingoNumber = (
-  bingoNumbers: SubscribeListNumbersSubscription["numbers"],
-) => bingoNumbers[bingoNumbers.length - 1] ?? defaultBingoNumber;
+const getFirstBingoNumber = (bingoNumbers: BingoNumbers) =>
+  bingoNumbers[bingoNumbers.length - 1];
 
-const getSortedBingoNumber = (
-  bingoNumbers: SubscribeListNumbersSubscription["numbers"],
-) => [...bingoNumbers].sort((a, b) => a.number - b.number);
+const getSortedBingoNumber = (bingoNumbers: BingoNumbers) =>
+  [...bingoNumbers].sort((a, b) => a.number - b.number);
 
 const getDisplayBingoNumbers = (
   isSortedAscending: boolean,
-  bingoNumbers: SubscribeListNumbersSubscription["numbers"],
+  bingoNumbers: BingoNumbers,
 ) => {
   const firstBingoNumber = getFirstBingoNumber(bingoNumbers);
   const sortedBingoNumber = getSortedBingoNumber(bingoNumbers);
@@ -37,9 +30,14 @@ const Page: NextPage = () => {
   const { pathname: pageName, locale } = useRouter();
   const [language, setLanguage] = useState<string>(locale || "ja");
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
-  const [bingoNumbers, setBingoNumbers] = useState<
-    SubscribeListNumbersSubscription["numbers"]
-  >([]);
+  const [bingoNumbers, setBingoNumbers] = useState<BingoNumbers>([
+    {
+      number: 0,
+      id: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ]);
   const { data, loading } = useSubscription(SubscribeListNumbersDocument);
 
   const updateBingoNumbers = useCallback(() => {
