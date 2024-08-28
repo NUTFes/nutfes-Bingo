@@ -20,7 +20,7 @@
   object-fit: cover;
   padding: 40px;
   overflow: hidden;
-  background: #FFF;
+  background: #fff;
   animation: zoomIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) 1 forwards;
   will-change: transform, opacity;
 }
@@ -37,13 +37,13 @@
 }
 
 .icon {
-  color: #07033E;
+  color: #07033e;
 }
 
 .contents {
-  width: 700px;
+  width: 90vw;
   height: 360px;
-  background-color: #07033E;
+  background-color: white;
   border-radius: 1rem;
 }
 
@@ -63,7 +63,7 @@
   top: 9px;
   right: 10px;
   padding: 0;
-  font-size: 2.7rem;
+  font-size: 2rem;
   line-height: 1;
   color: #d9d9d9;
   cursor: pointer;
@@ -72,7 +72,7 @@
 }
 
 .title {
-  color: #07033E;
+  color: #07033e;
   font-family: Inter;
   font-size: 2.5rem;
   font-style: normal;
@@ -91,17 +91,17 @@
 .inputNum {
   width: 100px;
   height: 100px;
-  background-color: #FF6591;
+  background-color: #ff3342;
   margin-top: 2rem;
   font-weight: 700;
   font-size: 3rem;
-  color: #FFF;
+  color: #fff;
   -webkit-text-stroke: 2px #333;
   text-align: center;
   border: 0rem solid #333;
   border-radius: 1rem;
   filter: drop-shadow(0px 2px 4px rgba(155, 104, 159, 0.71));
-  }
+}
 
 .inputNum::-webkit-inner-spin-button,
 .inputNum::-webkit-outer-spin-button {
@@ -110,7 +110,10 @@
 }
 
 .explanation {
-  color: #FFF;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  color: #07033e;
   font-family: Inter;
   font-size: 1.8rem;
   font-style: normal;
@@ -121,42 +124,41 @@
 
 .judgementContents {
   display: flex;
+  justify-content: center;
 }
 
 .jugementButton {
-    position: relative;
-    background: rgba(255, 255, 255, 0.70);
-    padding: 0.8rem 2.7rem;
-    text-align: center;
-    color: #07033E;
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin: 4px 2px;
-    cursor: pointer;
-    border: none;
-    border-radius: 1.5rem;
-    box-shadow: 3px 4px 2px rgba(0, 0, 0, 0.3);
-    transition: transform 0.1s ease-in-out;
-    margin-left: 2rem;
-}
-
-.jugementButton:active {
-    transform: translateY(4px);
-}
-
-.resetButton {
   position: relative;
-  background: rgba(255, 255, 255, 0.70);
+  background: #ff3342;
   padding: 0.8rem 2.7rem;
   text-align: center;
-  color: #07033E;
+  color: white;
   font-size: 1.8rem;
   font-weight: 700;
   margin: 4px 2px;
   cursor: pointer;
   border: none;
   border-radius: 1.5rem;
-  box-shadow: 3px 4px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s ease-in-out;
+  margin-left: 2rem;
+}
+
+.jugementButton:active {
+  transform: translateY(4px);
+}
+
+.resetButton {
+  position: relative;
+  background: #ff3342;
+  padding: 0.8rem 2.7rem;
+  text-align: center;
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 4px 2px;
+  cursor: pointer;
+  border: none;
+  border-radius: 1.5rem;
   transition: transform 0.1s ease-in-out;
   margin-left: 1rem;
 }
@@ -172,7 +174,9 @@
   line-height: 1;
   color: #ffffff;
   font-size: 50px;
-  text-shadow: 2px 2px 0px rgb(205, 85, 85), 4px 4px 0px rgb(205, 85, 85);
+  text-shadow:
+    2px 2px 0px rgb(205, 85, 85),
+    4px 4px 0px rgb(205, 85, 85);
   font-weight: bold;
   padding: 0.4rem;
   border-radius: 1rem;
@@ -189,15 +193,9 @@
     object-fit: cover;
     padding: 8px;
     overflow: hidden;
-    background: #FFF;
+    background: #fff;
     animation: zoomIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) 1 forwards;
     will-change: transform, opacity;
-  }
-
-  .contents {
-    width: 340px;
-    height: auto;
-    background-color: #07033E;
   }
 
   .inputForm {
@@ -207,71 +205,68 @@
   }
 
   .inputNum {
-    width: 60px;
-    height: 60px;
-    background-color: #FF6591;
+    width: 16vw;
+    height: 16vw;
+    background-color: #ff3342;
     margin-top: 1rem;
     font-weight: 700;
     font-size: 3rem;
-    color: #FFF;
+    color: #fff;
     -webkit-text-stroke: 2px #333;
     text-align: center;
     border: 0rem solid #333;
     border-radius: 1rem;
     filter: drop-shadow(0px 2px 4px rgba(155, 104, 159, 0.71));
-    }
-
-    .title {
-      color: #07033E;
-      font-family: Inter;
-      font-size: 2rem;
-      font-style: normal;
-      font-weight: 700;
-      line-height: normal;
-      margin: 0.3rem 0rem;
-      text-align: center;
-    }
-
-    .explanation {
-      color: #FFF;
-      font-family: Inter;
-      font-size: 1.2rem;
-      font-style: normal;
-      font-weight: 700;
-      line-height: normal;
-      margin: 1rem 2rem 0.5rem;
-    }
-
-    .jugementButton {
-      position: relative;
-      background: rgba(255, 255, 255, 0.70);
-      padding: 0.8rem 2.7rem;
-      text-align: center;
-      color: #07033E;
-      font-size: 1rem;
-      font-weight: 700;
-      margin: 4px 2px;
-      cursor: pointer;
-      border: none;
-      border-radius: 1.5rem;
-      box-shadow: 3px 4px 2px rgba(0, 0, 0, 0.3);
-      transition: transform 0.1s ease-in-out;
-      margin: 0rem 1rem;
   }
 
-  .resetButton {
+  .title {
+    color: #07033e;
+    font-family: Inter;
+    font-size: 2rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    margin: 0.3rem 0rem;
+    text-align: center;
+  }
+
+  .explanation {
+    color: #07033e;
+    font-family: Inter;
+    font-size: 1.2rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    margin: 1rem 2rem 0.5rem;
+  }
+
+  .jugementButton {
     position: relative;
-    background: rgba(255, 255, 255, 0.70);
+    background: #ff3342;
     padding: 0.8rem 2.7rem;
     text-align: center;
-    color: #07033E;
+    color: white;
     font-size: 1rem;
     font-weight: 700;
     margin: 4px 2px;
     cursor: pointer;
     border: none;
     border-radius: 1.5rem;
-    box-shadow: 3px 4px 2px rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s ease-in-out;
+    margin: 0rem 1rem;
+  }
+
+  .resetButton {
+    position: relative;
+    background: #ff3342;
+    padding: 0.8rem 2.7rem;
+    text-align: center;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    border-radius: 1.5rem;
     transition: transform 0.1s ease-in-out;
     margin: 0.5rem 1rem;
   }
@@ -281,4 +276,3 @@
     flex-direction: column;
   }
 }
-
