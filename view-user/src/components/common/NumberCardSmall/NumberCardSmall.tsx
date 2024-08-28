@@ -10,7 +10,7 @@ const NumberCardSmall = (props: NumberCardSmallProps) => {
   const bingoNumber = props.BingoNumber;
   return (
     <div className={styles.container}>
-      <div className={styles.number}>{bingoNumber.number}</div>
+      <p>{bingoNumber.number}</p>
     </div>
   );
 };
