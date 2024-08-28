@@ -27,32 +27,6 @@ const getDisplayBingoNumbers = (
     : { list: sortedBingoNumber };
 };
 
-const defaultBingoNumber = {
-  number: 0,
-  id: 0,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
-
-const getFirstBingoNumber = (
-  bingoNumbers: SubscribeListNumbersSubscription["numbers"],
-) => bingoNumbers[bingoNumbers.length - 1] ?? defaultBingoNumber;
-
-const getSortedBingoNumber = (
-  bingoNumbers: SubscribeListNumbersSubscription["numbers"],
-) => [...bingoNumbers].sort((a, b) => a.number - b.number);
-
-const getDisplayBingoNumbers = (
-  isSortedAscending: boolean,
-  bingoNumbers: SubscribeListNumbersSubscription["numbers"],
-) => {
-  const firstBingoNumber = getFirstBingoNumber(bingoNumbers);
-  const sortedBingoNumber = getSortedBingoNumber(bingoNumbers);
-  return isSortedAscending
-    ? { large: firstBingoNumber, list: bingoNumbers.slice(0, -1).reverse() }
-    : { list: sortedBingoNumber };
-};
-
 const Page: NextPage = () => {
   const { pathname: pageName, locale } = useRouter();
   const [language, setLanguage] = useState<string>(locale || "ja");
