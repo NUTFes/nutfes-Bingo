@@ -1,4 +1,4 @@
-import React, { ReactNode, use, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import styles from "./IconFramework.module.css";
 import classNames from "classnames";
 
@@ -14,6 +14,10 @@ const IconFramework = (props: IconFrameworkProps) => {
   const [colorInversion, setColorInversion] = useState<boolean>(
     props.inversion ?? false,
   );
+
+  useEffect(() => {
+    setColorInversion(props.inversion ?? false);
+  }, [props.inversion]);
 
   const handleClick = () => {
     setColorInversion(!colorInversion);
