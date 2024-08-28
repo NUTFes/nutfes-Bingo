@@ -21,12 +21,6 @@ import type {
 } from "@/type/graphql";
 import { useMutation } from "@apollo/client";
 import { ja, en } from "@/locales";
-import { UpdateOneTriggerFlagDocument } from "@/type/graphql";
-import type {
-  UpdateOneTriggerFlagMutation,
-  UpdateOneTriggerFlagMutationVariables,
-} from "@/type/graphql";
-import { useMutation } from "@apollo/client";
 
 const images = [
   { id: 1, src: "/ReactionIcon/crap.png", alt: "crap icon" },
