@@ -181,10 +181,12 @@ const Page: NextPage = () => {
   }, []);
 
   return (
-    <div className={styles.container}>
+    <>
       <div ref={scene} className={styles.scene} />
       <div className={styles.overlay}>
-        <Image src="/Bingo_logo.png" alt="logo" width={300} height={300} />
+        <div className={styles.image}>
+          <Image src="/Bingo_logo.png" alt="logo" fill />
+        </div>
         <div className={styles.flex}>
           <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
           <div className={styles.column}>
@@ -194,7 +196,7 @@ const Page: NextPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
