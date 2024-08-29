@@ -78,20 +78,12 @@ const Layout = (props: LayoutProps) => {
   }, []);
 
   const handleReactionsiconClick = (id: number) => {
-    setIsFlag(true);
-
-    updateFlag({ variables: { id, trigger: true } });
-
-    // 0.5病後に戻す。これ以上はきついかも
-    setTimeout(() => {
-      setIsFlag(false);
-      updateFlag({ variables: { id, trigger: false } });
-    }, 500);
+    setIsFlag(!isFlag);
+    updateFlag({ variables: { id, trigger: isFlag } });
   };
 
   const handleReachIconClick = () => {
     // todo リーチカウントAPIと繋ぎ込み
-
     setReachIconVisible(false);
     localStorage.setItem("isReachIconVisible", "false");
     setIsReachModalOpen(!isReachModalOpen);
@@ -109,82 +101,42 @@ const Layout = (props: LayoutProps) => {
     router.push(router.pathname, router.asPath, { locale: newLocale });
   };
 
-  const Icons = (pageName: string) => {
+  const icons = (pageName: string) => {
     let icons = [];
+    const commonIcons = [
+      <ReactionsIcon
+        isOpen={isReactionModalOpen}
+        setIsReactionModalOpen={setIsReactionModalOpen}
+        key="reaction"
+      />,
+      isReachIconVisible && (
+        <ReachIcon
+          key="reach"
+          isOpen={isReachModalOpen}
+          setIsReachModalOpen={setIsReachModalOpen}
+          onClick={handleReachIconClick}
+        />
+      ),
+      <SettingsIcon
+        key="settings"
+        isOpen={isSettingsModalOpen}
+        setIsSettingsModalOpen={setIsSettingsModalOpen}
+      />,
+    ];
     switch (pageName) {
       case "/":
-        icons = [
-          <PrizesIcon key="prize" />,
-          <ReactionsIcon
-            isOpen={isReactionModalOpen}
-            setIsReactionModalOpen={setIsReactionModalOpen}
-            key="reaction"
-          />,
-          isReachIconVisible && (
-            <ReachIcon
-              key="reach"
-              isOpen={isReachModalOpen}
-              setIsReachModalOpen={setIsReachModalOpen}
-              onClick={handleReachIconClick}
-            />
-          ),
-          <SettingsIcon
-            key="settings"
-            isOpen={isSettingsModalOpen}
-            setIsSettingsModalOpen={setIsSettingsModalOpen}
-          />,
-        ];
+        icons = [<PrizesIcon key="prize" />, commonIcons];
         break;
       case "/prizes":
-        icons = [
-          <BackIcon key="back" />,
-          <ReachIcon
-            key="reach"
-            isOpen={isReachModalOpen}
-            setIsReachModalOpen={setIsReachModalOpen}
-            onClick={handleReachIconClick}
-          />,
-          isReachIconVisible && (
-            <ReactionsIcon
-              isOpen={isReactionModalOpen}
-              setIsReactionModalOpen={setIsReactionModalOpen}
-              key="reaction"
-            />
-          ),
-          <SettingsIcon
-            key="settings"
-            isOpen={isSettingsModalOpen}
-            setIsSettingsModalOpen={setIsSettingsModalOpen}
-          />,
-        ];
+        icons = [<BackIcon key="back" />, commonIcons];
         break;
       default:
-        icons = [
-          <PrizesIcon key="prize" />,
-          <ReactionsIcon
-            isOpen={isReactionModalOpen}
-            setIsReactionModalOpen={setIsReactionModalOpen}
-            key="reaction"
-          />,
-          isReachIconVisible && (
-            <ReachIcon
-              key="reach"
-              isOpen={isReachModalOpen}
-              setIsReachModalOpen={setIsReachModalOpen}
-              onClick={handleReachIconClick}
-            />
-          ),
-          <SettingsIcon
-            key="settings"
-            isOpen={isSettingsModalOpen}
-            setIsSettingsModalOpen={setIsSettingsModalOpen}
-          />,
-        ];
+        icons = [<PrizesIcon key="prize" />, commonIcons];
     }
     return icons.filter(Boolean);
   };
 
-  const iconElements = Icons(props.pageName);
+  const iconElements = icons(props.pageName);
 
   return (
     <div>
