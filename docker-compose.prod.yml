@@ -5,7 +5,6 @@ services:
     container_name: "cloudflare"
     volumes: ["./cloudflare/prod:/home/nonroot/.cloudflared"]
     command: tunnel run
-      
   api: # hasura
     build:
       context: .
