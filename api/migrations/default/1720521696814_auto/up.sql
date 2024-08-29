@@ -68,7 +68,8 @@ ALTER SEQUENCE public.prizes_id_seq OWNED BY public.prizes.id;
 CREATE TABLE public.stamp_triggers (
     id integer NOT NULL,
     name text DEFAULT '""'::text NOT NULL,
-    trigger boolean DEFAULT false NOT NULL
+    trigger boolean DEFAULT false NOT NULL,
+    updated_at timestamp with time zone DEFAULT now()
 );
 COMMENT ON TABLE public.stamp_triggers IS 'スタンプを降らせるためのAPI';
 CREATE SEQUENCE public.stamp_triggers_id_seq
@@ -93,5 +94,7 @@ ALTER TABLE ONLY public.stamp_triggers
     ADD CONSTRAINT stamp_triggers_name_key UNIQUE (name);
 ALTER TABLE ONLY public.stamp_triggers
     ADD CONSTRAINT stamp_triggers_pkey PRIMARY KEY (id);
+CREATE TRIGGER set_public_stamp_triggers_updated_at BEFORE UPDATE ON public.stamp_triggers FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+COMMENT ON TRIGGER set_public_stamp_triggers_updated_at ON public.stamp_triggers IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 ALTER TABLE ONLY public.prizes
     ADD CONSTRAINT prizes_image_id_fkey FOREIGN KEY (image_id) REFERENCES public.images(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
