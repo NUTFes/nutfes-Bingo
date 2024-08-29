@@ -5,6 +5,7 @@ services:
     container_name: "cloudflare"
     volumes: ["./cloudflare/prod:/home/nonroot/.cloudflared"]
     command: tunnel run
+
   api: # hasura
     build:
       context: .
@@ -20,7 +21,7 @@ services:
     volumes:
       - ./view-user:/app
     working_dir: /app
-    command: sh -c "npm install && npm run build && npm run start"
+    command: sh -c "npm run start"
     ports:
       - "3000:3000"
     env_file:
@@ -34,7 +35,7 @@ services:
     volumes:
       - ./view-admin:/app
     working_dir: /app
-    command: sh -c "npm install && npm run build && npm run start"
+    command: sh -c "npm run start"
     ports:
       - "3001:3000"
     env_file:
