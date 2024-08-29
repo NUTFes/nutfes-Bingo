@@ -8,7 +8,6 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  contain: content;
   background: rgba(51, 51, 51, 0.6);
 }
 
@@ -17,11 +16,9 @@
   z-index: 1;
   box-sizing: border-box;
   border-radius: 1rem;
-  object-fit: cover;
   padding: 40px;
-  overflow: hidden;
-  background: #FFF;
-  animation: zoomIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) 1 forwards;
+  background: #ff3342;
+  animation: zoomIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   will-change: transform, opacity;
 }
 
@@ -36,249 +33,166 @@
   }
 }
 
-.icon {
-  color: #07033E;
-}
-
-.contents {
-  width: 700px;
-  height: 360px;
-  background-color: #07033E;
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: #fff;
   border-radius: 1rem;
 }
 
-.number {
+.inputContainer {
   display: flex;
-  flex-flow: column;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.inputContainer input {
+  width: 18%;
+  height: 60px;
+  background-color: #fff;
+  font-weight: 700;
+  font-size: 2rem;
+  color: #333;
+  text-align: center;
+  border: none;
+  border-radius: 0.5rem;
+  filter: drop-shadow(0px 2px 4px rgba(155, 104, 159, 0.71));
+}
+
+.inputContainer.bingo input {
+  color: #ff3342;
+  font-weight: 900;
+}
+
+.inputContainer.noWin input {
+  color: #333;
+  font-weight: 900;
+}
+
+input.active {
+  outline: none;
+  border: 2px solid #ff3342;
+}
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.button {
+  background-color: #fff;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 15px;
+  border: solid 2px #333;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.button:active {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.submitButton {
+  width: 100%;
+  background-color: #ff3342;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 15px;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  margin-top: 20px;
+  display: flex;
   justify-content: center;
   align-items: center;
-  color: #d9d9d9;
-  font-size: clamp(2rem, 2vw, 3rem);
+}
+
+.resetButton {
+  width: 100%;
+  background-color: #fff;
+  color: #ff3342;
+  font-size: 1.2rem;
   font-weight: 700;
-  font-feature-settings: "palt" 1;
+  padding: 15px;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: inset 0 0 0 2px #ff3342;
 }
 
 .btnClose {
   position: absolute;
   top: 9px;
   right: 10px;
-  padding: 0;
   font-size: 2.7rem;
-  line-height: 1;
   color: #d9d9d9;
-  cursor: pointer;
-  background-color: transparent;
+  background: transparent;
   border: none;
+  cursor: pointer;
 }
 
 .title {
-  color: #07033E;
-  font-family: Inter;
+  color: #fff;
   font-size: 2.5rem;
-  font-style: normal;
   font-weight: 700;
-  line-height: normal;
+  text-align: center;
   margin-bottom: 1rem;
-  text-align: center;
 }
 
-.inputForm {
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
+.icon {
+  color: #fff;
 }
 
-.inputNum {
-  width: 100px;
-  height: 100px;
-  background-color: #FF6591;
-  margin-top: 2rem;
-  font-weight: 700;
-  font-size: 3rem;
-  color: #FFF;
-  -webkit-text-stroke: 2px #333;
-  text-align: center;
-  border: 0rem solid #333;
+.contents {
+  width: 700px;
+  height: 360px;
+  background-color: #07033e;
   border-radius: 1rem;
-  filter: drop-shadow(0px 2px 4px rgba(155, 104, 159, 0.71));
-  }
-
-.inputNum::-webkit-inner-spin-button,
-.inputNum::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.explanation {
-  color: #FFF;
-  font-family: Inter;
-  font-size: 1.8rem;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
-  margin: 2rem 2rem 0.5rem;
 }
 
 .judgementContents {
   display: flex;
 }
 
-.jugementButton {
-    position: relative;
-    background: rgba(255, 255, 255, 0.70);
-    padding: 0.8rem 2.7rem;
-    text-align: center;
-    color: #07033E;
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin: 4px 2px;
-    cursor: pointer;
-    border: none;
-    border-radius: 1.5rem;
-    box-shadow: 3px 4px 2px rgba(0, 0, 0, 0.3);
-    transition: transform 0.1s ease-in-out;
-    margin-left: 2rem;
+.frame {
+  padding: 8px;
 }
 
-.jugementButton:active {
-    transform: translateY(4px);
+.contents {
+  width: 340px;
+  height: auto;
 }
 
-.resetButton {
-  position: relative;
-  background: rgba(255, 255, 255, 0.70);
-  padding: 0.8rem 2.7rem;
-  text-align: center;
-  color: #07033E;
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin: 4px 2px;
-  cursor: pointer;
-  border: none;
-  border-radius: 1.5rem;
-  box-shadow: 3px 4px 2px rgba(0, 0, 0, 0.3);
-  transition: transform 0.1s ease-in-out;
-  margin-left: 1rem;
+.title {
+  font-size: 2rem;
+  margin: 0.3rem 0;
 }
 
-.resetButton:active {
-  transform: translateY(4px);
-}
-
-.jugementResults {
+.judgementResults {
   display: flex;
-  align-items: center;
   justify-content: center;
-  line-height: 1;
-  color: #ffffff;
-  font-size: 50px;
-  text-shadow: 2px 2px 0px rgb(205, 85, 85), 4px 4px 0px rgb(205, 85, 85);
+  align-items: center;
+  font-size: 3rem;
   font-weight: bold;
-  padding: 0.4rem;
+  color: #fff;
+  background-color: #ff6591;
+  padding: 20px;
   border-radius: 1rem;
-  margin-left: 1rem;
-  margin-bottom: 0.5rem;
+  border: 2px solid #fff;
 }
-
-@media screen and (max-width: 790px) {
-  .frame {
-    position: relative;
-    z-index: 1;
-    box-sizing: border-box;
-    border-radius: 1rem;
-    object-fit: cover;
-    padding: 8px;
-    overflow: hidden;
-    background: #FFF;
-    animation: zoomIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) 1 forwards;
-    will-change: transform, opacity;
-  }
-
-  .contents {
-    width: 340px;
-    height: auto;
-    background-color: #07033E;
-  }
-
-  .inputForm {
-    display: flex;
-    gap: 0.4rem;
-    justify-content: center;
-  }
-
-  .inputNum {
-    width: 60px;
-    height: 60px;
-    background-color: #FF6591;
-    margin-top: 1rem;
-    font-weight: 700;
-    font-size: 3rem;
-    color: #FFF;
-    -webkit-text-stroke: 2px #333;
-    text-align: center;
-    border: 0rem solid #333;
-    border-radius: 1rem;
-    filter: drop-shadow(0px 2px 4px rgba(155, 104, 159, 0.71));
-    }
-
-    .title {
-      color: #07033E;
-      font-family: Inter;
-      font-size: 2rem;
-      font-style: normal;
-      font-weight: 700;
-      line-height: normal;
-      margin: 0.3rem 0rem;
-      text-align: center;
-    }
-
-    .explanation {
-      color: #FFF;
-      font-family: Inter;
-      font-size: 1.2rem;
-      font-style: normal;
-      font-weight: 700;
-      line-height: normal;
-      margin: 1rem 2rem 0.5rem;
-    }
-
-    .jugementButton {
-      position: relative;
-      background: rgba(255, 255, 255, 0.70);
-      padding: 0.8rem 2.7rem;
-      text-align: center;
-      color: #07033E;
-      font-size: 1rem;
-      font-weight: 700;
-      margin: 4px 2px;
-      cursor: pointer;
-      border: none;
-      border-radius: 1.5rem;
-      box-shadow: 3px 4px 2px rgba(0, 0, 0, 0.3);
-      transition: transform 0.1s ease-in-out;
-      margin: 0rem 1rem;
-  }
-
-  .resetButton {
-    position: relative;
-    background: rgba(255, 255, 255, 0.70);
-    padding: 0.8rem 2.7rem;
-    text-align: center;
-    color: #07033E;
-    font-size: 1rem;
-    font-weight: 700;
-    margin: 4px 2px;
-    cursor: pointer;
-    border: none;
-    border-radius: 1.5rem;
-    box-shadow: 3px 4px 2px rgba(0, 0, 0, 0.3);
-    transition: transform 0.1s ease-in-out;
-    margin: 0.5rem 1rem;
-  }
-
-  .judgementContents {
-    display: flex;
-    flex-direction: column;
-  }
-}
-
