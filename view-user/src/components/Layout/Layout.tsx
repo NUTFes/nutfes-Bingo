@@ -88,7 +88,6 @@ const Layout = (props: LayoutProps) => {
     try {
       const { data } = await getLatestReachLog();
       const latestReachLogNumber = data?.reachLogs[0]?.reachNum || 0;
-      console.log(latestReachLogNumber);
       await createOneReachRecord({
         variables: {
           status: true,
