@@ -4,12 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import Matter from "matter-js";
 import { useSubscription } from "@apollo/client";
 import {
-  SubscriotionStampTriggersDocument,
   SubscribeListNumbersDocument,
+  SubscriptionUpdatedStampTriggerDocument,
 } from "@/type/graphql";
 import type {
-  SubscriotionStampTriggersSubscription,
   SubscribeListNumbersSubscription,
+  SubscriptionUpdatedStampTriggerSubscription,
 } from "@/type/graphql";
 import {
   NumberCardLarge,
@@ -31,20 +31,64 @@ const images: { [key: string]: string } = {
   surprise: "/ReactionIcon/surprise.png",
 };
 
+type StampState = {
+  [id: number]: string;
+};
+
+type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
+
+const getFirstBingoNumber = (bingoNumbers: BingoNumbers) =>
+  bingoNumbers[bingoNumbers.length - 1];
+
+const getDisplayBingoNumbers = (bingoNumbers: BingoNumbers) => {
+  const firstBingoNumber = getFirstBingoNumber(bingoNumbers);
+  return { large: firstBingoNumber, list: bingoNumbers.slice(0, -1).reverse() };
+};
+
 const Page: NextPage = () => {
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string>(
+    "2024-08-29T08:12:00",
+  );
   const [bingoNumbers, setBingoNumbers] = useState<
     SubscribeListNumbersSubscription["numbers"]
-  >([]);
-  const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
-
+  >([
+    {
+      number: 0,
+      id: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ]);
+  const displayBingoNumbers = getDisplayBingoNumbers(bingoNumbers);
   const { data: numbers } = useSubscription(SubscribeListNumbersDocument);
   const { data: triggers } =
-    useSubscription<SubscriotionStampTriggersSubscription>(
-      SubscriotionStampTriggersDocument,
+    useSubscription<SubscriptionUpdatedStampTriggerSubscription>(
+      SubscriptionUpdatedStampTriggerDocument,
+      {
+        variables: { updatedAt: lastUpdatedAt },
+      },
     );
+
+  // スタンプの変更を検知し、スタンプを降下させる。
+  useEffect(() => {
+    if (triggers?.stampTriggers && triggers?.stampTriggers.length > 0) {
+      triggers.stampTriggers.forEach((stamp) => {
+        addCircleById(stamp.name);
+      });
+      const latestUpdatedAt = triggers.stampTriggers.reduce(
+        (latest, current) => {
+          return new Date(current.updatedAt) > new Date(latest)
+            ? current.updatedAt
+            : latest;
+        },
+        new Date(0).toISOString(),
+      );
+      setLastUpdatedAt(latestUpdatedAt);
+    }
+  }, [triggers]);
 
   //subscriptionを行うためのuseEffect
   useEffect(() => {
@@ -52,38 +96,6 @@ const Page: NextPage = () => {
       setBingoNumbers(numbers.numbers);
     }
   }, [numbers]);
-
-  // 画像を降らせる
-  useEffect(() => {
-    triggers?.stampTriggers
-      .filter(
-        (stamp: SubscriotionStampTriggersSubscription["stampTriggers"][0]) =>
-          stamp.trigger,
-      )
-      .forEach(
-        (stamp: SubscriotionStampTriggersSubscription["stampTriggers"][0]) =>
-          addCircleById(stamp.name),
-      ); // フィルタしたものに対してaddCircleByIdを実行
-  }, [triggers?.stampTriggers]);
-
-  // 番号の表示 indexからもらった
-  // todo 同じ関数ならいい感じにしたいね
-  const defaultBingoNumber = {
-    number: 0,
-    id: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-  const copiedArray = [...bingoNumbers];
-  const sortCopiedArray = [...bingoNumbers];
-  const firstBingoNumber = copiedArray.pop() ?? defaultBingoNumber;
-  const sortFirstBingoNumber =
-    sortCopiedArray.sort((a, b) => a.number - b.number).shift() ??
-    defaultBingoNumber;
-
-  const displayBingoNumbers = isSortedAscending
-    ? { large: firstBingoNumber, list: copiedArray.reverse() }
-    : { large: sortFirstBingoNumber, list: sortCopiedArray.slice(1) };
 
   const addCircleById = (key: string) => {
     if (!images[key]) {
