@@ -880,6 +880,7 @@ export type StampTriggers = {
   id: Scalars["Int"]["output"];
   name: Scalars["String"]["output"];
   trigger: Scalars["Boolean"]["output"];
+  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** aggregated selection of "stamp_triggers" */
@@ -925,6 +926,7 @@ export type StampTriggersBoolExp = {
   id?: InputMaybe<IntComparisonExp>;
   name?: InputMaybe<StringComparisonExp>;
   trigger?: InputMaybe<BooleanComparisonExp>;
+  updatedAt?: InputMaybe<TimestamptzComparisonExp>;
 };
 
 /** unique or primary key constraints on table "stamp_triggers" */
@@ -945,6 +947,7 @@ export type StampTriggersInsertInput = {
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
   trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
+  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate max on columns */
@@ -952,6 +955,7 @@ export type StampTriggersMaxFields = {
   __typename?: "StampTriggersMaxFields";
   id?: Maybe<Scalars["Int"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
+  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** aggregate min on columns */
@@ -959,6 +963,7 @@ export type StampTriggersMinFields = {
   __typename?: "StampTriggersMinFields";
   id?: Maybe<Scalars["Int"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
+  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** response of any mutation on the table "stamp_triggers" */
@@ -982,6 +987,7 @@ export type StampTriggersOrderBy = {
   id?: InputMaybe<OrderBy>;
   name?: InputMaybe<OrderBy>;
   trigger?: InputMaybe<OrderBy>;
+  updatedAt?: InputMaybe<OrderBy>;
 };
 
 /** primary key columns input for table: stamp_triggers */
@@ -997,6 +1003,8 @@ export enum StampTriggersSelectColumn {
   name = "name",
   /** column name */
   trigger = "trigger",
+  /** column name */
+  updatedAt = "updatedAt",
 }
 
 /** input type for updating data in table "stamp_triggers" */
@@ -1004,6 +1012,7 @@ export type StampTriggersSetInput = {
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
   trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
+  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate stddev on columns */
@@ -1037,6 +1046,7 @@ export type StampTriggersStreamCursorValueInput = {
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
   trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
+  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate sum on columns */
@@ -1053,6 +1063,8 @@ export enum StampTriggersUpdateColumn {
   name = "name",
   /** column name */
   trigger = "trigger",
+  /** column name */
+  updatedAt = "updatedAt",
 }
 
 export type StampTriggersUpdates = {
@@ -1852,6 +1864,21 @@ export type SubscriotionStampTriggersSubscription = {
   }>;
 };
 
+export type SubscriptionUpdatedStampTriggerSubscriptionVariables = Exact<{
+  updatedAt: Scalars["timestamptz"]["input"];
+}>;
+
+export type SubscriptionUpdatedStampTriggerSubscription = {
+  __typename?: "subscription_root";
+  stampTriggers: Array<{
+    __typename?: "StampTriggers";
+    id: number;
+    name: string;
+    trigger: boolean;
+    updatedAt?: any | null;
+  }>;
+};
+
 export const CreateOneImageDocument = gql`
   mutation CreateOneImage(
     $bucketName: String!
@@ -2193,3 +2220,15 @@ export const SubscriotionStampTriggersDocument = gql`
 `;
 export type SubscriotionStampTriggersSubscriptionResult =
   Apollo.SubscriptionResult<SubscriotionStampTriggersSubscription>;
+export const SubscriptionUpdatedStampTriggerDocument = gql`
+  subscription SubscriptionUpdatedStampTrigger($updatedAt: timestamptz!) {
+    stampTriggers(where: { updatedAt: { _gt: $updatedAt } }) {
+      id
+      name
+      trigger
+      updatedAt
+    }
+  }
+`;
+export type SubscriptionUpdatedStampTriggerSubscriptionResult =
+  Apollo.SubscriptionResult<SubscriptionUpdatedStampTriggerSubscription>;

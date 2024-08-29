@@ -41,3 +41,13 @@ subscription SubscriotionStampTriggers {
     trigger
   }
 }
+
+# 変更されたtriggerの取得(Subscription)
+subscription SubscriptionUpdatedStampTrigger($updatedAt: timestamptz!) {
+  stampTriggers(where: { updatedAt: { _gt: $updatedAt } }) {
+    id
+    name
+    trigger
+    updatedAt
+  }
+}
