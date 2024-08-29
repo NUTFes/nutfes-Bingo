@@ -20,26 +20,16 @@ services:
       retries: 5
 
   api: # hasura
-    image: hasura/graphql-engine:v2.36.6@sha256:3fc234510962e66d5ca7db16734b8796a16fb729953915861953e974f976f30f
+    build:
+      context: .
+      dockerfile: .docker/api.Dockerfile
     container_name: "bingo_api"
     ports:
       - "8080:8080"
     volumes:
       - ./api:/hasura/api
-    working_dir: /hasura/api
     env_file:
       - ./settings/bingo.env
-    environment:
-      HASURA_GRAPHQL_ENABLE_CONSOLE: true
-      HASURA_GRAPHQL_DATABASE_URL: "postgres://bingo:password@db:5432/bingo_db"
-      HASURA_GRAPHQL_DEV_MODE: true
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: "naming_convention"
-    entrypoint: >
-      sh -c "
-      curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash &&
-      graphql-engine serve
-      "
 
   view-user:
     image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
