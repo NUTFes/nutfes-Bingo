@@ -1,10 +1,10 @@
 import React from "react";
 import styles from "./PrizeCardList.module.css";
 import PrizeCard from "../PrizeCard";
-import { BingoPrize } from "@/type/common";
+import { GetListPrizesQuery } from "@/type/graphql";
 
 interface PrizeCardListProps {
-  BingoPrize: BingoPrize[];
+  BingoPrize: GetListPrizesQuery["prizes"];
 }
 
 const PrizeCardList = (props: PrizeCardListProps) => {

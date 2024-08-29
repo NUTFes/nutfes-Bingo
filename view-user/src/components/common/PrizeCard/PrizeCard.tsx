@@ -2,9 +2,8 @@ import React from "react";
 import styles from "./PrizeCard.module.css";
 import type { GetListPrizesQuery } from "@/type/graphql";
 import { useRouter } from "next/router";
-import { ja } from "@/locales/ja";
-import { en } from "@/locales/en";
 import classNames from "classnames";
+import { en, ja } from "@/locales";
 
 interface PrizeCardProps {
   BingoPrize: GetListPrizesQuery["prizes"][number];
@@ -46,7 +45,7 @@ const PrizeCard = (props: PrizeCardProps) => {
         </div>
         {bingoPrize.isWon && (
           <div className={classNames(styles.overlay, styles.center)}>
-            <p className={styles.center}>{t.WINNING_OVERRAY}</p>
+            <p className={styles.center}></p>
           </div>
         )}
       </div>
