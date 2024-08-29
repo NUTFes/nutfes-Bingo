@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import styles from "./PrizeResult.module.css";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { ja } from "@/locales/ja";
-import { en } from "@/locales/en";
+import { ja, en } from "@/locales";
 import { GetListPrizesQuery } from "@/type/graphql";
 
 interface PrizeResultProps {
@@ -55,7 +54,6 @@ export const PrizeResult = (props: PrizeResultProps) => {
       <div className={styles.container}>
         <div className={styles.frame_title}>
           <Image src="/GiftBox.svg" alt="GiftBox" width={19} height={19} />
-          {t.SUB_TITLE_PRIZE}
         </div>
         {!hasValidData && <div id="loading" className={styles.visible}></div>}
         {hasValidData && (
@@ -104,7 +102,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
                     </div>
                     {prize.isWon && (
                       <div className={styles.overlay}>
-                        <p>{t.WINNING_OVERRAY}</p>
+                        <p></p>
                       </div>
                     )}
                   </div>
