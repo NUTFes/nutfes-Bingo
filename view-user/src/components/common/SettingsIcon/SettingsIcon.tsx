@@ -16,7 +16,9 @@ const SettingsIcon = (props: SettingsIconProps) => {
       props.onClick();
     }
     setColorInversion(!colorInversion);
-    props.setIsSettingsModalOpen(!props.isOpen);
+    if (props.setIsSettingsModalOpen) {
+      props.setIsSettingsModalOpen(!props.isOpen);
+    }
   };
 
   useEffect(() => {

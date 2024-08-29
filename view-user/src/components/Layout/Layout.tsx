@@ -32,8 +32,8 @@ interface LayoutProps {
   pageName: string;
   isSortedAscending?: boolean;
   setIsSortedAscending?: (value: boolean) => void;
-  language: string;
-  setLanguage: (value: string) => void;
+  language?: string;
+  setLanguage?: (value: string) => void;
 }
 
 const Layout = (props: LayoutProps) => {
