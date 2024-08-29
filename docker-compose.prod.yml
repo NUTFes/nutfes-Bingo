@@ -5,24 +5,6 @@ services:
     container_name: "cloudflare"
     volumes: ["./cloudflare/prod:/home/nonroot/.cloudflared"]
     command: tunnel run
-
-  db:
-    image: postgres:12
-    container_name: "bingo_db"
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: bingo_db
-      POSTGRES_USER: bingo
-      POSTGRES_PASSWORD: password
-      POSTGRES_HOST_AUTH_METHOD: trust
-    healthcheck:
-      test:
-        - "CMD-SHELL"
-        - "pg_isready"
-      interval: 10s
-      timeout: 5s
-      retries: 5
       
   api: # hasura
     build:
@@ -43,7 +25,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ./settings/bingo.env
+      - ./settings/bingo-prod.env
     stdin_open: true
     tty: true
 
@@ -57,9 +39,6 @@ services:
     ports:
       - "3001:3000"
     env_file:
-      - ./settings/admin.env
+      - ./settings/admin-prod.env
     stdin_open: true
     tty: true
-
-volumes:
-  db-data:
