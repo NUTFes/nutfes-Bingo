@@ -2,7 +2,7 @@
   height: 100vh;
   width: 100vw;
   overflow: auto;
-  background: linear-gradient(180deg, #d95b7f 0%, #856db2 23.96%, #07033e 100%);
+  background: white;
 }
 
 .main {
@@ -26,18 +26,20 @@
 
 .title {
   display: flex;
-  justify-content: space-between;
+
   color: #fff;
   gap: 0.3rem;
   margin-top: 0.8rem;
   font-size: 1.5rem;
   font-weight: 700;
+  padding: 1vw 5vw;
 }
 
 .title_button {
   display: flex;
   align-items: center;
-  margin-left: 1rem;
+  justify-content: space-around;
+  flex-direction: row;
 }
 
 /* 10000円以上の景品 */
@@ -209,7 +211,8 @@
   color: #333;
   font-weight: 700;
   padding: 3px 10px;
-  width: 16rem;
+  width: 65vw;
+  max-width: 16rem;
   height: 2.8rem;
   overflow: hidden;
   margin-right: 0;
@@ -222,7 +225,8 @@
   background: #07033e;
   color: #fff;
   outline: none;
-  width: 3.5em;
+  width: 25vw;
+  max-width: 3.5em;
   height: 3rem;
   display: inline-block;
   vertical-align: middle;
