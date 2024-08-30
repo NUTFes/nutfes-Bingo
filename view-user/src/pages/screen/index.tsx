@@ -5,11 +5,11 @@ import Matter from "matter-js";
 import { useSubscription } from "@apollo/client";
 import {
   SubscribeListNumbersDocument,
-  SubscriptionUpdatedStampTriggerDocument,
+  SubscribeUpdatedStampTriggerDocument,
 } from "@/type/graphql";
 import type {
   SubscribeListNumbersSubscription,
-  SubscriptionUpdatedStampTriggerSubscription,
+  SubscribeUpdatedStampTriggerSubscription,
 } from "@/type/graphql";
 import {
   NumberCardLarge,
@@ -65,8 +65,8 @@ const Page: NextPage = () => {
   const displayBingoNumbers = getDisplayBingoNumbers(bingoNumbers);
   const { data: numbers } = useSubscription(SubscribeListNumbersDocument);
   const { data: triggers } =
-    useSubscription<SubscriptionUpdatedStampTriggerSubscription>(
-      SubscriptionUpdatedStampTriggerDocument,
+    useSubscription<SubscribeUpdatedStampTriggerSubscription>(
+      SubscribeUpdatedStampTriggerDocument,
       {
         variables: { updatedAt: lastUpdatedAt },
       },

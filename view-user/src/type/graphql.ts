@@ -1850,11 +1850,11 @@ export type DeleteOneStampTriggerMutation = {
   } | null;
 };
 
-export type SubscriotionStampTriggersSubscriptionVariables = Exact<{
+export type SubscribeStampTriggersSubscriptionVariables = Exact<{
   [key: string]: never;
 }>;
 
-export type SubscriotionStampTriggersSubscription = {
+export type SubscribeStampTriggersSubscription = {
   __typename?: "subscription_root";
   stampTriggers: Array<{
     __typename?: "StampTriggers";
@@ -1864,11 +1864,11 @@ export type SubscriotionStampTriggersSubscription = {
   }>;
 };
 
-export type SubscriptionUpdatedStampTriggerSubscriptionVariables = Exact<{
+export type SubscribeUpdatedStampTriggerSubscriptionVariables = Exact<{
   updatedAt: Scalars["timestamptz"]["input"];
 }>;
 
-export type SubscriptionUpdatedStampTriggerSubscription = {
+export type SubscribeUpdatedStampTriggerSubscription = {
   __typename?: "subscription_root";
   stampTriggers: Array<{
     __typename?: "StampTriggers";
@@ -2209,8 +2209,8 @@ export type DeleteOneStampTriggerMutationOptions = Apollo.BaseMutationOptions<
   DeleteOneStampTriggerMutation,
   DeleteOneStampTriggerMutationVariables
 >;
-export const SubscriotionStampTriggersDocument = gql`
-  subscription SubscriotionStampTriggers {
+export const SubscribeStampTriggersDocument = gql`
+  subscription SubscribeStampTriggers {
     stampTriggers {
       id
       name
@@ -2218,10 +2218,10 @@ export const SubscriotionStampTriggersDocument = gql`
     }
   }
 `;
-export type SubscriotionStampTriggersSubscriptionResult =
-  Apollo.SubscriptionResult<SubscriotionStampTriggersSubscription>;
-export const SubscriptionUpdatedStampTriggerDocument = gql`
-  subscription SubscriptionUpdatedStampTrigger($updatedAt: timestamptz!) {
+export type SubscribeStampTriggersSubscriptionResult =
+  Apollo.SubscriptionResult<SubscribeStampTriggersSubscription>;
+export const SubscribeUpdatedStampTriggerDocument = gql`
+  subscription SubscribeUpdatedStampTrigger($updatedAt: timestamptz!) {
     stampTriggers(where: { updatedAt: { _gt: $updatedAt } }) {
       id
       name
@@ -2230,5 +2230,5 @@ export const SubscriptionUpdatedStampTriggerDocument = gql`
     }
   }
 `;
-export type SubscriptionUpdatedStampTriggerSubscriptionResult =
-  Apollo.SubscriptionResult<SubscriptionUpdatedStampTriggerSubscription>;
+export type SubscribeUpdatedStampTriggerSubscriptionResult =
+  Apollo.SubscriptionResult<SubscribeUpdatedStampTriggerSubscription>;

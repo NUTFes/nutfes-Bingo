@@ -34,7 +34,7 @@ mutation DeleteOneStampTrigger($id: Int!) {
 }
 
 # triggerの継続取得(Subscription)
-subscription SubscriotionStampTriggers {
+subscription SubscribeStampTriggers {
   stampTriggers {
     id
     name
@@ -43,7 +43,7 @@ subscription SubscriotionStampTriggers {
 }
 
 # 変更されたtriggerの取得(Subscription)
-subscription SubscriptionUpdatedStampTrigger($updatedAt: timestamptz!) {
+subscription SubscribeUpdatedStampTrigger($updatedAt: timestamptz!) {
   stampTriggers(where: { updatedAt: { _gt: $updatedAt } }) {
     id
     name
