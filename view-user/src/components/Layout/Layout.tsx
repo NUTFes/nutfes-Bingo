@@ -1,13 +1,4 @@
 import { useLazyQuery, useMutation } from "@apollo/client";
-import {
-  CreateOneReachRecordDocument,
-  GetOneLatestReachLogDocument,
-} from "@/type/graphql";
-import type {
-  CreateOneReachRecordMutationVariables,
-  CreateOneReachRecordMutation,
-  GetOneLatestReachLogQuery,
-} from "@/type/graphql";
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useRouter } from "next/router";
 import styles from "./Layout.module.css";
@@ -24,12 +15,18 @@ import {
   Button,
   ToggleButton,
 } from "@/components/common";
-import { UpdateOneTriggerFlagDocument } from "@/type/graphql";
+import {
+  UpdateOneTriggerFlagDocument,
+  CreateOneReachRecordDocument,
+  GetOneLatestReachLogDocument,
+} from "@/type/graphql";
 import type {
   UpdateOneTriggerFlagMutation,
   UpdateOneTriggerFlagMutationVariables,
+  CreateOneReachRecordMutationVariables,
+  CreateOneReachRecordMutation,
+  GetOneLatestReachLogQuery,
 } from "@/type/graphql";
-import { useMutation } from "@apollo/client";
 import { ja, en } from "@/locales";
 
 const images = [

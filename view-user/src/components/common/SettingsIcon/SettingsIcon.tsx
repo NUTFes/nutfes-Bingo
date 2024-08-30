@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { IconFramework } from "@/components/common";
 import { IoIosSettings } from "react-icons/io";
-import { useEffect } from "react";
 
 interface SettingsIconProps {
   onClick?: () => void;
@@ -10,7 +9,6 @@ interface SettingsIconProps {
 }
 const SettingsIcon = (props: SettingsIconProps) => {
   const [colorInversion, setColorInversion] = useState<boolean>(false);
-  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const handleClick = () => {
     if (props.onClick) {
