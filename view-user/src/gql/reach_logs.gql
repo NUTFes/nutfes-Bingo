@@ -1,0 +1,31 @@
+# リーチログの最新のreachNumを取得(Get)
+query GetOneLatestReachLog {
+  reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
+    reachNum
+  }
+}
+
+# 指定したタイプスタンプ以降のリーチログを全て取得(Get)
+query GetListReachLogsAfterTimestamp($timestamp: timestamptz!) {
+  reachLogs(
+    where: { createdAt: { _gt: $timestamp } }
+    orderBy: { createdAt: ASC }
+  ) {
+    id
+    status
+    createdAt
+    reachNum
+  }
+}
+
+# リーチログの追加(Create)
+mutation CreateOneReachRecord($status: Boolean!, $reachNum: Int!) {
+  insertReachLogsOne(
+    object: { status: $status, reachNum: $reachNum, createdAt: "now()" }
+  ) {
+    id
+    status
+    createdAt
+    reachNum
+  }
+}
