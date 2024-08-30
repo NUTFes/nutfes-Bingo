@@ -1,3 +1,13 @@
+import { useLazyQuery, useMutation } from "@apollo/client";
+import {
+  CreateOneReachRecordDocument,
+  GetOneLatestReachLogDocument,
+} from "@/type/graphql";
+import type {
+  CreateOneReachRecordMutationVariables,
+  CreateOneReachRecordMutation,
+  GetOneLatestReachLogQuery,
+} from "@/type/graphql";
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useRouter } from "next/router";
 import styles from "./Layout.module.css";
@@ -61,6 +71,14 @@ const Layout = (props: LayoutProps) => {
     UpdateOneTriggerFlagMutationVariables
   >(UpdateOneTriggerFlagDocument);
 
+  const [getLatestReachLog, { data: latestReachLogData }] =
+    useLazyQuery<GetOneLatestReachLogQuery>(GetOneLatestReachLogDocument);
+
+  const [createOneReachRecord] = useMutation<
+    CreateOneReachRecordMutation,
+    CreateOneReachRecordMutationVariables
+  >(CreateOneReachRecordDocument);
+
   // navBarの高さをstring型で渡す
   useLayoutEffect(() => {
     if (navRef.current) {
@@ -82,11 +100,23 @@ const Layout = (props: LayoutProps) => {
     updateFlag({ variables: { id, trigger: isFlag } });
   };
 
-  const handleReachIconClick = () => {
-    // todo リーチカウントAPIと繋ぎ込み
-    setReachIconVisible(false);
-    localStorage.setItem("isReachIconVisible", "false");
-    setIsReachModalOpen(!isReachModalOpen);
+  const handleReachIconClick = async () => {
+    try {
+      const { data } = await getLatestReachLog();
+      const latestReachLogNumber = data?.reachLogs[0]?.reachNum || 0;
+      await createOneReachRecord({
+        variables: {
+          status: true,
+          reachNum: latestReachLogNumber + 1,
+        },
+      });
+
+      setReachIconVisible(false);
+      localStorage.setItem("isReachIconVisible", "false");
+      setIsReachModalOpen(!isReachModalOpen);
+    } catch (error) {
+      console.error("Failed to record reach:", error);
+    }
   };
 
   const toggleSortOrder = () => {

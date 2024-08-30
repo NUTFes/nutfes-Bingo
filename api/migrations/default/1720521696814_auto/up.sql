@@ -73,6 +73,14 @@ CREATE TABLE public.stamp_triggers (
 );
 COMMENT ON TABLE public.stamp_triggers IS 'スタンプを降らせるためのAPI';
 CREATE SEQUENCE public.stamp_triggers_id_seq
+CREATE TABLE public.reach_logs (
+    id integer NOT NULL,
+    status boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    reach_num integer DEFAULT 0 NOT NULL
+);
+COMMENT ON TABLE public.reach_logs IS 'リーチ数を記録するテーブル';
+CREATE SEQUENCE public.reach_log_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -84,6 +92,11 @@ ALTER TABLE ONLY public.images ALTER COLUMN id SET DEFAULT nextval('public.image
 ALTER TABLE ONLY public.numbers ALTER COLUMN id SET DEFAULT nextval('public.numbers_id_seq'::regclass);
 ALTER TABLE ONLY public.prizes ALTER COLUMN id SET DEFAULT nextval('public.prizes_id_seq'::regclass);
 ALTER TABLE ONLY public.stamp_triggers ALTER COLUMN id SET DEFAULT nextval('public.stamp_triggers_id_seq'::regclass);
+ALTER SEQUENCE public.reach_log_id_seq OWNED BY public.reach_logs.id;
+ALTER TABLE ONLY public.images ALTER COLUMN id SET DEFAULT nextval('public.images_id_seq'::regclass);
+ALTER TABLE ONLY public.numbers ALTER COLUMN id SET DEFAULT nextval('public.numbers_id_seq'::regclass);
+ALTER TABLE ONLY public.prizes ALTER COLUMN id SET DEFAULT nextval('public.prizes_id_seq'::regclass);
+ALTER TABLE ONLY public.reach_logs ALTER COLUMN id SET DEFAULT nextval('public.reach_log_id_seq'::regclass);
 ALTER TABLE ONLY public.images
     ADD CONSTRAINT images_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.numbers
@@ -96,5 +109,7 @@ ALTER TABLE ONLY public.stamp_triggers
     ADD CONSTRAINT stamp_triggers_pkey PRIMARY KEY (id);
 CREATE TRIGGER set_public_stamp_triggers_updated_at BEFORE UPDATE ON public.stamp_triggers FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_stamp_triggers_updated_at ON public.stamp_triggers IS 'trigger to set value of column "updated_at" to current timestamp on row update';
+ALTER TABLE ONLY public.reach_logs
+    ADD CONSTRAINT reach_log_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.prizes
     ADD CONSTRAINT prizes_image_id_fkey FOREIGN KEY (image_id) REFERENCES public.images(id) ON UPDATE RESTRICT ON DELETE RESTRICT;

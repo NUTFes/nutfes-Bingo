@@ -909,6 +909,41 @@ export type StampTriggersAggregateFields = {
 /** aggregate fields of "stamp_triggers" */
 export type StampTriggersAggregateFieldsCountArgs = {
   columns?: InputMaybe<Array<StampTriggersSelectColumn>>;
+/** リーチ数を記録するテーブル */
+export type ReachLogs = {
+  __typename?: "ReachLogs";
+  createdAt: Scalars["timestamptz"]["output"];
+  id: Scalars["Int"]["output"];
+  reachNum: Scalars["Int"]["output"];
+  status: Scalars["Boolean"]["output"];
+};
+
+/** aggregated selection of "reach_logs" */
+export type ReachLogsAggregate = {
+  __typename?: "ReachLogsAggregate";
+  aggregate?: Maybe<ReachLogsAggregateFields>;
+  nodes: Array<ReachLogs>;
+};
+
+/** aggregate fields of "reach_logs" */
+export type ReachLogsAggregateFields = {
+  __typename?: "ReachLogsAggregateFields";
+  avg?: Maybe<ReachLogsAvgFields>;
+  count: Scalars["Int"]["output"];
+  max?: Maybe<ReachLogsMaxFields>;
+  min?: Maybe<ReachLogsMinFields>;
+  stddev?: Maybe<ReachLogsStddevFields>;
+  stddevPop?: Maybe<ReachLogsStddevPopFields>;
+  stddevSamp?: Maybe<ReachLogsStddevSampFields>;
+  sum?: Maybe<ReachLogsSumFields>;
+  varPop?: Maybe<ReachLogsVarPopFields>;
+  varSamp?: Maybe<ReachLogsVarSampFields>;
+  variance?: Maybe<ReachLogsVarianceFields>;
+};
+
+/** aggregate fields of "reach_logs" */
+export type ReachLogsAggregateFieldsCountArgs = {
+  columns?: InputMaybe<Array<ReachLogsSelectColumn>>;
   distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
@@ -1037,6 +1072,133 @@ export type StampTriggersStddevSampFields = {
 export type StampTriggersStreamCursorInput = {
   /** Stream column input with initial value */
   initialValue: StampTriggersStreamCursorValueInput;
+export type ReachLogsAvgFields = {
+  __typename?: "ReachLogsAvgFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+  reachNum?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** Boolean expression to filter rows from the table "reach_logs". All fields are combined with a logical 'AND'. */
+export type ReachLogsBoolExp = {
+  _and?: InputMaybe<Array<ReachLogsBoolExp>>;
+  _not?: InputMaybe<ReachLogsBoolExp>;
+  _or?: InputMaybe<Array<ReachLogsBoolExp>>;
+  createdAt?: InputMaybe<TimestamptzComparisonExp>;
+  id?: InputMaybe<IntComparisonExp>;
+  reachNum?: InputMaybe<IntComparisonExp>;
+  status?: InputMaybe<BooleanComparisonExp>;
+};
+
+/** unique or primary key constraints on table "reach_logs" */
+export enum ReachLogsConstraint {
+  /** unique or primary key constraint on columns "id" */
+  reachLogPkey = "reach_log_pkey",
+}
+
+/** input type for incrementing numeric columns in table "reach_logs" */
+export type ReachLogsIncInput = {
+  id?: InputMaybe<Scalars["Int"]["input"]>;
+  reachNum?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** input type for inserting data into table "reach_logs" */
+export type ReachLogsInsertInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["Int"]["input"]>;
+  reachNum?: InputMaybe<Scalars["Int"]["input"]>;
+  status?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type ReachLogsMaxFields = {
+  __typename?: "ReachLogsMaxFields";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
+  id?: Maybe<Scalars["Int"]["output"]>;
+  reachNum?: Maybe<Scalars["Int"]["output"]>;
+};
+
+/** aggregate min on columns */
+export type ReachLogsMinFields = {
+  __typename?: "ReachLogsMinFields";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
+  id?: Maybe<Scalars["Int"]["output"]>;
+  reachNum?: Maybe<Scalars["Int"]["output"]>;
+};
+
+/** response of any mutation on the table "reach_logs" */
+export type ReachLogsMutationResponse = {
+  __typename?: "ReachLogsMutationResponse";
+  /** number of rows affected by the mutation */
+  affectedRows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<ReachLogs>;
+};
+
+/** on_conflict condition type for table "reach_logs" */
+export type ReachLogsOnConflict = {
+  constraint: ReachLogsConstraint;
+  updateColumns?: Array<ReachLogsUpdateColumn>;
+  where?: InputMaybe<ReachLogsBoolExp>;
+};
+
+/** Ordering options when selecting data from "reach_logs". */
+export type ReachLogsOrderBy = {
+  createdAt?: InputMaybe<OrderBy>;
+  id?: InputMaybe<OrderBy>;
+  reachNum?: InputMaybe<OrderBy>;
+  status?: InputMaybe<OrderBy>;
+};
+
+/** primary key columns input for table: reach_logs */
+export type ReachLogsPkColumnsInput = {
+  id: Scalars["Int"]["input"];
+};
+
+/** select columns of table "reach_logs" */
+export enum ReachLogsSelectColumn {
+  /** column name */
+  createdAt = "createdAt",
+  /** column name */
+  id = "id",
+  /** column name */
+  reachNum = "reachNum",
+  /** column name */
+  status = "status",
+}
+
+/** input type for updating data in table "reach_logs" */
+export type ReachLogsSetInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["Int"]["input"]>;
+  reachNum?: InputMaybe<Scalars["Int"]["input"]>;
+  status?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** aggregate stddev on columns */
+export type ReachLogsStddevFields = {
+  __typename?: "ReachLogsStddevFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+  reachNum?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** aggregate stddevPop on columns */
+export type ReachLogsStddevPopFields = {
+  __typename?: "ReachLogsStddevPopFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+  reachNum?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** aggregate stddevSamp on columns */
+export type ReachLogsStddevSampFields = {
+  __typename?: "ReachLogsStddevSampFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+  reachNum?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** Streaming cursor of the table "reach_logs" */
+export type ReachLogsStreamCursorInput = {
+  /** Stream column input with initial value */
+  initialValue: ReachLogsStreamCursorValueInput;
   /** cursor ordering */
   ordering?: InputMaybe<CursorOrdering>;
 };
@@ -1092,6 +1254,61 @@ export type StampTriggersVarSampFields = {
 export type StampTriggersVarianceFields = {
   __typename?: "StampTriggersVarianceFields";
   id?: Maybe<Scalars["Float"]["output"]>;
+
+export type ReachLogsStreamCursorValueInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["Int"]["input"]>;
+  reachNum?: InputMaybe<Scalars["Int"]["input"]>;
+  status?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** aggregate sum on columns */
+export type ReachLogsSumFields = {
+  __typename?: "ReachLogsSumFields";
+  id?: Maybe<Scalars["Int"]["output"]>;
+  reachNum?: Maybe<Scalars["Int"]["output"]>;
+};
+
+/** update columns of table "reach_logs" */
+export enum ReachLogsUpdateColumn {
+  /** column name */
+  createdAt = "createdAt",
+  /** column name */
+  id = "id",
+  /** column name */
+  reachNum = "reachNum",
+  /** column name */
+  status = "status",
+}
+
+export type ReachLogsUpdates = {
+  /** increments the numeric columns with given value of the filtered values */
+  _inc?: InputMaybe<ReachLogsIncInput>;
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<ReachLogsSetInput>;
+  /** filter the rows which have to be updated */
+  where: ReachLogsBoolExp;
+};
+
+/** aggregate varPop on columns */
+export type ReachLogsVarPopFields = {
+  __typename?: "ReachLogsVarPopFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+  reachNum?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** aggregate varSamp on columns */
+export type ReachLogsVarSampFields = {
+  __typename?: "ReachLogsVarSampFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+  reachNum?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** aggregate variance on columns */
+export type ReachLogsVarianceFields = {
+  __typename?: "ReachLogsVarianceFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+  reachNum?: Maybe<Scalars["Float"]["output"]>;
 };
 
 /** Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'. */
@@ -1159,6 +1376,10 @@ export type MutationRoot = {
   deleteStampTriggers?: Maybe<StampTriggersMutationResponse>;
   /** delete single row from the table: "stamp_triggers" */
   deleteStampTriggersByPk?: Maybe<StampTriggers>;
+  /** delete data from the table: "reach_logs" */
+  deleteReachLogs?: Maybe<ReachLogsMutationResponse>;
+  /** delete single row from the table: "reach_logs" */
+  deleteReachLogsByPk?: Maybe<ReachLogs>;
   /** insert data into the table: "images" */
   insertImages?: Maybe<ImagesMutationResponse>;
   /** insert a single row into the table: "images" */
@@ -1175,6 +1396,10 @@ export type MutationRoot = {
   insertStampTriggers?: Maybe<StampTriggersMutationResponse>;
   /** insert a single row into the table: "stamp_triggers" */
   insertStampTriggersOne?: Maybe<StampTriggers>;
+  /** insert data into the table: "reach_logs" */
+  insertReachLogs?: Maybe<ReachLogsMutationResponse>;
+  /** insert a single row into the table: "reach_logs" */
+  insertReachLogsOne?: Maybe<ReachLogs>;
   /** update data of the table: "images" */
   updateImages?: Maybe<ImagesMutationResponse>;
   /** update single row of the table: "images" */
@@ -1199,6 +1424,12 @@ export type MutationRoot = {
   updateStampTriggersByPk?: Maybe<StampTriggers>;
   /** update multiples rows of table: "stamp_triggers" */
   updateStampTriggersMany?: Maybe<Array<Maybe<StampTriggersMutationResponse>>>;
+  /** update data of the table: "reach_logs" */
+  updateReachLogs?: Maybe<ReachLogsMutationResponse>;
+  /** update single row of the table: "reach_logs" */
+  updateReachLogsByPk?: Maybe<ReachLogs>;
+  /** update multiples rows of table: "reach_logs" */
+  updateReachLogsMany?: Maybe<Array<Maybe<ReachLogsMutationResponse>>>;
 };
 
 /** mutation root */
@@ -1236,8 +1467,12 @@ export type MutationRootDeleteStampTriggersArgs = {
   where: StampTriggersBoolExp;
 };
 
+export type MutationRootDeleteReachLogsArgs = {
+  where: ReachLogsBoolExp;
+};
+
 /** mutation root */
-export type MutationRootDeleteStampTriggersByPkArgs = {
+export type MutationRootDeleteReachLogsByPkArgs = {
   id: Scalars["Int"]["input"];
 };
 
@@ -1287,6 +1522,17 @@ export type MutationRootInsertStampTriggersArgs = {
 export type MutationRootInsertStampTriggersOneArgs = {
   object: StampTriggersInsertInput;
   onConflict?: InputMaybe<StampTriggersOnConflict>;
+}
+
+export type MutationRootInsertReachLogsArgs = {
+  objects: Array<ReachLogsInsertInput>;
+  onConflict?: InputMaybe<ReachLogsOnConflict>;
+};
+
+/** mutation root */
+export type MutationRootInsertReachLogsOneArgs = {
+  object: ReachLogsInsertInput;
+  onConflict?: InputMaybe<ReachLogsOnConflict>;
 };
 
 /** mutation root */
@@ -1363,6 +1609,24 @@ export type MutationRootUpdateStampTriggersByPkArgs = {
 /** mutation root */
 export type MutationRootUpdateStampTriggersManyArgs = {
   updates: Array<StampTriggersUpdates>;
+}
+
+export type MutationRootUpdateReachLogsArgs = {
+  _inc?: InputMaybe<ReachLogsIncInput>;
+  _set?: InputMaybe<ReachLogsSetInput>;
+  where: ReachLogsBoolExp;
+};
+
+/** mutation root */
+export type MutationRootUpdateReachLogsByPkArgs = {
+  _inc?: InputMaybe<ReachLogsIncInput>;
+  _set?: InputMaybe<ReachLogsSetInput>;
+  pkColumns: ReachLogsPkColumnsInput;
+};
+
+/** mutation root */
+export type MutationRootUpdateReachLogsManyArgs = {
+  updates: Array<ReachLogsUpdates>;
 };
 
 export type QueryRoot = {
@@ -1391,6 +1655,12 @@ export type QueryRoot = {
   stampTriggersAggregate: StampTriggersAggregate;
   /** fetch data from the table: "stamp_triggers" using primary key columns */
   stampTriggersByPk?: Maybe<StampTriggers>;
+  /** fetch data from the table: "reach_logs" */
+  reachLogs: Array<ReachLogs>;
+  /** fetch aggregated fields from the table: "reach_logs" */
+  reachLogsAggregate: ReachLogsAggregate;
+  /** fetch data from the table: "reach_logs" using primary key columns */
+  reachLogsByPk?: Maybe<ReachLogs>;
 };
 
 export type QueryRootImagesArgs = {
@@ -1469,7 +1739,23 @@ export type QueryRootStampTriggersAggregateArgs = {
   where?: InputMaybe<StampTriggersBoolExp>;
 };
 
-export type QueryRootStampTriggersByPkArgs = {
+export type QueryRootReachLogsArgs = {
+  distinctOn?: InputMaybe<Array<ReachLogsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
+};
+
+export type QueryRootReachLogsAggregateArgs = {
+  distinctOn?: InputMaybe<Array<ReachLogsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
+};
+
+export type QueryRootReachLogsByPkArgs = {
   id: Scalars["Int"]["input"];
 };
 
@@ -1507,6 +1793,14 @@ export type SubscriptionRoot = {
   stampTriggersByPk?: Maybe<StampTriggers>;
   /** fetch data from the table in a streaming manner: "stamp_triggers" */
   stampTriggersStream: Array<StampTriggers>;
+  /** fetch data from the table: "reach_logs" */
+  reachLogs: Array<ReachLogs>;
+  /** fetch aggregated fields from the table: "reach_logs" */
+  reachLogsAggregate: ReachLogsAggregate;
+  /** fetch data from the table: "reach_logs" using primary key columns */
+  reachLogsByPk?: Maybe<ReachLogs>;
+  /** fetch data from the table in a streaming manner: "reach_logs" */
+  reachLogsStream: Array<ReachLogs>;
 };
 
 export type SubscriptionRootImagesArgs = {
@@ -1611,6 +1905,32 @@ export type SubscriptionRootStampTriggersStreamArgs = {
   batchSize: Scalars["Int"]["input"];
   cursor: Array<InputMaybe<StampTriggersStreamCursorInput>>;
   where?: InputMaybe<StampTriggersBoolExp>;
+}
+
+export type SubscriptionRootReachLogsArgs = {
+  distinctOn?: InputMaybe<Array<ReachLogsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
+};
+
+export type SubscriptionRootReachLogsAggregateArgs = {
+  distinctOn?: InputMaybe<Array<ReachLogsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
+};
+
+export type SubscriptionRootReachLogsByPkArgs = {
+  id: Scalars["Int"]["input"];
+};
+
+export type SubscriptionRootReachLogsStreamArgs = {
+  batchSize: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<ReachLogsStreamCursorInput>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
 };
 
 export type CreateOneImageMutationVariables = Exact<{
@@ -1877,6 +2197,46 @@ export type SubscribeUpdatedStampTriggerSubscription = {
     trigger: boolean;
     updatedAt?: any | null;
   }>;
+}
+
+export type GetOneLatestReachLogQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetOneLatestReachLogQuery = {
+  __typename?: "query_root";
+  reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
+};
+
+export type GetListReachLogsAfterTimestampQueryVariables = Exact<{
+  timestamp: Scalars["timestamptz"]["input"];
+}>;
+
+export type GetListReachLogsAfterTimestampQuery = {
+  __typename?: "query_root";
+  reachLogs: Array<{
+    __typename?: "ReachLogs";
+    id: number;
+    status: boolean;
+    createdAt: any;
+    reachNum: number;
+  }>;
+};
+
+export type CreateOneReachRecordMutationVariables = Exact<{
+  status: Scalars["Boolean"]["input"];
+  reachNum: Scalars["Int"]["input"];
+}>;
+
+export type CreateOneReachRecordMutation = {
+  __typename?: "mutation_root";
+  insertReachLogsOne?: {
+    __typename?: "ReachLogs";
+    id: number;
+    status: boolean;
+    createdAt: any;
+    reachNum: number;
+  } | null;
 };
 
 export const CreateOneImageDocument = gql`
@@ -2232,3 +2592,55 @@ export const SubscribeUpdatedStampTriggerDocument = gql`
 `;
 export type SubscribeUpdatedStampTriggerSubscriptionResult =
   Apollo.SubscriptionResult<SubscribeUpdatedStampTriggerSubscription>;
+}
+
+export const GetOneLatestReachLogDocument = gql`
+  query GetOneLatestReachLog {
+    reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
+      reachNum
+    }
+  }
+`;
+export type GetOneLatestReachLogQueryResult = Apollo.QueryResult<
+  GetOneLatestReachLogQuery,
+  GetOneLatestReachLogQueryVariables
+>;
+export const GetListReachLogsAfterTimestampDocument = gql`
+  query GetListReachLogsAfterTimestamp($timestamp: timestamptz!) {
+    reachLogs(
+      where: { createdAt: { _gt: $timestamp } }
+      orderBy: { createdAt: ASC }
+    ) {
+      id
+      status
+      createdAt
+      reachNum
+    }
+  }
+`;
+export type GetListReachLogsAfterTimestampQueryResult = Apollo.QueryResult<
+  GetListReachLogsAfterTimestampQuery,
+  GetListReachLogsAfterTimestampQueryVariables
+>;
+export const CreateOneReachRecordDocument = gql`
+  mutation CreateOneReachRecord($status: Boolean!, $reachNum: Int!) {
+    insertReachLogsOne(
+      object: { status: $status, reachNum: $reachNum, createdAt: "now()" }
+    ) {
+      id
+      status
+      createdAt
+      reachNum
+    }
+  }
+`;
+export type CreateOneReachRecordMutationFn = Apollo.MutationFunction<
+  CreateOneReachRecordMutation,
+  CreateOneReachRecordMutationVariables
+>;
+export type CreateOneReachRecordMutationResult =
+  Apollo.MutationResult<CreateOneReachRecordMutation>;
+export type CreateOneReachRecordMutationOptions = Apollo.BaseMutationOptions<
+  CreateOneReachRecordMutation,
+  CreateOneReachRecordMutationVariables
+>;
