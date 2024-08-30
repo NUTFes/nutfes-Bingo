@@ -1,71 +1,122 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./JudgementModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
 import { SubscribeListNumbersSubscription } from "@/type/graphql";
 
-interface ModalProps {
+interface JudgementModalProps {
   isOpened: boolean;
   canCloseByClickingBackground?: boolean;
   setIsOpened: (isOpened: boolean) => void;
   bingoNumbers: SubscribeListNumbersSubscription["numbers"];
 }
 
-const Modal = ({
+const JudgementModal = ({
   isOpened,
   canCloseByClickingBackground = true,
   setIsOpened,
   bingoNumbers,
-}: ModalProps) => {
-  const [inputValues, setInputValues] = useState<number[]>([
-    100, 100, 100, 100, 100,
-  ]);
+}: JudgementModalProps) => {
+  const [numbers, setNumbers] = useState<string[]>(["", "", "", "", ""]);
   const [isIncluded, setIsIncluded] = useState<boolean>(false);
   const [isJudgementClicked, setIsJudgementClicked] = useState<boolean>(false);
+  const [currentBox, setCurrentBox] = useState(0);
+  const [resultClass, setResultClass] = useState<string>("");
 
-  const handleInputChange = (
-    index: number,
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const newValue = parseInt(event.target.value);
-    const newInputValues = [...inputValues];
-    newInputValues[index] = newValue;
-    setInputValues(newInputValues);
-  };
+  useEffect(() => {
+    if (isJudgementClicked) {
+      if (isIncluded) {
+        setNumbers(["B", "I", "N", "G", "O"]);
+        setResultClass(styles.bingo);
+      } else {
+        setNumbers(["N", "o", "W", "i", "n"]);
+        setResultClass(styles.noWin);
+      }
+    } else {
+      setResultClass("");
+    }
+  }, [isJudgementClicked, isIncluded]);
 
   const closeModal = () => {
     setIsOpened(false);
     setIsIncluded(false);
   };
 
-  const resetInputs = () => {
-    const inputElements = document.getElementsByClassName(styles.inputNum);
-    const inputElementArray = Array.from(inputElements) as HTMLInputElement[];
-    for (let i = 0; i < inputElementArray.length; i++) {
-      inputElementArray[i].value = "";
-    }
-    setInputValues(inputValues.map(() => 100));
-    console.log(inputValues);
-    setIsIncluded(false);
-    setIsJudgementClicked(false);
-  };
-
-  const checkInclusion = () => {
+  const checkInclusion = (inputValues: number[]) => {
     const remainNumbers = inputValues.filter((number) => number !== 0);
-    if (
+    setIsIncluded(
       remainNumbers.every((number) =>
         bingoNumbers.map((num) => num.number).includes(number),
-      )
-    ) {
-      setIsIncluded(true);
-    }
+      ),
+    );
     setIsJudgementClicked(true);
   };
 
-  const BingoJudgement = () => (
-    <div className={styles.jugementResults}>
-      <p>{isIncluded ? "BINGO" : "NotYet!"}</p>
-    </div>
-  );
+  const handleButtonClick = (value: string) => {
+    if (currentBox < 5) {
+      const newNumbers = [...numbers];
+      const currentValue = newNumbers[currentBox];
+      const prevValue = currentBox > 0 ? newNumbers[currentBox - 1] : null;
+
+      if (currentValue === "" && value === "0") return;
+
+      const newValue = currentValue + value;
+      const newValueNum = parseInt(newValue);
+      if (newValueNum < 0 || newValueNum > 99 || newValue === prevValue) return;
+
+      newNumbers[currentBox] = newValue;
+      setNumbers(newNumbers);
+      if (newValueNum > 9) setCurrentBox(Math.min(currentBox + 1, 4));
+    }
+  };
+
+  const handleClear = () => {
+    const clearedNumbers = ["", "", "", "", ""];
+    setNumbers(clearedNumbers);
+    setCurrentBox(0);
+    setIsJudgementClicked(false);
+    setIsIncluded(false);
+  };
+
+  const handleInputClick = (index: number) => {
+    setCurrentBox(index);
+  };
+
+  const handleDelete = () => {
+    const newNumbers = [...numbers];
+    if (newNumbers[currentBox] !== "") {
+      newNumbers[currentBox] = newNumbers[currentBox].slice(0, -1);
+    } else if (currentBox > 0) {
+      setCurrentBox(currentBox - 1);
+      newNumbers[currentBox - 1] = newNumbers[currentBox - 1].slice(0, -1);
+    }
+    setNumbers(newNumbers);
+  };
+
+  const handleSubmit = () => {
+    if (numbers.every((num) => num !== "")) {
+      const numValues = numbers.map((num) => parseInt(num));
+      checkInclusion(numValues);
+    }
+  };
+
+  const handleNext = () => {
+    setCurrentBox(Math.min(currentBox + 1, 4));
+  };
+
+  const buttons = [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "Del",
+    "0",
+    "次へ",
+  ];
 
   return (
     <>
@@ -77,53 +128,40 @@ const Modal = ({
             </button>
             <div className={styles.title}>ビンゴ正誤判定</div>
             <div className={styles.contents}>
-              <div className={styles.inputForm}>
-                <input
-                  type="number"
-                  className={styles.inputNum}
-                  onChange={(e) => handleInputChange(0, e)}
-                />
-                <input
-                  type="number"
-                  className={styles.inputNum}
-                  onChange={(e) => handleInputChange(1, e)}
-                />
-                <input
-                  type="number"
-                  className={styles.inputNum}
-                  onChange={(e) => handleInputChange(2, e)}
-                />
-                <input
-                  type="number"
-                  className={styles.inputNum}
-                  onChange={(e) => handleInputChange(3, e)}
-                />
-                <input
-                  type="number"
-                  className={styles.inputNum}
-                  onChange={(e) => handleInputChange(4, e)}
-                />
-              </div>
-              <div className={styles.explanation}>
-                <p>5つの番号を入力してください</p>
-                <p>FREEマスの場合は0を入力してください</p>
-              </div>
-              <div className={styles.judgementContents}>
-                <button
-                  type="submit"
-                  className={styles.jugementButton}
-                  onClick={checkInclusion}
-                >
+              <div className={styles.container}>
+                <div className={`${styles.inputContainer} ${resultClass}`}>
+                  {numbers.map((num, index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      value={num}
+                      readOnly
+                      className={`${styles.input} ${index === currentBox ? styles.active : ""}`}
+                      onClick={() => handleInputClick(index)}
+                    />
+                  ))}
+                </div>
+                <div className={styles.numpad}>
+                  {buttons.map((btn, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (btn === "Del") handleDelete();
+                        else if (btn === "次へ") handleNext();
+                        else handleButtonClick(btn);
+                      }}
+                      className={styles.button}
+                    >
+                      {btn}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={handleSubmit} className={styles.submitButton}>
                   正誤判定
                 </button>
-                <button
-                  type="button"
-                  className={styles.resetButton}
-                  onClick={resetInputs}
-                >
+                <button onClick={handleClear} className={styles.resetButton}>
                   リセット
                 </button>
-                {isJudgementClicked && <BingoJudgement />}
               </div>
             </div>
           </div>
@@ -135,5 +173,4 @@ const Modal = ({
     </>
   );
 };
-
-export default Modal;
+export default JudgementModal;
