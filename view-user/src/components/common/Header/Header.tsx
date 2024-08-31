@@ -17,8 +17,8 @@ const Header = () => {
           className={styles.logo}
           src="/Bingo_logo.png"
           alt="sample"
-          width={100}
-          height={100}
+          width={300}
+          height={300}
           onClick={() => router.push("/")}
         />
         <button className={styles.icon} onClick={goHelp}>

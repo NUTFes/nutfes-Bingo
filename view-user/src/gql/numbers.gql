@@ -15,14 +15,14 @@ mutation CreateOneNumber($number: Int!) {
   }
 }
 
-# 番号の継続取得(Subscription)
+# 番号の削除(Delete)
 mutation DeleteOneNumber($number: Int!) {
   deleteNumbers(where: { number: { _eq: $number } }) {
     affectedRows
   }
 }
 
-# 番号の削除(Delete)
+# 番号の継続取得(Subscription)
 subscription SubscribeListNumbers {
   numbers {
     id

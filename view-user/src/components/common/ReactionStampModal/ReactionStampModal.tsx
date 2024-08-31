@@ -3,6 +3,7 @@ import Image from "next/image";
 import styles from "./ReactionStampModal.module.css";
 
 interface ImageProps {
+  id: number;
   src: string;
   alt: string;
 }
@@ -10,6 +11,7 @@ interface ReactionStampModalProps {
   position?: string;
   height?: string;
   images: ImageProps[];
+  onClick: (id: number) => void;
 }
 
 const ReactionStampModal = (props: ReactionStampModalProps) => {
@@ -23,6 +25,10 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
       : "0px",
   };
 
+  const handleClick = (id: number) => {
+    props.onClick(id);
+  };
+
   return (
     <div className={styles.horizontalCenter}>
       <div
@@ -30,8 +36,12 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
         style={{ ...bubbleLeftPosition, ...modalBottom }}
       >
         <div className={styles.grid}>
-          {props.images.map((image, index) => (
-            <button key={index} className={styles.iconButton}>
+          {props.images.map((image) => (
+            <button
+              key={image.id}
+              className={styles.iconButton}
+              onClick={() => handleClick(image.id)}
+            >
               <Image src={image.src} alt={image.alt} fill />
             </button>
           ))}

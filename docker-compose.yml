@@ -2,6 +2,8 @@ services:
   db:
     image: postgres:12
     container_name: "bingo_db"
+    ports:
+      - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     environment:
@@ -67,7 +69,7 @@ services:
       - ./tmp/minio/data:/data
     command: "server /data --console-address :9001"
     env_file:
-    - ./settings/admin.env
+      - ./settings/admin.env
 
 volumes:
   db-data:

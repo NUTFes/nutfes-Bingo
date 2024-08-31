@@ -1,13 +1,4 @@
 import { useLazyQuery, useMutation } from "@apollo/client";
-import {
-  CreateOneReachRecordDocument,
-  GetOneLatestReachLogDocument,
-} from "@/type/graphql";
-import type {
-  CreateOneReachRecordMutationVariables,
-  CreateOneReachRecordMutation,
-  GetOneLatestReachLogQuery,
-} from "@/type/graphql";
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useRouter } from "next/router";
 import styles from "./Layout.module.css";
@@ -24,17 +15,29 @@ import {
   Button,
   ToggleButton,
 } from "@/components/common";
+import {
+  UpdateOneTriggerFlagDocument,
+  CreateOneReachRecordDocument,
+  GetOneLatestReachLogDocument,
+} from "@/type/graphql";
+import type {
+  UpdateOneTriggerFlagMutation,
+  UpdateOneTriggerFlagMutationVariables,
+  CreateOneReachRecordMutationVariables,
+  CreateOneReachRecordMutation,
+  GetOneLatestReachLogQuery,
+} from "@/type/graphql";
 import { ja, en } from "@/locales";
 
 const images = [
-  { src: "/ReactionIcon/crap.png", alt: "crap icon" },
-  { src: "/ReactionIcon/good.png", alt: " good icon" },
-  { src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
-  { src: "/ReactionIcon/heart.png", alt: "heart icon" },
-  { src: "/ReactionIcon/smile.png", alt: "smile icon" },
-  { src: "/ReactionIcon/angry.png", alt: "angry icon" },
-  { src: "/ReactionIcon/skull.png", alt: "skull icon" },
-  { src: "/ReactionIcon/sad.png", alt: "sad icon" },
+  { id: 1, src: "/ReactionIcon/crap.png", alt: "crap icon" },
+  { id: 2, src: "/ReactionIcon/good.png", alt: " good icon" },
+  { id: 3, src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
+  { id: 4, src: "/ReactionIcon/heart.png", alt: "heart icon" },
+  { id: 5, src: "/ReactionIcon/smile.png", alt: "smile icon" },
+  { id: 6, src: "/ReactionIcon/angry.png", alt: "angry icon" },
+  { id: 7, src: "/ReactionIcon/skull.png", alt: "skull icon" },
+  { id: 8, src: "/ReactionIcon/sad.png", alt: "sad icon" },
 ];
 
 interface LayoutProps {
@@ -56,9 +59,14 @@ const Layout = (props: LayoutProps) => {
   const [isSortOrderActive, setIsSortOrderActive] = useState(false);
   const [isReachModalOpen, setIsReachModalOpen] = useState<boolean>(false);
   const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
+  const [isFlag, setIsFlag] = useState<boolean>(false);
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
   const position: string = isReachIconVisible ? "29%" : "50%";
+  const [updateFlag] = useMutation<
+    UpdateOneTriggerFlagMutation,
+    UpdateOneTriggerFlagMutationVariables
+  >(UpdateOneTriggerFlagDocument);
 
   const [getLatestReachLog, { data: latestReachLogData }] =
     useLazyQuery<GetOneLatestReachLogQuery>(GetOneLatestReachLogDocument);
@@ -83,6 +91,11 @@ const Layout = (props: LayoutProps) => {
       setReachIconVisible(storedVisibility === "true");
     }
   }, []);
+
+  const handleReactionsiconClick = (id: number) => {
+    setIsFlag(!isFlag);
+    updateFlag({ variables: { id, trigger: isFlag } });
+  };
 
   const handleReachIconClick = async () => {
     try {
@@ -115,82 +128,42 @@ const Layout = (props: LayoutProps) => {
     router.push(router.pathname, router.asPath, { locale: newLocale });
   };
 
-  const Icons = (pageName: string) => {
+  const icons = (pageName: string) => {
     let icons = [];
+    const commonIcons = [
+      <ReactionsIcon
+        isOpen={isReactionModalOpen}
+        setIsReactionModalOpen={setIsReactionModalOpen}
+        key="reaction"
+      />,
+      isReachIconVisible && (
+        <ReachIcon
+          key="reach"
+          isOpen={isReachModalOpen}
+          setIsReachModalOpen={setIsReachModalOpen}
+          onClick={handleReachIconClick}
+        />
+      ),
+      <SettingsIcon
+        key="settings"
+        isOpen={isSettingsModalOpen}
+        setIsSettingsModalOpen={setIsSettingsModalOpen}
+      />,
+    ];
     switch (pageName) {
       case "/":
-        icons = [
-          <PrizesIcon key="prize" />,
-          <ReactionsIcon
-            isOpen={isReactionModalOpen}
-            setIsReactionModalOpen={setIsReactionModalOpen}
-            key="reaction"
-          />,
-          isReachIconVisible && (
-            <ReachIcon
-              key="reach"
-              isOpen={isReachModalOpen}
-              setIsReachModalOpen={setIsReachModalOpen}
-              onClick={handleReachIconClick}
-            />
-          ),
-          <SettingsIcon
-            key="settings"
-            isOpen={isSettingsModalOpen}
-            setIsSettingsModalOpen={setIsSettingsModalOpen}
-          />,
-        ];
+        icons = [<PrizesIcon key="prize" />, commonIcons];
         break;
       case "/prizes":
-        icons = [
-          <BackIcon key="back" />,
-          <ReachIcon
-            key="reach"
-            isOpen={isReachModalOpen}
-            setIsReachModalOpen={setIsReachModalOpen}
-            onClick={handleReachIconClick}
-          />,
-          isReachIconVisible && (
-            <ReactionsIcon
-              isOpen={isReactionModalOpen}
-              setIsReactionModalOpen={setIsReactionModalOpen}
-              key="reaction"
-            />
-          ),
-          <SettingsIcon
-            key="settings"
-            isOpen={isSettingsModalOpen}
-            setIsSettingsModalOpen={setIsSettingsModalOpen}
-          />,
-        ];
+        icons = [<BackIcon key="back" />, commonIcons];
         break;
       default:
-        icons = [
-          <PrizesIcon key="prize" />,
-          <ReactionsIcon
-            isOpen={isReactionModalOpen}
-            setIsReactionModalOpen={setIsReactionModalOpen}
-            key="reaction"
-          />,
-          isReachIconVisible && (
-            <ReachIcon
-              key="reach"
-              isOpen={isReachModalOpen}
-              setIsReachModalOpen={setIsReachModalOpen}
-              onClick={handleReachIconClick}
-            />
-          ),
-          <SettingsIcon
-            key="settings"
-            isOpen={isSettingsModalOpen}
-            setIsSettingsModalOpen={setIsSettingsModalOpen}
-          />,
-        ];
+        icons = [<PrizesIcon key="prize" />, commonIcons];
     }
     return icons.filter(Boolean);
   };
 
-  const iconElements = Icons(props.pageName);
+  const iconElements = icons(props.pageName);
 
   return (
     <div>
@@ -199,6 +172,7 @@ const Layout = (props: LayoutProps) => {
           position={position}
           height={navBarHeight}
           images={images}
+          onClick={handleReactionsiconClick}
         />
       )}
       <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
