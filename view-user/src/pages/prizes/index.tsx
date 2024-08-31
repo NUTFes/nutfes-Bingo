@@ -1,10 +1,9 @@
 import type { NextPage } from "next";
 import styles from "./prizes.module.css";
-import { PrizeCardList, Loading } from "@/components/common";
+import { PrizeCardList, Loading, Layout } from "@/components";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import { ja } from "../../locales/ja";
-import { en } from "../../locales/en";
+import { ja, en } from "../../locales";
 import { useQuery, useSubscription } from "@apollo/client";
 import {
   GetListPrizesDocument,
@@ -16,17 +15,17 @@ import type {
 } from "@/type/graphql";
 import { useRecoilState } from "recoil";
 import { bingoPrizeState } from "../../Atom/atom";
-import Layout from "@/components/Layout";
 
 const Page: NextPage = () => {
-  const { locale } = useRouter();
+  const { pathname: pageName, locale } = useRouter();
   const t = locale === "ja" ? ja : en;
-  const [isOpened, setIsOpened] = useState(false);
-  const router = useRouter();
   const [bingoPrize, setBingoPrize] = useRecoilState(bingoPrizeState);
-  const [isLodaing, setIsLoading] = useState<boolean>(true);
+  const [language, setLanguage] = useState<string>(locale || "ja");
+  const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
 
-  const { data: query } = useQuery<GetListPrizesQuery>(GetListPrizesDocument);
+  const { data: query, loading } = useQuery<GetListPrizesQuery>(
+    GetListPrizesDocument,
+  );
   const { data: subscription } =
     useSubscription<SubscribeListPrizesIsWonSubscription>(
       SubscribeListPrizesIsWonDocument,
@@ -53,9 +52,15 @@ const Page: NextPage = () => {
 
   return (
     <>
-      {isLodaing && <Loading />}
+      {loading && <Loading />}
       <div className={styles.container}>
-        <Layout pageName="/prizes">
+        <Layout
+          pageName={pageName}
+          isSortedAscending={isSortedAscending}
+          setIsSortedAscending={setIsSortedAscending}
+          language={language}
+          setLanguage={setLanguage}
+        >
           <PrizeCardList BingoPrize={bingoPrize} />
         </Layout>
       </div>
