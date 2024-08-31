@@ -35,7 +35,14 @@ const Page: NextPage = () => {
   const t = locale === "ja" ? ja : en;
   const [bingoNumbers, setBingoNumbers] = useState<
     SubscribeListNumbersSubscription["numbers"]
-  >([]);
+  >([
+    {
+      number: 0,
+      id: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ]);
 
   const updateBingoNumbers = useCallback(() => {
     if (data) {
