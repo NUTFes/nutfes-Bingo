@@ -6,10 +6,12 @@ import { useSubscription } from "@apollo/client";
 import {
   SubscribeListNumbersDocument,
   SubscribeUpdatedStampTriggerDocument,
+  SubscribeOneLatestReachlogDocument,
 } from "@/type/graphql";
 import type {
   SubscribeListNumbersSubscription,
   SubscribeUpdatedStampTriggerSubscription,
+  SubscribeOneLatestReachlogSubscription,
 } from "@/type/graphql";
 import {
   NumberCardLarge,
@@ -70,6 +72,10 @@ const Page: NextPage = () => {
       {
         variables: { updatedAt: lastUpdatedAt },
       },
+    );
+  const { data: reachLog } =
+    useSubscription<SubscribeOneLatestReachlogSubscription>(
+      SubscribeOneLatestReachlogDocument,
     );
 
   // スタンプの変更を検知し、スタンプを降下させる。
@@ -203,8 +209,8 @@ const Page: NextPage = () => {
           <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
           <div className={styles.column}>
             <NumberCardList screen bingoNumber={displayBingoNumbers.list} />
-            {/* todo countはAPIとつなぎ込み */}
-            <ReachCount count={0} />
+            {/* // TODO オプショナルでエラーを逃れているのを対処する */}
+            <ReachCount count={reachLog?.reachLogs[0]?.reachNum || 0} />
           </div>
         </div>
       </div>
