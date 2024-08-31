@@ -1,9 +1,10 @@
 import { useQuery, useMutation } from "@apollo/client";
 /* eslint-disable @next/next/no-img-element */
 import type { NextPage } from "next";
+import styles from "./postPrizes.module.css";
 import { useState, useCallback, useRef, useEffect } from "react";
-import styles from "@/pages/postPrizes/postPrizes.module.css";
 import { Header, PrizeResult, Loading } from "@/components/common";
+import { IoCloudUploadOutline } from "react-icons/ios";
 import {
   GetListPrizesDocument,
   CreateOnePrizeDocument,
@@ -17,7 +18,6 @@ import type {
   CreateOnePrizeMutationVariables,
 } from "@/type/graphql";
 
-import { IoCloudUploadOutline } from "react-icons/io5";
 import { useRouter } from "next/router";
 
 const Page: NextPage = () => {
@@ -26,13 +26,12 @@ const Page: NextPage = () => {
   );
   const [prizeNameJp, setPrizeNameJp] = useState<string>("");
   const [prizeNameEn, setPrizeNameEn] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>();
+  const [imageFile, setImageFile] = useState<File>();
   const [preview, setPreview] = useState({ uploadImageURL: "", type: "" });
   const [bucketName, setBucketName] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
   const [fileType, setFileType] = useState<string>("");
-
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -54,26 +53,29 @@ const Page: NextPage = () => {
     }
   }, [data]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const targetFile = e.target.files![0]!;
-    if (!targetFile) {
-      setPreview({ uploadImageURL: "", type: "" });
-      return;
-    }
-    setImageFile(targetFile);
-    setPreview({
-      uploadImageURL: URL.createObjectURL(targetFile),
-      type: targetFile.type,
-    });
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const targetFile = e.target.files![0]!;
+      if (!targetFile) {
+        setPreview({ uploadImageURL: "", type: "" });
+        return;
+      }
+      setImageFile(targetFile);
+      setPreview({
+        uploadImageURL: URL.createObjectURL(targetFile),
+        type: targetFile.type,
+      });
 
-    const bucketName = process.env.NEXT_PUBLIC_BUCKET_NAME;
-    const fileName = targetFile.name;
-    const fileType = targetFile.type;
+      const bucketName = process.env.NEXT_PUBLIC_BUCKET_NAME;
+      const fileName = targetFile.name;
+      const fileType = targetFile.type;
 
-    setBucketName(bucketName || "");
-    setFileName(fileName);
-    setFileType(fileType);
-  };
+      setBucketName(bucketName || "");
+      setFileName(fileName);
+      setFileType(fileType);
+    },
+    [],
+  );
 
   const insertPrize = async (imageId: number) => {
     postPrize({
@@ -86,6 +88,7 @@ const Page: NextPage = () => {
     });
     setPrizeNameJp("");
     setPrizeNameEn("");
+    setPreview({ uploadImageURL: "", type: "" });
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -177,7 +180,7 @@ const Page: NextPage = () => {
       {isLoading && <Loading />}
       <div>
         <Header user="Admin">
-          <button></button>
+          <button />
         </Header>
         <div className={styles.input_group}>
           <div className={styles.input_group_content}>
