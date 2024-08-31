@@ -20,7 +20,7 @@ const PrizeCard = (props: PrizeCardProps) => {
   const prizeImage = bingoPrize.image;
 
   const imageURL: string = prizeImage
-    ? `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${prizeImage.bucketName}/${prizeImage.fileName}`
+    ? `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${prizeImage.bucketName}/${prizeImage.fileName}`
     : "";
 
   return (
