@@ -4,6 +4,7 @@ import type { GetListPrizesQuery } from "@/type/graphql";
 import { useRouter } from "next/router";
 import classNames from "classnames";
 import { en, ja } from "@/locales";
+import Image from "next/image";
 
 interface PrizeCardProps {
   BingoPrize: GetListPrizesQuery["prizes"][number];
@@ -33,15 +34,9 @@ const PrizeCard = (props: PrizeCardProps) => {
             height: "100%",
           }}
         >
-          <img
-            src={imageURL}
-            alt="PrizeImage"
-            style={{
-              objectFit: "cover",
-              width: "100%",
-              height: "100%",
-            }}
-          />
+          <div className={styles.imageWrapper}>
+            <Image src={imageURL} alt="PrizeImage" layout="fill" />
+          </div>
         </div>
         {bingoPrize.isWon && (
           <div className={classNames(styles.overlay, styles.center)}>
