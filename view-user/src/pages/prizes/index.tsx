@@ -1,9 +1,8 @@
 import type { NextPage } from "next";
-import styles from "./prizes.module.css";
 import { PrizeCardList, Loading, Layout } from "@/components";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import { ja, en } from "../../locales";
+import { ja, en } from "@/locales";
 import { useQuery, useSubscription } from "@apollo/client";
 import {
   GetListPrizesDocument,
@@ -53,17 +52,15 @@ const Page: NextPage = () => {
   return (
     <>
       {loading && <Loading />}
-      <div className={styles.container}>
-        <Layout
-          pageName={pageName}
-          isSortedAscending={isSortedAscending}
-          setIsSortedAscending={setIsSortedAscending}
-          language={language}
-          setLanguage={setLanguage}
-        >
-          <PrizeCardList BingoPrize={bingoPrize} />
-        </Layout>
-      </div>
+      <Layout
+        pageName={pageName}
+        isSortedAscending={isSortedAscending}
+        setIsSortedAscending={setIsSortedAscending}
+        language={language}
+        setLanguage={setLanguage}
+      >
+        <PrizeCardList BingoPrize={bingoPrize} />
+      </Layout>
     </>
   );
 };
