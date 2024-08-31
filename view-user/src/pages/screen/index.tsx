@@ -210,7 +210,7 @@ const Page: NextPage = () => {
           <div className={styles.column}>
             <NumberCardList screen bingoNumber={displayBingoNumbers.list} />
             {/* // TODO オプショナルでエラーを逃れているのを対処する */}
-            <ReachCount count={reachLog?.reachLogs[0].reachNum || 0} />
+            <ReachCount count={reachLog?.reachLogs[0]?.reachNum || 0} />
           </div>
         </div>
       </div>
