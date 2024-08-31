@@ -2141,6 +2141,55 @@ export type UpdateOnePrizeIsWonMutation = {
   } | null;
 };
 
+export type GetOneLatestReachLogQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetOneLatestReachLogQuery = {
+  __typename?: "query_root";
+  reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
+};
+
+export type SubscribeOneLatestReachlogSubscriptionVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type SubscribeOneLatestReachlogSubscription = {
+  __typename?: "subscription_root";
+  reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
+};
+
+export type GetListReachLogsAfterTimestampQueryVariables = Exact<{
+  timestamp: Scalars["timestamptz"]["input"];
+}>;
+
+export type GetListReachLogsAfterTimestampQuery = {
+  __typename?: "query_root";
+  reachLogs: Array<{
+    __typename?: "ReachLogs";
+    id: number;
+    status: boolean;
+    createdAt: any;
+    reachNum: number;
+  }>;
+};
+
+export type CreateOneReachRecordMutationVariables = Exact<{
+  status: Scalars["Boolean"]["input"];
+  reachNum: Scalars["Int"]["input"];
+}>;
+
+export type CreateOneReachRecordMutation = {
+  __typename?: "mutation_root";
+  insertReachLogsOne?: {
+    __typename?: "ReachLogs";
+    id: number;
+    status: boolean;
+    createdAt: any;
+    reachNum: number;
+  } | null;
+};
+
 export const CreateOneImageDocument = gql`
   mutation CreateOneImage(
     $bucketName: String!
@@ -2401,4 +2450,63 @@ export type UpdateOnePrizeIsWonMutationResult =
 export type UpdateOnePrizeIsWonMutationOptions = Apollo.BaseMutationOptions<
   UpdateOnePrizeIsWonMutation,
   UpdateOnePrizeIsWonMutationVariables
+>;
+export const GetOneLatestReachLogDocument = gql`
+  query GetOneLatestReachLog {
+    reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
+      reachNum
+    }
+  }
+`;
+export type GetOneLatestReachLogQueryResult = Apollo.QueryResult<
+  GetOneLatestReachLogQuery,
+  GetOneLatestReachLogQueryVariables
+>;
+export const SubscribeOneLatestReachlogDocument = gql`
+  subscription SubscribeOneLatestReachlog {
+    reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
+      reachNum
+    }
+  }
+`;
+export type SubscribeOneLatestReachlogSubscriptionResult =
+  Apollo.SubscriptionResult<SubscribeOneLatestReachlogSubscription>;
+export const GetListReachLogsAfterTimestampDocument = gql`
+  query GetListReachLogsAfterTimestamp($timestamp: timestamptz!) {
+    reachLogs(
+      where: { createdAt: { _gt: $timestamp } }
+      orderBy: { createdAt: ASC }
+    ) {
+      id
+      status
+      createdAt
+      reachNum
+    }
+  }
+`;
+export type GetListReachLogsAfterTimestampQueryResult = Apollo.QueryResult<
+  GetListReachLogsAfterTimestampQuery,
+  GetListReachLogsAfterTimestampQueryVariables
+>;
+export const CreateOneReachRecordDocument = gql`
+  mutation CreateOneReachRecord($status: Boolean!, $reachNum: Int!) {
+    insertReachLogsOne(
+      object: { status: $status, reachNum: $reachNum, createdAt: "now()" }
+    ) {
+      id
+      status
+      createdAt
+      reachNum
+    }
+  }
+`;
+export type CreateOneReachRecordMutationFn = Apollo.MutationFunction<
+  CreateOneReachRecordMutation,
+  CreateOneReachRecordMutationVariables
+>;
+export type CreateOneReachRecordMutationResult =
+  Apollo.MutationResult<CreateOneReachRecordMutation>;
+export type CreateOneReachRecordMutationOptions = Apollo.BaseMutationOptions<
+  CreateOneReachRecordMutation,
+  CreateOneReachRecordMutationVariables
 >;
