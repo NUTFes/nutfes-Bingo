@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import styles from "./PrizeResult.module.css";
-import Image from "next/image";
 import { useMutation } from "@apollo/client";
 import { UpdateOnePrizeIsWonDocument } from "@/type/graphql";
 import type {
@@ -29,13 +28,12 @@ export const PrizeResult = (props: PrizeResultProps) => {
     UpdateOnePrizeIsWonMutationVariables
   >(UpdateOnePrizeIsWonDocument);
 
-  // TODO ENDPONT のスペリングミスを修正
   // imageURLs を string[] 型にするための修正
   const imageURLs: string[] = props.prizeResult.map((prize) => {
     if (prize.image) {
       const { bucketName, fileName } = prize.image;
       console.log(prize.image.bucketName);
-      return `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${bucketName}/${fileName}`;
+      return `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${bucketName}/${fileName}`;
     } else {
       return "";
     }
@@ -74,14 +72,6 @@ export const PrizeResult = (props: PrizeResultProps) => {
                     height: "100%",
                   }}
                 >
-                  {/* <Image
-                    src={imageURLs && imageURLs[index]}
-                    className={styles.image}
-                    alt="PrizeImage"
-                    fill
-                    style={{ objectFit: "cover" }}
-                    onLoadingComplete={imageVisibility}
-                  /> */}
                   <img
                     src={imageURLs && imageURLs[index]}
                     className="image"
