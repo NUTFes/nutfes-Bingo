@@ -40,7 +40,7 @@ const PrizeCard = (props: PrizeCardProps) => {
         </div>
         {bingoPrize.isWon && (
           <div className={classNames(styles.overlay, styles.center)}>
-            <p className={styles.center}></p>
+            <p className={styles.center}>当選済み</p>
           </div>
         )}
       </div>
