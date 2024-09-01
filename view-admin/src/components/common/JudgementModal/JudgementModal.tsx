@@ -57,11 +57,12 @@ const JudgementModal = ({
       const currentValue = newNumbers[currentBox];
       const prevValue = currentBox > 0 ? newNumbers[currentBox - 1] : null;
 
-      if (currentValue === "" && value === "0") return;
-
+      if (currentValue === "" && value === "0")
+        setCurrentBox(Math.min(currentBox + 1, 4));
+      if (currentValue === "0" && value === "0") return;
       const newValue = currentValue + value;
       const newValueNum = parseInt(newValue);
-      if (newValueNum < 0 || newValueNum > 99 || newValue === prevValue) return;
+      if (newValueNum < 0 || newValueNum > 99) return;
 
       newNumbers[currentBox] = newValue;
       setNumbers(newNumbers);
