@@ -47,7 +47,7 @@
 
 .card_content {
   font-size: clamp(4px, calc(100vw / 10), 18px);
-  color: #ffffff;
+  color: #07033e;
   display: flex;
   flex-direction: column;
   justify-content: center;
