@@ -56,7 +56,7 @@ const Layout = (props: LayoutProps) => {
     useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] =
     useState<boolean>(false);
-  const [isSortOrderActive, setIsSortOrderActive] = useState(false);
+  const [isSortOrderActive, setIsSortOrderActive] = useState<boolean>(false);
   const [isReachModalOpen, setIsReachModalOpen] = useState<boolean>(false);
   const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
   const [isFlag, setIsFlag] = useState<boolean>(false);
@@ -90,6 +90,15 @@ const Layout = (props: LayoutProps) => {
     if (storedVisibility !== null) {
       setReachIconVisible(storedVisibility === "true");
     }
+
+    const storedSortOrder = localStorage.getItem("isSortedAscending");
+    if (storedSortOrder !== null) {
+      const isSortedAscending = storedSortOrder === "true";
+      props.setIsSortedAscending?.(isSortedAscending);
+      setIsSortOrderActive(isSortedAscending);
+    } else {
+      localStorage.setItem("isSortedAscending", "false");
+    }
   }, []);
 
   const handleReactionsiconClick = (id: number) => {
@@ -118,9 +127,11 @@ const Layout = (props: LayoutProps) => {
 
   const toggleSortOrder = () => {
     if (props.setIsSortedAscending) {
-      props.setIsSortedAscending(!props.isSortedAscending);
+      const newSortOrder = !props.isSortedAscending;
+      localStorage.setItem("isSortedAscending", newSortOrder.toString());
+      props.setIsSortedAscending(newSortOrder);
+      setIsSortOrderActive(newSortOrder);
     }
-    setIsSortOrderActive(!isSortOrderActive);
   };
 
   const toggleLanguage = () => {
