@@ -3,7 +3,7 @@
 connection_count=0
 max_connection_count=0
 
-sudo docker compose -f docker-compose.prod.yml logs -f api | while read -r line
+sudo docker compose -f docker-compose.prod.yml logs -f api 2>/dev/null | while read -r line
 do
   if echo "$line" | grep -q "accepted"; then
     ((connection_count++))
