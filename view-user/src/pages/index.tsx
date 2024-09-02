@@ -23,8 +23,8 @@ const getDisplayBingoNumbers = (
   const firstBingoNumber = getFirstBingoNumber(bingoNumbers);
   const sortedBingoNumber = getSortedBingoNumber(bingoNumbers);
   return isSortedAscending
-    ? { large: firstBingoNumber, list: bingoNumbers.slice(0, -1).reverse() }
-    : { list: sortedBingoNumber };
+    ? { list: sortedBingoNumber }
+    : { large: firstBingoNumber, list: bingoNumbers.slice(0, -1).reverse() };
 };
 
 const Page: NextPage = () => {
@@ -71,7 +71,7 @@ const Page: NextPage = () => {
         setLanguage={setLanguage}
       >
         <div className={styles.numberCardLarge}>
-          {isSortedAscending && displayBingoNumbers.large && (
+          {!isSortedAscending && displayBingoNumbers.large && (
             <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
           )}
           <NumberCardList bingoNumber={displayBingoNumbers.list} />
