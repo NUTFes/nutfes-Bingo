@@ -56,7 +56,6 @@ const JudgementModal = ({
     if (currentBox < 5) {
       const newNumbers = [...numbers];
       const currentValue = newNumbers[currentBox];
-      const prevValue = currentBox > 0 ? newNumbers[currentBox - 1] : null;
       const newValue = currentValue + value;
       const newValueNum = parseInt(newValue);
       if (value === "0") {
