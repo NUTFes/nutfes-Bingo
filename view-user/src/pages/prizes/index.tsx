@@ -32,7 +32,7 @@ const Page: NextPage = () => {
 
   useEffect(() => {
     if (query) {
-      setBingoPrize(query.prizes);
+      setBingoPrize(query?.prizes);
     }
   }, [query]);
 

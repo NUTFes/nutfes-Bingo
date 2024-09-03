@@ -46,7 +46,7 @@ const Page: NextPage = () => {
 
   const updateBingoNumbers = useCallback(() => {
     if (data) {
-      setBingoNumbers(data.numbers);
+      setBingoNumbers(data?.numbers);
     }
   }, [data]);
 
