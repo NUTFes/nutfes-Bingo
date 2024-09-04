@@ -111,13 +111,13 @@ const Page: NextPage = () => {
 
     const x = Math.random() * window.innerWidth;
     const image = images[key];
-    const circle = Matter.Bodies.circle(x, 0, 70, {
+    const circle = Matter.Bodies.circle(x, 0, 35, {
       restitution: 0.8,
       render: {
         sprite: {
           texture: image,
-          xScale: 0.2,
-          yScale: 0.2,
+          xScale: 0.1,
+          yScale: 0.1,
         },
       },
     });
