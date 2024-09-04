@@ -21,6 +21,7 @@ const JudgementModal = ({
   const [isJudgementClicked, setIsJudgementClicked] = useState<boolean>(false);
   const [currentBox, setCurrentBox] = useState(0);
   const [resultClass, setResultClass] = useState<string>("");
+  const nextInputBox = Math.min(currentBox + 1, 4);
 
   useEffect(() => {
     if (isJudgementClicked) {
@@ -55,17 +56,20 @@ const JudgementModal = ({
     if (currentBox < 5) {
       const newNumbers = [...numbers];
       const currentValue = newNumbers[currentBox];
-      const prevValue = currentBox > 0 ? newNumbers[currentBox - 1] : null;
-
-      if (currentValue === "" && value === "0") return;
-
       const newValue = currentValue + value;
       const newValueNum = parseInt(newValue);
-      if (newValueNum < 0 || newValueNum > 99 || newValue === prevValue) return;
+      if (value === "0") {
+        if (currentValue === "") {
+          setCurrentBox(nextInputBox);
+        } else if (currentValue === "0") {
+          return;
+        }
+      }
+      if (newValueNum < 0 || newValueNum > 99) return;
 
       newNumbers[currentBox] = newValue;
       setNumbers(newNumbers);
-      if (newValueNum > 9) setCurrentBox(Math.min(currentBox + 1, 4));
+      if (newValueNum > 9) setCurrentBox(nextInputBox);
     }
   };
 
@@ -100,7 +104,7 @@ const JudgementModal = ({
   };
 
   const handleNext = () => {
-    setCurrentBox(Math.min(currentBox + 1, 4));
+    setCurrentBox(nextInputBox);
   };
 
   const buttons = [
