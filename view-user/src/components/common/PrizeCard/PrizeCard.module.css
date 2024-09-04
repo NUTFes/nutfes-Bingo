@@ -32,7 +32,6 @@
 }
 
 .overlay {
-  /* TODO オーバーレイのcssを改良する */
   position: absolute;
   top: 0;
   left: 0;
@@ -48,7 +47,6 @@
   font-size: 4vw;
   font-weight: 700;
   color: #fff;
-  background-color: #ff3342;
 }
 
 /* 中央配置使いまわす用 */
