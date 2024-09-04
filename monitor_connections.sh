@@ -7,7 +7,9 @@ HEADER_COLOR='\033[38;5;196m'
 DATA_COLOR='\033[38;5;222m'
 RESET_COLOR='\033[0m'
 
-sudo docker compose -f docker-compose.prod.yml logs -f api 2>/dev/null | while read -r line; do
+DOCKER_COMPOSE_FILE=${1:-docker-compose.prod.yml}
+
+sudo docker compose -f "$DOCKER_COMPOSE_FILE" logs -f api 2>/dev/null | while read -r line; do
   if [[ "$line" == *"accepted"* ]]; then
     ((current_connections++))
     if ((current_connections > max_connections)); then
