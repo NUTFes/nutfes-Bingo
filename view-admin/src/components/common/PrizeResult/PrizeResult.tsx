@@ -74,7 +74,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
                   />
                   {props.showOverlay && prizeResult.isWon && (
                     <div className={styles.overlay}>
-                      <p className={styles.overlayText}>当選済み</p>
+                      <p>当選済み</p>
                     </div>
                   )}
                 </div>
