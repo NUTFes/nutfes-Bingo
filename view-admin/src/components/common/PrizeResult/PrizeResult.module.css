@@ -40,9 +40,13 @@
   aspect-ratio: 1 / 1;
   position: relative;
   border-radius: 3px;
-  border: 1px solid #333;
+  border: 1px solid #ff3342;
   display: flex;
   flex-direction: column;
+  border: 1.25vw solid #ff3342;
+  border-radius: 3.125vw;
+  box-sizing: border-box;
+  box-shadow: 0.9375vw 0.9375vw 0px #ff3342;
 }
 
 .card_content {
@@ -52,16 +56,13 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  margin-bottom: 0.3rem;
 }
 
 @media (max-width: 720px) {
   .card_content {
     font-weight: normal;
   }
-}
-
-.img {
-  height: 100%;
 }
 
 .card_overlay {
@@ -86,8 +87,7 @@
   top: 50%;
   width: 100%;
   font-size: 2rem;
-  color: #ffffff;
-  background-color: #07033e;
+  color: #fff;
 }
 
 .toggle_input {
@@ -127,12 +127,12 @@
 }
 
 .toggle_input:checked + .toggle_label {
-  border: 3px solid #d95b7f;
+  border: 3px solid #ff3342;
 }
 
 .toggle_input:checked + .toggle_label:after {
   left: 42px;
-  background: #d95b7f;
+  background: #ff3342;
 }
 
 .toggle-button {
@@ -179,7 +179,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 3px;
+  border-radius: 2.1vw 2.1vw 0 0;
   background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
@@ -193,10 +193,9 @@
   line-height: 1.8;
   width: 100%;
   height: 35%;
-  font-size: clamp(0.5rem, calc(100vw / 15), 4.8rem);
+  font-size: 5vw;
   font-weight: 700;
-  color: #d95b7f;
-  background-color: #07033e;
+  color: #fff;
 }
 
 .toggle_container {
@@ -404,4 +403,11 @@
 
 .hidden {
   display: none;
+}
+
+.image {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius:"2.1vw 2.1vw 0 0";
 }
