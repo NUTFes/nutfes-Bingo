@@ -67,41 +67,22 @@ export const PrizeResult = (props: PrizeResultProps) => {
                 key={prizeResult.id}
                 id={`prize-${prizeResult.id}`}
               >
-                <div
-                  style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
-                  }}
-                >
-                  {/* <Image
+                <div className={styles.image}>
+                  <Image
                     src={imageURLs && imageURLs[index]}
-                    className={styles.image}
                     alt="PrizeImage"
                     fill
-                    style={{ objectFit: "cover" }}
-                    onLoadingComplete={imageVisibility}
-                  /> */}
-                  <img
-                    src={imageURLs && imageURLs[index]}
-                    className="image"
-                    alt="PrizeImage"
-                    style={{
-                      objectFit: "cover",
-                      width: "100%",
-                      height: "100%",
-                    }}
                     onLoad={imageVisibility}
                   />
+                  {props.showOverlay && prizeResult.isWon && (
+                    <div className={styles.overlay}>
+                      <p>当選済み</p>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.card_content}>
                   <p>{prizeResult.nameJp}</p>
                 </div>
-                {props.showOverlay && prizeResult.isWon && (
-                  <div className={styles.overlay}>
-                    <p>当選！</p>
-                  </div>
-                )}
                 {props.showToggle && (
                   <div className={styles.toggle_container}>
                     <div className={styles.toggle_button}>
