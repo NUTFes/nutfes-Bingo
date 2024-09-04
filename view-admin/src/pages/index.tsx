@@ -139,7 +139,7 @@ const Page: NextPage = () => {
     }
   }, [data]);
 
-  // if (session) {
+  if (session) {
   return (
     <div className={styles.container}>
       <JudgementModal
@@ -282,18 +282,18 @@ const Page: NextPage = () => {
   );
 };
 
-//   return (
-//     <div className={styles.loginContainer}>
-//       <Header user="Admin Login">
-//         <div className={styles.main}></div>
-//       </Header>
-//       <div className={styles.loginButton}>
-//         <Button size="l" shape="square" onClick={() => signIn()}>
-//           Log in
-//         </Button>
-//       </div>
-//     </div>
-//   );
-// };
+  return (
+    <div className={styles.loginContainer}>
+      <Header user="Admin Login">
+        <div className={styles.main}></div>
+      </Header>
+      <div className={styles.loginButton}>
+        <Button size="l" shape="square" onClick={() => signIn()}>
+          Log in
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 export default Page;
