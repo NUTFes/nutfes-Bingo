@@ -38,7 +38,7 @@
 }
 
 .cardContent {
-  font-size: clamp(4px, calc(100vw / 10), 18px);
+  font-size: 5vw;
   color: #07033e;
   display: flex;
   flex-direction: column;
@@ -350,6 +350,10 @@
 }
 
 @media (min-width: 768px) {
+  .cardContent {
+    font-size: 2vw;
+  }
+
   .overlayText {
     font-size: 4vw;
   }
