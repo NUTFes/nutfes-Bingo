@@ -1,4 +1,4 @@
-import { useLazyQuery, useMutation, useSubscription } from "@apollo/client";
+import { useMutation, useSubscription } from "@apollo/client";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -17,14 +17,13 @@ import {
   CreateOneNumberDocument,
   DeleteOneNumberDocument,
   SubscribeListNumbersDocument,
-  GetOneLatestReachLogDocument,
-  CreateOneReachRecordDocument,
+  IncrementReachNumDocument,
+  DecrementReachNumDocument,
 } from "@/type/graphql";
 import type {
   SubscribeListNumbersSubscription,
-  GetOneLatestReachLogQuery,
-  CreateOneReachRecordMutation,
-  CreateOneReachRecordMutationVariables,
+  IncrementReachNumMutation,
+  DecrementReachNumMutation,
 } from "@/type/graphql";
 
 interface formDataCreate {
@@ -48,13 +47,13 @@ const Page: NextPage = () => {
   const [isOpenUpdateNumberModal, setIsOpenUpdateNumberModal] =
     useState<boolean>(false);
 
-  const [getLatestReachLog, { data: latestReachLogData }] =
-    useLazyQuery<GetOneLatestReachLogQuery>(GetOneLatestReachLogDocument);
+  const [incrementReach] = useMutation<IncrementReachNumMutation>(
+    IncrementReachNumDocument,
+  );
 
-  const [createOneReachRecord] = useMutation<
-    CreateOneReachRecordMutation,
-    CreateOneReachRecordMutationVariables
-  >(CreateOneReachRecordDocument);
+  const [decrementReach] = useMutation<DecrementReachNumMutation>(
+    DecrementReachNumDocument,
+  );
 
   const {
     register: registerCreate,
@@ -108,39 +107,6 @@ const Page: NextPage = () => {
     }
   };
 
-  // TODO try-catchでエラーハンドリングが必要かどうかを検討する
-  const handleReachCountUp = async () => {
-    try {
-      const { data, refetch } = await getLatestReachLog();
-      const latestReachLogNumber = data?.reachLogs[0]?.reachNum || 0;
-      await createOneReachRecord({
-        variables: {
-          status: true,
-          reachNum: latestReachLogNumber + 1,
-        },
-      });
-      refetch(); // クエリをリフレッシュ
-    } catch (error) {
-      console.error("Failed to record reach:", error);
-    }
-  };
-
-  // TODO try-catchでエラーハンドリングが必要かどうかを検討する
-  const handleReachCountDown = async () => {
-    try {
-      const { data, refetch } = await getLatestReachLog();
-      const latestReachLogNumber = data?.reachLogs[0]?.reachNum || 0;
-      await createOneReachRecord({
-        variables: {
-          status: false,
-          reachNum: latestReachLogNumber - 1,
-        },
-      });
-      refetch();
-    } catch (error) {
-      console.error("Failed to record reach:", error);
-    }
-  };
   //subscriptionを行うためのuseEffect
   useEffect(() => {
     if (data) {
@@ -278,14 +244,14 @@ const Page: NextPage = () => {
               <button
                 type="button"
                 className={styles.Button}
-                onClick={handleReachCountUp}
+                onClick={() => incrementReach()}
               >
                 リーチ数を 1 増加する
               </button>
               <button
                 type="button"
                 className={styles.Button}
-                onClick={handleReachCountDown}
+                onClick={() => decrementReach()}
               >
                 リーチ数を 1 減少する
               </button>

@@ -1358,6 +1358,8 @@ export type TimestamptzComparisonExp = {
 /** mutation root */
 export type MutationRoot = {
   __typename?: "mutation_root";
+  /** execute VOLATILE function "decrement_latest_reach_log" which returns "reach_logs" */
+  decrementLatestReachLog: Array<ReachLogs>;
   /** delete data from the table: "images" */
   deleteImages?: Maybe<ImagesMutationResponse>;
   /** delete single row from the table: "images" */
@@ -1378,6 +1380,8 @@ export type MutationRoot = {
   deleteStampTriggers?: Maybe<StampTriggersMutationResponse>;
   /** delete single row from the table: "stamp_triggers" */
   deleteStampTriggersByPk?: Maybe<StampTriggers>;
+  /** execute VOLATILE function "increment_latest_reach_log" which returns "reach_logs" */
+  incrementLatestReachLog: Array<ReachLogs>;
   /** insert data into the table: "images" */
   insertImages?: Maybe<ImagesMutationResponse>;
   /** insert a single row into the table: "images" */
@@ -1431,6 +1435,15 @@ export type MutationRoot = {
 };
 
 /** mutation root */
+export type MutationRootDecrementLatestReachLogArgs = {
+  distinctOn?: InputMaybe<Array<ReachLogsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
+};
+
+/** mutation root */
 export type MutationRootDeleteImagesArgs = {
   where: ImagesBoolExp;
 };
@@ -1478,6 +1491,15 @@ export type MutationRootDeleteStampTriggersArgs = {
 /** mutation root */
 export type MutationRootDeleteStampTriggersByPkArgs = {
   id: Scalars["Int"]["input"];
+};
+
+/** mutation root */
+export type MutationRootIncrementLatestReachLogArgs = {
+  distinctOn?: InputMaybe<Array<ReachLogsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
 };
 
 /** mutation root */
@@ -2192,6 +2214,36 @@ export type CreateOneReachRecordMutation = {
   } | null;
 };
 
+export type IncrementReachNumMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type IncrementReachNumMutation = {
+  __typename?: "mutation_root";
+  incrementLatestReachLog: Array<{
+    __typename?: "ReachLogs";
+    id: number;
+    reachNum: number;
+    status: boolean;
+    createdAt: any;
+  }>;
+};
+
+export type DecrementReachNumMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type DecrementReachNumMutation = {
+  __typename?: "mutation_root";
+  decrementLatestReachLog: Array<{
+    __typename?: "ReachLogs";
+    id: number;
+    reachNum: number;
+    status: boolean;
+    createdAt: any;
+  }>;
+};
+
 export const CreateOneImageDocument = gql`
   mutation CreateOneImage(
     $bucketName: String!
@@ -2532,4 +2584,44 @@ export type CreateOneReachRecordMutationResult =
 export type CreateOneReachRecordMutationOptions = Apollo.BaseMutationOptions<
   CreateOneReachRecordMutation,
   CreateOneReachRecordMutationVariables
+>;
+export const IncrementReachNumDocument = gql`
+  mutation IncrementReachNum {
+    incrementLatestReachLog {
+      id
+      reachNum
+      status
+      createdAt
+    }
+  }
+`;
+export type IncrementReachNumMutationFn = Apollo.MutationFunction<
+  IncrementReachNumMutation,
+  IncrementReachNumMutationVariables
+>;
+export type IncrementReachNumMutationResult =
+  Apollo.MutationResult<IncrementReachNumMutation>;
+export type IncrementReachNumMutationOptions = Apollo.BaseMutationOptions<
+  IncrementReachNumMutation,
+  IncrementReachNumMutationVariables
+>;
+export const DecrementReachNumDocument = gql`
+  mutation DecrementReachNum {
+    decrementLatestReachLog {
+      id
+      reachNum
+      status
+      createdAt
+    }
+  }
+`;
+export type DecrementReachNumMutationFn = Apollo.MutationFunction<
+  DecrementReachNumMutation,
+  DecrementReachNumMutationVariables
+>;
+export type DecrementReachNumMutationResult =
+  Apollo.MutationResult<DecrementReachNumMutation>;
+export type DecrementReachNumMutationOptions = Apollo.BaseMutationOptions<
+  DecrementReachNumMutation,
+  DecrementReachNumMutationVariables
 >;
