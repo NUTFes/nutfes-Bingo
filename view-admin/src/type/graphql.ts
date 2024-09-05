@@ -2216,6 +2216,36 @@ export type DecrementReachNumMutation = {
   decrementLatestReachLog: Array<{ __typename?: "ReachLogs"; id: number }>;
 };
 
+export type IncrementReachNumMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type IncrementReachNumMutation = {
+  __typename?: "mutation_root";
+  incrementLatestReachLog: Array<{
+    __typename?: "ReachLogs";
+    id: number;
+    reachNum: number;
+    status: boolean;
+    createdAt: any;
+  }>;
+};
+
+export type DecrementReachNumMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type DecrementReachNumMutation = {
+  __typename?: "mutation_root";
+  decrementLatestReachLog: Array<{
+    __typename?: "ReachLogs";
+    id: number;
+    reachNum: number;
+    status: boolean;
+    createdAt: any;
+  }>;
+};
+
 export const CreateOneImageDocument = gql`
   mutation CreateOneImage(
     $bucketName: String!
@@ -2556,6 +2586,46 @@ export const DecrementReachNumDocument = gql`
   mutation DecrementReachNum {
     decrementLatestReachLog {
       id
+    }
+  }
+`;
+export type DecrementReachNumMutationFn = Apollo.MutationFunction<
+  DecrementReachNumMutation,
+  DecrementReachNumMutationVariables
+>;
+export type DecrementReachNumMutationResult =
+  Apollo.MutationResult<DecrementReachNumMutation>;
+export type DecrementReachNumMutationOptions = Apollo.BaseMutationOptions<
+  DecrementReachNumMutation,
+  DecrementReachNumMutationVariables
+>;
+export const IncrementReachNumDocument = gql`
+  mutation IncrementReachNum {
+    incrementLatestReachLog {
+      id
+      reachNum
+      status
+      createdAt
+    }
+  }
+`;
+export type IncrementReachNumMutationFn = Apollo.MutationFunction<
+  IncrementReachNumMutation,
+  IncrementReachNumMutationVariables
+>;
+export type IncrementReachNumMutationResult =
+  Apollo.MutationResult<IncrementReachNumMutation>;
+export type IncrementReachNumMutationOptions = Apollo.BaseMutationOptions<
+  IncrementReachNumMutation,
+  IncrementReachNumMutationVariables
+>;
+export const DecrementReachNumDocument = gql`
+  mutation DecrementReachNum {
+    decrementLatestReachLog {
+      id
+      reachNum
+      status
+      createdAt
     }
   }
 `;
