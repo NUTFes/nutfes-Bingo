@@ -29,13 +29,11 @@ export const PrizeResult = (props: PrizeResultProps) => {
     UpdateOnePrizeIsWonMutationVariables
   >(UpdateOnePrizeIsWonDocument);
 
-  // TODO ENDPONT のスペリングミスを修正
-  // imageURLs を string[] 型にするための修正
   const imageURLs: string[] = props.prizeResult.map((prize) => {
     if (prize.image) {
       const { bucketName, fileName } = prize.image;
       console.log(prize.image.bucketName);
-      return `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${bucketName}/${fileName}`;
+      return `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${bucketName}/${fileName}`;
     } else {
       return "";
     }
@@ -51,14 +49,14 @@ export const PrizeResult = (props: PrizeResultProps) => {
   };
 
   return (
-    <div className={styles.content_wrapper}>
+    <div className={styles.wrapper}>
       <div className={styles.container}>
-        <div className={styles.frame_title}>景品一覧</div>
+        <div className={styles.title}>景品一覧</div>
         <div
           id="loading"
-          className={isImageVisible ? styles.visible : styles.hidden}
+          className={isImageVisible ? styles.loading : styles.hidden}
         ></div>
-        <div className={styles.card_frame}>
+        <div className={styles.grid}>
           {[...props.prizeResult]
             .sort((a, b) => a.id - b.id)
             .map((prizeResult, index) => (
@@ -76,26 +74,26 @@ export const PrizeResult = (props: PrizeResultProps) => {
                   />
                   {props.showOverlay && prizeResult.isWon && (
                     <div className={styles.overlay}>
-                      <p>当選済み</p>
+                      <p className={styles.overlayText}>当選済み</p>
                     </div>
                   )}
                 </div>
-                <div className={styles.card_content}>
+                <div className={styles.cardContent}>
                   <p>{prizeResult.nameJp}</p>
                 </div>
                 {props.showToggle && (
-                  <div className={styles.toggle_container}>
-                    <div className={styles.toggle_button}>
+                  <div className={styles.toggleContainer}>
+                    <div className={styles.toggleButton}>
                       <input
                         id="toggle"
-                        className={styles.toggle_input}
+                        className={styles.toggleInput}
                         type="checkbox"
                         checked={prizeResult.isWon}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           handleToggleChange(prizeResult.id, e.target.checked)
                         }
                       />
-                      <label htmlFor="toggle" className={styles.toggle_label} />
+                      <label htmlFor="toggle" className={styles.toggleLabel} />
                     </div>
                   </div>
                 )}
