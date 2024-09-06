@@ -16,28 +16,28 @@ import {
   ToggleButton,
 } from "@/components/common";
 import {
-  UpdateOneTriggerFlagDocument,
+  CreateOneStampTriggerDocument,
   CreateOneReachRecordDocument,
   GetOneLatestReachLogDocument,
 } from "@/type/graphql";
 import type {
-  UpdateOneTriggerFlagMutation,
-  UpdateOneTriggerFlagMutationVariables,
-  CreateOneReachRecordMutationVariables,
+  CreateOneStampTriggerMutation,
+  CreateOneStampTriggerMutationVariables,
   CreateOneReachRecordMutation,
+  CreateOneReachRecordMutationVariables,
   GetOneLatestReachLogQuery,
 } from "@/type/graphql";
 import { ja, en } from "@/locales";
 
 const images = [
-  { id: 1, src: "/ReactionIcon/crap.png", alt: "crap icon" },
-  { id: 2, src: "/ReactionIcon/good.png", alt: " good icon" },
-  { id: 3, src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
-  { id: 4, src: "/ReactionIcon/heart.png", alt: "heart icon" },
-  { id: 5, src: "/ReactionIcon/smile.png", alt: "smile icon" },
-  { id: 6, src: "/ReactionIcon/angry.png", alt: "angry icon" },
-  { id: 7, src: "/ReactionIcon/skull.png", alt: "skull icon" },
-  { id: 8, src: "/ReactionIcon/sad.png", alt: "sad icon" },
+  { name: "crap", src: "/ReactionIcon/crap.png", alt: "crap icon" },
+  { name: "good", src: "/ReactionIcon/good.png", alt: " good icon" },
+  { name: "crakcer", src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
+  { name: "heart", src: "/ReactionIcon/heart.png", alt: "heart icon" },
+  { name: "smile", src: "/ReactionIcon/smile.png", alt: "smile icon" },
+  { name: "angry", src: "/ReactionIcon/angry.png", alt: "angry icon" },
+  { name: "skull", src: "/ReactionIcon/skull.png", alt: "skull icon" },
+  { name: "sad", src: "/ReactionIcon/sad.png", alt: "sad icon" },
 ];
 
 interface LayoutProps {
@@ -59,15 +59,13 @@ const Layout = (props: LayoutProps) => {
   const [isSortOrderActive, setIsSortOrderActive] = useState<boolean>(false);
   const [isReachModalOpen, setIsReachModalOpen] = useState<boolean>(false);
   const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
-  const [isFlag, setIsFlag] = useState<boolean>(false);
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
   const position: string = isReachIconVisible ? "29%" : "50%";
-  const [updateFlag] = useMutation<
-    UpdateOneTriggerFlagMutation,
-    UpdateOneTriggerFlagMutationVariables
-  >(UpdateOneTriggerFlagDocument);
-
+  const [createStampRecord] = useMutation<
+    CreateOneStampTriggerMutation,
+    CreateOneStampTriggerMutationVariables
+  >(CreateOneStampTriggerDocument);
   const [getLatestReachLog, { data: latestReachLogData }] =
     useLazyQuery<GetOneLatestReachLogQuery>(GetOneLatestReachLogDocument);
 
@@ -75,7 +73,7 @@ const Layout = (props: LayoutProps) => {
     CreateOneReachRecordMutation,
     CreateOneReachRecordMutationVariables
   >(CreateOneReachRecordDocument);
-
+  5;
   // navBarの高さをstring型で渡す
   useLayoutEffect(() => {
     if (navRef.current) {
@@ -101,9 +99,8 @@ const Layout = (props: LayoutProps) => {
     }
   }, []);
 
-  const handleReactionsiconClick = (id: number) => {
-    setIsFlag(!isFlag);
-    updateFlag({ variables: { id, trigger: isFlag } });
+  const handleReactionsiconClick = (name: string) => {
+    createStampRecord({ variables: { name } });
   };
 
   const handleReachIconClick = async () => {
