@@ -68,10 +68,21 @@
   aspect-ratio: 1 / 1;
 }
 
-.iconButton:hover {
-  background-color: #cbcbcb;
+.iconButton:active {
+  animation: mochimochi 1.5s infinite;
 }
 
-.iconButton:active {
-  background-color: #007bff1a;
+@keyframes mochimochi {
+  0% {
+    transform: scale(1, 0.8);
+  }
+  20% {
+    transform: scale(0.8, 1.1);
+  }
+  90% {
+    transform: scale(1, 1);
+  }
+  100% {
+    transform: scale(1, 0.8);
+  }
 }
