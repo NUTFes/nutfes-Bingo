@@ -22,6 +22,20 @@ mutation DeleteOneNumber($number: Int!) {
   }
 }
 
+# 番号の更新(Mutation)
+mutation UpdateOneNumber($id: Int!, $number: Int!) {
+  updateNumbers(
+    where: { id: { _eq: $id } }
+    _set: { number: $number }
+  ) {
+    affectedRows
+    returning {
+      id
+      number
+    }
+  }
+}
+
 # 番号の削除(Delete)
 subscription SubscribeListNumbers {
   numbers {
