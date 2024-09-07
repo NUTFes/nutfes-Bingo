@@ -21,3 +21,5 @@ export { default as ToggleButton } from "./ToggleButton";
 export { default as ReachIcon } from "./ReachIcon";
 export { default as NavigationBar } from "./NavigationBar";
 export { default as ReachCount } from "./ReachCount";
+export { default as Help } from "./Help";
+export { default as DotButton } from "./Dotbutton";
