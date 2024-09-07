@@ -2,14 +2,19 @@ import styles from "./Header.module.css";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { IoHelpCircleOutline } from "react-icons/io5";
-
-// ボタンの動作確認用の関数（後でヘルプに飛ぶようにする）
-const goHelp = function () {
-  console.log("1");
-};
+import { Help } from "@/components";
+import React, { useState } from "react";
 
 const Header = () => {
   const router = useRouter();
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const goHelp = () => {
+    setIsHelpOpen(true);
+  };
+  const closeHelp = () => {
+    setIsHelpOpen(!isHelpOpen);
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.main}>
@@ -25,6 +30,7 @@ const Header = () => {
           <IoHelpCircleOutline />
         </button>
       </div>
+      {isHelpOpen && <Help isOpened={isHelpOpen }  setIsOpened={ setIsHelpOpen}/>}
     </div>
   );
 };
