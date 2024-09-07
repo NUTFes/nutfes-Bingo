@@ -43,3 +43,8 @@
   font-weight: bold;
   color: #ffffff;
 }
+
+.button {
+  border: none;
+  outline: none;
+}
