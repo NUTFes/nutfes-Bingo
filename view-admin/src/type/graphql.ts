@@ -1104,10 +1104,9 @@ export type ReachLogsVarianceFields = {
 /** スタンプを降らせるためのAPI */
 export type StampTriggers = {
   __typename?: "StampTriggers";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
   id: Scalars["Int"]["output"];
   name: Scalars["String"]["output"];
-  trigger: Scalars["Boolean"]["output"];
-  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** aggregated selection of "stamp_triggers" */
@@ -1150,10 +1149,9 @@ export type StampTriggersBoolExp = {
   _and?: InputMaybe<Array<StampTriggersBoolExp>>;
   _not?: InputMaybe<StampTriggersBoolExp>;
   _or?: InputMaybe<Array<StampTriggersBoolExp>>;
+  createdAt?: InputMaybe<TimestamptzComparisonExp>;
   id?: InputMaybe<IntComparisonExp>;
   name?: InputMaybe<StringComparisonExp>;
-  trigger?: InputMaybe<BooleanComparisonExp>;
-  updatedAt?: InputMaybe<TimestamptzComparisonExp>;
 };
 
 /** unique or primary key constraints on table "stamp_triggers" */
@@ -1171,26 +1169,25 @@ export type StampTriggersIncInput = {
 
 /** input type for inserting data into table "stamp_triggers" */
 export type StampTriggersInsertInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
-  trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
-  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate max on columns */
 export type StampTriggersMaxFields = {
   __typename?: "StampTriggersMaxFields";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
   id?: Maybe<Scalars["Int"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
-  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** aggregate min on columns */
 export type StampTriggersMinFields = {
   __typename?: "StampTriggersMinFields";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
   id?: Maybe<Scalars["Int"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
-  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** response of any mutation on the table "stamp_triggers" */
@@ -1211,10 +1208,9 @@ export type StampTriggersOnConflict = {
 
 /** Ordering options when selecting data from "stamp_triggers". */
 export type StampTriggersOrderBy = {
+  createdAt?: InputMaybe<OrderBy>;
   id?: InputMaybe<OrderBy>;
   name?: InputMaybe<OrderBy>;
-  trigger?: InputMaybe<OrderBy>;
-  updatedAt?: InputMaybe<OrderBy>;
 };
 
 /** primary key columns input for table: stamp_triggers */
@@ -1225,21 +1221,18 @@ export type StampTriggersPkColumnsInput = {
 /** select columns of table "stamp_triggers" */
 export enum StampTriggersSelectColumn {
   /** column name */
+  createdAt = "createdAt",
+  /** column name */
   id = "id",
   /** column name */
   name = "name",
-  /** column name */
-  trigger = "trigger",
-  /** column name */
-  updatedAt = "updatedAt",
 }
 
 /** input type for updating data in table "stamp_triggers" */
 export type StampTriggersSetInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
-  trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
-  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate stddev on columns */
@@ -1270,10 +1263,9 @@ export type StampTriggersStreamCursorInput = {
 
 /** Initial value of the column from where the streaming should start */
 export type StampTriggersStreamCursorValueInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
-  trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
-  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate sum on columns */
@@ -1285,13 +1277,11 @@ export type StampTriggersSumFields = {
 /** update columns of table "stamp_triggers" */
 export enum StampTriggersUpdateColumn {
   /** column name */
+  createdAt = "createdAt",
+  /** column name */
   id = "id",
   /** column name */
   name = "name",
-  /** column name */
-  trigger = "trigger",
-  /** column name */
-  updatedAt = "updatedAt",
 }
 
 export type StampTriggersUpdates = {
@@ -2221,9 +2211,9 @@ export type IncrementReachNumMutation = {
   incrementLatestReachLog: Array<{
     __typename?: "ReachLogs";
     id: number;
-    reachNum: number;
     status: boolean;
     createdAt: any;
+    reachNum: number;
   }>;
 };
 
@@ -2236,9 +2226,9 @@ export type DecrementReachNumMutation = {
   decrementLatestReachLog: Array<{
     __typename?: "ReachLogs";
     id: number;
-    reachNum: number;
     status: boolean;
     createdAt: any;
+    reachNum: number;
   }>;
 };
 
@@ -2566,9 +2556,9 @@ export const IncrementReachNumDocument = gql`
   mutation IncrementReachNum {
     incrementLatestReachLog {
       id
-      reachNum
       status
       createdAt
+      reachNum
     }
   }
 `;
@@ -2586,9 +2576,9 @@ export const DecrementReachNumDocument = gql`
   mutation DecrementReachNum {
     decrementLatestReachLog {
       id
-      reachNum
       status
       createdAt
+      reachNum
     }
   }
 `;
