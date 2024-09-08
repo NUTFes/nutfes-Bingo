@@ -5,12 +5,12 @@ import Matter from "matter-js";
 import { useSubscription } from "@apollo/client";
 import {
   SubscribeListNumbersDocument,
-  SubscribeUpdatedStampTriggerDocument,
+  SubscribeCreatedStampTriggerDocument,
   SubscribeOneLatestReachlogDocument,
 } from "@/type/graphql";
 import type {
   SubscribeListNumbersSubscription,
-  SubscribeUpdatedStampTriggerSubscription,
+  SubscribeCreatedStampTriggerSubscription,
   SubscribeOneLatestReachlogSubscription,
 } from "@/type/graphql";
 import {
@@ -20,6 +20,7 @@ import {
 } from "@/components/common";
 import styles from "./screen.module.css";
 
+// 画像のパスを管理
 const images: { [key: string]: string } = {
   angry: "/ReactionIcon/angry.png",
   cracker: "/ReactionIcon/cracker.png",
@@ -33,8 +34,10 @@ const images: { [key: string]: string } = {
   surprise: "/ReactionIcon/surprise.png",
 };
 
-type StampState = {
-  [id: number]: string;
+type Stamp = {
+  id: number;
+  name: string;
+  createdAt: string;
 };
 
 type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
@@ -51,7 +54,7 @@ const Page: NextPage = () => {
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<string>(
+  const [latestCreatedAt, setLatestCreatedAt] = useState<string>(
     "2024-08-29T08:12:00",
   );
   const [bingoNumbers, setBingoNumbers] = useState<
@@ -65,44 +68,47 @@ const Page: NextPage = () => {
     },
   ]);
   const displayBingoNumbers = getDisplayBingoNumbers(bingoNumbers);
+
+  // Bingo番号リストのサブスクリプション
   const { data: numbers } = useSubscription(SubscribeListNumbersDocument);
+  // スタンプトリガーのサブスクリプション
   const { data: triggers } =
-    useSubscription<SubscribeUpdatedStampTriggerSubscription>(
-      SubscribeUpdatedStampTriggerDocument,
+    useSubscription<SubscribeCreatedStampTriggerSubscription>(
+      SubscribeCreatedStampTriggerDocument,
       {
-        variables: { updatedAt: lastUpdatedAt },
+        variables: { createdAt: latestCreatedAt },
       },
     );
+  // リーチログのサブスクリプション
   const { data: reachLog } =
     useSubscription<SubscribeOneLatestReachlogSubscription>(
       SubscribeOneLatestReachlogDocument,
     );
 
-  // スタンプの変更を検知し、スタンプを降下させる。
   useEffect(() => {
     if (triggers?.stampTriggers && triggers?.stampTriggers.length > 0) {
-      triggers.stampTriggers.forEach((stamp) => {
+      let latestCreatedAt = new Date(0).toISOString();
+
+      triggers.stampTriggers.forEach((stamp: Stamp) => {
         addCircleById(stamp.name);
+
+        if (new Date(stamp.createdAt) > new Date(latestCreatedAt)) {
+          latestCreatedAt = stamp.createdAt;
+        }
       });
-      const latestUpdatedAt = triggers.stampTriggers.reduce(
-        (latest, current) => {
-          return new Date(current.updatedAt) > new Date(latest)
-            ? current.updatedAt
-            : latest;
-        },
-        new Date(0).toISOString(),
-      );
-      setLastUpdatedAt(latestUpdatedAt);
+
+      setLatestCreatedAt(latestCreatedAt);
     }
   }, [triggers]);
 
-  //subscriptionを行うためのuseEffect
+  // ビンゴ番号のuseEffect
   useEffect(() => {
     if (numbers) {
       setBingoNumbers(numbers.numbers);
     }
   }, [numbers]);
 
+  // スタンプをMatter.jsで降らせる処理
   const addCircleById = (key: string) => {
     if (!images[key]) {
       console.warn(`Image with ID ${key} not found`);
@@ -133,6 +139,7 @@ const Page: NextPage = () => {
     }
   };
 
+  // Matter.jsのエンジン設定とシーンの初期化
   useEffect(() => {
     if (!scene.current) {
       return;
@@ -209,7 +216,6 @@ const Page: NextPage = () => {
           <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
           <div className={styles.column}>
             <NumberCardList screen bingoNumber={displayBingoNumbers.list} />
-            {/* // TODO オプショナルでエラーを逃れているのを対処する */}
             <ReachCount count={reachLog?.reachLogs[0]?.reachNum || 0} />
           </div>
         </div>
