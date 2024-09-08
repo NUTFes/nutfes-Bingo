@@ -41,17 +41,17 @@ mutation DecrementReachNum {
 mutation IncrementReachNum {
   incrementLatestReachLog {
     id
-    reachNum
     status
     createdAt
+    reachNum
   }
 }
 
 mutation DecrementReachNum {
   decrementLatestReachLog {
     id
-    reachNum
     status
     createdAt
+    reachNum
   }
 }
