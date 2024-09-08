@@ -37,21 +37,3 @@ mutation DecrementReachNum {
     id
   }
 }
-
-mutation IncrementReachNum {
-  incrementLatestReachLog {
-    id
-    status
-    createdAt
-    reachNum
-  }
-}
-
-mutation DecrementReachNum {
-  decrementLatestReachLog {
-    id
-    status
-    createdAt
-    reachNum
-  }
-}
