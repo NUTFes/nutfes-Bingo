@@ -10,21 +10,29 @@ import { ja, en } from "@/locales";
 
 type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
 
-const getFirstBingoNumber = (bingoNumbers: BingoNumbers) =>
-  bingoNumbers[bingoNumbers.length - 1];
+const sortedBingoNumbers = (bingoNumbers: BingoNumbers) => {
+  return [...bingoNumbers].sort((a, b) => a.id - b.id);
+};
 
-const getSortedBingoNumber = (bingoNumbers: BingoNumbers) =>
-  [...bingoNumbers].sort((a, b) => a.number - b.number);
+// 最後に追加されたビンゴ番号（最新の番号）を取得
+const getLastBingoNumber = (bingoNumbers: BingoNumbers) => {
+  const sortedNumbers = sortedBingoNumbers(bingoNumbers);
+  return sortedNumbers[sortedNumbers.length - 1];
+};
 
 const getDisplayBingoNumbers = (
   isSortedAscending: boolean,
   bingoNumbers: BingoNumbers,
 ) => {
-  const firstBingoNumber = getFirstBingoNumber(bingoNumbers);
-  const sortedBingoNumber = getSortedBingoNumber(bingoNumbers);
+  const sortedNumbers = sortedBingoNumbers(bingoNumbers);
+  const lastBingoNumber = getLastBingoNumber(bingoNumbers);
+
   return isSortedAscending
-    ? { list: sortedBingoNumber }
-    : { large: firstBingoNumber, list: bingoNumbers.slice(0, -1).reverse() };
+    ? { list: sortedNumbers }
+    : {
+        large: lastBingoNumber,
+        list: sortedNumbers.slice(0, -1).reverse(),
+      };
 };
 
 const Page: NextPage = () => {
