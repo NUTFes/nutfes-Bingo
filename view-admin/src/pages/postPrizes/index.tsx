@@ -4,7 +4,7 @@ import type { NextPage } from "next";
 import styles from "./postPrizes.module.css";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Header, PrizeResult, Loading } from "@/components/common";
-import { IoCloudUploadOutline } from "react-icons/ios";
+import { IoCloudUploadOutline } from "react-icons/io5";
 import {
   GetListPrizesDocument,
   CreateOnePrizeDocument,
@@ -26,7 +26,7 @@ const Page: NextPage = () => {
   );
   const [prizeNameJp, setPrizeNameJp] = useState<string>("");
   const [prizeNameEn, setPrizeNameEn] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File>();
   const [preview, setPreview] = useState({ uploadImageURL: "", type: "" });
   const [bucketName, setBucketName] = useState<string>("");
