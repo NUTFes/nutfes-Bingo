@@ -69,10 +69,10 @@
 }
 
 .iconButton:active {
-  animation: mochimochi 1.5s infinite;
+  animation: softBounce 1.5s infinite;
 }
 
-@keyframes mochimochi {
+@keyframes softBounce {
   0% {
     transform: scale(1, 0.8);
   }
