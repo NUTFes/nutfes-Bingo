@@ -2,32 +2,24 @@ import styles from "./Header.module.css";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { IoHelpCircleOutline } from "react-icons/io5";
-import { Help } from "@/components";
-import React, { useState, useEffect } from "react";
+import { HelpCarousel } from "@/components";
+import { useState, useEffect } from "react";
 
 const Header = () => {
   const router = useRouter();
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isOpenHelpCarousel, setIsOpenHelpCarousel] = useState(false);
 
   useEffect(() => {
-    const isHelpShown = localStorage.getItem("helpShown");
+    const isHelpShown = localStorage.getItem("isOpenHelpCarousel");
 
     if (isHelpShown === null) {
-      setIsHelpOpen(true);
-      localStorage.setItem("helpShown", JSON.stringify(true));
+      setIsOpenHelpCarousel(true);
+      localStorage.setItem("isOpenHelpCarousel", JSON.stringify(true));
     }
   }, []);
 
-  useEffect(() => {
-    console.log("ヘルプ表示状態: ", isHelpOpen);
-  }, [isHelpOpen]);
-
-  const goHelp = () => {
-    setIsHelpOpen(true);
-  };
-
-  const closeHelp = () => {
-    setIsHelpOpen(!isHelpOpen);
+  const handleClick = () => {
+    setIsOpenHelpCarousel(true);
   };
 
   return (
@@ -41,11 +33,16 @@ const Header = () => {
           height={300}
           onClick={() => router.push("/")}
         />
-        <button className={styles.icon} onClick={goHelp}>
+        <button className={styles.icon} onClick={handleClick}>
           <IoHelpCircleOutline />
         </button>
       </div>
-      {isHelpOpen && <Help isOpened={isHelpOpen} setIsOpened={setIsHelpOpen} />}
+      {isOpenHelpCarousel && (
+        <HelpCarousel
+          isOpened={isOpenHelpCarousel}
+          setIsOpened={setIsOpenHelpCarousel}
+        />
+      )}
     </div>
   );
 };

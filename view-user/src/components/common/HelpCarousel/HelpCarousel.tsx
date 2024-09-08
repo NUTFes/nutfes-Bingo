@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import styles from "./HelpCarousel.module.css";
 import { Button, Modal, DotButton } from "@/components";
 import useEmblaCarousel from "embla-carousel-react";
@@ -6,16 +6,17 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { ja, en } from "@/locales";
 
-interface HelpProps {
+interface HelpCarouselProps {
   isOpened: boolean;
   setIsOpened: (isOpened: boolean) => void;
 }
-const Help = ({ isOpened, setIsOpened }: HelpProps) => {
+
+const HelpCarousel = ({ isOpened, setIsOpened }: HelpCarouselProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [slidesCount, setSlidesCount] = useState(0);
-  const { pathname: pageName, locale } = useRouter();
-  const [language, setLanguage] = useState<string>(locale || "ja");
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [slidesCount, setSlidesCount] = useState<number>(0);
+  const { locale } = useRouter();
+  const [] = useState<string>(locale || "ja");
   const t = locale === "ja" ? ja : en;
 
   const onSelect = useCallback(() => {
@@ -61,8 +62,8 @@ const Help = ({ isOpened, setIsOpened }: HelpProps) => {
                 className={styles.embla__slide}
                 src={image.src}
                 alt={image.alt}
-                width={300}
-                height={300}
+                width={1000}
+                height={1000}
               />
             ))}
           </div>
@@ -78,20 +79,20 @@ const Help = ({ isOpened, setIsOpened }: HelpProps) => {
           <div className={styles.screenTransition}>
             {selectedIndex === 0 ? (
               <Button onClick={() => setIsOpened(false)} inversion>
-                {t.helpCarousel.close}
+                <div className={styles.buttonText}>{t.helpCarousel.close}</div>
               </Button>
             ) : (
               <Button onClick={scrollPrev} inversion>
-                {t.helpCarousel.back}
+                <div className={styles.buttonText}>{t.helpCarousel.back}</div>
               </Button>
             )}
             {selectedIndex === slidesCount - 1 ? (
               <Button onClick={() => setIsOpened(false)} inversion>
-                {t.helpCarousel.close}
+                <div className={styles.buttonText}>{t.helpCarousel.close}</div>
               </Button>
             ) : (
               <Button onClick={scrollNext} inversion>
-                {t.helpCarousel.next}
+                <div className={styles.buttonText}>{t.helpCarousel.next}</div>
               </Button>
             )}
           </div>
@@ -101,4 +102,4 @@ const Help = ({ isOpened, setIsOpened }: HelpProps) => {
   );
 };
 
-export default Help;
+export default HelpCarousel;

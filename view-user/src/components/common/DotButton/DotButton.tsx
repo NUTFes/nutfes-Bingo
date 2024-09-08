@@ -1,10 +1,11 @@
-import React from "react";
 import styles from "./DotButton.module.css";
 
-const DotButton: React.FC<{ selected: boolean; onClick: () => void }> = ({
-  selected,
-  onClick,
-}) => {
+interface DotButtonProps {
+  selected: boolean;
+  onClick: () => void;
+}
+
+const DotButton = ({ selected, onClick }: DotButtonProps) => {
   return (
     <button
       className={`${styles.dotButton} ${selected ? styles.selected : ""}`}

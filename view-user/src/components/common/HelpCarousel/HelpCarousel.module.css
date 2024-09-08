@@ -1,4 +1,4 @@
-.container{
+.container {
   width: 65vw;
 }
 
@@ -18,13 +18,17 @@
   min-width: 0;
 }
 
-.screenTransition{
+.screenTransition {
   display: flex;
-  justify-content:space-around; 
+  justify-content: space-around;
 }
 
 .carousel__dots {
   display: flex;
   justify-content: center;
   margin-top: 10px;
+}
+
+.buttonText {
+  font-size: 2.5vw;
 }
