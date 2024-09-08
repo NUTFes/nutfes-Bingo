@@ -32,7 +32,6 @@ export const PrizeResult = (props: PrizeResultProps) => {
   const imageURLs: string[] = props.prizeResult.map((prize) => {
     if (prize.image) {
       const { bucketName, fileName } = prize.image;
-      console.log(prize.image.bucketName);
       return `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${bucketName}/${fileName}`;
     } else {
       return "";
