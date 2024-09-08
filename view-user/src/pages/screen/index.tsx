@@ -39,12 +39,25 @@ type StampState = {
 
 type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
 
-const getFirstBingoNumber = (bingoNumbers: BingoNumbers) =>
-  bingoNumbers[bingoNumbers.length - 1];
+const sortedBingoNumbers = (bingoNumbers: BingoNumbers) => {
+  return [...bingoNumbers].sort((a, b) => a.id - b.id); // idで昇順にソート
+};
 
+// 最後に追加されたビンゴ番号（最新の番号）を取得
+const getLastBingoNumber = (bingoNumbers: BingoNumbers) => {
+  const sortedNumbers = sortedBingoNumbers(bingoNumbers);
+  return sortedNumbers[sortedNumbers.length - 1];
+};
+
+// ビンゴ番号を表示する関数
 const getDisplayBingoNumbers = (bingoNumbers: BingoNumbers) => {
-  const firstBingoNumber = getFirstBingoNumber(bingoNumbers);
-  return { large: firstBingoNumber, list: bingoNumbers.slice(0, -1).reverse() };
+  const sortedNumbers = sortedBingoNumbers(bingoNumbers);
+  const lastBingoNumber = getLastBingoNumber(bingoNumbers);
+
+  return {
+    large: lastBingoNumber,
+    list: sortedNumbers.slice(0, -1).reverse(),
+  };
 };
 
 const Page: NextPage = () => {
