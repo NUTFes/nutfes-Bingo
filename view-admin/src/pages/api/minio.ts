@@ -32,7 +32,7 @@ export default async function handler(
   if (req.method === "POST") {
     const form = formidable();
 
-    form.parse(req, async (err, fields, files) => {
+    form.parse(req, async (err: any, files: any) => {
       if (err) {
         console.error("Error parsing form:", err);
         return res.status(400).json({ message: "Form parsing error" });
@@ -45,7 +45,7 @@ export default async function handler(
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const bucketName = process.env.NEXT_PUBLIC_ENDPOINT;
+      const bucketName = "bingo";
       const fileName = file.originalFilename;
 
       if (!fileName) {
@@ -70,7 +70,7 @@ export default async function handler(
         );
         return res.status(200).json({ message: "Upload successful" });
       } catch (uploadError) {
-        return res.status(500).json({ message: "File upload error" });
+        return res.status(500).json({ message: uploadError });
       }
     });
   } else {
