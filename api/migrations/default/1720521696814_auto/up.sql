@@ -160,7 +160,7 @@ ALTER TABLE ONLY public.prizes
 ALTER TABLE ONLY public.reach_logs
     ADD CONSTRAINT reach_log_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.stamp_triggers
-    ADD CONSTRAINT stamp_triggers_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT stamp_triggers_name_key UNIQUE (name);
 CREATE TRIGGER set_public_stamp_triggers_updated_at BEFORE UPDATE ON public.stamp_triggers FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 COMMENT ON TRIGGER set_public_stamp_triggers_updated_at ON public.stamp_triggers IS 'trigger to set value of column "updated_at" to current timestamp on row update';
 ALTER TABLE ONLY public.prizes
