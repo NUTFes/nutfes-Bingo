@@ -2186,35 +2186,13 @@ export type GetListReachLogsAfterTimestampQuery = {
   }>;
 };
 
-export type CreateOneReachRecordMutationVariables = Exact<{
-  status: Scalars["Boolean"]["input"];
-  reachNum: Scalars["Int"]["input"];
-}>;
-
-export type CreateOneReachRecordMutation = {
-  __typename?: "mutation_root";
-  insertReachLogsOne?: {
-    __typename?: "ReachLogs";
-    id: number;
-    status: boolean;
-    createdAt: any;
-    reachNum: number;
-  } | null;
-};
-
 export type IncrementReachNumMutationVariables = Exact<{
   [key: string]: never;
 }>;
 
 export type IncrementReachNumMutation = {
   __typename?: "mutation_root";
-  incrementLatestReachLog: Array<{
-    __typename?: "ReachLogs";
-    id: number;
-    status: boolean;
-    createdAt: any;
-    reachNum: number;
-  }>;
+  incrementLatestReachLog: Array<{ __typename?: "ReachLogs"; id: number }>;
 };
 
 export type DecrementReachNumMutationVariables = Exact<{
@@ -2223,13 +2201,7 @@ export type DecrementReachNumMutationVariables = Exact<{
 
 export type DecrementReachNumMutation = {
   __typename?: "mutation_root";
-  decrementLatestReachLog: Array<{
-    __typename?: "ReachLogs";
-    id: number;
-    status: boolean;
-    createdAt: any;
-    reachNum: number;
-  }>;
+  decrementLatestReachLog: Array<{ __typename?: "ReachLogs"; id: number }>;
 };
 
 export const CreateOneImageDocument = gql`
@@ -2530,35 +2502,10 @@ export type GetListReachLogsAfterTimestampQueryResult = Apollo.QueryResult<
   GetListReachLogsAfterTimestampQuery,
   GetListReachLogsAfterTimestampQueryVariables
 >;
-export const CreateOneReachRecordDocument = gql`
-  mutation CreateOneReachRecord($status: Boolean!, $reachNum: Int!) {
-    insertReachLogsOne(
-      object: { status: $status, reachNum: $reachNum, createdAt: "now()" }
-    ) {
-      id
-      status
-      createdAt
-      reachNum
-    }
-  }
-`;
-export type CreateOneReachRecordMutationFn = Apollo.MutationFunction<
-  CreateOneReachRecordMutation,
-  CreateOneReachRecordMutationVariables
->;
-export type CreateOneReachRecordMutationResult =
-  Apollo.MutationResult<CreateOneReachRecordMutation>;
-export type CreateOneReachRecordMutationOptions = Apollo.BaseMutationOptions<
-  CreateOneReachRecordMutation,
-  CreateOneReachRecordMutationVariables
->;
 export const IncrementReachNumDocument = gql`
   mutation IncrementReachNum {
     incrementLatestReachLog {
       id
-      status
-      createdAt
-      reachNum
     }
   }
 `;
@@ -2576,9 +2523,6 @@ export const DecrementReachNumDocument = gql`
   mutation DecrementReachNum {
     decrementLatestReachLog {
       id
-      status
-      createdAt
-      reachNum
     }
   }
 `;
