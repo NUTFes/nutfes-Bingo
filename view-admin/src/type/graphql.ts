@@ -2223,9 +2223,9 @@ export type IncrementReachNumMutation = {
   incrementLatestReachLog: Array<{
     __typename?: "ReachLogs";
     id: number;
-    reachNum: number;
     status: boolean;
     createdAt: any;
+    reachNum: number;
   }>;
 };
 
@@ -2238,9 +2238,9 @@ export type DecrementReachNumMutation = {
   decrementLatestReachLog: Array<{
     __typename?: "ReachLogs";
     id: number;
-    reachNum: number;
     status: boolean;
     createdAt: any;
+    reachNum: number;
   }>;
 };
 
@@ -2589,9 +2589,9 @@ export const IncrementReachNumDocument = gql`
   mutation IncrementReachNum {
     incrementLatestReachLog {
       id
-      reachNum
       status
       createdAt
+      reachNum
     }
   }
 `;
@@ -2609,9 +2609,9 @@ export const DecrementReachNumDocument = gql`
   mutation DecrementReachNum {
     decrementLatestReachLog {
       id
-      reachNum
       status
       createdAt
+      reachNum
     }
   }
 `;

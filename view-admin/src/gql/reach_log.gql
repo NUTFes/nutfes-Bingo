@@ -40,17 +40,17 @@ mutation CreateOneReachRecord($status: Boolean!, $reachNum: Int!) {
 mutation IncrementReachNum {
   incrementLatestReachLog {
     id
-    reachNum
     status
     createdAt
+    reachNum
   }
 }
 
 mutation DecrementReachNum {
   decrementLatestReachLog {
     id
-    reachNum
     status
     createdAt
+    reachNum
   }
 }
