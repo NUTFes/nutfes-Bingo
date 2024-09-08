@@ -140,147 +140,148 @@ const Page: NextPage = () => {
   }, [data]);
 
   if (session) {
-  return (
-    <div className={styles.container}>
-      <JudgementModal
-        isOpened={isOpened}
-        setIsOpened={setIsOpened}
-        bingoNumbers={bingoNumbers}
-      />
-      <Header user="Admin">
-        <div className={styles.main}>
-          <Button
-            size="m"
-            shape="circle"
-            onClick={() => router.push("/postPrizes")}
-          >
-            <p>景品追加</p>
-          </Button>
-          <Button
-            size="m"
-            shape="circle"
-            onClick={() => router.push("/prizes")}
-          >
-            <p>景品管理</p>
-          </Button>
-          <Button size="m" shape="circle" onClick={isopenBool}>
-            <p>ビンゴ正誤判定</p>
-          </Button>
-          <Button
-            size="m"
-            shape="circle"
-            onClick={() => signOut({ callbackUrl: "/" })}
-          >
-            <CgLogOut className={styles.buttonIcon} />
-            <p>ログアウト</p>
-          </Button>
-        </div>
-      </Header>
-      <div className={styles.form}>
-        <div className={styles.frame}>
-          <p>抽選した番号を入力</p>
-          <form onSubmit={handleSubmitCreate(onSubmitCreate)}>
+    return (
+      <div className={styles.container}>
+        <JudgementModal
+          isOpened={isOpened}
+          setIsOpened={setIsOpened}
+          bingoNumbers={bingoNumbers}
+        />
+        <Header user="Admin">
+          <div className={styles.main}>
+            <Button
+              size="m"
+              shape="circle"
+              onClick={() => router.push("/postPrizes")}
+            >
+              <p>景品追加</p>
+            </Button>
+            <Button
+              size="m"
+              shape="circle"
+              onClick={() => router.push("/prizes")}
+            >
+              <p>景品管理</p>
+            </Button>
+            <Button size="m" shape="circle" onClick={isopenBool}>
+              <p>ビンゴ正誤判定</p>
+            </Button>
+            <Button
+              size="m"
+              shape="circle"
+              onClick={() => signOut({ callbackUrl: "/" })}
+            >
+              <CgLogOut className={styles.buttonIcon} />
+              <p>ログアウト</p>
+            </Button>
+          </div>
+        </Header>
+        <div className={styles.form}>
+          <div className={styles.frame}>
+            <p>抽選した番号を入力</p>
+            <form onSubmit={handleSubmitCreate(onSubmitCreate)}>
+              <div className={styles.item}>
+                <div className={styles.flexerror}>
+                  <input
+                    type="number"
+                    placeholder="番号を入力"
+                    className={styles.inputForm}
+                    {...registerCreate("submitNumber", {
+                      valueAsNumber: true,
+                      max: 99,
+                      min: 1,
+                    })}
+                  />
+                  {errorsCreate.submitNumber && (
+                    <div className={styles.errormessage}>
+                      1~99の番号を入力してください
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  disabled={!isValidCreateSubmit}
+                  className={
+                    errorsCreate.submitNumber
+                      ? styles.not_hover_Button
+                      : styles.Button
+                  }
+                >
+                  送信
+                </button>
+              </div>
+            </form>
+          </div>
+          <div className={styles.frame}>
+            <p className={styles.centerText}>抽選した番号を削除</p>
             <div className={styles.item}>
               <div className={styles.flexerror}>
                 <input
                   type="number"
                   placeholder="番号を入力"
                   className={styles.inputForm}
-                  {...registerCreate("submitNumber", {
-                    valueAsNumber: true,
+                  {...registerDelete("inputedNumber", {
                     max: 99,
                     min: 1,
                   })}
                 />
-                {errorsCreate.submitNumber && (
+                {(errorsDelete.inputedNumber ||
+                  errorsDelete.selectedNumber) && (
                   <div className={styles.errormessage}>
                     1~99の番号を入力してください
                   </div>
                 )}
               </div>
+              <select
+                {...registerDelete("selectedNumber")}
+                onChange={() => resetDelete({ inputedNumber: null })}
+              >
+                <option value="" hidden>
+                  選択してください
+                </option>
+                {[...bingoNumbers].reverse().map((bingoNumber, index) => (
+                  <option key={index} value={bingoNumber.number}>
+                    {bingoNumber.number}
+                  </option>
+                ))}
+              </select>
               <button
-                type="submit"
-                disabled={!isValidCreateSubmit}
+                type="button"
+                disabled={!isValidCreateDelete}
                 className={
-                  errorsCreate.submitNumber
+                  errorsDelete.inputedNumber || errorsDelete.selectedNumber
                     ? styles.not_hover_Button
                     : styles.Button
                 }
+                onClick={handleSubmitDelete(onSubmitDelete)}
               >
                 送信
               </button>
             </div>
-          </form>
-        </div>
-        <div className={styles.frame}>
-          <p className={styles.centerText}>抽選した番号を削除</p>
-          <div className={styles.item}>
-            <div className={styles.flexerror}>
-              <input
-                type="number"
-                placeholder="番号を入力"
-                className={styles.inputForm}
-                {...registerDelete("inputedNumber", {
-                  max: 99,
-                  min: 1,
-                })}
-              />
-              {(errorsDelete.inputedNumber || errorsDelete.selectedNumber) && (
-                <div className={styles.errormessage}>
-                  1~99の番号を入力してください
-                </div>
-              )}
+          </div>
+          <div className={styles.frame}>
+            <div className={styles.item}>
+              <button
+                type="button"
+                className={styles.Button}
+                onClick={handleReachCountUp}
+              >
+                リーチ数を 1 増加する
+              </button>
+              <button
+                type="button"
+                className={styles.Button}
+                onClick={handleReachCountDown}
+              >
+                リーチ数を 1 減少する
+              </button>
             </div>
-            <select
-              {...registerDelete("selectedNumber")}
-              onChange={() => resetDelete({ inputedNumber: null })}
-            >
-              <option value="" hidden>
-                選択してください
-              </option>
-              {[...bingoNumbers].reverse().map((bingoNumber, index) => (
-                <option key={index} value={bingoNumber.number}>
-                  {bingoNumber.number}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              disabled={!isValidCreateDelete}
-              className={
-                errorsDelete.inputedNumber || errorsDelete.selectedNumber
-                  ? styles.not_hover_Button
-                  : styles.Button
-              }
-              onClick={handleSubmitDelete(onSubmitDelete)}
-            >
-              送信
-            </button>
           </div>
         </div>
-        <div className={styles.frame}>
-          <div className={styles.item}>
-            <button
-              type="button"
-              className={styles.Button}
-              onClick={handleReachCountUp}
-            >
-              リーチ数を 1 増加する
-            </button>
-            <button
-              type="button"
-              className={styles.Button}
-              onClick={handleReachCountDown}
-            >
-              リーチ数を 1 減少する
-            </button>
-          </div>
-        </div>
+        <BingoResult bingoResultNumber={bingoNumbers} />
       </div>
-      <BingoResult bingoResultNumber={bingoNumbers} />
-    </div>
-  );
-};
+    );
+  }
 
   return (
     <div className={styles.loginContainer}>
