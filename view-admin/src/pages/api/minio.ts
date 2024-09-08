@@ -1,5 +1,5 @@
 import fs from "fs";
-import { formidable } from "formidable";
+import formidable, { Fields, Files } from "formidable";
 import { Client } from "minio";
 import { NextApiRequest, NextApiResponse } from "next";
 
@@ -32,7 +32,7 @@ export default async function handler(
   if (req.method === "POST") {
     const form = formidable();
 
-    form.parse(req, async (err: any, files: any) => {
+    form.parse(req, async (err, fields: Fields, files: Files) => {
       if (err) {
         console.error("Error parsing form:", err);
         return res.status(400).json({ message: "Form parsing error" });
