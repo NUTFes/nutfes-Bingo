@@ -12,10 +12,10 @@ CREATE FUNCTION public.decrement_latest_reach_log() RETURNS SETOF public.reach_l
 DECLARE
     latest_reach_num INT;
 BEGIN
-    -- 最新のレコードを一件取得、最初になければ0を入れる --
+    -- 最新のレコードを一件取得、もしデータがなければ0を入れる --
     SELECT COALESCE((SELECT reach_num FROM reach_logs ORDER BY created_at DESC LIMIT 1), 0)
     INTO latest_reach_num;
-    -- 新しいレコードを一件取得、最初になければ0を入れる --
+    -- 新しいレコードを挿入、reach_numを1減らす
     RETURN QUERY
     INSERT INTO reach_logs (status, reach_num, created_at)
     VALUES (false, latest_reach_num - 1, NOW())
