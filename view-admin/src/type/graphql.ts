@@ -1156,8 +1156,6 @@ export type StampTriggersBoolExp = {
 
 /** unique or primary key constraints on table "stamp_triggers" */
 export enum StampTriggersConstraint {
-  /** unique or primary key constraint on columns "name" */
-  stampTriggersNameKey = "stamp_triggers_name_key",
   /** unique or primary key constraint on columns "id" */
   stampTriggersPkey = "stamp_triggers_pkey",
 }
@@ -2054,6 +2052,20 @@ export type DeleteOneNumberMutation = {
   } | null;
 };
 
+export type UpdateOneNumberMutationVariables = Exact<{
+  id: Scalars["Int"]["input"];
+  number: Scalars["Int"]["input"];
+}>;
+
+export type UpdateOneNumberMutation = {
+  __typename?: "mutation_root";
+  updateNumbers?: {
+    __typename?: "NumbersMutationResponse";
+    affectedRows: number;
+    returning: Array<{ __typename?: "Numbers"; id: number; number: number }>;
+  } | null;
+};
+
 export type SubscribeListNumbersSubscriptionVariables = Exact<{
   [key: string]: never;
 }>;
@@ -2346,6 +2358,27 @@ export type DeleteOneNumberMutationResult =
 export type DeleteOneNumberMutationOptions = Apollo.BaseMutationOptions<
   DeleteOneNumberMutation,
   DeleteOneNumberMutationVariables
+>;
+export const UpdateOneNumberDocument = gql`
+  mutation UpdateOneNumber($id: Int!, $number: Int!) {
+    updateNumbers(where: { id: { _eq: $id } }, _set: { number: $number }) {
+      affectedRows
+      returning {
+        id
+        number
+      }
+    }
+  }
+`;
+export type UpdateOneNumberMutationFn = Apollo.MutationFunction<
+  UpdateOneNumberMutation,
+  UpdateOneNumberMutationVariables
+>;
+export type UpdateOneNumberMutationResult =
+  Apollo.MutationResult<UpdateOneNumberMutation>;
+export type UpdateOneNumberMutationOptions = Apollo.BaseMutationOptions<
+  UpdateOneNumberMutation,
+  UpdateOneNumberMutationVariables
 >;
 export const SubscribeListNumbersDocument = gql`
   subscription SubscribeListNumbers {

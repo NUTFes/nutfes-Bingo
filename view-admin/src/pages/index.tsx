@@ -9,6 +9,7 @@ import {
   BingoResult,
   Button,
   JudgementModal,
+  UpdateNumberModal,
 } from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
 import { useEffect, useState } from "react";
@@ -43,6 +44,8 @@ const Page: NextPage = () => {
   >([]);
   const [isOpened, setIsOpened] = useState<boolean>(false);
   const isopenBool = () => setIsOpened(!isOpened);
+  const [isOpenUpdateNumberModal, setIsOpenUpdateNumberModal] =
+    useState<boolean>(false);
 
   const [incrementReach] = useMutation<IncrementReachNumMutation>(
     IncrementReachNumDocument,
@@ -76,6 +79,12 @@ const Page: NextPage = () => {
   );
   const [createNumber] = useMutation(CreateOneNumberDocument);
   const [deleteNumber] = useMutation(DeleteOneNumberDocument);
+  const [selectedId, setSelectedId] = useState<number>();
+
+  const handleNumberClick = (id: number) => {
+    setSelectedId(id);
+    setIsOpenUpdateNumberModal(true);
+  };
 
   //番号の追加
   const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
@@ -112,6 +121,11 @@ const Page: NextPage = () => {
           isOpened={isOpened}
           setIsOpened={setIsOpened}
           bingoNumbers={bingoNumbers}
+        />
+        <UpdateNumberModal
+          isOpened={isOpenUpdateNumberModal}
+          setIsOpened={setIsOpenUpdateNumberModal}
+          id={selectedId}
         />
         <Header user="Admin">
           <div className={styles.main}>
@@ -244,7 +258,10 @@ const Page: NextPage = () => {
             </div>
           </div>
         </div>
-        <BingoResult bingoResultNumber={bingoNumbers} />
+        <BingoResult
+          bingoResultNumber={bingoNumbers}
+          onClick={handleNumberClick}
+        />
       </div>
     );
   }
