@@ -14,3 +14,4 @@
   customization:
     naming_convention: graphql-default
   tables: "!include default/tables/tables.yaml"
+  functions: "!include default/functions/functions.yaml"
