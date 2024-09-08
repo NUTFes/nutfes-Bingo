@@ -20,27 +20,20 @@ const PrizeCard = (props: PrizeCardProps) => {
   const prizeImage = bingoPrize.image;
 
   const imageURL: string = prizeImage
-    ? `${process.env.NEXT_PUBLIC_MINIO_ENDPONT}/${prizeImage.bucketName}/${prizeImage.fileName}`
+    ? `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${prizeImage.bucketName}/${prizeImage.fileName}`
     : "";
 
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <div
-          className={styles.image}
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "100%",
-          }}
-        >
+        <div className={styles.image}>
           <div className={styles.imageWrapper}>
             <Image src={imageURL} alt="PrizeImage" layout="fill" />
           </div>
         </div>
         {bingoPrize.isWon && (
           <div className={classNames(styles.overlay, styles.center)}>
-            <p className={styles.center}></p>
+            <p className={styles.center}>当選済み</p>
           </div>
         )}
       </div>
