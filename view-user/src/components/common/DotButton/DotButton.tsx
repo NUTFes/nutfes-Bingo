@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./Dotbutton.module.css";
+import styles from "./DotButton.module.css";
 
 const DotButton: React.FC<{ selected: boolean; onClick: () => void }> = ({
   selected,

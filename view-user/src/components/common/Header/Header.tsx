@@ -30,7 +30,7 @@ const Header = () => {
           <IoHelpCircleOutline />
         </button>
       </div>
-      {isHelpOpen && <Help isOpened={isHelpOpen }  setIsOpened={ setIsHelpOpen}/>}
+      {isHelpOpen && <Help isOpened={isHelpOpen} setIsOpened={setIsHelpOpen} />}
     </div>
   );
 };
