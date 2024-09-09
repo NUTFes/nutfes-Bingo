@@ -43,7 +43,7 @@ type Stamp = {
 type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
 
 const sortedBingoNumbers = (bingoNumbers: BingoNumbers) => {
-  return [...bingoNumbers].sort((a, b) => a.id - b.id); // idで昇順にソート
+  return [...bingoNumbers].sort((a, b) => a.id - b.id);
 };
 
 // 最後に追加されたビンゴ番号（最新の番号）を取得
