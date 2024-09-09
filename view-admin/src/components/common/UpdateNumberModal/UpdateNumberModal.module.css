@@ -1,0 +1,91 @@
+.wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(51, 51, 51, 0.6);
+}
+
+.frame {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  border-radius: 1rem;
+  padding: 2rem;
+  background: white;
+  width: 350px;
+  animation: zoomIn 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes zoomIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.title {
+  color: black;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.contents {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 8px;
+  font-size: 1.2rem;
+  background-color: whitesmoke;
+  border: 2px solid #ddd;
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+  color: black;
+}
+
+.submitButton {
+  width: 100%;
+  background-color: #ff3342;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 12px;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.3s ease;
+}
+
+.submitButton:hover {
+  background-color: #e62e3a;
+}
+
+.btnClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.8rem;
+  color: #ff3342;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}

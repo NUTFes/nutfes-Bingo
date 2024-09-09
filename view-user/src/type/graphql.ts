@@ -1104,10 +1104,9 @@ export type ReachLogsVarianceFields = {
 /** スタンプを降らせるためのAPI */
 export type StampTriggers = {
   __typename?: "StampTriggers";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
   id: Scalars["Int"]["output"];
   name: Scalars["String"]["output"];
-  trigger: Scalars["Boolean"]["output"];
-  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** aggregated selection of "stamp_triggers" */
@@ -1150,10 +1149,9 @@ export type StampTriggersBoolExp = {
   _and?: InputMaybe<Array<StampTriggersBoolExp>>;
   _not?: InputMaybe<StampTriggersBoolExp>;
   _or?: InputMaybe<Array<StampTriggersBoolExp>>;
+  createdAt?: InputMaybe<TimestamptzComparisonExp>;
   id?: InputMaybe<IntComparisonExp>;
   name?: InputMaybe<StringComparisonExp>;
-  trigger?: InputMaybe<BooleanComparisonExp>;
-  updatedAt?: InputMaybe<TimestamptzComparisonExp>;
 };
 
 /** unique or primary key constraints on table "stamp_triggers" */
@@ -1171,26 +1169,25 @@ export type StampTriggersIncInput = {
 
 /** input type for inserting data into table "stamp_triggers" */
 export type StampTriggersInsertInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
-  trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
-  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate max on columns */
 export type StampTriggersMaxFields = {
   __typename?: "StampTriggersMaxFields";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
   id?: Maybe<Scalars["Int"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
-  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** aggregate min on columns */
 export type StampTriggersMinFields = {
   __typename?: "StampTriggersMinFields";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
   id?: Maybe<Scalars["Int"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
-  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** response of any mutation on the table "stamp_triggers" */
@@ -1211,10 +1208,9 @@ export type StampTriggersOnConflict = {
 
 /** Ordering options when selecting data from "stamp_triggers". */
 export type StampTriggersOrderBy = {
+  createdAt?: InputMaybe<OrderBy>;
   id?: InputMaybe<OrderBy>;
   name?: InputMaybe<OrderBy>;
-  trigger?: InputMaybe<OrderBy>;
-  updatedAt?: InputMaybe<OrderBy>;
 };
 
 /** primary key columns input for table: stamp_triggers */
@@ -1225,21 +1221,18 @@ export type StampTriggersPkColumnsInput = {
 /** select columns of table "stamp_triggers" */
 export enum StampTriggersSelectColumn {
   /** column name */
+  createdAt = "createdAt",
+  /** column name */
   id = "id",
   /** column name */
   name = "name",
-  /** column name */
-  trigger = "trigger",
-  /** column name */
-  updatedAt = "updatedAt",
 }
 
 /** input type for updating data in table "stamp_triggers" */
 export type StampTriggersSetInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
-  trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
-  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate stddev on columns */
@@ -1270,10 +1263,9 @@ export type StampTriggersStreamCursorInput = {
 
 /** Initial value of the column from where the streaming should start */
 export type StampTriggersStreamCursorValueInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
-  trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
-  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate sum on columns */
@@ -1285,13 +1277,11 @@ export type StampTriggersSumFields = {
 /** update columns of table "stamp_triggers" */
 export enum StampTriggersUpdateColumn {
   /** column name */
+  createdAt = "createdAt",
+  /** column name */
   id = "id",
   /** column name */
   name = "name",
-  /** column name */
-  trigger = "trigger",
-  /** column name */
-  updatedAt = "updatedAt",
 }
 
 export type StampTriggersUpdates = {
@@ -2198,7 +2188,6 @@ export type GetStampTrrigersQuery = {
     __typename?: "StampTriggers";
     id: number;
     name: string;
-    trigger: boolean;
   }>;
 };
 
@@ -2212,20 +2201,6 @@ export type CreateOneStampTriggerMutation = {
     __typename?: "StampTriggers";
     id: number;
     name: string;
-    trigger: boolean;
-  } | null;
-};
-
-export type UpdateOneTriggerFlagMutationVariables = Exact<{
-  id: Scalars["Int"]["input"];
-  trigger: Scalars["Boolean"]["input"];
-}>;
-
-export type UpdateOneTriggerFlagMutation = {
-  __typename?: "mutation_root";
-  updateStampTriggers?: {
-    __typename?: "StampTriggersMutationResponse";
-    affectedRows: number;
   } | null;
 };
 
@@ -2251,22 +2226,21 @@ export type SubscribeStampTriggersSubscription = {
     __typename?: "StampTriggers";
     id: number;
     name: string;
-    trigger: boolean;
+    createdAt?: any | null;
   }>;
 };
 
-export type SubscribeUpdatedStampTriggerSubscriptionVariables = Exact<{
-  updatedAt: Scalars["timestamptz"]["input"];
+export type SubscribeCreatedStampTriggerSubscriptionVariables = Exact<{
+  createdAt: Scalars["timestamptz"]["input"];
 }>;
 
-export type SubscribeUpdatedStampTriggerSubscription = {
+export type SubscribeCreatedStampTriggerSubscription = {
   __typename?: "subscription_root";
   stampTriggers: Array<{
     __typename?: "StampTriggers";
     id: number;
     name: string;
-    trigger: boolean;
-    updatedAt?: any | null;
+    createdAt?: any | null;
   }>;
 };
 
@@ -2595,7 +2569,6 @@ export const GetStampTrrigersDocument = gql`
     stampTriggers {
       id
       name
-      trigger
     }
   }
 `;
@@ -2608,7 +2581,6 @@ export const CreateOneStampTriggerDocument = gql`
     insertStampTriggersOne(object: { name: $name }) {
       id
       name
-      trigger
     }
   }
 `;
@@ -2621,26 +2593,6 @@ export type CreateOneStampTriggerMutationResult =
 export type CreateOneStampTriggerMutationOptions = Apollo.BaseMutationOptions<
   CreateOneStampTriggerMutation,
   CreateOneStampTriggerMutationVariables
->;
-export const UpdateOneTriggerFlagDocument = gql`
-  mutation UpdateOneTriggerFlag($id: Int!, $trigger: Boolean!) {
-    updateStampTriggers(
-      where: { id: { _eq: $id } }
-      _set: { trigger: $trigger }
-    ) {
-      affectedRows
-    }
-  }
-`;
-export type UpdateOneTriggerFlagMutationFn = Apollo.MutationFunction<
-  UpdateOneTriggerFlagMutation,
-  UpdateOneTriggerFlagMutationVariables
->;
-export type UpdateOneTriggerFlagMutationResult =
-  Apollo.MutationResult<UpdateOneTriggerFlagMutation>;
-export type UpdateOneTriggerFlagMutationOptions = Apollo.BaseMutationOptions<
-  UpdateOneTriggerFlagMutation,
-  UpdateOneTriggerFlagMutationVariables
 >;
 export const DeleteOneStampTriggerDocument = gql`
   mutation DeleteOneStampTrigger($id: Int!) {
@@ -2664,21 +2616,20 @@ export const SubscribeStampTriggersDocument = gql`
     stampTriggers {
       id
       name
-      trigger
+      createdAt
     }
   }
 `;
 export type SubscribeStampTriggersSubscriptionResult =
   Apollo.SubscriptionResult<SubscribeStampTriggersSubscription>;
-export const SubscribeUpdatedStampTriggerDocument = gql`
-  subscription SubscribeUpdatedStampTrigger($updatedAt: timestamptz!) {
-    stampTriggers(where: { updatedAt: { _gt: $updatedAt } }) {
+export const SubscribeCreatedStampTriggerDocument = gql`
+  subscription SubscribeCreatedStampTrigger($createdAt: timestamptz!) {
+    stampTriggers(where: { createdAt: { _gt: $createdAt } }) {
       id
       name
-      trigger
-      updatedAt
+      createdAt
     }
   }
 `;
-export type SubscribeUpdatedStampTriggerSubscriptionResult =
-  Apollo.SubscriptionResult<SubscribeUpdatedStampTriggerSubscription>;
+export type SubscribeCreatedStampTriggerSubscriptionResult =
+  Apollo.SubscriptionResult<SubscribeCreatedStampTriggerSubscription>;

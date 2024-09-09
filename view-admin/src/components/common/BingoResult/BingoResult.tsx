@@ -4,6 +4,7 @@ import { SubscribeListNumbersSubscription } from "@/type/graphql";
 
 interface BingoResultProps {
   bingoResultNumber: SubscribeListNumbersSubscription["numbers"];
+  onClick: (id: number) => void;
 }
 
 export const BingoResult = (props: BingoResultProps) => {
@@ -12,11 +13,22 @@ export const BingoResult = (props: BingoResultProps) => {
       <div className={styles.container}>
         <div className={styles.frame_title}>抽選済み番号一覧</div>
         <div className={styles.card_frame}>
-          {[...props.bingoResultNumber].reverse().map((num, index) => (
-            <div className={styles.card} key={index}>
-              <div className={styles.card_content}> {num.number}</div>
-            </div>
-          ))}
+          {[...props.bingoResultNumber]
+            .reverse()
+            .sort((a, b) => a.id - b.id)
+            .map((num, index) => (
+              <button
+                onClick={() => {
+                  props.onClick(num.id);
+                }}
+                key={index}
+                className={styles.button}
+              >
+                <div className={styles.card}>
+                  <div className={styles.card_content}> {num.number}</div>
+                </div>
+              </button>
+            ))}
         </div>
       </div>
     </div>

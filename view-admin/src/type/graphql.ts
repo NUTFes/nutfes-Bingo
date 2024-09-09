@@ -1104,10 +1104,9 @@ export type ReachLogsVarianceFields = {
 /** スタンプを降らせるためのAPI */
 export type StampTriggers = {
   __typename?: "StampTriggers";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
   id: Scalars["Int"]["output"];
   name: Scalars["String"]["output"];
-  trigger: Scalars["Boolean"]["output"];
-  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** aggregated selection of "stamp_triggers" */
@@ -1150,16 +1149,13 @@ export type StampTriggersBoolExp = {
   _and?: InputMaybe<Array<StampTriggersBoolExp>>;
   _not?: InputMaybe<StampTriggersBoolExp>;
   _or?: InputMaybe<Array<StampTriggersBoolExp>>;
+  createdAt?: InputMaybe<TimestamptzComparisonExp>;
   id?: InputMaybe<IntComparisonExp>;
   name?: InputMaybe<StringComparisonExp>;
-  trigger?: InputMaybe<BooleanComparisonExp>;
-  updatedAt?: InputMaybe<TimestamptzComparisonExp>;
 };
 
 /** unique or primary key constraints on table "stamp_triggers" */
 export enum StampTriggersConstraint {
-  /** unique or primary key constraint on columns "name" */
-  stampTriggersNameKey = "stamp_triggers_name_key",
   /** unique or primary key constraint on columns "id" */
   stampTriggersPkey = "stamp_triggers_pkey",
 }
@@ -1171,26 +1167,25 @@ export type StampTriggersIncInput = {
 
 /** input type for inserting data into table "stamp_triggers" */
 export type StampTriggersInsertInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
-  trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
-  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate max on columns */
 export type StampTriggersMaxFields = {
   __typename?: "StampTriggersMaxFields";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
   id?: Maybe<Scalars["Int"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
-  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** aggregate min on columns */
 export type StampTriggersMinFields = {
   __typename?: "StampTriggersMinFields";
+  createdAt?: Maybe<Scalars["timestamptz"]["output"]>;
   id?: Maybe<Scalars["Int"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
-  updatedAt?: Maybe<Scalars["timestamptz"]["output"]>;
 };
 
 /** response of any mutation on the table "stamp_triggers" */
@@ -1211,10 +1206,9 @@ export type StampTriggersOnConflict = {
 
 /** Ordering options when selecting data from "stamp_triggers". */
 export type StampTriggersOrderBy = {
+  createdAt?: InputMaybe<OrderBy>;
   id?: InputMaybe<OrderBy>;
   name?: InputMaybe<OrderBy>;
-  trigger?: InputMaybe<OrderBy>;
-  updatedAt?: InputMaybe<OrderBy>;
 };
 
 /** primary key columns input for table: stamp_triggers */
@@ -1225,21 +1219,18 @@ export type StampTriggersPkColumnsInput = {
 /** select columns of table "stamp_triggers" */
 export enum StampTriggersSelectColumn {
   /** column name */
+  createdAt = "createdAt",
+  /** column name */
   id = "id",
   /** column name */
   name = "name",
-  /** column name */
-  trigger = "trigger",
-  /** column name */
-  updatedAt = "updatedAt",
 }
 
 /** input type for updating data in table "stamp_triggers" */
 export type StampTriggersSetInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
-  trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
-  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate stddev on columns */
@@ -1270,10 +1261,9 @@ export type StampTriggersStreamCursorInput = {
 
 /** Initial value of the column from where the streaming should start */
 export type StampTriggersStreamCursorValueInput = {
+  createdAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["Int"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
-  trigger?: InputMaybe<Scalars["Boolean"]["input"]>;
-  updatedAt?: InputMaybe<Scalars["timestamptz"]["input"]>;
 };
 
 /** aggregate sum on columns */
@@ -1285,13 +1275,11 @@ export type StampTriggersSumFields = {
 /** update columns of table "stamp_triggers" */
 export enum StampTriggersUpdateColumn {
   /** column name */
+  createdAt = "createdAt",
+  /** column name */
   id = "id",
   /** column name */
   name = "name",
-  /** column name */
-  trigger = "trigger",
-  /** column name */
-  updatedAt = "updatedAt",
 }
 
 export type StampTriggersUpdates = {
@@ -1370,6 +1358,8 @@ export type TimestamptzComparisonExp = {
 /** mutation root */
 export type MutationRoot = {
   __typename?: "mutation_root";
+  /** execute VOLATILE function "decrement_latest_reach_log" which returns "reach_logs" */
+  decrementLatestReachLog: Array<ReachLogs>;
   /** delete data from the table: "images" */
   deleteImages?: Maybe<ImagesMutationResponse>;
   /** delete single row from the table: "images" */
@@ -1390,6 +1380,8 @@ export type MutationRoot = {
   deleteStampTriggers?: Maybe<StampTriggersMutationResponse>;
   /** delete single row from the table: "stamp_triggers" */
   deleteStampTriggersByPk?: Maybe<StampTriggers>;
+  /** execute VOLATILE function "increment_latest_reach_log" which returns "reach_logs" */
+  incrementLatestReachLog: Array<ReachLogs>;
   /** insert data into the table: "images" */
   insertImages?: Maybe<ImagesMutationResponse>;
   /** insert a single row into the table: "images" */
@@ -1443,6 +1435,15 @@ export type MutationRoot = {
 };
 
 /** mutation root */
+export type MutationRootDecrementLatestReachLogArgs = {
+  distinctOn?: InputMaybe<Array<ReachLogsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
+};
+
+/** mutation root */
 export type MutationRootDeleteImagesArgs = {
   where: ImagesBoolExp;
 };
@@ -1490,6 +1491,15 @@ export type MutationRootDeleteStampTriggersArgs = {
 /** mutation root */
 export type MutationRootDeleteStampTriggersByPkArgs = {
   id: Scalars["Int"]["input"];
+};
+
+/** mutation root */
+export type MutationRootIncrementLatestReachLogArgs = {
+  distinctOn?: InputMaybe<Array<ReachLogsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
 };
 
 /** mutation root */
@@ -2042,6 +2052,20 @@ export type DeleteOneNumberMutation = {
   } | null;
 };
 
+export type UpdateOneNumberMutationVariables = Exact<{
+  id: Scalars["Int"]["input"];
+  number: Scalars["Int"]["input"];
+}>;
+
+export type UpdateOneNumberMutation = {
+  __typename?: "mutation_root";
+  updateNumbers?: {
+    __typename?: "NumbersMutationResponse";
+    affectedRows: number;
+    returning: Array<{ __typename?: "Numbers"; id: number; number: number }>;
+  } | null;
+};
+
 export type SubscribeListNumbersSubscriptionVariables = Exact<{
   [key: string]: never;
 }>;
@@ -2174,20 +2198,22 @@ export type GetListReachLogsAfterTimestampQuery = {
   }>;
 };
 
-export type CreateOneReachRecordMutationVariables = Exact<{
-  status: Scalars["Boolean"]["input"];
-  reachNum: Scalars["Int"]["input"];
+export type IncrementReachNumMutationVariables = Exact<{
+  [key: string]: never;
 }>;
 
-export type CreateOneReachRecordMutation = {
+export type IncrementReachNumMutation = {
   __typename?: "mutation_root";
-  insertReachLogsOne?: {
-    __typename?: "ReachLogs";
-    id: number;
-    status: boolean;
-    createdAt: any;
-    reachNum: number;
-  } | null;
+  incrementLatestReachLog: Array<{ __typename?: "ReachLogs"; id: number }>;
+};
+
+export type DecrementReachNumMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type DecrementReachNumMutation = {
+  __typename?: "mutation_root";
+  decrementLatestReachLog: Array<{ __typename?: "ReachLogs"; id: number }>;
 };
 
 export const CreateOneImageDocument = gql`
@@ -2332,6 +2358,27 @@ export type DeleteOneNumberMutationResult =
 export type DeleteOneNumberMutationOptions = Apollo.BaseMutationOptions<
   DeleteOneNumberMutation,
   DeleteOneNumberMutationVariables
+>;
+export const UpdateOneNumberDocument = gql`
+  mutation UpdateOneNumber($id: Int!, $number: Int!) {
+    updateNumbers(where: { id: { _eq: $id } }, _set: { number: $number }) {
+      affectedRows
+      returning {
+        id
+        number
+      }
+    }
+  }
+`;
+export type UpdateOneNumberMutationFn = Apollo.MutationFunction<
+  UpdateOneNumberMutation,
+  UpdateOneNumberMutationVariables
+>;
+export type UpdateOneNumberMutationResult =
+  Apollo.MutationResult<UpdateOneNumberMutation>;
+export type UpdateOneNumberMutationOptions = Apollo.BaseMutationOptions<
+  UpdateOneNumberMutation,
+  UpdateOneNumberMutationVariables
 >;
 export const SubscribeListNumbersDocument = gql`
   subscription SubscribeListNumbers {
@@ -2488,25 +2535,37 @@ export type GetListReachLogsAfterTimestampQueryResult = Apollo.QueryResult<
   GetListReachLogsAfterTimestampQuery,
   GetListReachLogsAfterTimestampQueryVariables
 >;
-export const CreateOneReachRecordDocument = gql`
-  mutation CreateOneReachRecord($status: Boolean!, $reachNum: Int!) {
-    insertReachLogsOne(
-      object: { status: $status, reachNum: $reachNum, createdAt: "now()" }
-    ) {
+export const IncrementReachNumDocument = gql`
+  mutation IncrementReachNum {
+    incrementLatestReachLog {
       id
-      status
-      createdAt
-      reachNum
     }
   }
 `;
-export type CreateOneReachRecordMutationFn = Apollo.MutationFunction<
-  CreateOneReachRecordMutation,
-  CreateOneReachRecordMutationVariables
+export type IncrementReachNumMutationFn = Apollo.MutationFunction<
+  IncrementReachNumMutation,
+  IncrementReachNumMutationVariables
 >;
-export type CreateOneReachRecordMutationResult =
-  Apollo.MutationResult<CreateOneReachRecordMutation>;
-export type CreateOneReachRecordMutationOptions = Apollo.BaseMutationOptions<
-  CreateOneReachRecordMutation,
-  CreateOneReachRecordMutationVariables
+export type IncrementReachNumMutationResult =
+  Apollo.MutationResult<IncrementReachNumMutation>;
+export type IncrementReachNumMutationOptions = Apollo.BaseMutationOptions<
+  IncrementReachNumMutation,
+  IncrementReachNumMutationVariables
+>;
+export const DecrementReachNumDocument = gql`
+  mutation DecrementReachNum {
+    decrementLatestReachLog {
+      id
+    }
+  }
+`;
+export type DecrementReachNumMutationFn = Apollo.MutationFunction<
+  DecrementReachNumMutation,
+  DecrementReachNumMutationVariables
+>;
+export type DecrementReachNumMutationResult =
+  Apollo.MutationResult<DecrementReachNumMutation>;
+export type DecrementReachNumMutationOptions = Apollo.BaseMutationOptions<
+  DecrementReachNumMutation,
+  DecrementReachNumMutationVariables
 >;

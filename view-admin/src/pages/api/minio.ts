@@ -1,5 +1,5 @@
 import fs from "fs";
-import { formidable } from "formidable";
+import formidable, { Fields, Files } from "formidable";
 import { Client } from "minio";
 import { NextApiRequest, NextApiResponse } from "next";
 
@@ -21,25 +21,40 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  // CORSを設定
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  // OPTIONSリクエストに対応
+
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
+
   if (req.method === "POST") {
     const form = formidable();
 
-    form.parse(req, async (err: any, fields: any, files: any) => {
+    form.parse(req, async (err, fields: Fields, files: Files) => {
       if (err) {
-        throw new Error("Error parsing form", err);
+        console.error("Error parsing form:", err);
+        return res.status(400).json({ message: "Form parsing error" });
+      }
+
+      const fileArray = Array.isArray(files.file) ? files.file : [files.file];
+      const file = fileArray[0];
+
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
       }
 
       const bucketName = "bingo";
-      const fileName = files.file[0].originalFilename;
-      const file = files.file[0];
+      const fileName = file.originalFilename;
+
+      if (!fileName) {
+        return res.status(400).json({ message: "file name is missing" });
+      }
+      if (!bucketName) {
+        return res.status(400).json({ message: "bucket name is missing" });
+      }
+
       const mimetype = file.mimetype;
       const metaData = {
         "Content-Type": mimetype,
@@ -49,31 +64,18 @@ export default async function handler(
         const response = await minioClient.putObject(
           bucketName,
           fileName,
-          fs.createReadStream(files.file[0].filepath),
+          fs.createReadStream(file.filepath),
           undefined,
           metaData,
         );
-      } catch (err) {
-        res.status(400).json({ message: "失敗" });
-        throw new Error("Error uploading file (" + err + ")");
+        return res.status(200).json({ message: "Upload successful" });
+      } catch (uploadError) {
+        return res.status(500).json({ message: uploadError });
       }
-      return res.status(200).json({ message: "成功" });
     });
-  }
-
-  if (req.method === "GET") {
-    try {
-      const bucketName = "bingo";
-      const objectName = "go.png";
-      const filePath = "/tmp/go.png";
-
-      await minioClient.fGetObject(bucketName, objectName, filePath);
-      res.status(200).json({ message: "成功" });
-    } catch (err) {
-      res.status(400).json({ message: "失敗" });
-      throw new Error("Error downloading file (" + err + ")");
-    }
   } else {
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res
+      .status(405)
+      .json({ message: `Method ${req.method} Not Allowed` });
   }
 }

@@ -3,7 +3,7 @@ import Image from "next/image";
 import styles from "./ReactionStampModal.module.css";
 
 interface ImageProps {
-  id: number;
+  name: string;
   src: string;
   alt: string;
 }
@@ -11,7 +11,7 @@ interface ReactionStampModalProps {
   position?: string;
   height?: string;
   images: ImageProps[];
-  onClick: (id: number) => void;
+  onClick: (name: string) => void;
 }
 
 const ReactionStampModal = (props: ReactionStampModalProps) => {
@@ -25,8 +25,8 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
       : "0px",
   };
 
-  const handleClick = (id: number) => {
-    props.onClick(id);
+  const handleClick = (name: string) => {
+    props.onClick(name);
   };
 
   return (
@@ -38,9 +38,9 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
         <div className={styles.grid}>
           {props.images.map((image) => (
             <button
-              key={image.id}
+              key={image.name}
               className={styles.iconButton}
-              onClick={() => handleClick(image.id)}
+              onClick={() => handleClick(image.name)}
             >
               <Image src={image.src} alt={image.alt} fill />
             </button>
