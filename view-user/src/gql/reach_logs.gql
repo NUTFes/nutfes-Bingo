@@ -6,7 +6,7 @@ query GetOneLatestReachLog {
 }
 
 # リーチログの最新のreachNumを継続取得(Subscription)
-subscription SubscribeOneLatestReachlog {
+subscription SubscribeOneLatestReachLog {
   reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
     reachNum
   }

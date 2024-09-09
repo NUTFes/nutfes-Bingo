@@ -32,7 +32,7 @@ import { ja, en } from "@/locales";
 const images = [
   { name: "crap", src: "/ReactionIcon/crap.png", alt: "crap icon" },
   { name: "good", src: "/ReactionIcon/good.png", alt: " good icon" },
-  { name: "crakcer", src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
+  { name: "cracker", src: "/ReactionIcon/cracker.png", alt: "cracker icon" },
   { name: "heart", src: "/ReactionIcon/heart.png", alt: "heart icon" },
   { name: "smile", src: "/ReactionIcon/smile.png", alt: "smile icon" },
   { name: "angry", src: "/ReactionIcon/angry.png", alt: "angry icon" },
@@ -66,8 +66,9 @@ const Layout = (props: LayoutProps) => {
     CreateOneStampTriggerMutation,
     CreateOneStampTriggerMutationVariables
   >(CreateOneStampTriggerDocument);
-  const [getLatestReachLog, { data: latestReachLogData }] =
-    useLazyQuery<GetOneLatestReachLogQuery>(GetOneLatestReachLogDocument);
+  const [getLatestReachLog] = useLazyQuery<GetOneLatestReachLogQuery>(
+    GetOneLatestReachLogDocument,
+  );
 
   const [createOneReachRecord] = useMutation<
     CreateOneReachRecordMutation,
@@ -99,7 +100,7 @@ const Layout = (props: LayoutProps) => {
     }
   }, []);
 
-  const handleReactionsiconClick = (name: string) => {
+  const handleReactionClick = (name: string) => {
     createStampRecord({ variables: { name } });
   };
 
@@ -180,7 +181,7 @@ const Layout = (props: LayoutProps) => {
           position={position}
           height={navBarHeight}
           images={images}
-          onClick={handleReactionsiconClick}
+          onClick={handleReactionClick}
         />
       )}
       <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>

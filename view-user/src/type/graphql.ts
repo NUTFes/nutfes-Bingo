@@ -2140,11 +2140,11 @@ export type GetOneLatestReachLogQuery = {
   reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
 };
 
-export type SubscribeOneLatestReachlogSubscriptionVariables = Exact<{
+export type SubscribeOneLatestReachLogSubscriptionVariables = Exact<{
   [key: string]: never;
 }>;
 
-export type SubscribeOneLatestReachlogSubscription = {
+export type SubscribeOneLatestReachLogSubscription = {
   __typename?: "subscription_root";
   reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
 };
@@ -2180,9 +2180,9 @@ export type CreateOneReachRecordMutation = {
   } | null;
 };
 
-export type GetStampTrrigersQueryVariables = Exact<{ [key: string]: never }>;
+export type GetStampTriggersQueryVariables = Exact<{ [key: string]: never }>;
 
-export type GetStampTrrigersQuery = {
+export type GetStampTriggersQuery = {
   __typename?: "query_root";
   stampTriggers: Array<{
     __typename?: "StampTriggers";
@@ -2516,15 +2516,15 @@ export type GetOneLatestReachLogQueryResult = Apollo.QueryResult<
   GetOneLatestReachLogQuery,
   GetOneLatestReachLogQueryVariables
 >;
-export const SubscribeOneLatestReachlogDocument = gql`
-  subscription SubscribeOneLatestReachlog {
+export const SubscribeOneLatestReachLogDocument = gql`
+  subscription SubscribeOneLatestReachLog {
     reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
       reachNum
     }
   }
 `;
-export type SubscribeOneLatestReachlogSubscriptionResult =
-  Apollo.SubscriptionResult<SubscribeOneLatestReachlogSubscription>;
+export type SubscribeOneLatestReachLogSubscriptionResult =
+  Apollo.SubscriptionResult<SubscribeOneLatestReachLogSubscription>;
 export const GetListReachLogsAfterTimestampDocument = gql`
   query GetListReachLogsAfterTimestamp($timestamp: timestamptz!) {
     reachLogs(
@@ -2564,17 +2564,17 @@ export type CreateOneReachRecordMutationOptions = Apollo.BaseMutationOptions<
   CreateOneReachRecordMutation,
   CreateOneReachRecordMutationVariables
 >;
-export const GetStampTrrigersDocument = gql`
-  query GetStampTrrigers {
+export const GetStampTriggersDocument = gql`
+  query GetStampTriggers {
     stampTriggers {
       id
       name
     }
   }
 `;
-export type GetStampTrrigersQueryResult = Apollo.QueryResult<
-  GetStampTrrigersQuery,
-  GetStampTrrigersQueryVariables
+export type GetStampTriggersQueryResult = Apollo.QueryResult<
+  GetStampTriggersQuery,
+  GetStampTriggersQueryVariables
 >;
 export const CreateOneStampTriggerDocument = gql`
   mutation CreateOneStampTrigger($name: String!) {
