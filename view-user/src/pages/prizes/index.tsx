@@ -41,8 +41,9 @@ const Page: NextPage = () => {
       setBingoPrize((prizes) =>
         prizes.map((prize) => {
           const updatePrize = subscription.prizes.find(
-            (subscriptionPrize: SubscribeListPrizesIsWonSubscription["prizes"][0]) =>
-              subscriptionPrize.id === prize.id,
+            (
+              subscriptionPrize: SubscribeListPrizesIsWonSubscription["prizes"][0],
+            ) => subscriptionPrize.id === prize.id,
           );
           return updatePrize ? { ...prize, isWon: updatePrize.isWon } : prize;
         }),
