@@ -1154,14 +1154,6 @@ export type StampTriggersBoolExp = {
   name?: InputMaybe<StringComparisonExp>;
 };
 
-/** unique or primary key constraints on table "stamp_triggers" */
-export enum StampTriggersConstraint {
-  /** unique or primary key constraint on columns "name" */
-  stampTriggersNameKey = "stamp_triggers_name_key",
-  /** unique or primary key constraint on columns "id" */
-  stampTriggersPkey = "stamp_triggers_pkey",
-}
-
 /** input type for incrementing numeric columns in table "stamp_triggers" */
 export type StampTriggersIncInput = {
   id?: InputMaybe<Scalars["Int"]["input"]>;
@@ -1199,23 +1191,11 @@ export type StampTriggersMutationResponse = {
   returning: Array<StampTriggers>;
 };
 
-/** on_conflict condition type for table "stamp_triggers" */
-export type StampTriggersOnConflict = {
-  constraint: StampTriggersConstraint;
-  updateColumns?: Array<StampTriggersUpdateColumn>;
-  where?: InputMaybe<StampTriggersBoolExp>;
-};
-
 /** Ordering options when selecting data from "stamp_triggers". */
 export type StampTriggersOrderBy = {
   createdAt?: InputMaybe<OrderBy>;
   id?: InputMaybe<OrderBy>;
   name?: InputMaybe<OrderBy>;
-};
-
-/** primary key columns input for table: stamp_triggers */
-export type StampTriggersPkColumnsInput = {
-  id: Scalars["Int"]["input"];
 };
 
 /** select columns of table "stamp_triggers" */
@@ -1273,16 +1253,6 @@ export type StampTriggersSumFields = {
   __typename?: "StampTriggersSumFields";
   id?: Maybe<Scalars["Int"]["output"]>;
 };
-
-/** update columns of table "stamp_triggers" */
-export enum StampTriggersUpdateColumn {
-  /** column name */
-  createdAt = "createdAt",
-  /** column name */
-  id = "id",
-  /** column name */
-  name = "name",
-}
 
 export type StampTriggersUpdates = {
   /** increments the numeric columns with given value of the filtered values */
@@ -1360,6 +1330,8 @@ export type TimestamptzComparisonExp = {
 /** mutation root */
 export type MutationRoot = {
   __typename?: "mutation_root";
+  /** execute VOLATILE function "decrement_latest_reach_log" which returns "reach_logs" */
+  decrementLatestReachLog: Array<ReachLogs>;
   /** delete data from the table: "images" */
   deleteImages?: Maybe<ImagesMutationResponse>;
   /** delete single row from the table: "images" */
@@ -1378,8 +1350,8 @@ export type MutationRoot = {
   deleteReachLogsByPk?: Maybe<ReachLogs>;
   /** delete data from the table: "stamp_triggers" */
   deleteStampTriggers?: Maybe<StampTriggersMutationResponse>;
-  /** delete single row from the table: "stamp_triggers" */
-  deleteStampTriggersByPk?: Maybe<StampTriggers>;
+  /** execute VOLATILE function "increment_latest_reach_log" which returns "reach_logs" */
+  incrementLatestReachLog: Array<ReachLogs>;
   /** insert data into the table: "images" */
   insertImages?: Maybe<ImagesMutationResponse>;
   /** insert a single row into the table: "images" */
@@ -1426,10 +1398,17 @@ export type MutationRoot = {
   updateReachLogsMany?: Maybe<Array<Maybe<ReachLogsMutationResponse>>>;
   /** update data of the table: "stamp_triggers" */
   updateStampTriggers?: Maybe<StampTriggersMutationResponse>;
-  /** update single row of the table: "stamp_triggers" */
-  updateStampTriggersByPk?: Maybe<StampTriggers>;
   /** update multiples rows of table: "stamp_triggers" */
   updateStampTriggersMany?: Maybe<Array<Maybe<StampTriggersMutationResponse>>>;
+};
+
+/** mutation root */
+export type MutationRootDecrementLatestReachLogArgs = {
+  distinctOn?: InputMaybe<Array<ReachLogsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
 };
 
 /** mutation root */
@@ -1478,8 +1457,12 @@ export type MutationRootDeleteStampTriggersArgs = {
 };
 
 /** mutation root */
-export type MutationRootDeleteStampTriggersByPkArgs = {
-  id: Scalars["Int"]["input"];
+export type MutationRootIncrementLatestReachLogArgs = {
+  distinctOn?: InputMaybe<Array<ReachLogsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
+  where?: InputMaybe<ReachLogsBoolExp>;
 };
 
 /** mutation root */
@@ -1533,13 +1516,11 @@ export type MutationRootInsertReachLogsOneArgs = {
 /** mutation root */
 export type MutationRootInsertStampTriggersArgs = {
   objects: Array<StampTriggersInsertInput>;
-  onConflict?: InputMaybe<StampTriggersOnConflict>;
 };
 
 /** mutation root */
 export type MutationRootInsertStampTriggersOneArgs = {
   object: StampTriggersInsertInput;
-  onConflict?: InputMaybe<StampTriggersOnConflict>;
 };
 
 /** mutation root */
@@ -1626,13 +1607,6 @@ export type MutationRootUpdateStampTriggersArgs = {
 };
 
 /** mutation root */
-export type MutationRootUpdateStampTriggersByPkArgs = {
-  _inc?: InputMaybe<StampTriggersIncInput>;
-  _set?: InputMaybe<StampTriggersSetInput>;
-  pkColumns: StampTriggersPkColumnsInput;
-};
-
-/** mutation root */
 export type MutationRootUpdateStampTriggersManyArgs = {
   updates: Array<StampTriggersUpdates>;
 };
@@ -1667,8 +1641,6 @@ export type QueryRoot = {
   stampTriggers: Array<StampTriggers>;
   /** fetch aggregated fields from the table: "stamp_triggers" */
   stampTriggersAggregate: StampTriggersAggregate;
-  /** fetch data from the table: "stamp_triggers" using primary key columns */
-  stampTriggersByPk?: Maybe<StampTriggers>;
 };
 
 export type QueryRootImagesArgs = {
@@ -1767,10 +1739,6 @@ export type QueryRootStampTriggersAggregateArgs = {
   where?: InputMaybe<StampTriggersBoolExp>;
 };
 
-export type QueryRootStampTriggersByPkArgs = {
-  id: Scalars["Int"]["input"];
-};
-
 export type SubscriptionRoot = {
   __typename?: "subscription_root";
   /** fetch data from the table: "images" */
@@ -1809,8 +1777,6 @@ export type SubscriptionRoot = {
   stampTriggers: Array<StampTriggers>;
   /** fetch aggregated fields from the table: "stamp_triggers" */
   stampTriggersAggregate: StampTriggersAggregate;
-  /** fetch data from the table: "stamp_triggers" using primary key columns */
-  stampTriggersByPk?: Maybe<StampTriggers>;
   /** fetch data from the table in a streaming manner: "stamp_triggers" */
   stampTriggersStream: Array<StampTriggers>;
 };
@@ -1933,10 +1899,6 @@ export type SubscriptionRootStampTriggersAggregateArgs = {
   offset?: InputMaybe<Scalars["Int"]["input"]>;
   orderBy?: InputMaybe<Array<StampTriggersOrderBy>>;
   where?: InputMaybe<StampTriggersBoolExp>;
-};
-
-export type SubscriptionRootStampTriggersByPkArgs = {
-  id: Scalars["Int"]["input"];
 };
 
 export type SubscriptionRootStampTriggersStreamArgs = {
