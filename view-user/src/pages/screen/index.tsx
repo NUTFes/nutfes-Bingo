@@ -6,12 +6,12 @@ import { useSubscription } from "@apollo/client";
 import {
   SubscribeListNumbersDocument,
   SubscribeCreatedStampTriggerDocument,
-  SubscribeOneLatestReachlogDocument,
+  SubscribeOneLatestReachLogDocument,
 } from "@/type/graphql";
 import type {
   SubscribeListNumbersSubscription,
   SubscribeCreatedStampTriggerSubscription,
-  SubscribeOneLatestReachlogSubscription,
+  SubscribeOneLatestReachLogSubscription,
 } from "@/type/graphql";
 import {
   NumberCardLarge,
@@ -37,7 +37,7 @@ const images: { [key: string]: string } = {
 type Stamp = {
   id: number;
   name: string;
-  createdAt: string;
+  createdAt?: string;
 };
 
 type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
@@ -94,18 +94,21 @@ const Page: NextPage = () => {
     );
   // リーチログのサブスクリプション
   const { data: reachLog } =
-    useSubscription<SubscribeOneLatestReachlogSubscription>(
-      SubscribeOneLatestReachlogDocument,
+    useSubscription<SubscribeOneLatestReachLogSubscription>(
+      SubscribeOneLatestReachLogDocument,
     );
 
   useEffect(() => {
-    if (triggers?.stampTriggers && triggers?.stampTriggers.length > 0) {
+    if (triggers?.stampTriggers?.length) {
       let latestCreatedAt = new Date(0).toISOString();
 
       triggers.stampTriggers.forEach((stamp: Stamp) => {
         addCircleById(stamp.name);
 
-        if (new Date(stamp.createdAt) > new Date(latestCreatedAt)) {
+        if (
+          stamp.createdAt &&
+          new Date(stamp.createdAt) > new Date(latestCreatedAt)
+        ) {
           latestCreatedAt = stamp.createdAt;
         }
       });
