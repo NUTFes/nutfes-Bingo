@@ -12,4 +12,9 @@ export const ja = {
     drawOrder: "抽選順",
     ascending: "昇順",
   },
+  helpCarousel: {
+    close: "閉じる",
+    back: "戻る",
+    next: "次へ",
+  },
 };

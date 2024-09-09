@@ -1,0 +1,11 @@
+.dotButton {
+  background-color: #e8e8e8;
+  width: 5vw;
+  height: 5vw;
+  border: none;
+  border-radius: 50%;
+}
+
+.selected {
+  background-color: #ff3342;
+}

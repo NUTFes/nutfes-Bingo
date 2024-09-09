@@ -2,14 +2,26 @@ import styles from "./Header.module.css";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { IoHelpCircleOutline } from "react-icons/io5";
-
-// ボタンの動作確認用の関数（後でヘルプに飛ぶようにする）
-const goHelp = function () {
-  console.log("1");
-};
+import { HelpCarousel } from "@/components";
+import { useState, useEffect } from "react";
 
 const Header = () => {
   const router = useRouter();
+  const [isOpenHelpCarousel, setIsOpenHelpCarousel] = useState(false);
+
+  useEffect(() => {
+    const isHelpShown = localStorage.getItem("isOpenHelpCarousel");
+
+    if (isHelpShown === null) {
+      setIsOpenHelpCarousel(true);
+      localStorage.setItem("isOpenHelpCarousel", JSON.stringify(true));
+    }
+  }, []);
+
+  const handleClick = () => {
+    setIsOpenHelpCarousel(true);
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.main}>
@@ -21,10 +33,16 @@ const Header = () => {
           height={300}
           onClick={() => router.push("/")}
         />
-        <button className={styles.icon} onClick={goHelp}>
+        <button className={styles.icon} onClick={handleClick}>
           <IoHelpCircleOutline />
         </button>
       </div>
+      {isOpenHelpCarousel && (
+        <HelpCarousel
+          isOpened={isOpenHelpCarousel}
+          setIsOpened={setIsOpenHelpCarousel}
+        />
+      )}
     </div>
   );
 };

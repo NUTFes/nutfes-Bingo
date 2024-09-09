@@ -12,4 +12,9 @@ export const en = {
     drawOrder: "Draw Order",
     ascending: "Ascending",
   },
+  helpCarousel: {
+    close: "close",
+    back: "back",
+    next: "next",
+  },
 };
