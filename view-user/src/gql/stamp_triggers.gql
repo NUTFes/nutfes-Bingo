@@ -1,5 +1,5 @@
 # triggerの取得(Get)
-query GetStampTrrigers {
+query GetStampTriggers {
   stampTriggers {
     id
     name
