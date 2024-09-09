@@ -26,21 +26,14 @@ const PrizeCard = (props: PrizeCardProps) => {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <div
-          className={styles.image}
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "100%",
-          }}
-        >
+        <div className={styles.image}>
           <div className={styles.imageWrapper}>
             <Image src={imageURL} alt="PrizeImage" layout="fill" />
           </div>
         </div>
         {bingoPrize.isWon && (
           <div className={classNames(styles.overlay, styles.center)}>
-            <p className={styles.center}></p>
+            <p className={styles.center}>当選済み</p>
           </div>
         )}
       </div>

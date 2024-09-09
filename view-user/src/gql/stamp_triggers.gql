@@ -3,7 +3,6 @@ query GetStampTrrigers {
   stampTriggers {
     id
     name
-    trigger
   }
 }
 
@@ -12,17 +11,6 @@ mutation CreateOneStampTrigger($name: String!) {
   insertStampTriggersOne(object: { name: $name }) {
     id
     name
-    trigger
-  }
-}
-
-# triggerの更新(Update)
-mutation UpdateOneTriggerFlag($id: Int!, $trigger: Boolean!) {
-  updateStampTriggers(
-    where: { id: { _eq: $id } }
-    _set: { trigger: $trigger }
-  ) {
-    affectedRows
   }
 }
 
@@ -38,16 +26,15 @@ subscription SubscribeStampTriggers {
   stampTriggers {
     id
     name
-    trigger
+    createdAt
   }
 }
 
 # 変更されたtriggerの取得(Subscription)
-subscription SubscribeUpdatedStampTrigger($updatedAt: timestamptz!) {
-  stampTriggers(where: { updatedAt: { _gt: $updatedAt } }) {
+subscription SubscribeCreatedStampTrigger($createdAt: timestamptz!) {
+  stampTriggers(where: { createdAt: { _gt: $createdAt } }) {
     id
     name
-    trigger
-    updatedAt
+    createdAt
   }
 }

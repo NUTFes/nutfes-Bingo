@@ -187,7 +187,7 @@
   height: 100vh;
   width: 100vw;
   background-color: aliceblue;
-  background-image: linear-gradient(180deg, #d95b7f, #856db2, #07033e);
+  background-image: white;
 }
 
 .loginButton {

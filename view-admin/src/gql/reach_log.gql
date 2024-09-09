@@ -25,14 +25,15 @@ query GetListReachLogsAfterTimestamp($timestamp: timestamptz!) {
   }
 }
 
-# リーチログの追加(Create)
-mutation CreateOneReachRecord($status: Boolean!, $reachNum: Int!) {
-  insertReachLogsOne(
-    object: { status: $status, reachNum: $reachNum, createdAt: "now()" }
-  ) {
+# 関数の実行
+mutation IncrementReachNum {
+  incrementLatestReachLog {
     id
-    status
-    createdAt
-    reachNum
+  }
+}
+
+mutation DecrementReachNum {
+  decrementLatestReachLog {
+    id
   }
 }
