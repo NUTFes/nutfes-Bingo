@@ -68,7 +68,7 @@ const Page: NextPage = () => {
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
   const [latestCreatedAt, setLatestCreatedAt] = useState<string>(
-    "2024-08-29T08:12:00",
+    new Date().toString(),
   );
   const [bingoNumbers, setBingoNumbers] = useState<
     SubscribeListNumbersSubscription["numbers"]
@@ -100,8 +100,6 @@ const Page: NextPage = () => {
 
   useEffect(() => {
     if (triggers?.stampTriggers?.length) {
-      let latestCreatedAt = new Date(0).toISOString();
-
       triggers.stampTriggers.forEach((stamp: Stamp) => {
         addCircleById(stamp.name);
 
@@ -109,7 +107,7 @@ const Page: NextPage = () => {
           stamp.createdAt &&
           new Date(stamp.createdAt) > new Date(latestCreatedAt)
         ) {
-          latestCreatedAt = stamp.createdAt;
+          setLatestCreatedAt(stamp.createdAt);
         }
       });
 
