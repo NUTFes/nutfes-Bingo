@@ -1,12 +1,21 @@
-import React from "react";
-import { ReactNode, useState } from "react";
+import React, { useState } from "react";
 import styles from "./PrizeResult.module.css";
-import { BingoPrize, updatePrizeExisting } from "@/utils/api_methods";
+import { useMutation } from "@apollo/client";
+import { UpdateOnePrizeIsWonDocument } from "@/type/graphql";
 import Image from "next/image";
-
+import type {
+  UpdateOnePrizeIsWonMutation,
+  UpdateOnePrizeIsWonMutationVariables,
+  GetListPrizesQuery,
+} from "@/type/graphql";
 
 interface PrizeResultProps {
-  prizeResult: BingoPrize[];
+  prizeResult: GetListPrizesQuery["prizes"];
+  setBingoPrize: React.Dispatch<
+    React.SetStateAction<GetListPrizesQuery["prizes"]>
+  >;
+  showOverlay: boolean;
+  showToggle: boolean;
 }
 
 export const PrizeResult = (props: PrizeResultProps) => {
@@ -14,59 +23,81 @@ export const PrizeResult = (props: PrizeResultProps) => {
   const imageVisibility = () => {
     setIsImageVisible(false);
   };
+
+  const [updatePrize] = useMutation<
+    UpdateOnePrizeIsWonMutation,
+    UpdateOnePrizeIsWonMutationVariables
+  >(UpdateOnePrizeIsWonDocument);
+
+  // imageURLs を string[] 型にするための修正
+  const imageURLs: string[] = props.prizeResult.map((prize) => {
+    if (prize.image) {
+      const { bucketName, fileName } = prize.image;
+      return `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${bucketName}/${fileName}`;
+    } else {
+      return "";
+    }
+  });
+
+  const handleToggleChange = (id: number, isWon: boolean) => {
+    updatePrize({ variables: { id: id, isWon: isWon } });
+    props.setBingoPrize((prev) =>
+      prev.map((prize) =>
+        prize.id === id ? { ...prize, isWon: isWon } : prize,
+      ),
+    );
+  };
+
   return (
-    <div className={styles.content_wrapper}>
+    <div className={styles.wrapper}>
       <div className={styles.container}>
-        <div className={styles.frame_title}>景品一覧</div>
-        <div id="loading" className={isImageVisible ? styles.visible : styles.hidden}></div>
-        <div className={styles.card_frame}>
+        <div className={styles.title}>景品一覧</div>
+        <div
+          id="loading"
+          className={isImageVisible ? styles.loading : styles.hidden}
+        ></div>
+        <div className={styles.grid}>
           {[...props.prizeResult]
             .sort((a, b) => a.id - b.id)
-            .map((prizeResult) => (
-              <div className={styles.card} key={prizeResult.id}>
-                <div
-                  style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
-                  }}
-                >
+            .map((prizeResult, index) => (
+              <div
+                className={styles.card}
+                key={prizeResult.id}
+                id={`prize-${prizeResult.id}`}
+              >
+                <div className={styles.image}>
                   <Image
-                    src={prizeResult.image}
-                    className={styles.image}
+                    src={imageURLs && imageURLs[index]}
                     alt="PrizeImage"
                     fill
-                    style={{ objectFit: "cover" }}
-                    onLoadingComplete={imageVisibility}
+                    onLoad={imageVisibility}
                   />
+                  {props.showOverlay && prizeResult.isWon && (
+                    <div className={styles.overlay}>
+                      <p className={styles.overlayText}>当選済み</p>
+                    </div>
+                  )}
                 </div>
-                <div
-                  style={{ position: "relative" }}
-                  className={styles.card_content}
-                >
-                  {prizeResult.name}
+                <div className={styles.cardContent}>
+                  <p>{prizeResult.nameJp}</p>
                 </div>
-                {prizeResult.existing && (
-                  <div className={styles.overlay}>
-                    <p>当選！</p>
+                {props.showToggle && (
+                  <div className={styles.toggleContainer}>
+                    <div className={styles.toggleButton}>
+                      <input
+                        id="toggle"
+                        className={styles.toggleInput}
+                        type="checkbox"
+                        checked={prizeResult.isWon}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          handleToggleChange(prizeResult.id, e.target.checked)
+                        }
+                      />
+                      <label htmlFor="toggle" className={styles.toggleLabel} />
+                    </div>
                   </div>
                 )}
-                <div className={styles.toggle_container}>
-                  <div className={styles.toggle_button}>
-                    <input
-                      id="toggle"
-                      className={styles.toggle_input}
-                      type="checkbox"
-                      checked={prizeResult.existing}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        console.log(prizeResult.id, e.target.checked);
-                        updatePrizeExisting(prizeResult.id, e.target.checked);
-                      }}
-                    />
-                    <label htmlFor="toggle" className={styles.toggle_label} />
-                </div>
-                </div>
-            </div>
+              </div>
             ))}
         </div>
       </div>

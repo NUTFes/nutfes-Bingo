@@ -1,3 +1,4 @@
+import { useMutation, useSubscription } from "@apollo/client";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -8,18 +9,28 @@ import {
   BingoResult,
   Button,
   JudgementModal,
+  UpdateNumberModal,
 } from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
 import { useEffect, useState } from "react";
 import {
-  BingoNumber,
-  createBingoNumber,
-  deleteBingoNumber,
-  subscriptionBingoNumber,
-} from "@/utils/api_methods";
+  CreateOneNumberDocument,
+  DeleteOneNumberDocument,
+  SubscribeListNumbersDocument,
+  IncrementReachNumDocument,
+  DecrementReachNumDocument,
+} from "@/type/graphql";
+import type {
+  SubscribeListNumbersSubscription,
+  IncrementReachNumMutation,
+  DecrementReachNumMutation,
+} from "@/type/graphql";
 
-interface formData {
+interface formDataCreate {
   submitNumber: number | null;
+}
+
+interface formDataDelete {
   inputedNumber: number | null;
   selectedNumber: number | null;
 }
@@ -27,74 +38,95 @@ interface formData {
 const Page: NextPage = () => {
   const { data: session } = useSession();
   const router = useRouter();
-  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
+
+  const [bingoNumbers, setBingoNumbers] = useState<
+    SubscribeListNumbersSubscription["numbers"]
+  >([]);
   const [isOpened, setIsOpened] = useState<boolean>(false);
   const isopenBool = () => setIsOpened(!isOpened);
+  const [isOpenUpdateNumberModal, setIsOpenUpdateNumberModal] =
+    useState<boolean>(false);
+
+  const [incrementReach] = useMutation<IncrementReachNumMutation>(
+    IncrementReachNumDocument,
+  );
+
+  const [decrementReach] = useMutation<DecrementReachNumMutation>(
+    DecrementReachNumDocument,
+  );
 
   const {
-    register,
-    handleSubmit,
-    getValues,
-    reset,
-    formState: { errors },
-  } = useForm<formData>();
+    register: registerCreate,
+    handleSubmit: handleSubmitCreate,
+    getValues: getValuesCreate,
+    reset: resetCreate,
+    formState: { errors: errorsCreate, isValid: isValidCreateSubmit },
+  } = useForm<formDataCreate>({
+    mode: "onChange",
+  });
 
-  const handleSubmitCreate: SubmitHandler<formData> = () => {
-    const { submitNumber } = getValues();
-    createMethod(submitNumber);
+  const {
+    register: registerDelete,
+    handleSubmit: handleSubmitDelete,
+    getValues: getValuesDelete,
+    reset: resetDelete,
+    formState: { errors: errorsDelete, isValid: isValidCreateDelete },
+  } = useForm<formDataDelete>({
+    mode: "onChange",
+  });
+  const { data, loading, error } = useSubscription(
+    SubscribeListNumbersDocument,
+  );
+  const [createNumber] = useMutation(CreateOneNumberDocument);
+  const [deleteNumber] = useMutation(DeleteOneNumberDocument);
+  const [selectedId, setSelectedId] = useState<number>();
+
+  const handleNumberClick = (id: number) => {
+    setSelectedId(id);
+    setIsOpenUpdateNumberModal(true);
   };
 
-  const handleSubmitDelete = async () => {
-    const { inputedNumber, selectedNumber } = getValues();
+  //番号の追加
+  const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
+    const { submitNumber } = getValuesCreate();
+    if (submitNumber !== null) {
+      createNumber({ variables: { number: submitNumber } });
+      resetCreate({ submitNumber: null });
+    }
+  };
+
+  //番号の削除
+  const onSubmitDelete = () => {
+    const { inputedNumber, selectedNumber } = getValuesDelete();
     if (inputedNumber) {
-      deleteMethod(inputedNumber);
-      reset({ inputedNumber: null });
+      deleteNumber({ variables: { number: inputedNumber } });
+      resetDelete({ inputedNumber: null });
     } else if (selectedNumber) {
-      deleteMethod(selectedNumber);
-      reset({ selectedNumber: null });
+      deleteNumber({ variables: { number: selectedNumber } });
+      resetDelete({ selectedNumber: null });
     }
   };
 
+  //subscriptionを行うためのuseEffect
   useEffect(() => {
-    async function fetchBingoNumbers() {
-      try {
-        const response: BingoNumber[] = await subscriptionBingoNumber();
-        if (response) {
-          setBingoNumbers(response);
-        }
-      } catch (error) {
-        console.error("データの取得中にエラーが発生しました:", error);
-      }
+    if (data) {
+      setBingoNumbers(data.numbers);
     }
-    fetchBingoNumbers();
-  }, [bingoNumbers]);
-
-  async function createMethod(data: number | null) {
-    if (data != null) {
-      const newBingoNumber = await createBingoNumber(data);
-      reset({ submitNumber: null });
-      if (newBingoNumber) {
-        console.log("Bingo number created:", newBingoNumber);
-      } else {
-        console.error("Failed to create bingo number.");
-      }
-    }
-  }
-
-  async function deleteMethod(data: number) {
-    const deletedBingoNumber = await deleteBingoNumber(data);
-    reset();
-    if (deletedBingoNumber) {
-      console.log("Bingo number deleted:", deletedBingoNumber);
-    } else {
-      console.error("Failed to delete bingo number.");
-    }
-  }
+  }, [data]);
 
   if (session) {
     return (
       <div className={styles.container}>
-        <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} bingoNumbers={bingoNumbers}/>
+        <JudgementModal
+          isOpened={isOpened}
+          setIsOpened={setIsOpened}
+          bingoNumbers={bingoNumbers}
+        />
+        <UpdateNumberModal
+          isOpened={isOpenUpdateNumberModal}
+          setIsOpened={setIsOpenUpdateNumberModal}
+          id={selectedId}
+        />
         <Header user="Admin">
           <div className={styles.main}>
             <Button
@@ -127,25 +159,34 @@ const Page: NextPage = () => {
         <div className={styles.form}>
           <div className={styles.frame}>
             <p>抽選した番号を入力</p>
-            <form onSubmit={handleSubmit(handleSubmitCreate)}>
+            <form onSubmit={handleSubmitCreate(onSubmitCreate)}>
               <div className={styles.item}>
                 <div className={styles.flexerror}>
                   <input
-                    {...register("submitNumber", {
-                      max: 99,
-                      min: 1,
-                    })}
                     type="number"
                     placeholder="番号を入力"
                     className={styles.inputForm}
+                    {...registerCreate("submitNumber", {
+                      valueAsNumber: true,
+                      max: 99,
+                      min: 1,
+                    })}
                   />
-                  {errors.submitNumber && (
+                  {errorsCreate.submitNumber && (
                     <div className={styles.errormessage}>
                       1~99の番号を入力してください
                     </div>
                   )}
                 </div>
-                <button type="submit" className={styles.Button}>
+                <button
+                  type="submit"
+                  disabled={!isValidCreateSubmit}
+                  className={
+                    errorsCreate.submitNumber
+                      ? styles.not_hover_Button
+                      : styles.Button
+                  }
+                >
                   送信
                 </button>
               </div>
@@ -156,45 +197,71 @@ const Page: NextPage = () => {
             <div className={styles.item}>
               <div className={styles.flexerror}>
                 <input
-                  {...register("inputedNumber", {
-                    max: 99,
-                    min: 1,
-                  })}
                   type="number"
                   placeholder="番号を入力"
                   className={styles.inputForm}
-                  onChange={() => reset({ selectedNumber: null })}
+                  {...registerDelete("inputedNumber", {
+                    max: 99,
+                    min: 1,
+                  })}
                 />
-                {(errors.inputedNumber || errors.selectedNumber) && (
+                {(errorsDelete.inputedNumber ||
+                  errorsDelete.selectedNumber) && (
                   <div className={styles.errormessage}>
                     1~99の番号を入力してください
                   </div>
                 )}
               </div>
               <select
-                {...register("selectedNumber")}
-                onChange={() => reset({ inputedNumber: null })}
+                {...registerDelete("selectedNumber")}
+                onChange={() => resetDelete({ inputedNumber: null })}
               >
                 <option value="" hidden>
                   選択してください
                 </option>
-                {[...bingoNumbers].reverse().map((number, index) => (
-                  <option key={index} value={number.data}>
-                    {number.data}
+                {[...bingoNumbers].reverse().map((bingoNumber, index) => (
+                  <option key={index} value={bingoNumber.number}>
+                    {bingoNumber.number}
                   </option>
                 ))}
               </select>
               <button
                 type="button"
-                className={styles.Button}
-                onClick={handleSubmitDelete}
+                disabled={!isValidCreateDelete}
+                className={
+                  errorsDelete.inputedNumber || errorsDelete.selectedNumber
+                    ? styles.not_hover_Button
+                    : styles.Button
+                }
+                onClick={handleSubmitDelete(onSubmitDelete)}
               >
                 送信
               </button>
             </div>
           </div>
+          <div className={styles.frame}>
+            <div className={styles.item}>
+              <button
+                type="button"
+                className={styles.Button}
+                onClick={() => incrementReach()}
+              >
+                リーチ数を 1 増加する
+              </button>
+              <button
+                type="button"
+                className={styles.Button}
+                onClick={() => decrementReach()}
+              >
+                リーチ数を 1 減少する
+              </button>
+            </div>
+          </div>
         </div>
-        <BingoResult bingoResultNumber={bingoNumbers} />
+        <BingoResult
+          bingoResultNumber={bingoNumbers}
+          onClick={handleNumberClick}
+        />
       </div>
     );
   }

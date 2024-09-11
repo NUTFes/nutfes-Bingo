@@ -1,48 +1,37 @@
-.primary {
-  background: rgba(255, 255, 255, 0.70);
-  border: 1px solid #333333;
-  color: #07033E;
-  text-align: center;
-  cursor: pointer;
-  align-items: center;
+.button {
   display: flex;
-  flex-flow: column;
   justify-content: center;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  align-items: center;
+  font-weight: 700;
+  border-radius: 1vw;
+  border: 1vw solid #ff3342;
+  color: white;
+  background-color: #ff3342;
+  width: 25vw;
+  height: 5.6vh;
+  padding: 1vw;
+  font-family: "Noto Sans JP";
 }
 
-.l {
-  font-size: x-large;
-  padding: 0.8rem 1.5rem;
+.inversion {
+  color: #ff3342;
+  background-color: white;
 }
 
-.xm {
-  font-size: x-small;
-  padding: 0.5rem 1.5rem;
+.button:active {
+  background-color: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1vw rgba(102, 102, 102, 0.2);
+  transform: translateY(4px);
 }
 
-.m {
-  font-size: medium;
-  padding: 0.4rem 1rem;
-}
+@media screen and (min-width: 1024px) {
+  .button {
+    border: 0.3vw solid #ff3342;
+  }
 
-.s {
-  font-size: x-small;
-  padding:0.1rem;
-}
-
-
-.circle {
-  border-radius: 0.625rem;
-}
-
-
-.square {
-  border-radius: 0.4rem;
-}
-
-.primary:hover {
-  background-color: whitesmoke;
-  color: var(--primary);
-  transition: 0.25s;
+  .button:active {
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 3px rgba(102, 102, 102, 0.2);
+    transform: translateY(4px);
+  }
 }

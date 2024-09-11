@@ -1,2 +1,5 @@
-- "!include public_bingo_number.yaml"
-- "!include public_bingo_prize.yaml"
+- "!include public_images.yaml"
+- "!include public_numbers.yaml"
+- "!include public_prizes.yaml"
+- "!include public_reach_logs.yaml"
+- "!include public_stamp_triggers.yaml"

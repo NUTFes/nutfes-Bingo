@@ -1,1 +1,1 @@
-export {default} from "./BingoIcon"
+export { default } from "./BingoIcon";

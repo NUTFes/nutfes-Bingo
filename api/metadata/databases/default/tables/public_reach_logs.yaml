@@ -1,0 +1,3 @@
+table:
+  name: reach_logs
+  schema: public

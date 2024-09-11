@@ -1,0 +1,39 @@
+# リーチログの最新のreachNumを取得(Get)
+query GetOneLatestReachLog {
+  reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
+    reachNum
+  }
+}
+
+# リーチログの最新のreachNumを継続取得(Subscription)
+subscription SubscribeOneLatestReachLog {
+  reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
+    reachNum
+  }
+}
+
+# 指定したタイプスタンプ以降のリーチログを全て取得(Get)
+query GetListReachLogsAfterTimestamp($timestamp: timestamptz!) {
+  reachLogs(
+    where: { createdAt: { _gt: $timestamp } }
+    orderBy: { createdAt: ASC }
+  ) {
+    id
+    status
+    createdAt
+    reachNum
+  }
+}
+
+# 関数の実行
+mutation IncrementReachNum {
+  incrementLatestReachLog {
+    id
+  }
+}
+
+mutation DecrementReachNum {
+  decrementLatestReachLog {
+    id
+  }
+}

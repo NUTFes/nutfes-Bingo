@@ -1,0 +1,40 @@
+# triggerの取得(Get)
+query GetStampTriggers {
+  stampTriggers {
+    id
+    name
+  }
+}
+
+# triggerの追加(Create)
+mutation CreateOneStampTrigger($name: String!) {
+  insertStampTriggersOne(object: { name: $name }) {
+    id
+    name
+  }
+}
+
+# triggerの削除(Delete)
+mutation DeleteOneStampTrigger($id: Int!) {
+  deleteStampTriggers(where: { id: { _eq: $id } }) {
+    affectedRows
+  }
+}
+
+# triggerの継続取得(Subscription)
+subscription SubscribeStampTriggers {
+  stampTriggers {
+    id
+    name
+    createdAt
+  }
+}
+
+# 変更されたtriggerの取得(Subscription)
+subscription SubscribeCreatedStampTrigger($createdAt: timestamptz!) {
+  stampTriggers(where: { createdAt: { _gt: $createdAt } }) {
+    id
+    name
+    createdAt
+  }
+}

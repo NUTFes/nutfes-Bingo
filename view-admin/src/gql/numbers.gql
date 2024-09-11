@@ -1,0 +1,47 @@
+# 番号の取得(Get)
+query GetListNumbers {
+  numbers {
+    id
+    number
+    createdAt
+    updatedAt
+  }
+}
+
+# 番号の追加(Create)
+mutation CreateOneNumber($number: Int!) {
+  insertNumbersOne(object: { number: $number }) {
+    id
+  }
+}
+
+# 番号の継続取得(Subscription)
+mutation DeleteOneNumber($number: Int!) {
+  deleteNumbers(where: { number: { _eq: $number } }) {
+    affectedRows
+  }
+}
+
+# 番号の更新(Mutation)
+mutation UpdateOneNumber($id: Int!, $number: Int!) {
+  updateNumbers(
+    where: { id: { _eq: $id } }
+    _set: { number: $number }
+  ) {
+    affectedRows
+    returning {
+      id
+      number
+    }
+  }
+}
+
+# 番号の削除(Delete)
+subscription SubscribeListNumbers {
+  numbers {
+    id
+    number
+    createdAt
+    updatedAt
+  }
+}

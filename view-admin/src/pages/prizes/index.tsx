@@ -1,68 +1,54 @@
 import type { NextPage } from "next";
-import Image from "next/image";
 import styles from "./prizes.module.css";
 import { Header, Button, PrizeResult } from "@/components/common";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
-import {
-  BingoPrize,
-  subscriptionBingoPrize,
-  getBingoPrize,
-} from "@/utils/api_methods";
+import { useState, useEffect, useRef } from "react";
+import { useQuery } from "@apollo/client";
+import { GetListPrizesDocument } from "@/type/graphql";
+import type { GetListPrizesQuery } from "@/type/graphql";
 
 const Page: NextPage = () => {
   const router = useRouter();
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // getしてきた画像
-
-  useEffect(() => {
-    async function getPrizeImage() {
-      try {
-        const getData: BingoPrize[] = await getBingoPrize();
-        if (getData) {
-          setBingoPrize(getData);
-          console.log("getPrize");
-        }
-      } catch (error) {
-        console.error("データの取得中にエラーが発生しました:", error);
-      }
-    }
-    getPrizeImage();
-  }, []);
-
-  useEffect(() => {
-    async function subscriptionBingoExisting() {
-      try {
-        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
-        setBingoPrize((oldPrize) => {
-          // existing プロパティを subscriptionData で更新
-          const updatedPrizes = oldPrize.map((prize) => {
-            const matchingSubscriptionPrize = subscriptionData.find(
-              (subscriptionPrize) => subscriptionPrize.id === prize.id
-            ); // oldPrizeとsubscriptionDataのidが一致するものを探して上書き
-            return matchingSubscriptionPrize
-              ? { ...prize, existing: matchingSubscriptionPrize.existing }
-              : prize;
-          });
-          return updatedPrizes;
-        });
-      } catch (error) {}
-    }
-    subscriptionBingoExisting();
-  }, [bingoPrize]);
-
-  // 景品の文字検索機能 divタグの要素を取得しています。
+  const [bingoPrize, setBingoPrize] = useState<GetListPrizesQuery["prizes"]>(
+    [],
+  );
   const [searchText, setSearchText] = useState("");
+  const [searchResults, setSearchResults] = useState<
+    GetListPrizesQuery["prizes"]
+  >([]);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const { data } = useQuery<GetListPrizesQuery>(GetListPrizesDocument);
+
+  useEffect(() => {
+    if (data) {
+      setBingoPrize(data.prizes);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (searchText === "") {
+      setSearchResults([]);
+    } else {
+      setSearchResults(
+        bingoPrize.filter((prize) =>
+          prize.nameJp.toLowerCase().includes(searchText.toLowerCase()),
+        ),
+      );
+    }
+  }, [searchText, bingoPrize]);
+
   const handleSearch = () => {
-    const elements = Array.from(document.querySelectorAll("div"));
-    elements.forEach((element) => {
-      if (
-        element &&
-        element.textContent &&
-        element.textContent.includes(searchText)
-      ) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    });
+    const searchInput = searchRef.current;
+    if (searchInput && searchResults.length > 0) {
+      const firstResultElement = document.getElementById(
+        `prize-${searchResults[0].id}`,
+      );
+      firstResultElement?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
   };
 
   return (
@@ -77,18 +63,33 @@ const Page: NextPage = () => {
       <div className={styles.title}>
         <div className={styles.title_button}>
           <input
+            ref={searchRef}
             className={styles.search_box}
             type="text"
             placeholder="検索..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
           />
           <button className={styles.search_button} onClick={handleSearch}>
             検索
           </button>
         </div>
       </div>
-      <PrizeResult prizeResult={bingoPrize} />
+      <PrizeResult
+        prizeResult={
+          searchText !== "" && searchResults.length > 0
+            ? searchResults
+            : bingoPrize
+        }
+        setBingoPrize={setBingoPrize}
+        showOverlay={true}
+        showToggle={true}
+      />
     </div>
   );
 };

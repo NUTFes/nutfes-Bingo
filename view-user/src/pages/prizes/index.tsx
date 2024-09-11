@@ -1,74 +1,69 @@
 import type { NextPage } from "next";
-import styles from "./prizes.module.css";
-import Image from "next/image";
-import { Header, Button, PrizeResult } from "@/components/common";
+import { PrizeCardList, Loading, Layout } from "@/components";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
+import { ja, en } from "@/locales";
+import { useQuery, useSubscription } from "@apollo/client";
 import {
-  BingoPrize,
-  subscriptionBingoPrize,
-  getBingoPrize,
-} from "@/utils/api_methods";
+  GetListPrizesDocument,
+  SubscribeListPrizesIsWonDocument,
+} from "@/type/graphql";
+import type {
+  GetListPrizesQuery,
+  SubscribeListPrizesIsWonSubscription,
+} from "@/type/graphql";
+import { useRecoilState } from "recoil";
+import { bingoPrizeState } from "../../Atom/atom";
 
 const Page: NextPage = () => {
-  const router = useRouter();
-  const [bingoPrize, setBingoPrize] = useState<BingoPrize[]>([]); // get
+  const { pathname: pageName, locale } = useRouter();
+  const t = locale === "ja" ? ja : en;
+  const [bingoPrize, setBingoPrize] = useRecoilState(bingoPrizeState);
+  const [language, setLanguage] = useState<string>(locale || "ja");
+  const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
+
+  const { data: query, loading } = useQuery<GetListPrizesQuery>(
+    GetListPrizesDocument,
+  );
+  const { data: subscription } =
+    useSubscription<SubscribeListPrizesIsWonSubscription>(
+      SubscribeListPrizesIsWonDocument,
+    );
 
   useEffect(() => {
-    async function getPrizeImage() {
-      try {
-        const getData: BingoPrize[] = await getBingoPrize();
-        if (getData) {
-          setBingoPrize(getData);
-          console.log("getPrize");
-        }
-      } catch (error) {
-        console.log("データの取得中にえらーが発生しました:", error);
-      }
+    if (query) {
+      setBingoPrize(query?.prizes);
     }
-    getPrizeImage();
-  }, []);
+  }, [query]);
 
   useEffect(() => {
-    async function subscriptionBingoExisting() {
-      try {
-        const subscriptionData: BingoPrize[] = await subscriptionBingoPrize();
-        setBingoPrize((oldPrize) => {
-          // existing プロパティを subscriptionData で更新
-          const updatedPrizes = oldPrize.map((prize) => {
-            const matchingSubscriptionPrize = subscriptionData.find(
-              (subscriptionPrize) => subscriptionPrize.id === prize.id
-            ); // oldPrizeとsubscriptionDataのidが一致するものを探して上書き
-            return matchingSubscriptionPrize
-              ? { ...prize, existing: matchingSubscriptionPrize.existing }
-              : prize;
-          });
-          return updatedPrizes;
-        });
-      } catch (error) {}
+    if (subscription && subscription.prizes) {
+      setBingoPrize((prizes) =>
+        prizes.map((prize) => {
+          const updatePrize = subscription.prizes.find(
+            (
+              subscriptionPrize: SubscribeListPrizesIsWonSubscription["prizes"][0],
+            ) => subscriptionPrize.id === prize.id,
+          );
+          return updatePrize ? { ...prize, isWon: updatePrize.isWon } : prize;
+        }),
+      );
     }
-    subscriptionBingoExisting();
-  }, [bingoPrize]);
+  }, [subscription]);
 
   return (
-    <div className={styles.container}>
-      <Header user="">
-        <div className={styles.main}>
-          <Button size="m" shape="circle" onClick={() => router.push("/")}>
-            <div className={styles.buttonContents}>
-              <Image
-                src="/BingoCard.svg"
-                alt="BingoCard"
-                width={25}
-                height={25}
-              />
-              Number
-            </div>
-          </Button>
-        </div>
-      </Header>
-      <PrizeResult prizeResult={bingoPrize} />
-    </div>
+    <>
+      {loading && <Loading />}
+      <Layout
+        pageName={pageName}
+        isSortedAscending={isSortedAscending}
+        setIsSortedAscending={setIsSortedAscending}
+        language={language}
+        setLanguage={setLanguage}
+      >
+        <PrizeCardList BingoPrize={bingoPrize} />
+      </Layout>
+    </>
   );
 };
 

@@ -1,0 +1,88 @@
+.horizontalCenter {
+  display: flex;
+  justify-content: center;
+}
+
+.bubble {
+  width: 87.5vw;
+  height: 50.9vw;
+  position: fixed;
+  background: #ffffff;
+  box-shadow: 1.09375vw 1.09375vw 0px 0px #ff3341;
+  border-radius: 5.46875vw;
+  border: #ff3341 solid 1.640625vw;
+  padding: 1rem;
+  z-index: 100;
+}
+
+.bubble:before {
+  content: "";
+  position: absolute;
+  width: 0;
+  z-index: 0;
+  border-style: solid;
+  border-color: #ff3341 transparent;
+  border-width: 7.9296875vw 3.828125vw 0;
+  bottom: -8.75vw;
+  margin-left: -3.828125vw;
+  display: block;
+  filter: drop-shadow(0.546875vw 1.09375vw #ff3341);
+}
+
+.bubble:after {
+  content: "";
+  position: absolute;
+  display: block;
+  width: 0;
+  z-index: 1;
+  border-style: solid;
+  border-color: #ffffff transparent;
+  border-width: 6.2890625vw 2.1875vw 0;
+  bottom: -6.015625vw;
+  margin-left: -2.1875vw;
+}
+
+.bubble:before,
+.bubble:after {
+  left: var(--bubble-left-position, 50%);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  justify-items: center;
+  align-items: center;
+}
+
+.iconButton {
+  position: relative;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.iconButton:active {
+  animation: softBounce 1.5s infinite;
+}
+
+@keyframes softBounce {
+  0% {
+    transform: scale(1, 0.8);
+  }
+  20% {
+    transform: scale(0.8, 1.1);
+  }
+  90% {
+    transform: scale(1, 1);
+  }
+  100% {
+    transform: scale(1, 0.8);
+  }
+}
