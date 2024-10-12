@@ -117,8 +117,8 @@
   width: 100%;
   height: 35%;
   font-size: 2rem;
-  color: #d95b7f;
-  background-color: #07033e;
+  color: var(--main-color);
+  background-color: #333;
 }
 
 .overlay_small {
@@ -140,8 +140,8 @@
   width: 100%;
   height: 35%;
   font-size: 1.4rem;
-  color: #d95b7f;
-  background-color: #07033e;
+  color: var(--main-color);
+  background-color: #333;
 }
 
 .toggle_input {
@@ -181,12 +181,12 @@
 }
 
 .toggle_input:checked + .toggle_label {
-  border: 3px solid #d95b7f;
+  border: 3px solid var(--main-color);
 }
 
 .toggle_input:checked + .toggle_label:after {
   left: 42px;
-  background: #d95b7f;
+  background: var(--main-color);
 }
 
 .toggle_button {
@@ -197,16 +197,16 @@
 }
 
 .selected .toggle_label {
-  border: 3px solid #d95b7f;
+  border: 3px solid var(--main-color);
 }
 
 .selected .toggle_label:after {
   left: 42px;
-  background: #d95b7f;
+  background: var(--main-color);
 }
 
 .search_box {
-  border: 1px solid #07033e;
+  border: 1px solid #333;
   background-color: #ffffff;
   color: #333;
   font-weight: 700;
@@ -222,7 +222,7 @@
   cursor: pointer;
   font-family: FontAwesome;
   font-size: 1em;
-  background: #07033e;
+  background: var(--main-color);
   color: #fff;
   outline: none;
   width: 25vw;
