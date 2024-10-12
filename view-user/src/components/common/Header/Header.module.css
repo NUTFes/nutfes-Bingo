@@ -1,6 +1,6 @@
 .container {
   width: 100vw;
-  background-color: #ffffff;
+  background-color: var(--background-color);
   position: sticky;
   top: 0;
   z-index: 500;
@@ -19,7 +19,7 @@
 
 .icon {
   font-size: 9.375vw;
-  color: #ff3342;
+  color: var(--main-color);
   border: none;
   background: none;
 }
