@@ -1,6 +1,6 @@
 import React from "react";
 import NumberCardSmall from "../NumberCardSmall";
-import type { SubscribeListNumbersSubscription } from "@/type/graphql";
+import type { SubscribeListNumbersSubscription } from "@/types/graphql";
 import styles from "./NumberCardList.module.css";
 
 interface NumberCardListProps {

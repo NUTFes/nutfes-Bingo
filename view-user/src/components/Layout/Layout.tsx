@@ -19,14 +19,14 @@ import {
   CreateOneStampTriggerDocument,
   CreateOneReachRecordDocument,
   GetOneLatestReachLogDocument,
-} from "@/type/graphql";
+} from "@/types/graphql";
 import type {
   CreateOneStampTriggerMutation,
   CreateOneStampTriggerMutationVariables,
   CreateOneReachRecordMutation,
   CreateOneReachRecordMutationVariables,
   GetOneLatestReachLogQuery,
-} from "@/type/graphql";
+} from "@/types/graphql";
 import { ja, en } from "@/locales";
 
 const images = [

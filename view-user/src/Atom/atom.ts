@@ -1,5 +1,5 @@
 import { atom } from "recoil";
-import type { GetListPrizesQuery } from "@/type/graphql";
+import type { GetListPrizesQuery } from "@/types/graphql";
 
 const defaultPrize = {
   id: 0,
