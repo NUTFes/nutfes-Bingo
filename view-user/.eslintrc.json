@@ -3,6 +3,8 @@
     "next/core-web-vitals",
     "plugin:prettier/recommended",
     "plugin:import/warnings",
-    "prettier"
+    "prettier",
+    "next",
+    "next/babel"
   ]
 }

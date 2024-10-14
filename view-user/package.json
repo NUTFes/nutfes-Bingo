@@ -42,6 +42,7 @@
     "@graphql-codegen/typescript-graphql-request": "^6.2.0",
     "@graphql-codegen/typescript-operations": "^4.2.3",
     "@graphql-codegen/typescript-react-apollo": "^4.3.0",
+    "@svgr/webpack": "^8.1.0",
     "@types/matter-js": "^0.19.6",
     "@types/minio": "^7.1.1",
     "eslint-config-prettier": "^9.1.0",
