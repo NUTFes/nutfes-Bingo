@@ -29,6 +29,14 @@
   position: relative;
 }
 
+.logo path {
+  fill: var(--sub-color);
+}
+
+.logo path:nth-child(2) {
+  fill: var(--main-color);
+}
+
 .loader,
 .loader:after {
   align-items: center;
