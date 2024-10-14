@@ -9,7 +9,7 @@ function ReachCount({ count }: ReachCountProps) {
   return (
     <div className={styles.reachCountContainer}>
       <div className={styles.reachIcon}>
-        <Image src={"/reach-icon.svg"} alt="Reach Icon" fill/>
+        <Image src={"/reach-icon.svg"} alt="Reach Icon" fill />
       </div>
       <div className={styles.reachText}>REACH</div>
       <div className={styles.count}>{count}</div>
