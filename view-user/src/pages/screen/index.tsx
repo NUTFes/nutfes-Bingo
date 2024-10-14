@@ -7,18 +7,19 @@ import {
   SubscribeListNumbersDocument,
   SubscribeCreatedStampTriggerDocument,
   SubscribeOneLatestReachLogDocument,
-} from "@/type/graphql";
+} from "@/types/graphql";
 import type {
   SubscribeListNumbersSubscription,
   SubscribeCreatedStampTriggerSubscription,
   SubscribeOneLatestReachLogSubscription,
-} from "@/type/graphql";
+} from "@/types/graphql";
 import {
   NumberCardLarge,
   NumberCardList,
   ReachCount,
 } from "@/components/common";
 import styles from "./screen.module.css";
+import BingoLogo from "public/logo_bingo.svg";
 
 // 画像のパスを管理
 const images: { [key: string]: string } = {
@@ -223,9 +224,7 @@ const Page: NextPage = () => {
     <>
       <div ref={scene} className={styles.scene} />
       <div className={styles.overlay}>
-        <div className={styles.image}>
-          <Image src="/Bingo_logo.png" alt="logo" fill />
-        </div>
+        <BingoLogo className={styles.logo} />
         <div className={styles.flex}>
           <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
           <div className={styles.column}>

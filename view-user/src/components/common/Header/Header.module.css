@@ -13,13 +13,21 @@
   padding: 2.5vw;
 }
 
-.logo {
-  width: 31.25vw;
-}
-
 .icon {
   font-size: 9.375vw;
   color: var(--main-color);
   border: none;
   background: none;
+}
+
+.logo {
+  width: 31.25vw;
+}
+
+.logo path {
+  fill: var(--sub-color);
+}
+
+.logo path:nth-child(2) {
+  fill: var(--main-color);
 }
