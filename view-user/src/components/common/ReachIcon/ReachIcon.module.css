@@ -17,8 +17,17 @@
   width: 12vw;
   height: 12vw;
   position: absolute;
-  top: 16%;
-  left: 9%;
+  top: 11%;
+  left: 10%;
+}
+
+.icon path {
+  fill: var(--background-color);
+}
+
+.inverted path,
+.inverted circle {
+  fill: var(--main-color);
 }
 
 .text {
