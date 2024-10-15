@@ -7,5 +7,5 @@
 }
 
 .selected {
-  background-color: #ff3342;
+  background-color: var(--main-color);
 }

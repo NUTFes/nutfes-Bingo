@@ -1,6 +1,6 @@
 .reachIcon {
-  background-color: #ff3342;
-  color: white;
+  background-color: var(--main-color);
+  color: var(--background-color);
   padding: 1vw;
   width: 34.810625vw;
   height: 18.565625vw;
@@ -14,11 +14,20 @@
 }
 
 .icon {
-  width: 13vw;
-  height: 13vw;
+  width: 12vw;
+  height: 12vw;
   position: absolute;
-  top: 7%;
-  left: 11%;
+  top: 11%;
+  left: 10%;
+}
+
+.icon path {
+  fill: var(--background-color);
+}
+
+.inverted path,
+.inverted circle {
+  fill: var(--main-color);
 }
 
 .text {
@@ -28,9 +37,10 @@
   line-height: 100%;
   font-family: "Noto Sans Jp";
   margin-left: 13.5vw;
+  margin-right: 2vw;
 }
 
 .color_inversion {
-  background-color: white;
-  color: #ff3342;
+  background-color: var(--background-color);
+  color: var(--main-color);
 }

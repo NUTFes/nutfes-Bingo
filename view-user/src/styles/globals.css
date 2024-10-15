@@ -1,6 +1,6 @@
 body {
   font-family: 'Noto Sans JP', sans-serif;
-  background-color: #fff;
+  background-color: var(--background-color);
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -9,3 +9,8 @@ body::-webkit-scrollbar {
   display:none;
 }
 
+:root {
+  --main-color: #20a0d8;
+  --sub-color: #c4deed;
+  --background-color: #fff;
+}

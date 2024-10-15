@@ -17,7 +17,7 @@
   box-sizing: border-box;
   border-radius: 1rem;
   padding: 40px;
-  background: #ff3342;
+  background: var(--main-color);
   animation: zoomIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   will-change: transform, opacity;
 }
@@ -63,7 +63,7 @@
 }
 
 .inputContainer.bingo input {
-  color: #ff3342;
+  color: var(--main-color);
   font-weight: 900;
 }
 
@@ -74,7 +74,7 @@
 
 input.active {
   outline: none;
-  border: 2px solid #ff3342;
+  border: 2px solid var(--main-color);
 }
 
 .numpad {
@@ -105,7 +105,7 @@ input.active {
 
 .submitButton {
   width: 100%;
-  background-color: #ff3342;
+  background-color: var(--main-color);
   color: #fff;
   font-size: 1.2rem;
   font-weight: 700;
@@ -122,7 +122,7 @@ input.active {
 .resetButton {
   width: 100%;
   background-color: #fff;
-  color: #ff3342;
+  color: var(--main-color);
   font-size: 1.2rem;
   font-weight: 700;
   padding: 15px;
@@ -133,7 +133,7 @@ input.active {
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: inset 0 0 0 2px #ff3342;
+  box-shadow: inset 0 0 0 2px var(--main-color);
 }
 
 .btnClose {
@@ -162,7 +162,7 @@ input.active {
 .contents {
   width: 700px;
   height: 360px;
-  background-color: #07033e;
+  background-color: var(--main-color);
   border-radius: 1rem;
 }
 
@@ -191,7 +191,7 @@ input.active {
   font-size: 3rem;
   font-weight: bold;
   color: #fff;
-  background-color: #ff6591;
+  background-color: var(--main-color);
   padding: 20px;
   border-radius: 1rem;
   border: 2px solid #fff;

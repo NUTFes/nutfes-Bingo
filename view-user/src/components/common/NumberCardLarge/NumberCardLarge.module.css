@@ -4,25 +4,25 @@
   align-items: center;
   width: 62.5vw;
   height: 62.5vw;
-  border: 2vw solid #ff3342;
-  background: linear-gradient(135deg, #fff 50%, #ffeeb1 51%);
+  border: 2vw solid var(--main-color);
+  background: linear-gradient(135deg, var(--background-color) 50%, var(--sub-color) 51%);
   border-radius: 7vw;
   box-sizing: border-box;
-  box-shadow: 1vw 1vw 0vw 0.9vw #ff3342;
+  box-shadow: 1vw 1vw 0vw 0.9vw var(--main-color);
   font-size: 31.25vw;
   font-style: normal;
   font-weight: 400;
   line-height: normal;
-  color: #ff3342;
+  color: var(--main-color);
 }
 
 @media (min-width: 1024px) {
   .container {
     width: 30vw;
     height: 30vw;
-    border: 1rem solid #ff3342;
+    border: 1rem solid var(--main-color);
     border-radius: 1.25rem;
-    box-shadow: 0.5rem 0.5rem 0rem #ff3342;
+    box-shadow: 0.5rem 0.5rem 0rem var(--main-color);
     font-size: 15vw;
   }
 }

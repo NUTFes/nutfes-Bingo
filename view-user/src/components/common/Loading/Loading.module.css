@@ -18,15 +18,23 @@
   height: 95vh;
   width: 85vw;
   border-radius: 10vw;
-  border: 5px solid #ff3342;
-  background-color: white;
-  filter: drop-shadow(1.25vw 1.25vw 0px #ff3342);
+  border: 5px solid var(--main-color);
+  background-color: var(--background-color);
+  filter: drop-shadow(1.25vw 1.25vw 0px var(--main-color));
 }
 
 .logo {
   width: 33vw;
   height: 13vw;
   position: relative;
+}
+
+.logo path {
+  fill: var(--sub-color);
+}
+
+.logo path:nth-child(2) {
+  fill: var(--main-color);
 }
 
 .loader,
@@ -39,7 +47,7 @@
   font-size: 10vw;
   position: relative;
   text-indent: -9999em;
-  color: #ff3342;
+  color: var(--main-color);
   -webkit-transform: translateZ(0);
   -ms-transform: translateZ(0);
   transform: translateZ(0);

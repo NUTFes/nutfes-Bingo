@@ -4,9 +4,9 @@
   align-items: center;
   font-weight: 700;
   border-radius: 1vw;
-  border: 1vw solid #ff3342;
+  border: 1vw solid var(--main-color);
   color: white;
-  background-color: #ff3342;
+  background-color: var(--main-color);
   width: 25vw;
   height: 5.6vh;
   padding: 1vw;
@@ -14,7 +14,7 @@
 }
 
 .inversion {
-  color: #ff3342;
+  color: var(--main-color);
   background-color: white;
 }
 
@@ -26,7 +26,7 @@
 
 @media screen and (min-width: 1024px) {
   .button {
-    border: 0.3vw solid #ff3342;
+    border: 0.3vw solid var(--main-color);
   }
 
   .button:active {

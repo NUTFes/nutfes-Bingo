@@ -1,6 +1,6 @@
 .container {
   width: 100vw;
-  background-color: #ffffff;
+  background-color: var(--background-color);
   position: sticky;
   top: 0;
   z-index: 500;
@@ -13,13 +13,21 @@
   padding: 2.5vw;
 }
 
+.icon {
+  font-size: 9.375vw;
+  color: var(--main-color);
+  border: none;
+  background: none;
+}
+
 .logo {
   width: 31.25vw;
 }
 
-.icon {
-  font-size: 9.375vw;
-  color: #ff3342;
-  border: none;
-  background: none;
+.logo path {
+  fill: var(--sub-color);
+}
+
+.logo path:nth-child(2) {
+  fill: var(--main-color);
 }

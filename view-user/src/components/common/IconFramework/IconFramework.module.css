@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: white;
+  background-color: var(--background-color);
   /* 320pxを基準にした場合の10px */
   padding: 3.125vw;
   border-radius: 3.125vw;
@@ -21,25 +21,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ff3342;
+  color: var(--main-color);
 }
 
 .text {
   /* 54pxを基準にした場合の9px */
   font-size: 0.1666666666666667em;
   font-weight: 400;
-  color: #ff3342;
+  color: var(--main-color);
 }
 
 .outline {
-  border: 1.25vw solid #ff3342;
+  border: 1.25vw solid var(--main-color);
 }
 
 .iconContainer.color_inversion {
-  background-color: #ff3342;
+  background-color: var(--main-color);
 }
 
 .iconContainer.color_inversion .icon,
 .iconContainer.color_inversion .text {
-  color: white;
+  color: var(--background-color);
 }

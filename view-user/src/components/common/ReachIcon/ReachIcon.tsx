@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "./ReachIcon.module.css";
 import classNames from "classnames";
-import Image from "next/image";
+import Icon from "public/icon_reach.svg";
 
 interface ReachIconProps {
   onClick: () => void;
@@ -11,16 +11,22 @@ interface ReachIconProps {
 
 const ReachIcon = (props: ReachIconProps) => {
   const [colorInversion, setColorInversion] = useState<boolean>(false);
+  const [mainColor, setMainColor] = useState<string>("");
+  const [subColor, setSubColor] = useState<string>("");
+
   const handleClick = () => {
-    setColorInversion(!colorInversion);
     props.setIsReachModalOpen(!props.isOpen);
   };
 
   useEffect(() => {
-    if (!props.isOpen) {
-      setColorInversion(false);
-    }
+    setColorInversion(props.isOpen);
   }, [props.isOpen]);
+
+  useEffect(() => {
+    const rootStyles = getComputedStyle(document.documentElement);
+    setMainColor(rootStyles.getPropertyValue("--main-color").trim());
+    setSubColor(rootStyles.getPropertyValue("--sub-color").trim());
+  }, []);
 
   return (
     <button
@@ -30,11 +36,7 @@ const ReachIcon = (props: ReachIconProps) => {
       onClick={handleClick}
     >
       <div className={styles.icon}>
-        <Image
-          src={colorInversion ? "/reach-icon-inversion.svg" : "/reach-icon.svg"}
-          alt="Reach Icon"
-          layout="fill"
-        />
+        <Icon className={colorInversion ? styles.inverted : ""} />
       </div>
       <span className={styles.text}>REACH</span>
     </button>

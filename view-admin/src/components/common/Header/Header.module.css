@@ -1,7 +1,7 @@
 /* Header */
 .container {
   width: 100vw;
-  background-color: #ff3342;
+  background-color: var(--main-color);
 }
 
 .main {
@@ -23,7 +23,7 @@
 }
 
 .title:hover {
-  color: #c0b4d7ff;
+  color: #ffffff25;
 }
 
 .title:active {

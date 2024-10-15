@@ -45,3 +45,16 @@
   gap: 2rem 0;
   flex-shrink: 0;
 }
+
+.logo {
+  width: 20vw;
+  margin-bottom: 3vw;
+}
+
+.logo path {
+  fill: var(--sub-color);
+}
+
+.logo path:nth-child(2) {
+  fill: var(--main-color);
+}

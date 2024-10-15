@@ -5,7 +5,7 @@
   min-width: 8.324375rem;
   background-color: white;
   border: 1px solid #333333;
-  color: #ff3342;
+  color: var(--main-color);
   font-weight: 700;
   text-align: center;
   cursor: pointer;
@@ -35,7 +35,7 @@
 }
 
 .primary:hover {
-  background-color: #a78aad;
+  background-color: #ffffff25;
   color: var(--primary);
   transition: 0.25s;
 }

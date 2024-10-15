@@ -8,10 +8,10 @@
   position: relative;
   width: 25vw;
   height: 25vw;
-  border: 1.25vw solid #ff3342;
+  border: 1.25vw solid var(--main-color);
   border-radius: 3.125vw;
   box-sizing: border-box;
-  box-shadow: 0.9375vw 0.9375vw 0px #ff3342;
+  box-shadow: 0.9375vw 0.9375vw 0px var(--main-color);
   margin-bottom:1.5vw;
 }
 
@@ -23,7 +23,7 @@
 }
 
 .text {
-  color: #ff3342;
+  color: var(--main-color);
   font-family: "Noto Sans JP";
   font-size: 2.8125vw;
   font-weight: 500;
@@ -46,7 +46,7 @@
   width: 100%;
   font-size: 4vw;
   font-weight: 700;
-  color: #fff;
+  color: var(--background-color);
 }
 
 /* 中央配置使いまわす用 */

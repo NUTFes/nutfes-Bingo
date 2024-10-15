@@ -21,9 +21,9 @@
   box-sizing: border-box;
   padding: 10vw;
   overflow: hidden;
-  background-color: white;
-  border: 1.3vw solid #ff3342;
-  filter: drop-shadow(1.25vw 1.25vw 0px #ff3342);
+  background-color: var(--background-color);
+  border: 1.3vw solid var(--main-color);
+  filter: drop-shadow(1.25vw 1.25vw 0px var(--main-color));
   border-radius: 7.14vw;
   animation: zoomIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) 1 forwards;
   will-change: transform, opacity;

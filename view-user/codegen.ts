@@ -20,7 +20,7 @@ const config: CodegenConfig = {
     afterAllFileWrite: ["prettier --write"],
   },
   generates: {
-    "./src/type/graphql.ts": {
+    "./src/types/graphql.ts": {
       plugins: [
         "typescript",
         "typescript-operations",

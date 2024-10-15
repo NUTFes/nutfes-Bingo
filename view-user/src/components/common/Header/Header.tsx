@@ -1,9 +1,9 @@
 import styles from "./Header.module.css";
 import { useRouter } from "next/router";
-import Image from "next/image";
 import { IoHelpCircleOutline } from "react-icons/io5";
 import { HelpCarousel } from "@/components";
 import { useState, useEffect } from "react";
+import BingoLogo from "public/logo_bingo.svg";
 
 const Header = () => {
   const router = useRouter();
@@ -25,14 +25,7 @@ const Header = () => {
   return (
     <div className={styles.container}>
       <div className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/Bingo_logo.png"
-          alt="sample"
-          width={300}
-          height={300}
-          onClick={() => router.push("/")}
-        />
+        <BingoLogo className={styles.logo} onClick={() => router.push("/")} />
         <button className={styles.icon} onClick={handleClick}>
           <IoHelpCircleOutline />
         </button>

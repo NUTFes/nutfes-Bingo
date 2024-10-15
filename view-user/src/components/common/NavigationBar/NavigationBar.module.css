@@ -6,11 +6,11 @@
   bottom: 0;
   width: 100%;
   padding: 3.125vw 6.25vw;
-  background-color: white;
+  background-color: var(--background-color);
   box-shadow: 0 -0.625vw 3.125vw rgba(0, 0, 0, 0.1);
 }
 
 .center {
   justify-content: center;
-  gap: 5vw;
+  gap: 3vw;
 }
