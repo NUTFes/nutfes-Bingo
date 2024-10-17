@@ -1,5 +1,4 @@
 import type { NextPage } from "next";
-import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import Matter from "matter-js";
 import { useSubscription } from "@apollo/client";
@@ -7,11 +6,9 @@ import {
   SubscribeListNumbersDocument,
   SubscribeCreatedStampTriggerDocument,
   SubscribeOneLatestReachLogDocument,
-} from "@/types/graphql";
-import type {
-  SubscribeListNumbersSubscription,
-  SubscribeCreatedStampTriggerSubscription,
-  SubscribeOneLatestReachLogSubscription,
+  type SubscribeListNumbersSubscription,
+  type SubscribeCreatedStampTriggerSubscription,
+  type SubscribeOneLatestReachLogSubscription,
 } from "@/types/graphql";
 import {
   NumberCardLarge,
@@ -69,7 +66,7 @@ const Page: NextPage = () => {
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
   const [latestCreatedAt, setLatestCreatedAt] = useState<string>(
-    new Date().toString(),
+    new Date().toISOString(),
   );
   const [bingoNumbers, setBingoNumbers] = useState<
     SubscribeListNumbersSubscription["numbers"]
@@ -100,21 +97,23 @@ const Page: NextPage = () => {
     );
 
   useEffect(() => {
-    if (triggers?.stampTriggers?.length) {
-      triggers.stampTriggers.forEach((stamp: Stamp) => {
+    const stamps = triggers?.stampTriggers;
+    if (stamps?.length) {
+      stamps.forEach((stamp: Stamp) => {
         addCircleById(stamp.name);
-
-        if (
-          stamp.createdAt &&
-          new Date(stamp.createdAt) > new Date(latestCreatedAt)
-        ) {
-          setLatestCreatedAt(stamp.createdAt);
-        }
       });
 
-      setLatestCreatedAt(latestCreatedAt);
+      const latestStamp = stamps.reduce((latest, stamp) => {
+        return new Date(stamp.createdAt) > new Date(latest.createdAt)
+          ? stamp
+          : latest;
+      }, stamps[0]);
+
+      if (new Date(latestStamp.createdAt) > new Date(latestCreatedAt)) {
+        setLatestCreatedAt(latestStamp.createdAt);
+      }
     }
-  }, [triggers]);
+  }, [triggers, latestCreatedAt]);
 
   // ビンゴ番号のuseEffect
   useEffect(() => {
@@ -175,14 +174,6 @@ const Page: NextPage = () => {
       },
     });
 
-    const ground = Bodies.rectangle(
-      window.innerWidth / 2,
-      window.innerHeight,
-      window.innerWidth + 10,
-      20,
-      { isStatic: true, render: { visible: false } },
-    );
-
     const rightWall = Bodies.rectangle(
       window.innerWidth,
       window.innerHeight / 2,
@@ -199,7 +190,7 @@ const Page: NextPage = () => {
       { isStatic: true, render: { visible: false } },
     );
 
-    Composite.add(engine.current.world, [ground, leftWall, rightWall]);
+    Composite.add(engine.current.world, [leftWall, rightWall]);
     Render.run(render.current);
 
     const runner = Runner.create();
