@@ -173,7 +173,7 @@ const Page: NextPage = () => {
         background: "transparent",
       },
     });
-    
+
     const rightWall = Bodies.rectangle(
       window.innerWidth,
       window.innerHeight / 2,
