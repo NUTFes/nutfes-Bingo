@@ -11,12 +11,13 @@ const nextConfig = {
     defaultLocale: "ja",
   },
   images: {
+    domains: ['minio'],
     remotePatterns: [
       {
         protocol: "http",
         hostname: "minio",
         port: "9000",
-        pathname: "/**",
+        pathname: "bingo/**",
       },
       {
         protocol: "https",
