@@ -11,13 +11,12 @@ const nextConfig = {
     defaultLocale: "ja",
   },
   images: {
-    domains: ['minio'],
     remotePatterns: [
       {
         protocol: "http",
         hostname: "minio",
         port: "9000",
-        pathname: "bingo/**",
+        pathname: "/bingo/**",
       },
       {
         protocol: "https",
@@ -25,6 +24,7 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
+    disableStaticImages: true,
   },
   webpack: (config) => {
     config.module.rules.push({
@@ -39,9 +39,6 @@ const nextConfig = {
       ],
     });
     return config;
-  },
-  images: {
-    disableStaticImages: true,
   },
 };
 
