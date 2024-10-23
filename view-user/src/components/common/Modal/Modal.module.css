@@ -14,13 +14,11 @@
 .content {
   min-width: 87.5vw;
   min-height: 58.1vw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  max-height: 70vh;
   z-index: 50;
   box-sizing: border-box;
   padding: 10vw;
-  overflow: hidden;
+  overflow: auto;
   background-color: var(--background-color);
   border: 1.3vw solid var(--main-color);
   filter: drop-shadow(1.25vw 1.25vw 0px var(--main-color));
