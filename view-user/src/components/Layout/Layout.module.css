@@ -49,3 +49,7 @@
   text-align: center;
   margin-bottom: 3.5vw;
 }
+
+.resetButton > button {
+  width: auto;
+}

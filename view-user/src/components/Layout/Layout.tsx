@@ -193,6 +193,21 @@ const Layout = (props: LayoutProps) => {
     document.documentElement.style.setProperty("--sub-color", newColor);
   };
 
+  const resetColors = () => {
+    setMainColor(DEFAULT_MAIN_COLOR);
+    setSubColor(DEFAULT_SUB_COLOR);
+    localStorage.removeItem("mainColor");
+    localStorage.removeItem("subColor");
+    document.documentElement.style.setProperty(
+      "--main-color",
+      DEFAULT_MAIN_COLOR,
+    );
+    document.documentElement.style.setProperty(
+      "--sub-color",
+      DEFAULT_SUB_COLOR,
+    );
+  };
+
   const icons = (pageName: string) => {
     let icons = [];
     const commonIcons = [
@@ -315,6 +330,9 @@ const Layout = (props: LayoutProps) => {
               triangle="hide"
               onChange={handleSubColorChange}
             />
+          </div>
+          <div className={styles.resetButton}>
+            <Button onClick={resetColors}>カラーを初期値に戻す</Button>
           </div>
         </div>
       </Modal>
