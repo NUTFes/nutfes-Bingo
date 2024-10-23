@@ -28,7 +28,9 @@ const PrizeCard = (props: PrizeCardProps) => {
       <div className={styles.card}>
         <div className={styles.image}>
           <div className={styles.imageWrapper}>
-            <Image src={imageURL} alt="PrizeImage" layout="fill" />
+            {imageURL && prizeImage.bucketName && prizeImage.fileName && (
+              <Image src={imageURL} alt="PrizeImage" fill />
+            )}
           </div>
         </div>
         {bingoPrize.isWon && (
