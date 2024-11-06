@@ -66,8 +66,8 @@ const COLOR_PRESETS = {
     "#FCDBE3",
     "#E4BBFA",
   ],
-  DEFAULT_MAIN_COLOR: "#20a0d8",
-  DEFAULT_SUB_COLOR: "#c4deed",
+  DEFAULT_MAIN_COLOR: "#20A0D8",
+  DEFAULT_SUB_COLOR: "#C4DEED",
 };
 
 interface LayoutProps {
