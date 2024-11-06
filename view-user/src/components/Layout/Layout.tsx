@@ -1,5 +1,5 @@
 import { useLazyQuery, useMutation } from "@apollo/client";
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useRouter } from "next/router";
 import styles from "./Layout.module.css";
 import {
@@ -82,15 +82,20 @@ interface LayoutProps {
 const Layout = (props: LayoutProps) => {
   const router = useRouter();
   const t = props.language === "ja" ? ja : en;
+
   const [isReactionModalOpen, setIsReactionModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
   const [isSortOrderActive, setIsSortOrderActive] = useState(false);
+  const { setIsSortedAscending } = props;
+
   const [isReachModalOpen, setIsReachModalOpen] = useState(false);
   const [isReachIconVisible, setReachIconVisible] = useState(true);
-  const [navBarHeight, setNavBarHeight] = useState<string>();
+
   const [mainColor, setMainColor] = useState(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
   const [subColor, setSubColor] = useState(COLOR_PRESETS.DEFAULT_SUB_COLOR);
 
+  const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
   const position = isReachIconVisible ? "29%" : "50%";
 
@@ -98,9 +103,11 @@ const Layout = (props: LayoutProps) => {
     CreateOneStampTriggerMutation,
     CreateOneStampTriggerMutationVariables
   >(CreateOneStampTriggerDocument);
+
   const [getLatestReachLog] = useLazyQuery<GetOneLatestReachLogQuery>(
     GetOneLatestReachLogDocument,
   );
+
   const [createOneReachRecord] = useMutation<
     CreateOneReachRecordMutation,
     CreateOneReachRecordMutationVariables
@@ -116,51 +123,30 @@ const Layout = (props: LayoutProps) => {
 
   // ローカルストレージから設定を読み込む
   useEffect(() => {
-    // リーチアイコンの表示状態を読み込む
-    const storedVisibility = localStorage.getItem("isReachIconVisible");
-    if (storedVisibility !== null) {
-      setReachIconVisible(storedVisibility === "true");
-    }
-
-    // ソート順を読み込む
     const storedSortOrder = localStorage.getItem("isSortedAscending");
-    if (storedSortOrder !== null) {
-      const isSortedAscending = storedSortOrder === "true";
-      props.setIsSortedAscending?.(isSortedAscending);
-      setIsSortOrderActive(isSortedAscending);
-    } else {
-      localStorage.setItem("isSortedAscending", "false");
-    }
-
-    // メインカラーを読み込む
+    const storedVisibility = localStorage.getItem("isReachIconVisible");
     const storedMainColor = localStorage.getItem("mainColor");
-    if (storedMainColor) {
-      setMainColor(storedMainColor);
-      document.documentElement.style.setProperty(
-        "--main-color",
-        storedMainColor,
-      );
-    } else {
-      setMainColor(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
-      document.documentElement.style.setProperty(
-        "--main-color",
-        COLOR_PRESETS.DEFAULT_MAIN_COLOR,
-      );
-    }
-
-    // サブカラーを読み込む
     const storedSubColor = localStorage.getItem("subColor");
-    if (storedSubColor) {
-      setSubColor(storedSubColor);
-      document.documentElement.style.setProperty("--sub-color", storedSubColor);
-    } else {
-      setSubColor(COLOR_PRESETS.DEFAULT_SUB_COLOR);
-      document.documentElement.style.setProperty(
-        "--sub-color",
-        COLOR_PRESETS.DEFAULT_SUB_COLOR,
-      );
-    }
-  }, [props]);
+
+    setIsSortOrderActive(
+      storedSortOrder !== null ? storedSortOrder === "true" : false,
+    );
+    setReachIconVisible(
+      storedVisibility !== null ? storedVisibility === "true" : true,
+    );
+    setMainColor(storedMainColor || COLOR_PRESETS.DEFAULT_MAIN_COLOR);
+    setSubColor(storedSubColor || COLOR_PRESETS.DEFAULT_SUB_COLOR);
+  }, []);
+
+  // 初期設定を適用
+  useEffect(() => {
+    // ソート順を親コンポーネントに伝える
+    setIsSortedAscending?.(isSortOrderActive);
+
+    // カラーを適用
+    document.documentElement.style.setProperty("--main-color", mainColor);
+    document.documentElement.style.setProperty("--sub-color", subColor);
+  }, [isSortOrderActive, mainColor, subColor, setIsSortedAscending]);
 
   // リアクションアイコンがクリックされたときの処理
   const handleReactionClick = (name: string) => {
@@ -189,12 +175,10 @@ const Layout = (props: LayoutProps) => {
 
   // ソート順を切り替える
   const toggleSortOrder = () => {
-    if (props.setIsSortedAscending) {
-      const newSortOrder = !props.isSortedAscending;
-      localStorage.setItem("isSortedAscending", newSortOrder.toString());
-      props.setIsSortedAscending(newSortOrder);
-      setIsSortOrderActive(newSortOrder);
-    }
+    const newSortOrder = !isSortOrderActive;
+    localStorage.setItem("isSortedAscending", newSortOrder.toString());
+    setIsSortedAscending?.(newSortOrder);
+    setIsSortOrderActive(newSortOrder);
   };
 
   // 言語を切り替える
