@@ -4,8 +4,7 @@ import { Header, Button, PrizeResult } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@apollo/client";
-import { GetListPrizesDocument } from "@/type/graphql";
-import type { GetListPrizesQuery } from "@/type/graphql";
+import { GetListPrizesDocument, type GetListPrizesQuery } from "@/type/graphql";
 
 const Page: NextPage = () => {
   const router = useRouter();

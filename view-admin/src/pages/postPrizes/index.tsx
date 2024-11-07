@@ -9,15 +9,12 @@ import {
   GetListPrizesDocument,
   CreateOnePrizeDocument,
   CreateOneImageDocument,
+  type GetListPrizesQuery,
+  type CreateOneImageMutation,
+  type CreateOnePrizeMutation,
+  type CreateOneImageMutationVariables,
+  type CreateOnePrizeMutationVariables,
 } from "@/type/graphql";
-import type {
-  GetListPrizesQuery,
-  CreateOneImageMutation,
-  CreateOnePrizeMutation,
-  CreateOneImageMutationVariables,
-  CreateOnePrizeMutationVariables,
-} from "@/type/graphql";
-
 import { useRouter } from "next/router";
 
 const Page: NextPage = () => {

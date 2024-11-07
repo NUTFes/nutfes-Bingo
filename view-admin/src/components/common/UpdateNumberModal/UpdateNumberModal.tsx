@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import styles from "./UpdateNumberModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
 import { useMutation } from "@apollo/client";
-import { UpdateOneNumberDocument } from "@/type/graphql";
-import type {
-  UpdateOneNumberMutation,
-  UpdateOneNumberMutationVariables,
+import {
+  UpdateOneNumberDocument,
+  type UpdateOneNumberMutation,
+  type UpdateOneNumberMutationVariables,
 } from "@/type/graphql";
 
 interface UpdateNumberModalProps {

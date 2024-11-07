@@ -7,10 +7,8 @@ import { useQuery, useSubscription } from "@apollo/client";
 import {
   GetListPrizesDocument,
   SubscribeListPrizesIsWonDocument,
-} from "@/types/graphql";
-import type {
-  GetListPrizesQuery,
-  SubscribeListPrizesIsWonSubscription,
+  type GetListPrizesQuery,
+  type SubscribeListPrizesIsWonSubscription,
 } from "@/types/graphql";
 import { useRecoilState } from "recoil";
 import { bingoPrizeState } from "../../Atom/atom";
