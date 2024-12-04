@@ -8,7 +8,6 @@ export { default as Modal } from "./Modal";
 export { default as Loading } from "./Loading";
 export { default as NavigationBar } from "./NavigationBar";
 export { default as ReactionStampModal } from "./ReactionStampModal";
-export { default as HelpCarousel } from "./HelpCarousel";
 export { default as ReachCount } from "./ReachCount";
 
 // Buttons
