@@ -1,4 +1,3 @@
-import React from "react";
 import styles from "./BingoResult.module.css";
 import { SubscribeListNumbersSubscription } from "@/type/graphql";
 
