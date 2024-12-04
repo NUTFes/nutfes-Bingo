@@ -1,4 +1,3 @@
-import React from "react";
 import styles from "./PrizeCardList.module.css";
 import PrizeCard from "../PrizeCard";
 import { GetListPrizesQuery } from "@/types/graphql";

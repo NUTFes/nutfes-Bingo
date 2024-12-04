@@ -1,4 +1,3 @@
-import React from "react";
 import { IconFramework } from "@/components/common";
 import { BiGift } from "react-icons/bi";
 import { useRouter } from "next/router";

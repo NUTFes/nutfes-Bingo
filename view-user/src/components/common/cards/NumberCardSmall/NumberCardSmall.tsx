@@ -1,4 +1,3 @@
-import React from "react";
 import styles from "./NumberCardSmall.module.css";
 import { type SubscribeListNumbersSubscription } from "@/types/graphql";
 
