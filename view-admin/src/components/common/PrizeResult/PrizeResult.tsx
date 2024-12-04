@@ -3,9 +3,9 @@ import styles from "./PrizeResult.module.css";
 import { useMutation } from "@apollo/client";
 import {
   UpdateOnePrizeIsWonDocument,
-  type UpdateOnePrizeIsWonMutation,
-  type UpdateOnePrizeIsWonMutationVariables,
-  type GetListPrizesQuery,
+  UpdateOnePrizeIsWonMutation,
+  UpdateOnePrizeIsWonMutationVariables,
+  GetListPrizesQuery,
 } from "@/type/graphql";
 import Image from "next/image";
 

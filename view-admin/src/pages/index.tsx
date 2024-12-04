@@ -19,9 +19,9 @@ import {
   SubscribeListNumbersDocument,
   IncrementReachNumDocument,
   DecrementReachNumDocument,
-  type SubscribeListNumbersSubscription,
-  type IncrementReachNumMutation,
-  type DecrementReachNumMutation,
+  SubscribeListNumbersSubscription,
+  IncrementReachNumMutation,
+  DecrementReachNumMutation,
 } from "@/type/graphql";
 
 interface formDataCreate {

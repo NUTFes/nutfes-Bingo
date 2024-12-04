@@ -4,8 +4,8 @@ import { RxCrossCircled } from "react-icons/rx";
 import { useMutation } from "@apollo/client";
 import {
   UpdateOneNumberDocument,
-  type UpdateOneNumberMutation,
-  type UpdateOneNumberMutationVariables,
+  UpdateOneNumberMutation,
+  UpdateOneNumberMutationVariables,
 } from "@/type/graphql";
 
 interface UpdateNumberModalProps {
