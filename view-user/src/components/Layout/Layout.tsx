@@ -19,11 +19,11 @@ import {
   CreateOneStampTriggerDocument,
   CreateOneReachRecordDocument,
   GetOneLatestReachLogDocument,
-  type CreateOneStampTriggerMutation,
-  type CreateOneStampTriggerMutationVariables,
-  type CreateOneReachRecordMutation,
-  type CreateOneReachRecordMutationVariables,
-  type GetOneLatestReachLogQuery,
+  CreateOneStampTriggerMutation,
+  CreateOneStampTriggerMutationVariables,
+  CreateOneReachRecordMutation,
+  CreateOneReachRecordMutationVariables,
+  GetOneLatestReachLogQuery,
 } from "@/types/graphql";
 import { ja, en } from "@/locales";
 import { TwitterPicker } from "react-color";

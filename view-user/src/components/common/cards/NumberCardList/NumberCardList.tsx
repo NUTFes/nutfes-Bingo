@@ -1,4 +1,4 @@
-import { type SubscribeListNumbersSubscription } from "@/types/graphql";
+import { SubscribeListNumbersSubscription } from "@/types/graphql";
 import styles from "./NumberCardList.module.css";
 import NumberCardSmall from "../NumberCardSmall";
 

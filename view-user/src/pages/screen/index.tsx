@@ -6,9 +6,9 @@ import {
   SubscribeListNumbersDocument,
   SubscribeCreatedStampTriggerDocument,
   SubscribeOneLatestReachLogDocument,
-  type SubscribeListNumbersSubscription,
-  type SubscribeCreatedStampTriggerSubscription,
-  type SubscribeOneLatestReachLogSubscription,
+  SubscribeListNumbersSubscription,
+  SubscribeCreatedStampTriggerSubscription,
+  SubscribeOneLatestReachLogSubscription,
 } from "@/types/graphql";
 import {
   NumberCardLarge,

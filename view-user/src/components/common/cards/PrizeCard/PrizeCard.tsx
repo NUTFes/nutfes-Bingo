@@ -1,5 +1,5 @@
 import styles from "./PrizeCard.module.css";
-import { type GetListPrizesQuery } from "@/types/graphql";
+import { GetListPrizesQuery } from "@/types/graphql";
 import { useRouter } from "next/router";
 import classNames from "classnames";
 import { en, ja } from "@/locales";
