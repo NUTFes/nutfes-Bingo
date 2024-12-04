@@ -38,7 +38,7 @@
   max-width: 100vw !important;
 }
 
-.customTooltip *{
+.customTooltip * {
   border-color: var(--main-color) !important;
   text-shadow: none !important;
   color: var(--main-color) !important;

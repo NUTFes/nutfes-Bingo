@@ -165,7 +165,7 @@ const Layout = (props: LayoutProps) => {
     ];
     switch (pageName) {
       case "/":
-        icons = [<PrizesIcon key="prize" id="PrizesIcon"/>, commonIcons];
+        icons = [<PrizesIcon key="prize" id="PrizesIcon" />, commonIcons];
         break;
       case "/prizes":
         icons = [<BackIcon key="back" />, commonIcons];

@@ -2,7 +2,7 @@ import introJs from "intro.js";
 import styles from "./Header.module.css";
 import { useRouter } from "next/router";
 import { IoHelpCircleOutline } from "react-icons/io5";
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import BingoLogo from "public/logo_bingo.svg";
 import { ja, en } from "@/locales";
 
@@ -46,19 +46,19 @@ const Header = () => {
           position: "bottom-middle-aligned",
         },
         {
-          title:t.helpDescription.page3_title,
+          title: t.helpDescription.page3_title,
           intro: t.helpDescription.page3_txt,
           element: "#ReactionsIcon",
           position: "bottom-middle-aligned",
         },
         {
-          title:t.helpDescription.page4_title,
+          title: t.helpDescription.page4_title,
           intro: t.helpDescription.page4_txt,
           element: "#ReachIcon",
           position: "bottom-middle-aligned",
         },
         {
-          title:t.helpDescription.page5_title,
+          title: t.helpDescription.page5_title,
           intro: t.helpDescription.page5_txt,
           element: "#SettingsIcon",
           position: "bottom-middle-aligned",
@@ -78,14 +78,8 @@ const Header = () => {
   return (
     <div className={styles.container}>
       <div className={styles.main}>
-        <BingoLogo
-          className={styles.logo}
-          onClick={() => router.push("/")}
-        />
-        <button
-          className={styles.icon}
-          onClick={startTour}
-        >
+        <BingoLogo className={styles.logo} onClick={() => router.push("/")} />
+        <button className={styles.icon} onClick={startTour}>
           <IoHelpCircleOutline />
         </button>
       </div>
