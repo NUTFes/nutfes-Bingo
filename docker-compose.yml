@@ -37,7 +37,7 @@ services:
     volumes:
       - ./view-user:/app
     working_dir: /app
-    command: sh -c "npm ci && npm run dev"
+    command: sh -c "npm i && npm run dev"
     ports:
       - "3000:3000"
     env_file:
@@ -51,7 +51,7 @@ services:
     volumes:
       - ./view-admin:/app
     working_dir: /app
-    command: sh -c "npm ci && npm run dev"
+    command: sh -c "npm i && npm run dev"
     ports:
       - "3001:3000"
     env_file:
