@@ -3,7 +3,11 @@ import { IconFramework } from "@/components/common";
 import { BiGift } from "react-icons/bi";
 import { useRouter } from "next/router";
 
-const PrizesIcon = () => {
+interface PrizesIconProps {
+  id?: string;
+}
+
+const PrizesIcon = (props: PrizesIconProps) => {
   const router = useRouter();
 
   const handleClick = () => {
@@ -18,6 +22,7 @@ const PrizesIcon = () => {
       text="Prizes"
       outline
       onClick={() => handleClick()}
+      id={props.id ? props.id : ""}
     />
   );
 };
