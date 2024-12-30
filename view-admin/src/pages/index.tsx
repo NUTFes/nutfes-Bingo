@@ -1,29 +1,32 @@
 import { useMutation, useSubscription } from "@apollo/client";
-import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import styles from "@/styles/Home.module.css";
+import { CgLogOut } from "react-icons/cg";
+
 import type { NextPage } from "next";
+
 import {
   Header,
   BingoResult,
   Button,
   JudgementModal,
   UpdateNumberModal,
+  Loading,
 } from "@/components/common";
-import { CgLogOut } from "react-icons/cg";
-import { useEffect, useState } from "react";
+import styles from "@/styles/Home.module.css";
 import {
   CreateOneNumberDocument,
   DeleteOneNumberDocument,
+  IncrementReachNumMutation,
   SubscribeListNumbersDocument,
   IncrementReachNumDocument,
   DecrementReachNumDocument,
-} from "@/type/graphql";
-import type {
   SubscribeListNumbersSubscription,
-  IncrementReachNumMutation,
   DecrementReachNumMutation,
+  CreateOneNumberMutation,
+  CreateOneNumberMutationVariables,
 } from "@/type/graphql";
 
 interface formDataCreate {
@@ -74,10 +77,12 @@ const Page: NextPage = () => {
   } = useForm<formDataDelete>({
     mode: "onChange",
   });
-  const { data, loading, error } = useSubscription(
-    SubscribeListNumbersDocument,
-  );
-  const [createNumber] = useMutation(CreateOneNumberDocument);
+  const { data, loading } = useSubscription(SubscribeListNumbersDocument);
+  const [createNumber] = useMutation<
+    CreateOneNumberMutation,
+    CreateOneNumberMutationVariables
+  >(CreateOneNumberDocument);
+
   const [deleteNumber] = useMutation(DeleteOneNumberDocument);
   const [selectedId, setSelectedId] = useState<number>();
 
@@ -86,11 +91,24 @@ const Page: NextPage = () => {
     setIsOpenUpdateNumberModal(true);
   };
 
-  //番号の追加
   const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
     const { submitNumber } = getValuesCreate();
     if (submitNumber !== null) {
-      createNumber({ variables: { number: submitNumber } });
+      createNumber({
+        variables: { number: submitNumber },
+        onError: (err) => {
+          if (
+            err.graphQLErrors.some(
+              (e) => e.extensions?.code === "constraint-violation",
+            )
+          ) {
+            // TODO: ちゃんとしたコンポーネントで実装する
+            alert(`${submitNumber} は既に入力済みです。`);
+          } else {
+            alert("エラーが発生しました。");
+          }
+        },
+      });
       resetCreate({ submitNumber: null });
     }
   };
@@ -113,6 +131,10 @@ const Page: NextPage = () => {
       setBingoNumbers(data.numbers);
     }
   }, [data]);
+
+  if (loading) {
+    return <Loading />;
+  }
 
   // if (session) {
   return (
