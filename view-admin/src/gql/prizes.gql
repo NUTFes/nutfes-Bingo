@@ -67,3 +67,10 @@ mutation UpdateOnePrizeIsWon($id: Int!, $isWon: Boolean!) {
     isWon
   }
 }
+
+mutation UpdateImageName($id: Int!, $name: String!) {
+  updatePrizesByPk(pkColumns: { id: $id }, _set: { nameJp: $name }) {
+    id
+    nameJp
+  }
+}

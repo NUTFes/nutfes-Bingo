@@ -375,6 +375,8 @@ export type NumbersBoolExp = {
 
 /** unique or primary key constraints on table "numbers" */
 export enum NumbersConstraint {
+  /** unique or primary key constraint on columns "number" */
+  numbersNumberKey = "numbers_number_key",
   /** unique or primary key constraint on columns "id" */
   numbersPkey = "numbers_pkey",
 }

@@ -375,6 +375,8 @@ export type NumbersBoolExp = {
 
 /** unique or primary key constraints on table "numbers" */
 export enum NumbersConstraint {
+  /** unique or primary key constraint on columns "number" */
+  numbersNumberKey = "numbers_number_key",
   /** unique or primary key constraint on columns "id" */
   numbersPkey = "numbers_pkey",
 }
@@ -2107,6 +2109,20 @@ export type UpdateOnePrizeIsWonMutation = {
   } | null;
 };
 
+export type UpdateImageNameMutationVariables = Exact<{
+  id: Scalars["Int"]["input"];
+  name: Scalars["String"]["input"];
+}>;
+
+export type UpdateImageNameMutation = {
+  __typename?: "mutation_root";
+  updatePrizesByPk?: {
+    __typename?: "Prizes";
+    id: number;
+    nameJp: string;
+  } | null;
+};
+
 export type GetOneLatestReachLogQueryVariables = Exact<{
   [key: string]: never;
 }>;
@@ -2116,11 +2132,11 @@ export type GetOneLatestReachLogQuery = {
   reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
 };
 
-export type SubscribeOneLatestReachlogSubscriptionVariables = Exact<{
+export type SubscribeOneLatestReachLogSubscriptionVariables = Exact<{
   [key: string]: never;
 }>;
 
-export type SubscribeOneLatestReachlogSubscription = {
+export type SubscribeOneLatestReachLogSubscription = {
   __typename?: "subscription_root";
   reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
 };
@@ -2440,6 +2456,24 @@ export type UpdateOnePrizeIsWonMutationOptions = Apollo.BaseMutationOptions<
   UpdateOnePrizeIsWonMutation,
   UpdateOnePrizeIsWonMutationVariables
 >;
+export const UpdateImageNameDocument = gql`
+  mutation UpdateImageName($id: Int!, $name: String!) {
+    updatePrizesByPk(pkColumns: { id: $id }, _set: { nameJp: $name }) {
+      id
+      nameJp
+    }
+  }
+`;
+export type UpdateImageNameMutationFn = Apollo.MutationFunction<
+  UpdateImageNameMutation,
+  UpdateImageNameMutationVariables
+>;
+export type UpdateImageNameMutationResult =
+  Apollo.MutationResult<UpdateImageNameMutation>;
+export type UpdateImageNameMutationOptions = Apollo.BaseMutationOptions<
+  UpdateImageNameMutation,
+  UpdateImageNameMutationVariables
+>;
 export const GetOneLatestReachLogDocument = gql`
   query GetOneLatestReachLog {
     reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
@@ -2451,15 +2485,15 @@ export type GetOneLatestReachLogQueryResult = Apollo.QueryResult<
   GetOneLatestReachLogQuery,
   GetOneLatestReachLogQueryVariables
 >;
-export const SubscribeOneLatestReachlogDocument = gql`
-  subscription SubscribeOneLatestReachlog {
+export const SubscribeOneLatestReachLogDocument = gql`
+  subscription SubscribeOneLatestReachLog {
     reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
       reachNum
     }
   }
 `;
-export type SubscribeOneLatestReachlogSubscriptionResult =
-  Apollo.SubscriptionResult<SubscribeOneLatestReachlogSubscription>;
+export type SubscribeOneLatestReachLogSubscriptionResult =
+  Apollo.SubscriptionResult<SubscribeOneLatestReachLogSubscription>;
 export const GetListReachLogsAfterTimestampDocument = gql`
   query GetListReachLogsAfterTimestamp($timestamp: timestamptz!) {
     reachLogs(
