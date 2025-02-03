@@ -2,56 +2,36 @@ import { useQuery, useMutation } from "@apollo/client";
 /* eslint-disable @next/next/no-img-element */
 import type { NextPage } from "next";
 import styles from "./postPrizes.module.css";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Header, PrizeResult, Loading } from "@/components/common";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import {
   GetListPrizesDocument,
-  CreateOnePrizeDocument,
-  CreateOneImageDocument,
-} from "@/type/graphql";
-import type {
   GetListPrizesQuery,
-  CreateOneImageMutation,
-  CreateOnePrizeMutation,
-  CreateOneImageMutationVariables,
-  CreateOnePrizeMutationVariables,
+  CreatePrizeWithImageMutation,
+  CreatePrizeWithImageDocument,
 } from "@/type/graphql";
 
 import { useRouter } from "next/router";
 
+type PrizeName = {
+  nameJp: string;
+  nameEn: string;
+};
+
 const Page: NextPage = () => {
-  const [bingoPrize, setBingoPrize] = useState<GetListPrizesQuery["prizes"]>(
-    [],
-  );
-  const [prizeNameJp, setPrizeNameJp] = useState<string>("");
-  const [prizeNameEn, setPrizeNameEn] = useState<string>("");
+  const [prizeName, setPrizeName] = useState<PrizeName>({
+    nameJp: "",
+    nameEn: "",
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFile, setImageFile] = useState<File>();
   const [preview, setPreview] = useState({ uploadImageURL: "", type: "" });
-  const [bucketName, setBucketName] = useState<string>("");
-  const [fileName, setFileName] = useState<string>("");
-  const [fileType, setFileType] = useState<string>("");
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { data } = useQuery<GetListPrizesQuery>(GetListPrizesDocument);
-  const [postPrize] = useMutation<
-    CreateOnePrizeMutation,
-    CreateOnePrizeMutationVariables
-  >(CreateOnePrizeDocument);
-  const [postImage] = useMutation<
-    CreateOneImageMutation,
-    CreateOneImageMutationVariables
-  >(CreateOneImageDocument);
-
+  const bingoPrizes: GetListPrizesQuery["prizes"] = data?.prizes ?? [];
   const router = useRouter();
-
-  useEffect(() => {
-    if (data) {
-      setBingoPrize(data.prizes);
-    }
-  }, [data]);
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,77 +45,62 @@ const Page: NextPage = () => {
         uploadImageURL: URL.createObjectURL(targetFile),
         type: targetFile.type,
       });
-
-      const bucketName = process.env.NEXT_PUBLIC_BUCKET_NAME;
-      const fileName = targetFile.name;
-      const fileType = targetFile.type;
-
-      setBucketName(bucketName || "");
-      setFileName(fileName);
-      setFileType(fileType);
     },
     [],
   );
-
-  const insertPrize = async (imageId: number) => {
-    postPrize({
-      variables: {
-        isWon: false,
-        imageId: imageId,
-        nameJp: prizeNameJp,
-        nameEn: prizeNameEn,
-      },
-    });
-    setPrizeNameJp("");
-    setPrizeNameEn("");
-    setPreview({ uploadImageURL: "", type: "" });
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-    setIsDisabled(false);
-    setIsLoading(false);
-  };
-
-  const insertImage = async () => {
-    const result = await postImage({
-      variables: {
-        bucketName: bucketName,
-        fileName: fileName,
-        fileType: fileType,
-      },
-    });
-    // ここでimageIdをuseStateに設定する
-    const imageId = result.data?.insertImagesOne?.id;
-    if (imageId) {
-      insertPrize(imageId);
-    }
-  };
+  const [createPrizeWithImage, loading] =
+    useMutation<CreatePrizeWithImageMutation>(CreatePrizeWithImageDocument);
 
   const postMinio = async () => {
     if (!imageFile) {
       return alert("画像を選択してください");
     }
-    if (prizeNameJp === "") {
+    if (prizeName.nameJp === "") {
       alert("景品名を入力してください。");
-      setIsLoading(false);
       router.reload();
       return;
     }
     const formData = new FormData();
     formData.append("file", imageFile);
-    const fileName = imageFile?.name || "";
-    formData.append("fileName", fileName);
+    const fileNameFromImage = imageFile.name || "";
+    formData.append("fileName", fileNameFromImage);
 
-    const response = await fetch("/api/minio", {
-      method: "POST",
-      body: formData,
-    });
-    insertImage();
+    try {
+      const response = await fetch("/api/minio", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error("MinIOへのアップロードに失敗しました");
+      }
+      const minioData = await response.json();
+
+      await createPrizeWithImage({
+        variables: {
+          isWon: false,
+          nameJp: prizeName.nameJp,
+          nameEn: prizeName.nameEn,
+          bucketName: minioData.bucketName,
+          fileName: minioData.fileName,
+          fileType: minioData.fileType,
+        },
+      });
+
+      // 登録成功時の処理
+      setPrizeName({ nameJp: "", nameEn: "" });
+      setPreview({ uploadImageURL: "", type: "" });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (error) {
+      console.error("画像送信エラー:", error);
+      alert("画像アップロードに失敗しました");
+    }
+    setIsDisabled(false);
   };
 
   const submit = async () => {
     setIsDisabled(true);
-    setIsLoading(true);
     postMinio();
   };
 
@@ -177,7 +142,7 @@ const Page: NextPage = () => {
 
   return (
     <div className={styles.container}>
-      {isLoading && <Loading />}
+      {loading && <Loading />}
       <div>
         <Header user="Admin">
           <button />
@@ -210,12 +175,15 @@ const Page: NextPage = () => {
             <div className={styles.input_details}>
               <h2>景品名を入力</h2>
               <input
-                value={prizeNameJp}
+                value={prizeName.nameJp}
                 className={styles.input_form}
                 type="text"
                 name="name"
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setPrizeNameJp(e.target.value)
+                  setPrizeName((prev) => ({
+                    ...prev,
+                    nameJp: e.target.value,
+                  }))
                 }
               />
             </div>
@@ -233,8 +201,7 @@ const Page: NextPage = () => {
           </div>
         </div>
         <PrizeResult
-          prizeResult={bingoPrize}
-          setBingoPrize={setBingoPrize}
+          prizeResult={bingoPrizes}
           showToggle={false}
           showOverlay={false}
         />
