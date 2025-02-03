@@ -1,0 +1,27 @@
+mutation CreatePrizeWithImage(
+  $isWon: Boolean!
+  $nameJp: String!
+  $nameEn: String!
+  $bucketName: String!
+  $fileName: String!
+  $fileType: String!
+) {
+  createPrizeWithImage(
+    args: {
+      p_is_won: $isWon
+      p_name_jp: $nameJp
+      p_name_en: $nameEn
+      p_bucket_name: $bucketName
+      p_file_name: $fileName
+      p_file_type: $fileType
+    }
+  ) {
+    id
+    isWon
+    imageId
+    nameJp
+    nameEn
+    createdAt
+    updatedAt
+  }
+}
