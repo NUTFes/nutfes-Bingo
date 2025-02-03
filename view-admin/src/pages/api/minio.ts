@@ -68,7 +68,12 @@ export default async function handler(
           undefined,
           metaData,
         );
-        return res.status(200).json({ message: "Upload successful" });
+        return res.status(200).json({
+          message: "Upload successful",
+          bucketName,
+          fileName,
+          fileType: mimetype,
+        });
       } catch (uploadError) {
         return res.status(500).json({ message: uploadError });
       }
