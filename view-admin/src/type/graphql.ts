@@ -375,6 +375,8 @@ export type NumbersBoolExp = {
 
 /** unique or primary key constraints on table "numbers" */
 export enum NumbersConstraint {
+  /** unique or primary key constraint on columns "number" */
+  numbersNumberKey = "numbers_number_key",
   /** unique or primary key constraint on columns "id" */
   numbersPkey = "numbers_pkey",
 }
@@ -1327,9 +1329,20 @@ export type TimestamptzComparisonExp = {
   _nin?: InputMaybe<Array<Scalars["timestamptz"]["input"]>>;
 };
 
+export type CreatePrizeWithImageArgs = {
+  p_bucket_name?: InputMaybe<Scalars["String"]["input"]>;
+  p_file_name?: InputMaybe<Scalars["String"]["input"]>;
+  p_file_type?: InputMaybe<Scalars["String"]["input"]>;
+  p_is_won?: InputMaybe<Scalars["Boolean"]["input"]>;
+  p_name_en?: InputMaybe<Scalars["String"]["input"]>;
+  p_name_jp?: InputMaybe<Scalars["String"]["input"]>;
+};
+
 /** mutation root */
 export type MutationRoot = {
   __typename?: "mutation_root";
+  /** execute VOLATILE function "create_prize_with_image" which returns "prizes" */
+  createPrizeWithImage: Array<Prizes>;
   /** execute VOLATILE function "decrement_latest_reach_log" which returns "reach_logs" */
   decrementLatestReachLog: Array<ReachLogs>;
   /** delete data from the table: "images" */
@@ -1400,6 +1413,16 @@ export type MutationRoot = {
   updateStampTriggers?: Maybe<StampTriggersMutationResponse>;
   /** update multiples rows of table: "stamp_triggers" */
   updateStampTriggersMany?: Maybe<Array<Maybe<StampTriggersMutationResponse>>>;
+};
+
+/** mutation root */
+export type MutationRootCreatePrizeWithImageArgs = {
+  args: CreatePrizeWithImageArgs;
+  distinctOn?: InputMaybe<Array<PrizesSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<PrizesOrderBy>>;
+  where?: InputMaybe<PrizesBoolExp>;
 };
 
 /** mutation root */
@@ -2023,6 +2046,29 @@ export type SubscribeListNumbersSubscription = {
   }>;
 };
 
+export type CreatePrizeWithImageMutationVariables = Exact<{
+  isWon: Scalars["Boolean"]["input"];
+  nameJp: Scalars["String"]["input"];
+  nameEn: Scalars["String"]["input"];
+  bucketName: Scalars["String"]["input"];
+  fileName: Scalars["String"]["input"];
+  fileType: Scalars["String"]["input"];
+}>;
+
+export type CreatePrizeWithImageMutation = {
+  __typename?: "mutation_root";
+  createPrizeWithImage: Array<{
+    __typename?: "Prizes";
+    id: number;
+    isWon: boolean;
+    imageId: number;
+    nameJp: string;
+    nameEn?: string | null;
+    createdAt: any;
+    updatedAt: any;
+  }>;
+};
+
 export type GetListPrizesQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetListPrizesQuery = {
@@ -2116,11 +2162,11 @@ export type GetOneLatestReachLogQuery = {
   reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
 };
 
-export type SubscribeOneLatestReachlogSubscriptionVariables = Exact<{
+export type SubscribeOneLatestReachLogSubscriptionVariables = Exact<{
   [key: string]: never;
 }>;
 
-export type SubscribeOneLatestReachlogSubscription = {
+export type SubscribeOneLatestReachLogSubscription = {
   __typename?: "subscription_root";
   reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
 };
@@ -2334,6 +2380,45 @@ export const SubscribeListNumbersDocument = gql`
 `;
 export type SubscribeListNumbersSubscriptionResult =
   Apollo.SubscriptionResult<SubscribeListNumbersSubscription>;
+export const CreatePrizeWithImageDocument = gql`
+  mutation CreatePrizeWithImage(
+    $isWon: Boolean!
+    $nameJp: String!
+    $nameEn: String!
+    $bucketName: String!
+    $fileName: String!
+    $fileType: String!
+  ) {
+    createPrizeWithImage(
+      args: {
+        p_is_won: $isWon
+        p_name_jp: $nameJp
+        p_name_en: $nameEn
+        p_bucket_name: $bucketName
+        p_file_name: $fileName
+        p_file_type: $fileType
+      }
+    ) {
+      id
+      isWon
+      imageId
+      nameJp
+      nameEn
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export type CreatePrizeWithImageMutationFn = Apollo.MutationFunction<
+  CreatePrizeWithImageMutation,
+  CreatePrizeWithImageMutationVariables
+>;
+export type CreatePrizeWithImageMutationResult =
+  Apollo.MutationResult<CreatePrizeWithImageMutation>;
+export type CreatePrizeWithImageMutationOptions = Apollo.BaseMutationOptions<
+  CreatePrizeWithImageMutation,
+  CreatePrizeWithImageMutationVariables
+>;
 export const GetListPrizesDocument = gql`
   query GetListPrizes {
     prizes {
@@ -2451,15 +2536,15 @@ export type GetOneLatestReachLogQueryResult = Apollo.QueryResult<
   GetOneLatestReachLogQuery,
   GetOneLatestReachLogQueryVariables
 >;
-export const SubscribeOneLatestReachlogDocument = gql`
-  subscription SubscribeOneLatestReachlog {
+export const SubscribeOneLatestReachLogDocument = gql`
+  subscription SubscribeOneLatestReachLog {
     reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
       reachNum
     }
   }
 `;
-export type SubscribeOneLatestReachlogSubscriptionResult =
-  Apollo.SubscriptionResult<SubscribeOneLatestReachlogSubscription>;
+export type SubscribeOneLatestReachLogSubscriptionResult =
+  Apollo.SubscriptionResult<SubscribeOneLatestReachLogSubscription>;
 export const GetListReachLogsAfterTimestampDocument = gql`
   query GetListReachLogsAfterTimestamp($timestamp: timestamptz!) {
     reachLogs(
