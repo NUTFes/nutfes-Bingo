@@ -1,2 +1,3 @@
+- "!include public_create_prize_with_image.yaml"
 - "!include public_decrement_latest_reach_log.yaml"
 - "!include public_increment_latest_reach_log.yaml"
