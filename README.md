@@ -18,3 +18,14 @@
     - `docker compose run --rm [コンテナ名] bash` でそのコンテナに入る
     - `chown +x -R .`　で実行権限を与える
     - `exit`でそのコンテナから出る
+
+## Load Testing
+
+WebSocket 通信の負荷計測には [Artillery](https://www.artillery.io/) を使用します。
+`loadtest/ws-loadtest.yml` では、Hasura で定義された `SubscribeListNumbers` サブスクリプションを利用したシナリオを記述しています。以下のコマンドで実行できます。
+
+```bash
+WS_API_URL=ws://localhost:8080 HASURA_GRAPHQL_ADMIN_SECRET=your_secret npx artillery run loadtest/ws-loadtest.yml
+```
+
+`WS_API_URL` と `HASURA_GRAPHQL_ADMIN_SECRET` は環境に合わせて設定してください。

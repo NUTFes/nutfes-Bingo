@@ -1,0 +1,12 @@
+{
+  "name": "loadtest",
+  "private": true,
+  "scripts": {
+    "test": "npx artillery run ws-loadtest.yml"
+  },
+  "devDependencies": {
+    "artillery": "^2.0.0",
+    "graphql-ws": "^5.13.0",
+    "ws": "^8.13.0"
+  }
+}

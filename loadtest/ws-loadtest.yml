@@ -1,0 +1,21 @@
+config:
+  target: "{{ $processEnvironment.WS_API_URL }}/v1/graphql"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+  engine: ws
+
+scenarios:
+  - name: "SubscribeListNumbers via WS"
+    flow:
+      - send:
+          text: |
+            {"type":"connection_init","payload":{"headers":{"x-hasura-admin-secret":"{{ $processEnvironment.HASURA_GRAPHQL_ADMIN_SECRET }}"}}}
+      - think: 1
+      - send:
+          text: |
+            {"id":"1","type":"subscribe","payload":{"query":"subscription SubscribeListNumbers { numbers { id number createdAt updatedAt } }","variables":{}}}
+      - think: 1
+      - send:
+          text: |
+            {"id":"1","type":"complete"}
