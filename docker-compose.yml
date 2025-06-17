@@ -19,17 +19,43 @@ services:
       timeout: 5s
       retries: 5
 
-  api: # hasura
+  api-go:
+    container_name: "api"
+    build:
+      context: .docker
+      dockerfile: api-go.Dockerfile
+    volumes:
+      - ./api-go:/go/src/api
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: bingo
+      DB_PASSWORD: password
+      DB_NAME: bingo_db
+      ADMIN_NAME: admin
+      ADMIN_PASS: password
+    ports:
+      - "1323:1323"
+    # command: './start.sh'
+    depends_on:
+      - "db"
+    tty: true
+    stdin_open: true
+
+  api-hasura: # hasura
     build:
       context: .
-      dockerfile: .docker/api.Dockerfile
-    container_name: "bingo_api"
+      dockerfile: .docker/api-hasura.Dockerfile
+    container_name: "bingo_api_hasura"
     ports:
       - "8080:8080"
     volumes:
       - ./api:/hasura/api
     env_file:
       - ./settings/bingo.env
+    depends_on:
+      db:
+        condition: service_healthy
 
   view-user:
     image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
