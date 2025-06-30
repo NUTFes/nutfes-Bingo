@@ -19,6 +19,7 @@ import type {
 } from "@/type/graphql";
 
 import { useRouter } from "next/router";
+import { toast } from "react-toastify";
 
 const Page: NextPage = () => {
   const [bingoPrize, setBingoPrize] = useState<GetListPrizesQuery["prizes"]>(
@@ -137,6 +138,7 @@ const Page: NextPage = () => {
     setIsDisabled(true);
     setIsLoading(true);
     postMinio();
+    toast.success("景品画像を登録しました");
   };
 
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
@@ -207,6 +209,7 @@ const Page: NextPage = () => {
                 ref={fileInputRef}
               />
             </div>
+           
             <div className={styles.input_details}>
               <h2>景品名を入力</h2>
               <input
@@ -216,6 +219,18 @@ const Page: NextPage = () => {
                 name="name"
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setPrizeNameJp(e.target.value)
+                }
+              />
+            </div>
+            <div className={styles.input_details}>
+              <h2>英語名を入力</h2>
+              <input
+                value={prizeNameEn}
+                className={styles.input_form}
+                type="text"
+                name="name"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setPrizeNameEn(e.target.value)
                 }
               />
             </div>
