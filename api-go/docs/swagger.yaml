@@ -1,0 +1,189 @@
+basePath: /
+definitions:
+  controller.CreateNumberRequest:
+    properties:
+      number:
+        type: integer
+    required:
+    - number
+    type: object
+  controller.HTTPError:
+    properties:
+      message:
+        type: string
+    type: object
+  controller.UpdateNumberRequest:
+    properties:
+      number:
+        type: integer
+    required:
+    - number
+    type: object
+  model.Number:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      number:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+host: localhost:1323
+info:
+  contact: {}
+  description: go_learn API
+  title: go_learn API
+  version: "1.0"
+paths:
+  /numbers:
+    get:
+      consumes:
+      - application/json
+      description: Get all bingo numbers that have been drawn
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Number'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+      summary: Get all numbers
+      tags:
+      - numbers
+    post:
+      consumes:
+      - application/json
+      description: Add a new bingo number
+      parameters:
+      - description: Number to create
+        in: body
+        name: number
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateNumberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Number'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+      summary: Create a new number
+      tags:
+      - numbers
+  /numbers/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a bingo number by its ID
+      parameters:
+      - description: Number ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+      summary: Delete a number
+      tags:
+      - numbers
+    get:
+      consumes:
+      - application/json
+      description: Get a single bingo number by its ID
+      parameters:
+      - description: Number ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Number'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+      summary: Get a number by ID
+      tags:
+      - numbers
+    put:
+      consumes:
+      - application/json
+      description: Update an existing bingo number by its ID
+      parameters:
+      - description: Number ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New number value
+        in: body
+        name: number
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UpdateNumberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Number'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.HTTPError'
+      summary: Update a number
+      tags:
+      - numbers
+schemes:
+- http
+swagger: "2.0"
