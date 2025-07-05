@@ -1,0 +1,225 @@
+config:
+  target: "{{ $processEnvironment.API_ENDPOINT || 'http://localhost:8080' }}"
+  phases:
+    # ウォームアップフェーズ - 接続確認
+    - duration: 10
+      arrivalRate: 2
+      name: "ウォームアップ"
+
+    # 通常負荷 - 実際のユーザー数をシミュレート
+    - duration: 10
+      arrivalRate: 10
+      rampTo: 25
+      name: "通常負荷"
+
+    # ピーク負荷 - イベント開始時の同時アクセス
+    - duration: 10
+      arrivalRate: 40
+      name: "ピーク負荷"
+
+    # ストレステスト - システム限界のテスト
+    - duration: 10
+      arrivalRate: 80
+      name: "ストレステスト"
+
+    # クールダウン
+    - duration: 10
+      arrivalRate: 10
+      name: "クールダウン"
+
+  http:
+    timeout: 15
+    pool: 100
+
+  # WebSocketの設定
+  ws:
+    timeout: 30
+
+  # 環境変数の設定
+  environments:
+    local:
+      target: "http://localhost:8080"
+      wsTarget: "ws://localhost:8080"
+      userPageUrl: "http://localhost:3000"
+
+    production:
+      target: "https://bingo-api.nutfes.net"
+      wsTarget: "wss://bingo-api.nutfes.net"
+      userPageUrl: "https://bingo.nutfes.net"
+
+  # カスタムメトリクス
+  metrics:
+    - name: "page_load_time"
+      description: "ページロード時間"
+    - name: "api_response_time"
+      description: "API応答時間"
+    - name: "websocket_connection_time"
+      description: "WebSocket接続時間"
+
+  # プロセッサー設定
+  processor: "./artillery-processor.js"
+
+scenarios:
+  # シナリオ1: 番号一覧ページの閲覧
+  - name: "番号一覧ページ閲覧"
+    weight: 40
+    flow:
+      # 1. ページアクセス
+      - get:
+          url: "{{ $processEnvironment.USER_PAGE_URL || 'http://localhost:3000' }}"
+          headers:
+            Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            Accept-Language: "ja,en-US;q=0.7,en;q=0.3"
+            User-Agent: "Mozilla/5.0 (compatible; LoadTest/1.0)"
+          capture:
+            - as: "pageContent"
+              regexp: "__NEXT_DATA__"
+
+      # 2. APIから番号データ取得
+      - post:
+          url: "/v1/graphql"
+          headers:
+            Content-Type: "application/json"
+            x-hasura-admin-secret: "/4XQdRUHXGtW"
+          json:
+            query: |
+              query GetListNumbers {
+                numbers {
+                  id
+                  number
+                  createdAt
+                  updatedAt
+                }
+              }
+          capture:
+            - as: "numbersData"
+              json: "$.data.numbers"
+
+      # 3. ページ内操作のシミュレート
+      - think: "{{ Math.random() * 3 + 1 }}"
+
+  # シナリオ2: 景品一覧ページの閲覧
+  - name: "景品一覧ページ閲覧"
+    weight: 35
+    flow:
+      # 1. 景品ページアクセス
+      - get:
+          url: "{{ $processEnvironment.USER_PAGE_URL || 'http://localhost:3000' }}/prizes"
+          headers:
+            Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            Accept-Language: "ja,en-US;q=0.7,en;q=0.3"
+            User-Agent: "Mozilla/5.0 (compatible; LoadTest/1.0)"
+
+      # 2. APIから景品データ取得
+      - post:
+          url: "/v1/graphql"
+          headers:
+            Content-Type: "application/json"
+            x-hasura-admin-secret: "/4XQdRUHXGtW"
+          json:
+            query: |
+              query GetListPrizes {
+                prizes {
+                  id
+                  isWon
+                  nameJp
+                  nameEn
+                  createdAt
+                  updatedAt
+                  image {
+                    id
+                    bucketName
+                    fileName
+                    fileType
+                    createdAt
+                    updatedAt
+                  }
+                }
+              }
+          capture:
+            - as: "prizesData"
+              json: "$.data.prizes"
+
+      # 3. 景品詳細の閲覧シミュレート
+      - think: "{{ Math.random() * 5 + 2 }}"
+
+  # シナリオ3: リアルタイム更新の負荷テスト
+  - name: "リアルタイム更新"
+    weight: 25
+    flow:
+      # WebSocket接続でリアルタイム更新をシミュレート
+      - ws:
+          url: "{{ $processEnvironment.WS_TARGET || 'ws://localhost:8080' }}/v1/graphql"
+          protocols: ["graphql-ws"]
+          headers:
+            Sec-WebSocket-Protocol: "graphql-ws"
+          onopen:
+            - send:
+                data: |
+                  {
+                    "type": "connection_init",
+                    "payload": {
+                      "headers": {
+                        "x-hasura-admin-secret": "/4XQdRUHXGtW"
+                      }
+                    }
+                  }
+          onmessage:
+            - capture:
+                as: "wsMessage"
+                json: "$.type"
+            - log: "Received WebSocket message: {{ wsMessage }}"
+          flow:
+            # 番号のサブスクリプション
+            - send:
+                data: |
+                  {
+                    "id": "numbers_{{ $uuid }}",
+                    "type": "start",
+                    "payload": {
+                      "query": "subscription SubscribeListNumbers { numbers { id number createdAt updatedAt } }"
+                    }
+                  }
+
+            # 景品のサブスクリプション
+            - send:
+                data: |
+                  {
+                    "id": "prizes_{{ $uuid }}",
+                    "type": "start",
+                    "payload": {
+                      "query": "subscription SubscribeListPrizesIsWon { prizes { id isWon createdAt updatedAt } }"
+                    }
+                  }
+
+            # 接続維持
+            - think: 30
+
+            # サブスクリプション停止
+            - send:
+                data: |
+                  {
+                    "id": "numbers_{{ $uuid }}",
+                    "type": "stop"
+                  }
+            - send:
+                data: |
+                  {
+                    "id": "prizes_{{ $uuid }}",
+                    "type": "stop"
+                  }
+
+            # 接続終了
+            - send:
+                data: |
+                  {
+                    "type": "connection_terminate"
+                  }
+
+# パフォーマンス期待値
+expectations:
+  - http.response_time.p95: 1000
+  - http.response_time.p99: 2000
+  - http.response_time.max: 5000
+  - http.codes.200: 99
+  - vusers.completed: 95
