@@ -8,13 +8,12 @@
 #
 # 処理の流れ:
 # 1. 環境変数の読み込み (bingo.env)
-# 2. MinIOバケットの作成・設定
-# 3. 既存のimages/prizesデータのクリーンアップ
-# 4. view-user/public/PrizeItem/内の画像を順次処理:
+# 2. MinIOクライアントの設定
+# 3. view-user/public/PrizeItem/内の画像を順次処理:
 #    - MinIOにアップロード (prizes/ディレクトリ配下)
 #    - imagesテーブルにメタデータ登録
 #    - prizesテーブルに景品情報登録
-# 5. 作成結果のサマリー表示
+# 4. 作成結果のサマリー表示
 
 set -e  # エラー時に停止
 
@@ -36,162 +35,304 @@ BUCKET_NAME="${NEXT_PUBLIC_BUCKET_NAME}"
 ACCESS_KEY="${NEXT_PUBLIC_ACCESS_KEY}"
 SECRET_KEY="${NEXT_PUBLIC_SECRET_KEY}"
 HASURA_ENDPOINT="${API_URI}/v1/graphql"
+HASURA_METADATA_ENDPOINT="${API_URI}/v1/metadata"
 ADMIN_SECRET="${HASURA_GRAPHQL_ADMIN_SECRET}"
 
 # 画像ディレクトリ
 PRIZE_IMAGES_DIR="view-user/public/PrizeItem"
 
-echo "🚀 Starting seed data creation with existing images..."
-
-# 1. MinIOクライアントの設定とバケット作成（Docker経由）
-echo "📦 Setting up MinIO client and creating bucket..."
-docker compose exec api mc alias set local $MINIO_ENDPOINT $ACCESS_KEY $SECRET_KEY
-docker compose exec api mc mb local/$BUCKET_NAME --ignore-existing
-
-# 2. 既存データのクリーンアップ
-echo "🧹 Cleaning up existing data..."
-curl -X POST \
-  $HASURA_ENDPOINT \
-  -H "Content-Type: application/json" \
-  -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
-  -d '{
-    "type": "run_sql",
-    "args": {
-      "sql": "DELETE FROM prizes; DELETE FROM images; ALTER SEQUENCE images_id_seq RESTART WITH 1; ALTER SEQUENCE prizes_id_seq RESTART WITH 1;"
-    }
-  }' > /dev/null
-
-# 3. 画像のアップロードとDB登録
-echo "📷 Uploading images and registering to database..."
-
-
-
-# 景品データの配列（ファイル名から景品名を抽出）
-declare -a prize_data=(
-    "01_Apple Watch SE.jpg|Apple Watch SE|Apple Watch SE"
-    "02_黒毛和牛1kg.jpg|黒毛和牛1kg|Japanese Wagyu Beef 1kg"
-    "03_選べるペアチケット.jpg|選べるペアチケット|Pair Ticket"
-    "04_コーヒーメーカー.jpg|コーヒーメーカー|Coffee Maker"
-    "05_缶つま.jpg|缶つま|Canned Food Set"
-    "06_朝日山 天籟 越淡麗 純米大吟醸.jpg|朝日山 天籟 越淡麗 純米大吟醸|Asahiyama Tenrai Sake"
-    "07_折りたたみ自転車.jpg|折りたたみ自転車|Folding Bicycle"
-    "08_焼肉プレート.jpg|焼肉プレート|BBQ Plate"
-    "09_ジバニャン着ぐるみ.jpg|ジバニャン着ぐるみ|Jibanyan Costume"
-    "10_チュッパチャプス200本ツリー.jpg|チュッパチャプス200本ツリー|Chupa Chups Tree 200pcs"
-    "11_技大セット.jpg|技大セット|NUT Set"
-    "12_瓶コーラ12本セット.jpg|瓶コーラ12本セット|Bottle Cola 12pcs Set"
-    "13_魚沼産コシヒカリ(2kg).jpg|魚沼産コシヒカリ(2kg)|Uonuma Koshihikari Rice 2kg"
-    "14_着る毛布(サメ).jpg|着る毛布(サメ)|Wearable Blanket (Shark)"
-    "15_駄菓子 詰め合わせセット.jpg|駄菓子 詰め合わせセット|Japanese Snack Set"
-    "16_トトロクッション.jpg|トトロクッション|Totoro Cushion"
-    "17_ハンディファン.jpg|ハンディファン|Handy Fan"
-    "18_サウナハット.jpg|サウナハット|Sauna Hat"
-    "19_ご飯が炊ける弁当箱.jpg|ご飯が炊ける弁当箱|Rice Cooking Lunch Box"
-    "20_人生ゲームゴールデンドリーム.jpg|人生ゲームゴールデンドリーム|Game of Life Golden Dream"
-    "21_寝袋.jpg|寝袋|Sleeping Bag"
-    "22_ソーダストリーム.jpg|ソーダストリーム|SodaStream"
-    "23_ナブラ演算子ゲーム.jpg|ナブラ演算子ゲーム|Nabla Operator Game"
-    "24_ダンベル.jpg|ダンベル|Dumbbell"
-    "25_ニュートンのゆりかご.jpg|ニュートンのゆりかご|Newton's Cradle"
-    "26_日めくりカレンダー(毎日アンミカ）.jpg|日めくりカレンダー(毎日アンミカ）|Daily Calendar (Anmika)"
-    "27_セクシー大根抱き枕.jpg|セクシー大根抱き枕|Sexy Radish Body Pillow"
-    "28_ペッパーミル.jpg|ペッパーミル|Pepper Mill"
-    "29_ザコシショウ来学記念セット.jpg|ザコシショウ来学記念セット|Zakoshi Show Memorial Set"
-    "30_巨大クマのぬいぐるみ.jpg|巨大クマのぬいぐるみ|Giant Bear Plushie"
-    "31_ハーゲンダッツ詰め合わせ.jpg|ハーゲンダッツ詰め合わせ|Haagen-Dazs Set"
+# 景品名配列（ファイル番号01-31に対応）
+declare -a PRIZE_NAMES_JP=(
+    "Apple Watch SE"
+    "黒毛和牛1kg"
+    "選べるペアチケット"
+    "コーヒーメーカー"
+    "缶つま"
+    "朝日山 天籟 越淡麗 純米大吟醸"
+    "折りたたみ自転車"
+    "焼肉プレート"
+    "ジバニャン着ぐるみ"
+    "チュッパチャプス200本ツリー"
+    "技大セット"
+    "瓶コーラ12本セット"
+    "魚沼産コシヒカリ(2kg)"
+    "着る毛布(サメ)"
+    "駄菓子 詰め合わせセット"
+    "トトロクッション"
+    "ハンディファン"
+    "サウナハット"
+    "ご飯が炊ける弁当箱"
+    "人生ゲームゴールデンドリーム"
+    "寝袋"
+    "ソーダストリーム"
+    "ナブラ演算子ゲーム"
+    "ダンベル"
+    "ニュートンのゆりかご"
+    "日めくりカレンダー(毎日アンミカ)"
+    "セクシー大根抱き枕"
+    "ペッパーミル"
+    "ザコシショウ来学記念セット"
+    "巨大クマのぬいぐるみ"
+    "ハーゲンダッツ詰め合わせ"
 )
 
-# 各画像を処理
-total_count=${#prize_data[@]}
+declare -a PRIZE_NAMES_EN=(
+    "Apple Watch SE"
+    "Kuroge Wagyu 1kg"
+    "Selectable Pair Ticket"
+    "Coffee Maker"
+    "Canned Delicacies"
+    "Asahiyama Tenrai Junmai Daiginjo"
+    "Folding Bicycle"
+    "BBQ Grill Plate"
+    "Jibanyan Costume"
+    "Chupa Chups 200 Tree"
+    "NUTEC Set"
+    "Bottled Coke 12 Set"
+    "Uonuma Koshihikari Rice (2kg)"
+    "Wearable Blanket (Shark)"
+    "Assorted Snacks Set"
+    "Totoro Cushion"
+    "Handy Fan"
+    "Sauna Hat"
+    "Rice Cooker Lunch Box"
+    "Game of Life Golden Dream"
+    "Sleeping Bag"
+    "SodaStream"
+    "Nabla Operator Game"
+    "Dumbbell"
+    "Newton's Cradle"
+    "Daily Calendar (Anmika)"
+    "Sexy Radish Pillow"
+    "Pepper Mill"
+    "Zakoshi Show Memorial Set"
+    "Giant Bear Plushie"
+    "Haagen-Dazs Assortment"
+)
+
+echo "🚀 Starting seed data creation with existing images..."
+
+# 1. MinIOクライアントの設定（データ操作用）
+# 前提条件: generate_minio_credentials.sh でMinIO環境が適切にセットアップ済み
+echo "🔑 Setting up MinIO client for data operations..."
+docker compose exec api mc alias set local $MINIO_ENDPOINT $ACCESS_KEY $SECRET_KEY
+
+# 2. 画像のアップロードとDB登録
+echo "📷 Uploading images and registering to database..."
+
+# 実際の画像ファイルを確認
+echo "🔍 Checking available image files..."
+cd ../../
+if [ ! -d "$PRIZE_IMAGES_DIR" ]; then
+    echo "❌ Directory not found: $PRIZE_IMAGES_DIR"
+    exit 1
+fi
+
+# 実際に存在するファイルを動的に取得
+available_files=$(find "$PRIZE_IMAGES_DIR" -name "*.jpg" -exec basename {} \; 2>/dev/null | sort)
+cd api/seeds
+
+if [ -z "$available_files" ]; then
+    echo "❌ No image files found in $PRIZE_IMAGES_DIR"
+    exit 1
+fi
+
+# ファイルリストを配列に変換
+mapfile -t test_files <<< "$available_files"
+
+total_count=${#test_files[@]}
 current_count=0
 
-for prize_info in "${prize_data[@]}"; do
+echo "Processing $total_count files..."
+
+# テストファイルを処理
+for filename in "${test_files[@]}"; do
+    # 個別の処理では set -e を一時的に無効にして続行
+    set +e
+
     ((current_count++))
-    IFS='|' read -r filename name_jp name_en <<< "$prize_info"
 
-    # プロジェクトルート内のファイルパス
+    # ファイル名をプリントして確認
+    echo "Processing file $current_count/$total_count: '$filename'"
+
+    # ファイル名から番号を抽出（01-31）
+    file_number=$(echo "$filename" | grep -o '^[0-9]\+' | sed 's/^0*//')
+
+    # 配列のインデックスは0ベースなので1を引く
+    array_index=$((file_number - 1))
+
+    # 配列から景品名を取得
+    if [ $array_index -ge 0 ] && [ $array_index -lt ${#PRIZE_NAMES_JP[@]} ]; then
+        name_jp="${PRIZE_NAMES_JP[$array_index]}"
+        name_en="${PRIZE_NAMES_EN[$array_index]}"
+        echo "  Prize names: JP='$name_jp', EN='$name_en'"
+    else
+        echo "  Warning: File number $file_number is out of range, using fallback names"
+        name_jp="景品 $file_number"
+        name_en="Prize $file_number"
+    fi
+
+    # ファイル名のクリーンアップ（MinIOアップロード用）
+    clean_filename=$(echo "$filename" | sed "s/^'//; s/'$//")
+
+    # ファイル名に特殊文字が含まれる場合のための安全な処理
+    # Docker内でのファイルパス（クォートで適切に囲む）
     source_path="/hasura/project/$PRIZE_IMAGES_DIR/$filename"
-    dest_path="local/$BUCKET_NAME/prizes/$filename"
+    dest_path="local/$BUCKET_NAME/prizes/$clean_filename"
 
-    # ホスト側でファイルの存在確認
-    if [ -f "../../$PRIZE_IMAGES_DIR/$filename" ]; then
-        echo -n "[$current_count/$total_count] Processing: $name_jp... "
+    echo -n "  Uploading $name_jp to MinIO... "
 
-        # MinIOに画像をアップロード
-        docker compose exec api sh -c "mc cp '$source_path' '$dest_path'" > /dev/null 2>&1
+    # MinIOに画像をアップロード（特殊文字対応のためprintf使用）
+    upload_result=$(docker compose exec api sh -c "mc cp '$source_path' '$dest_path'" 2>&1)
+    upload_exit_code=$?
+
+    if [ $upload_exit_code -eq 0 ]; then
+        echo "✅ Uploaded"
 
         # ファイル拡張子を取得
-        file_extension="${filename##*.}"
+        file_extension="${clean_filename##*.}"
 
-        # imagesテーブルに登録
+        # MinIOでのファイル名（prizes/プレフィックス付き、スペースはアンダースコアに変換）
+        safe_filename=$(echo "prizes/$clean_filename" | sed 's/ /_/g')
 
-        # ファイル名のスペースをアンダースコアに置換（安全な方法）
-        safe_filename=$(echo "prizes/$filename" | sed 's/ /_/g')
+        echo -n "  Registering image to database... "
+        # imagesテーブルに登録（既存チェック後に挿入）
+        escaped_bucket=$(printf '%s' "$BUCKET_NAME" | sed 's/"/\\"/g')
+        escaped_filename=$(printf '%s' "$safe_filename" | sed 's/"/\\"/g')
+        escaped_extension=$(printf '%s' "$file_extension" | sed 's/"/\\"/g')
 
-        # シンプルなGraphQLクエリ（変数なし）
-        image_response=$(curl -s -X POST \
-          $HASURA_ENDPOINT \
+        # 既存の画像をチェック
+        existing_image_response=$(curl -s -X POST \
+          "$HASURA_ENDPOINT" \
           -H "Content-Type: application/json" \
           -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
-          -d "{\"query\":\"mutation { insertImagesOne(object: {bucketName: \\\"$BUCKET_NAME\\\", fileName: \\\"$safe_filename\\\", fileType: \\\"$file_extension\\\"}) { id } }\"}")
+          -d "{\"query\":\"query { images(where: {fileName: {_eq: \\\"$escaped_filename\\\"}}) { id } }\"}")
 
-        # レスポンスからimage_idを抽出
-        image_id=$(echo "$image_response" | grep -o '"id":[0-9]*' | grep -o '[0-9]*')
-
-        if [ -z "$image_id" ]; then
-            echo "❌ Failed to get image ID"
-            echo "Response: $image_response"
-            continue
-        fi
-
-        if [ ! -z "$image_id" ]; then
-            # prizesテーブルに登録（特殊文字をエスケープ）
-            safe_name_jp=$(echo "$name_jp" | sed 's/"/\\"/g')
-            safe_name_en=$(echo "$name_en" | sed 's/"/\\"/g')
-
-            prize_response=$(curl -s -X POST \
-              $HASURA_ENDPOINT \
-              -H "Content-Type: application/json" \
-              -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
-              -d "{\"query\":\"mutation { insertPrizesOne(object: {imageId: $image_id, nameJp: \\\"$safe_name_jp\\\", nameEn: \\\"$safe_name_en\\\", isWon: false}) { id } }\"}")
-
-            # prizesのIDを確認
-            prize_id=$(echo "$prize_response" | grep -o '"id":[0-9]*' | grep -o '[0-9]*')
-
-            if [ ! -z "$prize_id" ]; then
-                echo "✅ 完了 ID: $image_id"
-            else
-                echo "❌ Prize registration failed"
-                echo "Response: $prize_response"
-            fi
+        # GraphQLレスポンスのエラーチェック
+        if echo "$existing_image_response" | grep -q '"errors"'; then
+            echo "❌ GraphQL error in image check"
+            echo "    Response: $existing_image_response"
         else
-            echo "❌ Failed to insert image"
+            existing_image_id=$(echo "$existing_image_response" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
+
+            if [ ! -z "$existing_image_id" ]; then
+                image_id="$existing_image_id"
+                echo "✅ Image already exists ID: $image_id"
+            else
+                # 新規作成
+                image_response=$(curl -s -X POST \
+                  "$HASURA_ENDPOINT" \
+                  -H "Content-Type: application/json" \
+                  -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
+                  -d "{\"query\":\"mutation { insertImagesOne(object: {bucketName: \\\"$escaped_bucket\\\", fileName: \\\"$escaped_filename\\\", fileType: \\\"$escaped_extension\\\"}) { id } }\"}")
+
+                # GraphQLレスポンスのエラーチェック
+                if echo "$image_response" | grep -q '"errors"'; then
+                    echo "❌ GraphQL error in image creation"
+                    echo "    Response: $image_response"
+                    image_id=""
+                else
+                    image_id=$(echo "$image_response" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
+
+                    if [ ! -z "$image_id" ]; then
+                        echo "✅ Image created ID: $image_id"
+                    else
+                        echo "❌ Image registration failed"
+                        echo "    Response: $image_response"
+                        image_id=""
+                    fi
+                fi
+            fi
+
+            # 画像IDが取得できた場合のみ、景品を登録
+            if [ ! -z "$image_id" ]; then
+                echo -n "  Registering prize to database... "
+                # prizesテーブルに登録（既存チェック後に挿入）
+
+                # 既存の景品をチェック
+                existing_prize_response=$(curl -s -X POST \
+                  "$HASURA_ENDPOINT" \
+                  -H "Content-Type: application/json" \
+                  -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
+                  -d "{\"query\":\"query { prizes(where: {imageId: {_eq: $image_id}}) { id } }\"}")
+
+                # GraphQLレスポンスのエラーチェック
+                if echo "$existing_prize_response" | grep -q '"errors"'; then
+                    echo "❌ GraphQL error in prize check"
+                    echo "    Response: $existing_prize_response"
+                else
+                    existing_prize_id=$(echo "$existing_prize_response" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
+
+                    if [ ! -z "$existing_prize_id" ]; then
+                        echo "✅ Prize already exists ID: $existing_prize_id"
+                    else
+                        # 新規作成（JSONエスケープ）
+                        escaped_name_jp=$(printf '%s' "$name_jp" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
+                        escaped_name_en=$(printf '%s' "$name_en" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
+
+                        prize_response=$(curl -s -X POST \
+                          "$HASURA_ENDPOINT" \
+                          -H "Content-Type: application/json" \
+                          -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
+                          -d "{\"query\":\"mutation { insertPrizesOne(object: {imageId: $image_id, nameJp: \\\"$escaped_name_jp\\\", nameEn: \\\"$escaped_name_en\\\", isWon: false}) { id } }\"}")
+
+                        # GraphQLレスポンスのエラーチェック
+                        if echo "$prize_response" | grep -q '"errors"'; then
+                            echo "❌ GraphQL error in prize creation"
+                            echo "    Response: $prize_response"
+                        else
+                            prize_id=$(echo "$prize_response" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
+
+                            if [ ! -z "$prize_id" ]; then
+                                echo "✅ Prize created ID: $prize_id"
+                            else
+                                echo "❌ Prize registration failed"
+                                echo "    Response: $prize_response"
+                            fi
+                        fi
+                    fi
+                fi
+            fi
         fi
     else
-        echo "⚠️  [$current_count/$total_count] File not found: $filename"
+        echo "❌ Upload failed (exit code: $upload_exit_code)"
+        echo "    Error: $upload_result"
+        echo "    Source: '$source_path'"
+        echo "    Dest: '$dest_path'"
+
+        # ファイルが存在するかチェック
+        if docker compose exec api test -f "$source_path"; then
+            echo "    File exists in container"
+        else
+            echo "    File NOT found in container"
+        fi
     fi
+    echo ""
+
+    # 個別処理完了後、set -e を再度有効にする
+    set -e
 done
 
 echo ""
 echo "🎉 Seed data creation completed!"
 echo "📊 Summary:"
 
-# 結果のサマリーを表示
-images_count=$(curl -s -X POST \
-  $HASURA_ENDPOINT \
+# 結果のサマリーを表示（正しいフィールド名を使用）
+images_response=$(curl -s -X POST \
+  "$HASURA_ENDPOINT" \
   -H "Content-Type: application/json" \
   -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
-  -d '{
-    "query": "query { images_aggregate { aggregate { count } } }"
-  }' | grep -o '"count":[0-9]*' | grep -o '[0-9]*')
+  -d '{"query": "query { imagesAggregate { aggregate { count } } }"}')
 
-prizes_count=$(curl -s -X POST \
-  $HASURA_ENDPOINT \
+images_count=$(echo "$images_response" | grep -o '"count"[[:space:]]*:[[:space:]]*[0-9]*' | grep -o '[0-9]*')
+
+prizes_response=$(curl -s -X POST \
+  "$HASURA_ENDPOINT" \
   -H "Content-Type: application/json" \
   -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
-  -d '{
-    "query": "query { prizes_aggregate { aggregate { count } } }"
-  }' | grep -o '"count":[0-9]*' | grep -o '[0-9]*')
+  -d '{"query": "query { prizesAggregate { aggregate { count } } }"}')
+
+prizes_count=$(echo "$prizes_response" | grep -o '"count"[[:space:]]*:[[:space:]]*[0-9]*' | grep -o '[0-9]*')
 
 echo "  - Images uploaded: $images_count"
 echo "  - Prizes registered: $prizes_count"
