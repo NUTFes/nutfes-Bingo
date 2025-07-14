@@ -1,5 +1,5 @@
 run:
-	docker compose up -d
+	docker compose up -d --build
 	sleep 10
 	make db-apply
 
@@ -24,6 +24,16 @@ run-prod:
 	docker compose -f docker-compose.prod.yml up -d
 	sleep 10
 	make db-apply-prod
+
+# Seed data commands
+seed:
+	docker compose build api
+	cd api/seeds && ./seed_with_existing_images.sh
+
+# Complete setup with seed data
+setup: run
+	sleep 5
+	make seed
 
 codegen/user:
 	docker compose run --rm view-user npm run codegen
