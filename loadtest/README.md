@@ -167,11 +167,11 @@ brew install k6
 # WebSocket負荷試験
 ./run-tests.sh websocket
 
-# HTTP API負荷試験
-./run-tests.sh http
+# 統合HTTP負荷試験（ユーザー行動シミュレーション）
+./run-tests.sh unified
 
-# 最適化された負荷試験
-./run-tests.sh optimized-http
+# デバッグ用WebSocket試験
+./run-tests.sh debug-websocket
 ```
 
 ## 📋 負荷試験種類
@@ -181,22 +181,15 @@ brew install k6
 - リアルタイム通信のパフォーマンス測定
 - サブスクリプション機能の検証
 
-### 2. HTTP API負荷試験
+### 2. 統合HTTP負荷試験（ユーザー行動シミュレーション）
+- 現実的なユーザー行動パターンの再現
+- HTTP APIの集中的な負荷テスト
+- ページ遷移とAPI呼び出しの組み合わせ
 - REST API / GraphQL API の負荷テスト
 - レスポンス時間とスループットの測定
 - エラー率の監視
 
-### 3. 最適化されたHTTP負荷試験
-- ページロード時間を含む統合テスト
-- より現実的なユーザー行動パターン
-- ユーザーセッションのシミュレーション
-
-### 4. 最適化されたWebSocket負荷試験
-- 効率的なWebSocket接続管理
-- 動的なユーザー数スケーリング
-- 長期間の接続維持テスト
-
-### 5. デバッグ用WebSocket負荷試験
+### 3. デバッグ用WebSocket負荷試験
 - 軽負荷での動作確認
 - スクリプトの検証・デバッグ
 - 開発時の動作確認
@@ -208,10 +201,10 @@ brew install k6
 ./run-tests.sh -e local websocket
 
 # 最大ユーザー数指定
-./run-tests.sh -u 1000 optimized-http
+./run-tests.sh -u 1000 unified
 
-# 本番環境で1000ユーザーのWebSocketテスト
-./run-tests.sh -e production -u 1000 websocket
+# 本番環境で1000ユーザーの統合テスト
+./run-tests.sh -e production -u 1000 unified
 ```
 
 ## 📊 結果の分析
@@ -233,9 +226,7 @@ brew install k6
 loadtest/
 ├── k6/                       # K6テストスクリプト
 │   ├── websocket-load-test.js        # WebSocket負荷試験
-│   ├── http-api-load-test.js         # HTTP API負荷試験
-│   ├── optimized-user-load-test.js   # 最適化HTTP負荷試験
-│   ├── optimized-websocket-test.js   # 最適化WebSocket負荷試験
+│   ├── unified-load-test.js          # 統合HTTP負荷試験（ユーザー行動シミュレーション）
 │   ├── debug-websocket-test.js       # デバッグ用WebSocket試験
 │   └── debug-local-websocket-test.js # ローカル環境デバッグ用
 ├── config/                   # 共通設定
@@ -253,15 +244,13 @@ loadtest/
 - リアルタイムデータの受信
 - 接続維持とメッセージ処理
 
-### HTTP API負荷試験
+### 統合HTTP負荷試験（ユーザー行動シミュレーション）
 - ビンゴ番号の取得
 - 景品情報の取得
-- エラーハンドリングの検証
-
-### 最適化負荷試験
 - ページロードのシミュレーション
 - ユーザー行動パターンの再現
 - 段階的な負荷増加
+- エラーハンドリングの検証
 
 ## 📈 パフォーマンス目標
 

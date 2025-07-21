@@ -44,15 +44,13 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "テストタイプ:"
       echo "  websocket                WebSocket負荷テスト"
-      echo "  http                     HTTP API負荷テスト"
-      echo "  optimized-http           最適化されたHTTP負荷テスト"
-      echo "  optimized-websocket      最適化されたWebSocket負荷テスト"
+      echo "  unified                  統合HTTP負荷テスト（ユーザー行動シミュレーション）"
       echo "  debug-websocket          WebSocketデバッグテスト"
       echo "  debug-local              ローカル環境デバッグテスト"
       echo "  all                      全K6負荷テスト"
       echo ""
       echo "例："
-      echo "  $0 --max-users 1000 optimized-http"
+      echo "  $0 --max-users 1000 unified"
       echo "  $0 -e local -u 100 websocket"
       exit 0
       ;;
@@ -192,50 +190,18 @@ run_k6_websocket_test() {
     echo ""
 }
 
-# K6 HTTP API負荷試験
-run_k6_http_test() {
-    echo -e "${PURPLE}🌐 HTTP API負荷試験 (K6) を実行中...${NC}"
+# K6 統合HTTP負荷試験
+run_k6_unified_test() {
+    echo -e "${PURPLE}🌐 統合HTTP負荷試験 (K6) を実行中...${NC}"
     
-    local result_file="$RESULTS_DIR/k6_http_${TIMESTAMP}.json"
-    
-    ENVIRONMENT=$ENVIRONMENT MAX_USERS=$MAX_USERS k6 run \
-        --out json="$result_file" \
-        --summary-export="$RESULTS_DIR/k6_http_summary_${TIMESTAMP}.json" \
-        "$SCRIPT_DIR/k6/http-api-load-test.js"
-    
-    echo -e "${GREEN}✅ HTTP API負荷試験完了${NC}"
-    echo -e "📊 結果ファイル: $result_file"
-    echo ""
-}
-
-# 最適化されたK6 HTTP負荷試験
-run_optimized_k6_http_test() {
-    echo -e "${PURPLE}🚀 最適化されたHTTP負荷試験 (K6) を実行中...${NC}"
-    
-    local result_file="$RESULTS_DIR/k6_optimized_http_${TIMESTAMP}.json"
+    local result_file="$RESULTS_DIR/k6_unified_${TIMESTAMP}.json"
     
     ENVIRONMENT=$ENVIRONMENT MAX_USERS=$MAX_USERS k6 run \
         --out json="$result_file" \
-        --summary-export="$RESULTS_DIR/k6_optimized_http_summary_${TIMESTAMP}.json" \
-        "$SCRIPT_DIR/k6/optimized-user-load-test.js"
+        --summary-export="$RESULTS_DIR/k6_unified_summary_${TIMESTAMP}.json" \
+        "$SCRIPT_DIR/k6/unified-load-test.js"
     
-    echo -e "${GREEN}✅ 最適化されたHTTP負荷試験完了${NC}"
-    echo -e "📊 結果ファイル: $result_file"
-    echo ""
-}
-
-# 最適化されたK6 WebSocket負荷試験
-run_optimized_k6_websocket_test() {
-    echo -e "${PURPLE}🌐 最適化されたWebSocket負荷試験 (K6) を実行中...${NC}"
-    
-    local result_file="$RESULTS_DIR/k6_optimized_websocket_${TIMESTAMP}.json"
-    
-    ENVIRONMENT=$ENVIRONMENT MAX_USERS=$MAX_USERS k6 run \
-        --out json="$result_file" \
-        --summary-export="$RESULTS_DIR/k6_optimized_websocket_summary_${TIMESTAMP}.json" \
-        "$SCRIPT_DIR/k6/optimized-websocket-test.js"
-    
-    echo -e "${GREEN}✅ 最適化されたWebSocket負荷試験完了${NC}"
+    echo -e "${GREEN}✅ 統合HTTP負荷試験完了${NC}"
     echo -e "📊 結果ファイル: $result_file"
     echo ""
 }
@@ -277,15 +243,13 @@ main_menu() {
     while true; do
         echo -e "${CYAN}🎯 実行するK6負荷試験を選択してください:${NC}"
         echo "  1) WebSocket負荷試験"
-        echo "  2) HTTP API負荷試験"
-        echo "  3) 最適化されたHTTP負荷試験"
-        echo "  4) 最適化されたWebSocket負荷試験"
-        echo "  5) デバッグ用WebSocket試験"
-        echo "  6) ローカル環境デバッグ用WebSocket試験"
-        echo "  7) 全K6負荷試験"
+        echo "  2) 統合HTTP負荷試験（ユーザー行動シミュレーション）"
+        echo "  3) デバッグ用WebSocket試験"
+        echo "  4) ローカル環境デバッグ用WebSocket試験"
+        echo "  5) 全負荷試験"
         echo ""
         
-        read -p "選択 (1-7): " choice
+        read -p "選択 (1-5): " choice
         
         case $choice in
             1)
@@ -293,35 +257,25 @@ main_menu() {
                 break
                 ;;
             2)
-                run_k6_http_test
+                run_k6_unified_test
                 break
                 ;;
             3)
-                run_optimized_k6_http_test
-                break
-                ;;
-            4)
-                run_optimized_k6_websocket_test
-                break
-                ;;
-            5)
                 run_debug_websocket_test
                 break
                 ;;
-            6)
+            4)
                 run_debug_local_websocket_test
                 break
                 ;;
-            7)
+            5)
                 echo -e "${PURPLE}🚀 全K6負荷試験を実行します...${NC}"
-                run_k6_http_test
+                run_k6_unified_test
                 run_k6_websocket_test
-                run_optimized_k6_http_test
-                run_optimized_k6_websocket_test
                 break
                 ;;
             *)
-                echo -e "${RED}❌ 無効な選択です。1-7の範囲で選択してください。${NC}"
+                echo -e "${RED}❌ 無効な選択です。1-5の範囲で選択してください。${NC}"
                 echo ""
                 ;;
         esac
@@ -349,16 +303,12 @@ main() {
 if [[ -n "$TEST_TYPE" ]]; then
     case $TEST_TYPE in
         "websocket") run_k6_websocket_test ;;
-        "http") run_k6_http_test ;;
-        "optimized-http") run_optimized_k6_http_test ;;
-        "optimized-websocket") run_optimized_k6_websocket_test ;;
+        "unified") run_k6_unified_test ;;
         "debug-websocket") run_debug_websocket_test ;;
         "debug-local") run_debug_local_websocket_test ;;
         "all") 
-            run_k6_http_test
+            run_k6_unified_test
             run_k6_websocket_test
-            run_optimized_k6_http_test
-            run_optimized_k6_websocket_test
             ;;
         *) 
             echo "エラー: 無効なテストタイプ: $TEST_TYPE"
