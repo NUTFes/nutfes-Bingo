@@ -1,0 +1,45 @@
+{
+  "name": "nutfes-bingo-k6-loadtest",
+  "version": "1.0.0",
+  "description": "BINGO アプリケーション用のK6負荷試験スイート",
+  "main": "run-tests.sh",
+  "scripts": {
+    "test": "./run-tests.sh",
+    "test:websocket": "./run-tests.sh websocket",
+    "test:http": "./run-tests.sh http",
+    "test:optimized-http": "./run-tests.sh optimized-http",
+    "test:optimized-websocket": "./run-tests.sh optimized-websocket",
+    "test:debug": "./run-tests.sh debug-websocket",
+    "test:all": "./run-tests.sh all",
+    "analyze": "./analyze-results.sh",
+    "analyze:evaluate": "./analyze-results.sh evaluate",
+    "analyze:list": "./analyze-results.sh list",
+    "clean": "./analyze-results.sh cleanup",
+    "install-deps": "echo 'K6をインストールしてください: https://k6.io/docs/getting-started/installation/'"
+  },
+  "keywords": [
+    "load-testing",
+    "performance",
+    "k6",
+    "websocket",
+    "graphql",
+    "hasura",
+    "nextjs",
+    "bingo"
+  ],
+  "author": "NUT Festival Team",
+  "license": "MIT",
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NUTFes/nutfes-Bingo.git",
+    "directory": "loadtest"
+  },
+  "bugs": {
+    "url": "https://github.com/NUTFes/nutfes-Bingo/issues"
+  },
+  "homepage": "https://github.com/NUTFes/nutfes-Bingo/tree/feat/yama/k6-load-testing/loadtest#readme"
+}
