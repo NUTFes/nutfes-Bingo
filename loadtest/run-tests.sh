@@ -43,12 +43,11 @@ while [[ $# -gt 0 ]]; do
       echo "  -h, --help               このヘルプを表示"
       echo ""
       echo "テストタイプ:"
-      echo "  artillery                基本Artillery負荷テスト"
-      echo "  optimized                最適化されたArtillery負荷テスト"
+      echo "  artillery                Artillery統合負荷テスト"
       echo "  all                      全Artillery負荷テスト"
       echo ""
       echo "例："
-      echo "  $0 --max-users 1000 optimized"
+      echo "  $0 --max-users 1000 artillery"
       echo "  $0 -e local -u 100 artillery"
       exit 0
       ;;
@@ -159,58 +158,37 @@ check_dependencies() {
 
 # Artillery統合負荷試験
 run_artillery_test() {
-    echo -e "${PURPLE}🎯 統合負荷試験 (Artillery) を実行中...${NC}"
+    echo -e "${PURPLE}🎯 Artillery統合負荷試験を実行中...${NC}"
     
     local result_file="$RESULTS_DIR/artillery_${TIMESTAMP}.json"
     local html_report="$RESULTS_DIR/artillery_report_${TIMESTAMP}.html"
+    local dynamic_config="$RESULTS_DIR/artillery_dynamic_config_${TIMESTAMP}.yml"
+    
+    # 🔧 最大ユーザー数に基づく動的設定を生成中...
+    echo -e "${YELLOW}🔧 最大ユーザー数 $MAX_USERS に基づく動的設定を生成中...${NC}"
     
     # 環境変数の設定
     export API_ENDPOINT="$API_ENDPOINT"
     export WS_TARGET="$WS_ENDPOINT"
     export USER_PAGE_URL="$USER_PAGE_URL"
+    export MAX_USERS="$MAX_USERS"
+    
+    # 動的設定生成
+    node "$SCRIPT_DIR/artillery/dynamic-config.js" \
+        "$SCRIPT_DIR/artillery/load-test.yml" \
+        "$dynamic_config" \
+        "$MAX_USERS"
     
     artillery run \
         --output "$result_file" \
-        "$SCRIPT_DIR/artillery/integrated-load-test.yml"
+        "$dynamic_config"
     
     # HTMLレポートの生成
     artillery report --output "$html_report" "$result_file"
     
-    echo -e "${GREEN}✅ 統合負荷試験完了${NC}"
+    echo -e "${GREEN}✅ Artillery統合負荷試験完了${NC}"
     echo -e "📊 結果ファイル: $result_file"
     echo -e "📈 HTMLレポート: $html_report"
-    echo ""
-}
-
-# 最適化されたArtillery統合試験
-run_optimized_artillery_test() {
-    echo -e "${PURPLE}🎯 最適化されたArtillery統合試験を実行中...${NC}"
-    
-    local result_file="$RESULTS_DIR/artillery_optimized_${TIMESTAMP}.json"
-    local dynamic_config="$RESULTS_DIR/artillery_dynamic_config_${TIMESTAMP}.yml"
-    
-    # 動的設定の生成
-    echo -e "${BLUE}🔧 最大ユーザー数 $MAX_USERS に基づく動的設定を生成中...${NC}"
-    node "$SCRIPT_DIR/artillery/dynamic-config.js" "$MAX_USERS" > "$dynamic_config"
-    
-    # 環境変数の設定
-    export API_ENDPOINT="$API_ENDPOINT"
-    export USER_PAGE_URL="$USER_PAGE_URL"
-    export WS_TARGET="$WS_ENDPOINT"
-    export ADMIN_SECRET="/4XQdRUHXGtW"
-    
-    artillery run \
-        --output "$result_file" \
-        --environment "$ENVIRONMENT" \
-        "$dynamic_config"
-    
-    # HTMLレポート生成
-    artillery report "$result_file" --output "$RESULTS_DIR/artillery_optimized_report_${TIMESTAMP}.html"
-    
-    echo -e "${GREEN}✅ 最適化されたArtillery統合試験完了${NC}"
-    echo -e "📊 結果ファイル: $result_file"
-    echo -e "📄 HTMLレポート: $RESULTS_DIR/artillery_optimized_report_${TIMESTAMP}.html"
-    echo -e "⚙️  動的設定: $dynamic_config"
     echo ""
 }
 
@@ -218,30 +196,18 @@ run_optimized_artillery_test() {
 main_menu() {
     while true; do
         echo -e "${CYAN}🎯 実行する負荷試験を選択してください:${NC}"
-        echo "  1) 基本Artillery負荷試験"
-        echo "  2) 最適化されたArtillery負荷試験"
-        echo "  3) 全Artillery負荷試験"
+        echo "  1) Artillery統合負荷試験"
         echo ""
         
-        read -p "選択 (1-3): " choice
+        read -p "選択 (1): " choice
         
         case $choice in
             1)
                 run_artillery_test
                 break
                 ;;
-            2)
-                run_optimized_artillery_test
-                break
-                ;;
-            3)
-                echo -e "${PURPLE}🚀 全Artillery負荷試験を実行します...${NC}"
-                run_artillery_test
-                run_optimized_artillery_test
-                break
-                ;;
             *)
-                echo -e "${RED}❌ 無効な選択です。1-3の範囲で選択してください。${NC}"
+                echo -e "${RED}❌ 無効な選択です。1を選択してください。${NC}"
                 echo ""
                 ;;
         esac
@@ -269,10 +235,8 @@ main() {
 if [[ -n "$TEST_TYPE" ]]; then
     case $TEST_TYPE in
         "artillery") run_artillery_test ;;
-        "optimized") run_optimized_artillery_test ;;
         "all") 
             run_artillery_test
-            run_optimized_artillery_test
             ;;
         *) 
             echo "エラー: 無効なテストタイプ: $TEST_TYPE"

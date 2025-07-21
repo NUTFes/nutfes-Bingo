@@ -156,24 +156,20 @@ npm install
 # 基本的な実行
 ./run-tests.sh
 
-# 最適化された負荷試験
-./run-tests.sh optimized
+# Artillery統合負荷試験
+./run-tests.sh artillery
 
-# 全Artillery負荷試験
-./run-tests.sh all
+# 最大ユーザー数指定
+./run-tests.sh -u 1000 artillery
 ```
 
 ## 📋 負荷試験種類
 
-### 1. 基本Artillery負荷試験
+### Artillery統合負荷試験
 - HTTP API とWebSocket の統合テスト
-- 標準的な負荷パターン
-- ユーザー閲覧シナリオ
-
-### 2. 最適化されたArtillery負荷試験
-- 動的設定生成
-- 最大ユーザー数に基づくスケーリング
-- より現実的なユーザー行動パターン
+- 動的設定生成（最大ユーザー数に基づくスケーリング）
+- 現実的なユーザー行動パターン
+- カスタムメトリクスによる詳細分析
 
 ## ⚙️  設定オプション
 
