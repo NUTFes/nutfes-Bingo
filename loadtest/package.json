@@ -1,0 +1,45 @@
+{
+  "name": "nutfes-bingo-artillery-loadtest",
+  "version": "1.0.0",
+  "description": "BINGO アプリケーション用のArtillery負荷試験スイート",
+  "main": "run-tests.sh",
+  "scripts": {
+    "test": "./run-tests.sh",
+    "test:artillery": "./run-tests.sh artillery",
+    "test:optimized": "./run-tests.sh optimized",
+    "test:all": "./run-tests.sh all",
+    "analyze": "./analyze-results.sh",
+    "analyze:evaluate": "./analyze-results.sh evaluate",
+    "analyze:list": "./analyze-results.sh list",
+    "clean": "./analyze-results.sh cleanup",
+    "install-deps": "npm install -g artillery"
+  },
+  "keywords": [
+    "load-testing",
+    "performance",
+    "artillery",
+    "websocket",
+    "graphql",
+    "hasura",
+    "nextjs",
+    "bingo"
+  ],
+  "author": "NUT Festival Team",
+  "license": "MIT",
+  "devDependencies": {
+    "artillery": "^2.0.0",
+    "js-yaml": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NUTFes/nutfes-Bingo.git",
+    "directory": "loadtest"
+  },
+  "bugs": {
+    "url": "https://github.com/NUTFes/nutfes-Bingo/issues"
+  },
+  "homepage": "https://github.com/NUTFes/nutfes-Bingo/tree/feat/yama/artillery-load-testing/loadtest#readme"
+}
