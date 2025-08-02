@@ -10,6 +10,7 @@ import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
 import { SessionProvider } from "next-auth/react";
 import { useEffect } from "react";
+import { Flip, ToastContainer } from "react-toastify";
 
 // ヘッダーに x-hasura-admin-secret を設定する
 const wsClient = createClient({
@@ -42,10 +43,26 @@ export default function App({
   }, [router, session]);
 
   return (
-    <ApolloProvider client={client}>
-      <SessionProvider session={session}>
-        <Component {...pageProps} />
-      </SessionProvider>
-    </ApolloProvider>
+    <>
+      <ToastContainer
+        toastClassName={"rounded-lg min-w-96 text-center"}
+        position="bottom-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        transition={Flip}
+      />
+      <ApolloProvider client={client}>
+        <SessionProvider session={session}>
+          <Component {...pageProps} />
+        </SessionProvider>
+      </ApolloProvider>
+    </>
   );
 }
