@@ -84,6 +84,7 @@
 }
 
 .input_form {
+  color: #333;
   border-radius: 0.25rem;
   border: 2px solid #333;
   background: rgba(255, 255, 255, 0.2);
