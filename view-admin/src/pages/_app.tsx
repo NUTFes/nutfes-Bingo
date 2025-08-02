@@ -44,25 +44,25 @@ export default function App({
 
   return (
     <>
-    <ToastContainer
-      toastClassName={"rounded-lg min-w-96 text-center"}
-      position="bottom-center"
-      autoClose={3000}
-      hideProgressBar={false}
-      newestOnTop={false}
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme="colored"
-      transition={Flip}
-    />
-    <ApolloProvider client={client}>
-      <SessionProvider session={session}>
-        <Component {...pageProps} />
-      </SessionProvider>
-    </ApolloProvider>
+      <ToastContainer
+        toastClassName={"rounded-lg min-w-96 text-center"}
+        position="bottom-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        transition={Flip}
+      />
+      <ApolloProvider client={client}>
+        <SessionProvider session={session}>
+          <Component {...pageProps} />
+        </SessionProvider>
+      </ApolloProvider>
     </>
   );
 }
