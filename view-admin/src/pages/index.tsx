@@ -4,6 +4,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { CgLogOut } from "react-icons/cg";
+import { toast } from "react-toastify";
 
 import type { NextPage } from "next";
 
@@ -102,10 +103,9 @@ const Page: NextPage = () => {
               (e) => e.extensions?.code === "constraint-violation",
             )
           ) {
-            // TODO: ちゃんとしたコンポーネントで実装する
-            alert(`${submitNumber} は既に入力済みです。`);
+            toast.warning(`${submitNumber} は既に入力済みです。`);
           } else {
-            alert("エラーが発生しました。");
+            toast.error("エラーが発生しました。");
           }
         },
       });
