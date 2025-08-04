@@ -192,13 +192,13 @@ for filename in "${test_files[@]}"; do
         # ファイル拡張子を取得
         file_extension="${clean_filename##*.}"
 
-        # MinIOでのファイル名（prizes/プレフィックス付き、スペースはアンダースコアに変換）
-        safe_filename=$(echo "prizes/$clean_filename" | sed 's/ /_/g')
+        # MinIOでのファイル名（prizes/プレフィックス付き）
+        minio_filename="prizes/$clean_filename"
 
         echo -n "  Registering image to database... "
         # imagesテーブルに登録（既存チェック後に挿入）
         escaped_bucket=$(printf '%s' "$BUCKET_NAME" | sed 's/"/\\"/g')
-        escaped_filename=$(printf '%s' "$safe_filename" | sed 's/"/\\"/g')
+        escaped_filename=$(printf '%s' "$minio_filename" | sed 's/"/\\"/g')
         escaped_extension=$(printf '%s' "$file_extension" | sed 's/"/\\"/g')
 
         # 既存の画像をチェック
