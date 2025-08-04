@@ -13,9 +13,9 @@
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": "./view-admin/tsconfig.json"
+    "project": "./tsconfig.json"
   },
-  "plugins": ["@typescript-eslint", "import", "unused-imports", "next"],
+  "plugins": ["@typescript-eslint", "import", "unused-imports"],
   "root": true,
   "ignorePatterns": [
     "**/codegen.ts",
