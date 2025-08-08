@@ -1,57 +1,8 @@
 {
-  "env": {
-    "node": true,
-    "es2022": true
-  },
   "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking",
     "next/core-web-vitals",
-    "plugin:storybook/recommended",
+    "plugin:prettier/recommended",
+    "plugin:import/warnings",
     "prettier"
-  ],
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "project": "./tsconfig.json"
-  },
-  "plugins": ["@typescript-eslint", "import", "unused-imports"],
-  "root": true,
-  "ignorePatterns": [
-    "**/codegen.ts",
-    "**/gql/**",
-    "**/type/graphql.ts",
-    "**/*.d.ts"
-  ],
-  "rules": {
-    "@typescript-eslint/no-unused-vars": "off",
-    "unused-imports/no-unused-imports": "warn",
-    "@typescript-eslint/no-floating-promises": "error",
-    "@typescript-eslint/no-misused-promises": "error",
-    "@typescript-eslint/require-await": "error",
-    "@typescript-eslint/no-unsafe-assignment": "warn",
-    "@typescript-eslint/no-unsafe-argument": "warn",
-    "@typescript-eslint/no-unsafe-member-access": "warn",
-    "@typescript-eslint/no-explicit-any": "warn",
-    "import/order": [
-      "warn",
-      {
-        "groups": [
-          "builtin",
-          "external",
-          "internal",
-          ["parent", "sibling"],
-          "index",
-          "object",
-          "type"
-        ],
-        "newlines-between": "always",
-        "pathGroupsExcludedImportTypes": ["builtin", "external"],
-        "alphabetize": { "order": "asc", "caseInsensitive": true },
-        "pathGroups": [
-          { "pattern": "src/**", "group": "internal", "position": "before" }
-        ]
-      }
-    ]
-  }
+  ]
 }
