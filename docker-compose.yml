@@ -28,6 +28,7 @@ services:
       - "8080:8080"
     volumes:
       - ./api:/hasura/api
+      - .:/hasura/project # プロジェクト全体をマウント（seedスクリプト用）
     env_file:
       - ./settings/bingo.env
 

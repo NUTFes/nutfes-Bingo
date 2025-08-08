@@ -1,6 +1,6 @@
 run:
-	docker compose up -d
-	sleep 10
+	docker compose up -d --build
+	sleep 20
 	make db-apply
 
 down:
@@ -24,6 +24,23 @@ run-prod:
 	docker compose -f docker-compose.prod.yml up -d
 	sleep 10
 	make db-apply-prod
+
+# MinIO credentials management
+generate-minio-keys:
+	cd api/seeds && ./generate_minio_credentials.sh
+
+# Seed data commands
+seed:
+	cd api/seeds && ./seed_with_existing_images.sh
+
+# Complete setup with new MinIO credentials and seed data
+setup:
+	make run
+	make generate-minio-keys
+	@echo "🔄 Restarting containers to apply new credentials..."
+	docker compose restart
+	sleep 10
+	make seed
 
 codegen/user:
 	docker compose run --rm view-user npm run codegen
