@@ -2242,12 +2242,12 @@ export type SubscriptionRootStampTriggersStreamArgs = {
   where?: InputMaybe<StampTriggersBoolExp>;
 };
 
-export type GetLatestEventSurveyForUserQueryVariables = Exact<{
+export type SubscribeLatestEventSurveySubscriptionVariables = Exact<{
   [key: string]: never;
 }>;
 
-export type GetLatestEventSurveyForUserQuery = {
-  __typename?: "query_root";
+export type SubscribeLatestEventSurveySubscription = {
+  __typename?: "subscription_root";
   events: Array<{
     __typename?: "Events";
     id: any;
@@ -2555,8 +2555,8 @@ export type SubscribeCreatedStampTriggerSubscription = {
   }>;
 };
 
-export const GetLatestEventSurveyForUserDocument = gql`
-  query GetLatestEventSurveyForUser {
+export const SubscribeLatestEventSurveyDocument = gql`
+  subscription SubscribeLatestEventSurvey {
     events(orderBy: { id: DESC }, limit: 1) {
       id
       surveyUrl
@@ -2564,10 +2564,8 @@ export const GetLatestEventSurveyForUserDocument = gql`
     }
   }
 `;
-export type GetLatestEventSurveyForUserQueryResult = Apollo.QueryResult<
-  GetLatestEventSurveyForUserQuery,
-  GetLatestEventSurveyForUserQueryVariables
->;
+export type SubscribeLatestEventSurveySubscriptionResult =
+  Apollo.SubscriptionResult<SubscribeLatestEventSurveySubscription>;
 export const CreateOneImageDocument = gql`
   mutation CreateOneImage(
     $bucketName: String!
