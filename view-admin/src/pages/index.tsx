@@ -1,4 +1,4 @@
-import { useMutation, useSubscription } from "@apollo/client";
+import { useLazyQuery, useMutation, useSubscription } from "@apollo/client";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -13,17 +13,21 @@ import {
 } from "@/components/common";
 import { CgLogOut } from "react-icons/cg";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import {
   CreateOneNumberDocument,
   DeleteOneNumberDocument,
   SubscribeListNumbersDocument,
   IncrementReachNumDocument,
   DecrementReachNumDocument,
+  CreateEventSurveyDocument,
+  GetLatestEventSurveyDocument,
 } from "@/type/graphql";
 import type {
   SubscribeListNumbersSubscription,
   IncrementReachNumMutation,
   DecrementReachNumMutation,
+  GetLatestEventSurveyQuery,
 } from "@/type/graphql";
 
 interface formDataCreate {
@@ -33,6 +37,10 @@ interface formDataCreate {
 interface formDataDelete {
   inputedNumber: number | null;
   selectedNumber: number | null;
+}
+
+interface FormSurvey {
+  surveyUrl: string;
 }
 
 const Page: NextPage = () => {
@@ -79,12 +87,42 @@ const Page: NextPage = () => {
   );
   const [createNumber] = useMutation(CreateOneNumberDocument);
   const [deleteNumber] = useMutation(DeleteOneNumberDocument);
+  const [upsertSurvey, { loading: isSubmittingSurvey }] = useMutation(
+    CreateEventSurveyDocument,
+  );
   const [selectedId, setSelectedId] = useState<number>();
 
   const handleNumberClick = (id: number) => {
     setSelectedId(id);
     setIsOpenUpdateNumberModal(true);
   };
+
+  // アンケート設定フォーム
+  const {
+    register: registerSurvey,
+    handleSubmit: handleSubmitSurvey,
+    getValues: getValuesSurvey,
+    reset: resetSurvey,
+  } = useForm<FormSurvey>({
+    mode: "onChange",
+  });
+
+  // 最新イベント状態取得
+  const [fetchLatestSurvey] = useLazyQuery<GetLatestEventSurveyQuery>(
+    GetLatestEventSurveyDocument,
+  );
+
+  useEffect(() => {
+    // 初回ロード時に現在の状態を取得
+    const load = async () => {
+      const res = await fetchLatestSurvey();
+      const latest = res.data?.events?.[0];
+      if (latest) {
+        resetSurvey({ surveyUrl: latest.surveyUrl || "" });
+      }
+    };
+    load();
+  }, [fetchLatestSurvey, resetSurvey]);
 
   //番号の追加
   const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
@@ -105,6 +143,22 @@ const Page: NextPage = () => {
       deleteNumber({ variables: { number: selectedNumber } });
       resetDelete({ selectedNumber: null });
     }
+  };
+
+  // アンケート配信即時送信
+  const handleSendSurvey = async () => {
+    const { surveyUrl } = getValuesSurvey();
+    await upsertSurvey({
+      variables: { surveyUrl: surveyUrl || "", isSurveyActive: true },
+    });
+    toast.success("アンケートを送信しました。");
+  };
+  const handleStopSurvey = async () => {
+    const { surveyUrl } = getValuesSurvey();
+    await upsertSurvey({
+      variables: { surveyUrl: surveyUrl || "", isSurveyActive: false },
+    });
+    toast.success("アンケートを送信しました。");
   };
 
   //subscriptionを行うためのuseEffect
@@ -254,6 +308,37 @@ const Page: NextPage = () => {
             >
               リーチ数を 1 減少する
             </button>
+          </div>
+        </div>
+        <div className={styles.frame}>
+          <p>アンケートURLと配信制御</p>
+          <div className={`${styles.item} ${styles.surveyRow}`}>
+            <input
+              type="url"
+              placeholder="https://forms.gle/..."
+              className={styles.inputForm}
+              {...registerSurvey("surveyUrl")}
+            />
+          </div>
+          <div className={`${styles.item} ${styles.surveyRow}`}>
+            <div className={styles.surveyButtons}>
+              <button
+                type="button"
+                className={styles.Button}
+                disabled={isSubmittingSurvey}
+                onClick={handleSendSurvey}
+              >
+                配信する
+              </button>
+              <button
+                type="button"
+                className={styles.Button}
+                disabled={isSubmittingSurvey}
+                onClick={handleStopSurvey}
+              >
+                配信を停止する
+              </button>
+            </div>
           </div>
         </div>
       </div>
