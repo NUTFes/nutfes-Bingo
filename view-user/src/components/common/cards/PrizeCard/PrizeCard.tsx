@@ -39,11 +39,11 @@ const PrizeCard = (props: PrizeCardProps) => {
           </div>
         )}
       </div>
-       {locale === "en" ? ( 
-      <p className={styles.text}>{bingoPrize.nameEn}</p>
-       ) : (
+      {locale === "en" ? (
+        <p className={styles.text}>{bingoPrize.nameEn}</p>
+      ) : (
         <p className={styles.text}>{bingoPrize.nameJp}</p>
-       )}
+      )}
     </div>
   );
 };
