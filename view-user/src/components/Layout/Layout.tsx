@@ -1,5 +1,7 @@
-import { useLazyQuery, useMutation } from "@apollo/client";
+import { useLazyQuery, useMutation, useSubscription } from "@apollo/client";
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
+import { useRecoilState } from "recoil";
+import { hasShownSurveyState } from "@/state/survey";
 import { useRouter } from "next/router";
 import styles from "./Layout.module.css";
 import {
@@ -11,14 +13,16 @@ import {
   ReactionStampModal,
   NavigationBar,
   Header,
-  Modal,
   Button,
+  Modal,
   ToggleButton,
+  SurveyPromptModal,
 } from "@/components/common";
 import {
   CreateOneStampTriggerDocument,
   CreateOneReachRecordDocument,
   GetOneLatestReachLogDocument,
+  SubscribeLatestEventSurveyDocument,
 } from "@/types/graphql";
 import type {
   CreateOneStampTriggerMutation,
@@ -85,6 +89,10 @@ const Layout = (props: LayoutProps) => {
 
   const [isReactionModalOpen, setIsReactionModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isSurveyModalOpen, setIsSurveyModalOpen] = useState(false);
+  const [hasShownSurvey, setHasShownSurvey] =
+    useRecoilState(hasShownSurveyState);
+  const [surveyUrl, setSurveyUrl] = useState<string>("");
 
   const [isSortOrderActive, setIsSortOrderActive] = useState(false);
   const { setIsSortedAscending } = props;
@@ -112,6 +120,11 @@ const Layout = (props: LayoutProps) => {
     CreateOneReachRecordMutation,
     CreateOneReachRecordMutationVariables
   >(CreateOneReachRecordDocument);
+
+  // アンケート配信の軽量サブスク（番号サブスクとは分離）
+  const { data: surveyEvent } = useSubscription(
+    SubscribeLatestEventSurveyDocument,
+  );
 
   // ナビゲーションバーの高さを設定
   useLayoutEffect(() => {
@@ -147,6 +160,25 @@ const Layout = (props: LayoutProps) => {
     document.documentElement.style.setProperty("--main-color", mainColor);
     document.documentElement.style.setProperty("--sub-color", subColor);
   }, [isSortOrderActive, mainColor, subColor, setIsSortedAscending]);
+
+  // アンケート配信サブスクの反映
+  useEffect(() => {
+    const latest = surveyEvent?.events?.[0];
+    if (!latest) return;
+
+    // アンケートが配信停止された場合、状態をリセット
+    if (!latest.isSurveyActive && hasShownSurvey) {
+      setHasShownSurvey(false);
+      return;
+    }
+
+    // アンケートが配信中で、まだ表示していない場合のみ表示
+    if (latest.isSurveyActive && !hasShownSurvey) {
+      setSurveyUrl(latest.surveyUrl || "");
+      setIsSurveyModalOpen(true);
+      setHasShownSurvey(true);
+    }
+  }, [surveyEvent, hasShownSurvey, setHasShownSurvey]);
 
   // リアクションアイコンがクリックされたときの処理
   const handleReactionClick = (name: string) => {
@@ -264,6 +296,11 @@ const Layout = (props: LayoutProps) => {
           onClick={handleReactionClick}
         />
       )}
+      <SurveyPromptModal
+        isOpened={isSurveyModalOpen}
+        setIsOpened={setIsSurveyModalOpen}
+        surveyUrl={surveyUrl}
+      />
       <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
         <div className={styles.reachModal}>
           <p>{t.reachModal.title}</p>
