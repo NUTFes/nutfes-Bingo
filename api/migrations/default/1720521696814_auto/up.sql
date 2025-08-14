@@ -69,6 +69,18 @@ BEGIN
   RETURN _new;
 END;
 $$;
+CREATE TABLE public.events (
+    id bigint NOT NULL,
+    survey_url text NOT NULL,
+    is_survey_active boolean DEFAULT false NOT NULL
+);
+CREATE SEQUENCE public.events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER SEQUENCE public.events_id_seq OWNED BY public.events.id;
 CREATE TABLE public.images (
     id integer NOT NULL,
     bucket_name text DEFAULT '""'::text NOT NULL,
@@ -146,11 +158,14 @@ CREATE SEQUENCE public.stamp_triggers_id_seq
     NO MAXVALUE
     CACHE 1;
 ALTER SEQUENCE public.stamp_triggers_id_seq OWNED BY public.stamp_triggers.id;
+ALTER TABLE ONLY public.events ALTER COLUMN id SET DEFAULT nextval('public.events_id_seq'::regclass);
 ALTER TABLE ONLY public.images ALTER COLUMN id SET DEFAULT nextval('public.images_id_seq'::regclass);
 ALTER TABLE ONLY public.numbers ALTER COLUMN id SET DEFAULT nextval('public.numbers_id_seq'::regclass);
 ALTER TABLE ONLY public.prizes ALTER COLUMN id SET DEFAULT nextval('public.prizes_id_seq'::regclass);
 ALTER TABLE ONLY public.reach_logs ALTER COLUMN id SET DEFAULT nextval('public.reach_log_id_seq'::regclass);
 ALTER TABLE ONLY public.stamp_triggers ALTER COLUMN id SET DEFAULT nextval('public.stamp_triggers_id_seq'::regclass);
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.images
     ADD CONSTRAINT images_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.numbers
