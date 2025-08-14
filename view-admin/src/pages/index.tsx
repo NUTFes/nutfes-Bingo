@@ -158,7 +158,7 @@ const Page: NextPage = () => {
     await upsertSurvey({
       variables: { surveyUrl: surveyUrl || "", isSurveyActive: false },
     });
-    toast.success("アンケートを送信しました。");
+    toast.success("アンケートを停止しました。");
   };
 
   //subscriptionを行うためのuseEffect
