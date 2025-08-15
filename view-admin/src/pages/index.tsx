@@ -336,19 +336,7 @@ const Page: NextPage = () => {
               className={styles.inputForm}
               {...registerSurvey("surveyUrl")}
             />
-              {...registerSurvey("surveyUrl", {
-                required: "URLを入力してください",
-                pattern: {
-                  value: /^(https?:\/\/[^\s$.?#].[^\s]*)$/i,
-                  message: "有効なURLを入力してください",
-                },
-              })}
-            />
-            {errorsSurvey?.surveyUrl && (
-              <div className={styles.errormessage}>
-                {errorsSurvey.surveyUrl.message}
-              </div>
-            )}
+          </div>
           <div className={`${styles.item} ${styles.surveyRow}`}>
             <div className={styles.surveyButtons}>
               <button
