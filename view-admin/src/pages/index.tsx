@@ -89,6 +89,21 @@ const Page: NextPage = () => {
   const [deleteNumber] = useMutation(DeleteOneNumberDocument);
   const [upsertSurvey, { loading: isSubmittingSurvey }] = useMutation(
     CreateEventSurveyDocument,
+    {
+      onError: (error) => {
+        console.error("Survey mutation error:", error);
+        toast.error("アンケートの操作に失敗しました。もう一度お試しください。");
+      },
+      onCompleted: (data, clientOptions) => {
+        // variablesからisSurveyActiveの値を取得して適切なメッセージを表示
+        const isActive = clientOptions?.variables?.isSurveyActive;
+        if (isActive) {
+          toast.success("アンケートを送信しました。");
+        } else {
+          toast.success("アンケートを停止しました。");
+        }
+      },
+    },
   );
   const [selectedId, setSelectedId] = useState<number>();
 
@@ -155,14 +170,12 @@ const Page: NextPage = () => {
     await upsertSurvey({
       variables: { surveyUrl: surveyUrl || "", isSurveyActive: true },
     });
-    toast.success("アンケートを送信しました。");
   };
   const handleStopSurvey = async () => {
     const { surveyUrl } = getValuesSurvey();
     await upsertSurvey({
       variables: { surveyUrl: surveyUrl || "", isSurveyActive: false },
     });
-    toast.success("アンケートを停止しました。");
   };
 
   //subscriptionを行うためのuseEffect
