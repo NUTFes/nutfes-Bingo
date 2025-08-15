@@ -105,6 +105,10 @@ const Page: NextPage = () => {
     reset: resetSurvey,
   } = useForm<FormSurvey>({
     mode: "onChange",
+    defaultValues: {
+      surveyUrl:
+        "https://docs.google.com/forms/d/e/1FAIpQLScI8BClIWH8PVO7bJDINADj-xiym37JPl7ULRhBnTMblq6Dbw/viewform?usp=dialog",
+    },
   });
 
   // 最新イベント状態取得
