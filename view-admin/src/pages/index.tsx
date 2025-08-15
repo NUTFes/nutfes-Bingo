@@ -118,6 +118,7 @@ const Page: NextPage = () => {
     handleSubmit: handleSubmitSurvey,
     getValues: getValuesSurvey,
     reset: resetSurvey,
+    formState: { errors: errorsSurvey, isValid: isValidSurvey },
   } = useForm<FormSurvey>({
     mode: "onChange",
     defaultValues: {
@@ -330,12 +331,25 @@ const Page: NextPage = () => {
         <div className={styles.frame}>
           <p>アンケートURLと配信制御</p>
           <div className={`${styles.item} ${styles.surveyRow}`}>
-            <input
-              type="url"
-              placeholder="https://forms.gle/..."
-              className={styles.inputForm}
-              {...registerSurvey("surveyUrl")}
-            />
+            <div className={styles.flexerror}>
+              <input
+                type="url"
+                placeholder="https://forms.gle/..."
+                className={styles.inputForm}
+                {...registerSurvey("surveyUrl", {
+                  required: "URLを入力してください",
+                  pattern: {
+                    value: /^(https?:\/\/[^\s$.?#].[^\s]*)$/i,
+                    message: "有効なURLを入力してください",
+                  },
+                })}
+              />
+              {errorsSurvey?.surveyUrl && (
+                <div className={styles.errormessage}>
+                  {errorsSurvey.surveyUrl.message}
+                </div>
+              )}
+            </div>
           </div>
           <div className={`${styles.item} ${styles.surveyRow}`}>
             <div className={styles.surveyButtons}>
