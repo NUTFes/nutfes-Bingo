@@ -93,6 +93,7 @@ const Layout = (props: LayoutProps) => {
   const [hasShownSurvey, setHasShownSurvey] =
     useRecoilState(hasShownSurveyState);
   const [surveyUrl, setSurveyUrl] = useState<string>("");
+  const [isSurveyActive, setIsSurveyActive] = useState<boolean>(false);
 
   const [isSortOrderActive, setIsSortOrderActive] = useState(false);
   const { setIsSortedAscending } = props;
@@ -166,6 +167,10 @@ const Layout = (props: LayoutProps) => {
     const latest = surveyEvent?.events?.[0];
     if (!latest) return;
 
+    // 現在のアンケート配信状態とURLを保持
+    setIsSurveyActive(!!latest.isSurveyActive);
+    setSurveyUrl(latest.surveyUrl || "");
+
     // アンケートが配信停止された場合、状態をリセット
     if (!latest.isSurveyActive && hasShownSurvey) {
       setHasShownSurvey(false);
@@ -183,6 +188,11 @@ const Layout = (props: LayoutProps) => {
   // リアクションアイコンがクリックされたときの処理
   const handleReactionClick = (name: string) => {
     createStampRecord({ variables: { name } });
+  };
+
+  // 設定内のアンケート回答ボタンの処理
+  const handleAnswerSurvey = () => {
+    if (surveyUrl) window.open(surveyUrl, "_blank", "noopener");
   };
 
   // リーチアイコンがクリックされたときの処理
@@ -317,6 +327,16 @@ const Layout = (props: LayoutProps) => {
         setIsOpened={setIsSettingsModalOpen}
       >
         <div className={styles.settingsModal}>
+          {isSurveyActive && surveyUrl && (
+            <div>
+              <p>{t.settingsModal.survey}</p>
+              <div className={styles.surveyActions}>
+                <Button inversion onClick={handleAnswerSurvey}>
+                  {t.settingsModal.answerSurvey}
+                </Button>
+              </div>
+            </div>
+          )}
           <div>
             <p>{t.settingsModal.languageSelection}</p>
             <ToggleButton
