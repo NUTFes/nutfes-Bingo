@@ -48,3 +48,15 @@ mutation DeleteOneImage($id: Int!) {
     id
   }
 }
+
+# 画像一覧の取得(Get)
+query GetListImages {
+  images(orderBy: { id: ASC }) {
+    id
+    bucketName
+    fileName
+    fileType
+    createdAt
+    updatedAt
+  }
+}
