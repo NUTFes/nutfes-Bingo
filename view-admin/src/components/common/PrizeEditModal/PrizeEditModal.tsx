@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import styles from "./PrizeEditModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
 import { useMutation } from "@apollo/client";
@@ -27,7 +33,12 @@ interface Props {
     nameJp: string;
     nameEn: string;
     imageId?: number | null;
-    image?: { id: number; bucketName: string; fileName: string; fileType: string };
+    image?: {
+      id: number;
+      bucketName: string;
+      fileName: string;
+      fileType: string;
+    };
   }) => Promise<void> | void;
 }
 
@@ -54,14 +65,17 @@ const PrizeEditModal = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const targetFile = e.target.files?.[0];
-    if (!targetFile) {
-      setNewFile(null);
-      return;
-    }
-    setNewFile(targetFile);
-  }, []);
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const targetFile = e.target.files?.[0];
+      if (!targetFile) {
+        setNewFile(null);
+        return;
+      }
+      setNewFile(targetFile);
+    },
+    [],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -75,21 +89,18 @@ const PrizeEditModal = ({
     e.preventDefault();
     setIsDragOver(false);
   }, []);
-  const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      setIsDragOver(false);
-      const files = e.dataTransfer.files;
-      if (files && files.length) {
-        const file = files[0];
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        if (fileInputRef.current) fileInputRef.current.files = dt.files;
-        setNewFile(file);
-      }
-    },
-    [],
-  );
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length) {
+      const file = files[0];
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      if (fileInputRef.current) fileInputRef.current.files = dt.files;
+      setNewFile(file);
+    }
+  }, []);
   const triggerFileInput = () => fileInputRef.current?.click();
 
   // Refresh initial values when modal opens for a different prize
@@ -199,11 +210,17 @@ const PrizeEditModal = ({
             {previewUrl && (
               <div className={styles.previewContainer}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className={styles.previewImage} src={previewUrl} alt="preview" />
+                <img
+                  className={styles.previewImage}
+                  src={previewUrl}
+                  alt="preview"
+                />
               </div>
             )}
             <div
-              className={isDragOver ? styles.drop_area_drag_over : styles.drop_area}
+              className={
+                isDragOver ? styles.drop_area_drag_over : styles.drop_area
+              }
               onDragOver={handleDragOver}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
@@ -224,10 +241,16 @@ const PrizeEditModal = ({
             />
           </div>
           <div className={styles.actions}>
-            <button className={`${styles.btn} ${styles.cancel}`} onClick={close}>
+            <button
+              className={`${styles.btn} ${styles.cancel}`}
+              onClick={close}
+            >
               キャンセル
             </button>
-            <button className={`${styles.btn} ${styles.primary}`} onClick={handleSubmit}>
+            <button
+              className={`${styles.btn} ${styles.primary}`}
+              onClick={handleSubmit}
+            >
               保存
             </button>
           </div>
