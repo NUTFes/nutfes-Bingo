@@ -13,7 +13,8 @@ type Line = { id: LineId; cells: CellPos[] };
 const BOARD_SIZE = 5;
 const CENTER: CellPos = { row: 2, col: 2 };
 const FREE = "FREE";
-const NO_SELECTION: CellPos = { row: -1, col: -1 } as const;
+const MAX_BINGO_NUMBER = 99;
+const MAX_DIGIT_LENGTH = 2;
 const COL_HEADERS = ["B", "I", "N", "G", "O"] as const;
 
 // 5x5のビンゴ盤, 中央はFREE固定
@@ -28,12 +29,12 @@ const createEmptyBingoCard = (): BingoCard => {
 const isCenter = (row: number, col: number) =>
   row === CENTER.row && col === CENTER.col;
 
-const hasSelection = (pos: CellPos) => pos.row >= 0 && pos.col >= 0;
+const hasSelection = (pos: CellPos | null): pos is CellPos => pos !== null;
 
 const isCellSatisfied = (cell: string, drawnNumbers: number[]) => {
   if (cell === FREE) return true;
   if (cell === "") return false;
-  const num = parseInt(cell, 10);
+  const num = Number.parseInt(cell, 10);
   return !Number.isNaN(num) && drawnNumbers.includes(num);
 };
 
@@ -101,7 +102,10 @@ const JudgementModal = ({
   bingoNumbers,
 }: JudgementModalProps) => {
   const [bingoCard, setBingoCard] = useState<BingoCard>(createEmptyBingoCard());
-  const [selectedCell, setSelectedCell] = useState<CellPos>({ row: 0, col: 0 });
+  const [selectedCell, setSelectedCell] = useState<CellPos | null>({
+    row: 0,
+    col: 0,
+  });
   const [inputValue, setInputValue] = useState("");
   const [hasJudged, setHasJudged] = useState(false);
   const [completedLines, setCompletedLines] = useState<LineId[]>([]);
@@ -148,7 +152,7 @@ const JudgementModal = ({
     }
     setCompletedLines(done);
     setHasJudged(true);
-    setSelectedCell(NO_SELECTION);
+    setSelectedCell(null);
     setInputValue("");
   };
 
@@ -162,12 +166,12 @@ const JudgementModal = ({
   const handleDigitClick = (digit: string) => {
     if (hasJudged || !hasSelection(selectedCell)) return;
 
-    const next = (inputValue + digit).slice(0, 2);
-    const n = parseInt(next, 10);
-    if (Number.isNaN(n) || n < 0 || n > 99) return;
+    const next = (inputValue + digit).slice(0, MAX_DIGIT_LENGTH);
+    const n = Number.parseInt(next, 10);
+    if (Number.isNaN(n) || n < 0 || n > MAX_BINGO_NUMBER) return;
 
     setInputValue(next);
-    if (next.length === 2) commitValueAt(selectedCell, next);
+    if (next.length === MAX_DIGIT_LENGTH) commitValueAt(selectedCell, next);
   };
 
   // 削除
@@ -196,7 +200,7 @@ const JudgementModal = ({
 
   // UIヘルパー
   const isSelected = (row: number, col: number) =>
-    selectedCell.row === row && selectedCell.col === col;
+    selectedCell?.row === row && selectedCell?.col === col;
 
   const getCellText = (row: number, col: number) => {
     if (!hasJudged && isSelected(row, col) && inputValue) return inputValue;
