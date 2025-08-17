@@ -77,60 +77,6 @@
   }
 }
 
-.statusBar {
-  width: 100%;
-  padding: 8px 12px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  text-align: center;
-  font-size: 0.95rem;
-  color: #666;
-  font-weight: 500;
-}
-
-@media (min-width: 768px) {
-  .statusBar {
-    padding: 10px 16px;
-    font-size: 1rem;
-  }
-}
-
-.inputContainer {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-.inputContainer input {
-  width: 18%;
-  height: 60px;
-  background-color: #fff;
-  font-weight: 700;
-  font-size: 2rem;
-  color: #333;
-  text-align: center;
-  border: none;
-  border-radius: 0.5rem;
-  filter: drop-shadow(0px 2px 4px rgba(155, 104, 159, 0.71));
-}
-
-.inputContainer.bingo input {
-  color: var(--main-color);
-  font-weight: 900;
-}
-
-.inputContainer.noWin input {
-  color: #333;
-  font-weight: 900;
-}
-
-input.active {
-  outline: none;
-  border: 2px solid var(--main-color);
-}
-
 .numpad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -279,7 +225,7 @@ input.active {
   right: 10px;
   font-size: 1.8rem;
   color: #fff;
-  background: rgba(255, 255, 255, 0.15);
+  background: none;
   border: none;
   cursor: pointer;
   padding: 8px;
@@ -332,6 +278,7 @@ input.active {
   width: 100%;
   max-width: 500px;
   height: auto;
+  margin: 0 auto;
 }
 
 .bingoCardContainer {
@@ -424,14 +371,14 @@ input.active {
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
-.activeCell {
-  border-color: var(--main-color) !important;
+.bingoCell.activeCell {
+  border-color: var(--main-color);
   background-color: rgba(155, 104, 159, 0.1);
   box-shadow: 0 0 8px rgba(155, 104, 159, 0.3);
   position: relative;
 }
 
-.activeCell::after {
+.bingoCell.activeCell::after {
   content: "";
   position: absolute;
   inset: -2px;
@@ -453,15 +400,15 @@ input.active {
   }
 }
 
-.inputingCell {
-  background-color: rgba(155, 104, 159, 0.15) !important;
-  border-color: var(--main-color) !important;
-  color: var(--main-color) !important;
+.bingoCell.typingCell {
+  background-color: rgba(155, 104, 159, 0.15);
+  border-color: var(--main-color);
+  color: var(--main-color);
   font-weight: bold;
   position: relative;
 }
 
-.inputingCell::before {
+.bingoCell.typingCell::before {
   content: "";
   position: absolute;
   bottom: 4px;
@@ -473,7 +420,17 @@ input.active {
   animation: blink 1s ease-in-out infinite;
 }
 
-.inputingCell::after {
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.bingoCell.typingCell::after {
   opacity: 0.8;
   animation: activePulse 1s ease-in-out infinite;
 }
@@ -509,29 +466,9 @@ input.active {
   }
 }
 
-.inputDisplay {
-  background-color: #f5f5f5;
-  padding: 8px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  text-align: center;
-  font-size: 1rem;
-  font-weight: bold;
-  color: #333;
-}
-
-@media (min-width: 768px) {
-  .inputDisplay {
-    padding: 10px;
-    margin-bottom: 15px;
-    font-size: 1.1rem;
-  }
-}
-
 .resultDisplay {
   text-align: center;
   width: 100%;
-  margin-bottom: 16px;
 }
 
 @media (min-width: 768px) {
@@ -544,62 +481,111 @@ input.active {
 .bingoResult {
   width: 100%;
   font-size: 1.6rem;
-  font-weight: bold;
-  color: #4caf50;
-  background-color: rgba(76, 175, 80, 0.1);
-  padding: 16px;
-  border-radius: 12px;
-  border: 2px solid #4caf50;
+  font-weight: 800;
+  color: #2e7d32;
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  padding: 20px 16px;
+  border-radius: 16px;
+  border: 3px solid #4caf50;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
-  animation: resultAppear 0.5s ease-out forwards;
+  gap: 0.8rem;
+  box-shadow: 
+    0 8px 25px rgba(76, 175, 80, 0.3),
+    0 0 0 1px rgba(76, 175, 80, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  animation: resultAppear 0.6s ease-out forwards, successPulse 2s ease-in-out infinite;
+  position: relative;
+  cursor: default;
+  user-select: none;
+}
+
+.bingoResult::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.6;
+  animation: borderGlow 3s ease-in-out infinite;
 }
 
 .noWinResult {
   width: 100%;
   font-size: 1.4rem;
-  font-weight: bold;
-  color: #f44336;
-  background-color: rgba(244, 67, 54, 0.08);
-  padding: 16px;
-  border-radius: 12px;
-  border: 2px solid #f44336;
+  font-weight: 700;
+  color: #c62828;
+  background: linear-gradient(135deg, #ffeaea 0%, #ffcdd2 100%);
+  padding: 18px 16px;
+  border-radius: 16px;
+  border: 3px solid #f44336;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(244, 67, 54, 0.15);
-  animation: resultAppear 0.5s ease-out forwards;
+  gap: 0.8rem;
+  box-shadow: 
+    0 6px 20px rgba(244, 67, 54, 0.25),
+    0 0 0 1px rgba(244, 67, 54, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  animation: resultAppear 0.6s ease-out forwards;
+  position: relative;
+  cursor: default;
+  user-select: none;
 }
 
 @keyframes resultAppear {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px) scale(0.9);
+    transform-origin: center;
   }
-  to {
+  60% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-6px) scale(1.05);
+  }
+  80% {
+    transform: translateY(3px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
 .resultIcon {
-  font-size: 1.6rem;
-  margin-right: 10px;
+  font-size: 2rem;
+  margin-right: 0;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.resultIcon svg {
+  display: block;
+  width: auto;
+  height: 1em;
 }
 
 @media (min-width: 768px) {
   .bingoResult,
   .noWinResult {
     font-size: 1.8rem;
-    padding: 20px;
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+
+  .bingoResult {
+    font-size: 2rem;
   }
 
   .resultIcon {
-    font-size: 1.8rem;
+    font-size: 2.4rem;
   }
 }
 
@@ -659,5 +645,4 @@ input.active {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 0;
 }
