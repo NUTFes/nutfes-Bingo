@@ -38,6 +38,11 @@ const isCellSatisfied = (cell: string, drawnNumbers: number[]) => {
   return !Number.isNaN(num) && drawnNumbers.includes(num);
 };
 
+const getRowLineId = (row: number): LineId => `row-${row}`;
+const getColLineId = (col: number): LineId => `col-${col}`;
+const getDiagMainLineId = (): LineId => "diag-main";
+const getDiagAntiLineId = (): LineId => "diag-anti";
+
 // 行, 列, 斜めの全ラインを事前に計算
 const generateAllLines = (size = BOARD_SIZE): Line[] => {
   const lines: Line[] = [];
@@ -45,24 +50,24 @@ const generateAllLines = (size = BOARD_SIZE): Line[] => {
   // 行
   for (let r = 0; r < size; r++) {
     lines.push({
-      id: `row-${r}`,
+      id: getRowLineId(r),
       cells: Array.from({ length: size }, (_, c) => ({ row: r, col: c })),
     });
   }
   // 列
   for (let c = 0; c < size; c++) {
     lines.push({
-      id: `col-${c}`,
+      id: getColLineId(c),
       cells: Array.from({ length: size }, (_, r) => ({ row: r, col: c })),
     });
   }
   // 斜め
   lines.push({
-    id: "diag-main",
+    id: getDiagMainLineId(),
     cells: Array.from({ length: size }, (_, i) => ({ row: i, col: i })),
   });
   lines.push({
-    id: "diag-anti",
+    id: getDiagAntiLineId(),
     cells: Array.from({ length: size }, (_, i) => ({
       row: i,
       col: size - 1 - i,
@@ -210,10 +215,11 @@ const JudgementModal = ({
   const shouldHighlight = (row: number, col: number) => {
     if (!hasJudged || completedLines.length === 0) return false;
     return (
-      completedLines.includes(`row-${row}` as LineId) ||
-      completedLines.includes(`col-${col}` as LineId) ||
-      (row === col && completedLines.includes("diag-main")) ||
-      (row + col === BOARD_SIZE - 1 && completedLines.includes("diag-anti"))
+      completedLines.includes(getRowLineId(row)) ||
+      completedLines.includes(getColLineId(col)) ||
+      (row === col && completedLines.includes(getDiagMainLineId())) ||
+      (row + col === BOARD_SIZE - 1 &&
+        completedLines.includes(getDiagAntiLineId()))
     );
   };
 
@@ -295,7 +301,7 @@ const JudgementModal = ({
                           }}
                           tabIndex={0}
                           role="button"
-                          aria-label={`セル ${COL_HEADERS[c]}${r + 1} ${getCellText(r, c) || "空"}`}
+                          aria-label={`行${r + 1} 列${COL_HEADERS[c]} ${getCellText(r, c) || "空"}`}
                         >
                           {getCellText(r, c)}
                         </div>
