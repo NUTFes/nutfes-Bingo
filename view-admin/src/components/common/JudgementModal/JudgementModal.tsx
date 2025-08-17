@@ -168,7 +168,7 @@ const JudgementModal = ({
 
     const next = (inputValue + digit).slice(0, MAX_DIGIT_LENGTH);
     const n = Number.parseInt(next, 10);
-    if (Number.isNaN(n) || n < 0 || n > MAX_BINGO_NUMBER) return;
+    if (Number.isNaN(n) || n < 1 || n > MAX_BINGO_NUMBER) return;
 
     setInputValue(next);
     if (next.length === MAX_DIGIT_LENGTH) commitValueAt(selectedCell, next);
@@ -287,8 +287,15 @@ const JudgementModal = ({
                           key={`${r}-${c}`}
                           className={classNames.join(" ")}
                           onClick={() => handleCellClick(r, c)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleCellClick(r, c);
+                            }
+                          }}
+                          tabIndex={0}
                           role="button"
-                          aria-label={`セル ${r + 1}-${c + 1}`}
+                          aria-label={`セル ${COL_HEADERS[c]}${r + 1} ${getCellText(r, c) || "空"}`}
                         >
                           {getCellText(r, c)}
                         </div>
