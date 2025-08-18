@@ -32,6 +32,7 @@
   fill: var(--main-color);
 }
 
+/* note: intro jsのcssをカスタムで指定できないためimportantを使う */
 .customTooltip {
   border: 2vw solid var(--main-color) !important;
   min-width: 50vw !important;
