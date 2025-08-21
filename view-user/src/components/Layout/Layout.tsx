@@ -41,6 +41,35 @@ const images = [
   { name: "sad", src: "/ReactionIcon/sad.png", alt: "sad icon" },
 ];
 
+const COLOR_PRESETS = {
+  MAIN_COLORS: [
+    "#FF6900",
+    "#FCB900",
+    "#7BDCB5",
+    "#00D084",
+    "#8ED1FC",
+    "#0693E3",
+    "#333333",
+    "#EB144C",
+    "#F78DA7",
+    "#9900EF",
+  ],
+  SUB_COLORS: [
+    "#FFD9BE",
+    "#FDECBD",
+    "#C2EFDD",
+    "#C3F5E3",
+    "#DBF0FE",
+    "#C0E4F8",
+    "#B1B1B1",
+    "#FDECF0",
+    "#FCDBE3",
+    "#E4BBFA",
+  ],
+  DEFAULT_MAIN_COLOR: "#FFD607",
+  DEFAULT_SUB_COLOR: "#FFF8DC",
+};
+
 interface LayoutProps {
   children: React.ReactNode;
   pageName: string;
