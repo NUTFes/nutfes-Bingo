@@ -6,21 +6,30 @@ run:
 down:
 	docker compose down
 
-db-apply:
+db/status:
+	docker compose exec api hasura migrate status --database-name default
+
+db/apply:
 	docker compose exec api hasura metadata apply
 	docker compose exec api hasura migrate apply --database-name default
 	docker compose exec api hasura metadata reload
 
-db-export:
+db/export:
 	docker compose exec api hasura metadata export
 	docker compose exec api hasura migrate create "auto" --from-server --database-name default
 
-db-apply-prod:
+db/migration:
+	./migration.sh squash
+	./migration.sh clean
+	./migration.sh apply
+	./migration.sh reload
+
+db/apply/prod:
 	docker compose -f docker-compose.prod.yml exec api hasura metadata apply
 	docker compose -f docker-compose.prod.yml exec api hasura migrate apply --database-name default
 	docker compose -f docker-compose.prod.yml exec api hasura metadata reload
 
-run-prod:
+run/prod:
 	docker compose -f docker-compose.prod.yml up -d
 	sleep 10
 	make db-apply-prod
