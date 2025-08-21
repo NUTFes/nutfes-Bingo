@@ -9,7 +9,7 @@ interface Props {
 
 const SurveyPromptModal = ({ isOpened, setIsOpened, surveyUrl }: Props) => {
   const handleAnswer = () => {
-    if (surveyUrl) window.open(surveyUrl, "_blank", "noopener");
+    if (surveyUrl) window.open(surveyUrl, "_blank", "noopener,noreferrer");
     setIsOpened(false);
   };
 

@@ -33,6 +33,7 @@ import type {
 } from "@/types/graphql";
 import { ja, en } from "@/locales";
 import { TwitterPicker } from "react-color";
+import { useSurveyState } from "@/hooks/useSurveyState";
 
 const images = [
   { name: "crap", src: "/ReactionIcon/crap.png", alt: "crap icon" },
@@ -89,11 +90,8 @@ const Layout = (props: LayoutProps) => {
 
   const [isReactionModalOpen, setIsReactionModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [isSurveyModalOpen, setIsSurveyModalOpen] = useState(false);
   const [hasShownSurvey, setHasShownSurvey] =
     useRecoilState(hasShownSurveyState);
-  const [surveyUrl, setSurveyUrl] = useState<string>("");
-  const [isSurveyActive, setIsSurveyActive] = useState<boolean>(false);
 
   const [isSortOrderActive, setIsSortOrderActive] = useState(false);
   const { setIsSortedAscending } = props;
@@ -162,28 +160,14 @@ const Layout = (props: LayoutProps) => {
     document.documentElement.style.setProperty("--sub-color", subColor);
   }, [isSortOrderActive, mainColor, subColor, setIsSortedAscending]);
 
-  // アンケート配信サブスクの反映
-  useEffect(() => {
-    const latest = surveyEvent?.events?.[0];
-    if (!latest) return;
-
-    // 現在のアンケート配信状態とURLを保持
-    setIsSurveyActive(!!latest.isSurveyActive);
-    setSurveyUrl(latest.surveyUrl || "");
-
-    // アンケートが配信停止された場合、状態をリセット
-    if (!latest.isSurveyActive && hasShownSurvey) {
-      setHasShownSurvey(false);
-      return;
-    }
-
-    // アンケートが配信中で、まだ表示していない場合のみ表示
-    if (latest.isSurveyActive && !hasShownSurvey) {
-      setSurveyUrl(latest.surveyUrl || "");
-      setIsSurveyModalOpen(true);
-      setHasShownSurvey(true);
-    }
-  }, [surveyEvent, hasShownSurvey, setHasShownSurvey]);
+  // アンケート状態管理（カスタムフック）
+  const {
+    surveyUrl,
+    setSurveyUrl,
+    isSurveyModalOpen,
+    setIsSurveyModalOpen,
+    isSurveyActive,
+  } = useSurveyState(surveyEvent, hasShownSurvey, setHasShownSurvey);
 
   // リアクションアイコンがクリックされたときの処理
   const handleReactionClick = (name: string) => {
@@ -192,7 +176,7 @@ const Layout = (props: LayoutProps) => {
 
   // 設定内のアンケート回答ボタンの処理
   const handleAnswerSurvey = () => {
-    if (surveyUrl) window.open(surveyUrl, "_blank", "noopener");
+    if (surveyUrl) window.open(surveyUrl, "_blank", "noopener,noreferrer");
   };
 
   // リーチアイコンがクリックされたときの処理
