@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import styles from "./UpdateNumberModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
 import { useMutation } from "@apollo/client";
-import { UpdateOneNumberDocument } from "@/type/graphql";
-import type {
+import {
+  UpdateOneNumberDocument,
   UpdateOneNumberMutation,
   UpdateOneNumberMutationVariables,
 } from "@/type/graphql";

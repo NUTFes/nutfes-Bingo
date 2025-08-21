@@ -9,15 +9,12 @@ import {
   GetListPrizesDocument,
   CreateOnePrizeDocument,
   CreateOneImageDocument,
-} from "@/type/graphql";
-import type {
   GetListPrizesQuery,
   CreateOneImageMutation,
   CreateOnePrizeMutation,
   CreateOneImageMutationVariables,
   CreateOnePrizeMutationVariables,
 } from "@/type/graphql";
-
 import { useRouter } from "next/router";
 import { toast } from "react-toastify";
 

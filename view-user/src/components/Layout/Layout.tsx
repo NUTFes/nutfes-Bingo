@@ -20,8 +20,6 @@ import {
   CreateOneStampTriggerDocument,
   CreateOneReachRecordDocument,
   GetOneLatestReachLogDocument,
-} from "@/types/graphql";
-import type {
   CreateOneStampTriggerMutation,
   CreateOneStampTriggerMutationVariables,
   CreateOneReachRecordMutation,

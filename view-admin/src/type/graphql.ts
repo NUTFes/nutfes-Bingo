@@ -2116,11 +2116,11 @@ export type GetOneLatestReachLogQuery = {
   reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
 };
 
-export type SubscribeOneLatestReachlogSubscriptionVariables = Exact<{
+export type SubscribeOneLatestReachLogSubscriptionVariables = Exact<{
   [key: string]: never;
 }>;
 
-export type SubscribeOneLatestReachlogSubscription = {
+export type SubscribeOneLatestReachLogSubscription = {
   __typename?: "subscription_root";
   reachLogs: Array<{ __typename?: "ReachLogs"; reachNum: number }>;
 };
@@ -2451,15 +2451,15 @@ export type GetOneLatestReachLogQueryResult = Apollo.QueryResult<
   GetOneLatestReachLogQuery,
   GetOneLatestReachLogQueryVariables
 >;
-export const SubscribeOneLatestReachlogDocument = gql`
-  subscription SubscribeOneLatestReachlog {
+export const SubscribeOneLatestReachLogDocument = gql`
+  subscription SubscribeOneLatestReachLog {
     reachLogs(orderBy: { createdAt: DESC }, limit: 1) {
       reachNum
     }
   }
 `;
-export type SubscribeOneLatestReachlogSubscriptionResult =
-  Apollo.SubscriptionResult<SubscribeOneLatestReachlogSubscription>;
+export type SubscribeOneLatestReachLogSubscriptionResult =
+  Apollo.SubscriptionResult<SubscribeOneLatestReachLogSubscription>;
 export const GetListReachLogsAfterTimestampDocument = gql`
   query GetListReachLogsAfterTimestamp($timestamp: timestamptz!) {
     reachLogs(

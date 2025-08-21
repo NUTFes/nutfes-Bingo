@@ -19,8 +19,6 @@ import {
   SubscribeListNumbersDocument,
   IncrementReachNumDocument,
   DecrementReachNumDocument,
-} from "@/type/graphql";
-import type {
   SubscribeListNumbersSubscription,
   IncrementReachNumMutation,
   DecrementReachNumMutation,
@@ -43,7 +41,7 @@ const Page: NextPage = () => {
     SubscribeListNumbersSubscription["numbers"]
   >([]);
   const [isOpened, setIsOpened] = useState<boolean>(false);
-  const isopenBool = () => setIsOpened(!isOpened);
+  const isOpenBool = () => setIsOpened(!isOpened);
   const [isOpenUpdateNumberModal, setIsOpenUpdateNumberModal] =
     useState<boolean>(false);
 
@@ -143,7 +141,7 @@ const Page: NextPage = () => {
           >
             <p>景品管理</p>
           </Button>
-          <Button size="m" shape="circle" onClick={isopenBool}>
+          <Button size="m" shape="circle" onClick={isOpenBool}>
             <p>ビンゴ正誤判定</p>
           </Button>
           <Button
@@ -161,7 +159,7 @@ const Page: NextPage = () => {
           <p>抽選した番号を入力</p>
           <form onSubmit={handleSubmitCreate(onSubmitCreate)}>
             <div className={styles.item}>
-              <div className={styles.flexerror}>
+              <div className={styles.flexError}>
                 <input
                   type="number"
                   placeholder="番号を入力"
@@ -195,7 +193,7 @@ const Page: NextPage = () => {
         <div className={styles.frame}>
           <p className={styles.centerText}>抽選した番号を削除</p>
           <div className={styles.item}>
-            <div className={styles.flexerror}>
+            <div className={styles.flexError}>
               <input
                 type="number"
                 placeholder="番号を入力"

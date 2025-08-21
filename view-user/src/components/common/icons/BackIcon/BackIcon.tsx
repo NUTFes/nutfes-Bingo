@@ -1,4 +1,3 @@
-import React from "react";
 import { IconFramework } from "@/components/common";
 import { TiArrowBack } from "react-icons/ti";
 import { useRouter } from "next/router";

@@ -1,4 +1,3 @@
-import React from "react";
 import { IconFramework } from "@/components/common";
 import { FaRegFaceSmile } from "react-icons/fa6";
 

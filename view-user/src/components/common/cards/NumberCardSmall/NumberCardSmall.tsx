@@ -1,6 +1,5 @@
-import React from "react";
 import styles from "./NumberCardSmall.module.css";
-import type { SubscribeListNumbersSubscription } from "@/types/graphql";
+import { SubscribeListNumbersSubscription } from "@/types/graphql";
 
 interface NumberCardSmallProps {
   BingoNumber: SubscribeListNumbersSubscription["numbers"][number];

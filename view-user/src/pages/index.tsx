@@ -3,8 +3,10 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState, useCallback } from "react";
 import styles from "@/styles/Home.module.css";
 import { useSubscription } from "@apollo/client";
-import { SubscribeListNumbersDocument } from "@/types/graphql";
-import type { SubscribeListNumbersSubscription } from "@/types/graphql";
+import {
+  SubscribeListNumbersDocument,
+  SubscribeListNumbersSubscription,
+} from "@/types/graphql";
 import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
 import { ja, en } from "@/locales";
 

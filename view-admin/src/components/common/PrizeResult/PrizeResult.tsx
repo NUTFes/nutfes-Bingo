@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import styles from "./PrizeResult.module.css";
 import { useMutation } from "@apollo/client";
-import { UpdateOnePrizeIsWonDocument } from "@/type/graphql";
-import Image from "next/image";
-import type {
+import {
+  UpdateOnePrizeIsWonDocument,
   UpdateOnePrizeIsWonMutation,
   UpdateOnePrizeIsWonMutationVariables,
   GetListPrizesQuery,
 } from "@/type/graphql";
+import Image from "next/image";
 
 interface PrizeResultProps {
   prizeResult: GetListPrizesQuery["prizes"];
