@@ -7,7 +7,6 @@ interface IconFrameworkProps {
   text: string;
   outline?: boolean;
   inversion?: boolean;
-  id?: string;
   onClick?: () => void;
 }
 
@@ -34,7 +33,6 @@ const IconFramework = (props: IconFrameworkProps) => {
         [styles.color_inversion]: colorInversion,
       })}
       onClick={handleClick}
-      id={props.id}
     >
       <div className={styles.icon}>{props.icon}</div>
       <span className={styles.text}>{props.text}</span>

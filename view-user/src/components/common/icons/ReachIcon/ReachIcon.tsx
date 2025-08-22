@@ -6,7 +6,6 @@ import Icon from "public/icon_reach.svg";
 interface ReachIconProps {
   onClick: () => void;
   isOpen: boolean;
-  id?: string;
   setIsReachModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -35,7 +34,6 @@ const ReachIcon = (props: ReachIconProps) => {
         [styles.color_inversion]: colorInversion,
       })}
       onClick={handleClick}
-      id={props.id}
     >
       <div className={styles.icon}>
         <Icon className={colorInversion ? styles.inverted : ""} />

@@ -4,7 +4,6 @@ import { FaRegFaceSmile } from "react-icons/fa6";
 
 interface ReactionsIconProps {
   isOpen: boolean;
-  id?: string;
   setIsReactionModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 const ReactionsIcon = (props: ReactionsIconProps) => {
@@ -18,7 +17,6 @@ const ReactionsIcon = (props: ReactionsIconProps) => {
       text="Reactions"
       inversion
       onClick={() => handleClick()}
-      id={props.id ? props.id : ""}
     />
   );
 };
