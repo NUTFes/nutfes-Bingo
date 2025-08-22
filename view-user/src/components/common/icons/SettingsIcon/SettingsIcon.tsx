@@ -6,6 +6,7 @@ interface SettingsIconProps {
   onClick?: () => void;
   isOpen: boolean;
   setIsSettingsModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  id?: string;
 }
 const SettingsIcon = (props: SettingsIconProps) => {
   const [colorInversion, setColorInversion] = useState<boolean>(false);
@@ -33,6 +34,7 @@ const SettingsIcon = (props: SettingsIconProps) => {
       outline
       inversion={colorInversion}
       onClick={() => handleClick()}
+      id={props.id ? props.id : ""}
     />
   );
 };

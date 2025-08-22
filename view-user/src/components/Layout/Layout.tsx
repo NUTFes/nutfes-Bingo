@@ -4,6 +4,7 @@ import { useRecoilState } from "recoil";
 import { hasShownSurveyState } from "@/state/survey";
 import { useRouter } from "next/router";
 import styles from "./Layout.module.css";
+import "intro.js/minified/introjs.min.css";
 import {
   ReachIcon,
   PrizesIcon,
@@ -71,8 +72,8 @@ const COLOR_PRESETS = {
     "#FCDBE3",
     "#E4BBFA",
   ],
-  DEFAULT_MAIN_COLOR: "#20A0D8",
-  DEFAULT_SUB_COLOR: "#C4DEED",
+  DEFAULT_MAIN_COLOR: "#FFD607",
+  DEFAULT_SUB_COLOR: "#FFF8DC",
 };
 
 interface LayoutProps {
@@ -87,30 +88,30 @@ interface LayoutProps {
 const Layout = (props: LayoutProps) => {
   const router = useRouter();
   const t = props.language === "ja" ? ja : en;
-
-  const [isReactionModalOpen, setIsReactionModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  
+  const [isReactionModalOpen, setIsReactionModalOpen] =
+    useState<boolean>(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] =
+    useState<boolean>(false);
   const [hasShownSurvey, setHasShownSurvey] =
     useRecoilState(hasShownSurveyState);
 
-  const [isSortOrderActive, setIsSortOrderActive] = useState(false);
+  const [isSortOrderActive, setIsSortOrderActive] = useState<boolean>(false);
   const { setIsSortedAscending } = props;
 
-  const [isReachModalOpen, setIsReachModalOpen] = useState(false);
-  const [isReachIconVisible, setReachIconVisible] = useState(true);
+  const [isReachModalOpen, setIsReachModalOpen] = useState<boolean>(false);
+  const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
 
   const [mainColor, setMainColor] = useState(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
   const [subColor, setSubColor] = useState(COLOR_PRESETS.DEFAULT_SUB_COLOR);
-
+  
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
-  const position = isReachIconVisible ? "29%" : "50%";
-
+  const position: string = isReachIconVisible ? "29%" : "50%";
   const [createStampRecord] = useMutation<
     CreateOneStampTriggerMutation,
     CreateOneStampTriggerMutationVariables
   >(CreateOneStampTriggerDocument);
-
   const [getLatestReachLog] = useLazyQuery<GetOneLatestReachLogQuery>(
     GetOneLatestReachLogDocument,
   );
@@ -133,21 +134,21 @@ const Layout = (props: LayoutProps) => {
     }
   }, []);
 
-  // ローカルストレージから設定を読み込む
+  // localStorageから状態を読み込む
   useEffect(() => {
-    const storedSortOrder = localStorage.getItem("isSortedAscending");
     const storedVisibility = localStorage.getItem("isReachIconVisible");
-    const storedMainColor = localStorage.getItem("mainColor");
-    const storedSubColor = localStorage.getItem("subColor");
+    if (storedVisibility !== null) {
+      setReachIconVisible(storedVisibility === "true");
+    }
 
-    setIsSortOrderActive(
-      storedSortOrder !== null ? storedSortOrder === "true" : false,
-    );
-    setReachIconVisible(
-      storedVisibility !== null ? storedVisibility === "true" : true,
-    );
-    setMainColor(storedMainColor || COLOR_PRESETS.DEFAULT_MAIN_COLOR);
-    setSubColor(storedSubColor || COLOR_PRESETS.DEFAULT_SUB_COLOR);
+    const storedSortOrder = localStorage.getItem("isSortedAscending");
+    if (storedSortOrder !== null) {
+      const isSortedAscending = storedSortOrder === "true";
+      props.setIsSortedAscending?.(isSortedAscending);
+      setIsSortOrderActive(isSortedAscending);
+    } else {
+      localStorage.setItem("isSortedAscending", "false");
+    }
   }, []);
 
   // 初期設定を適用
@@ -199,59 +200,28 @@ const Layout = (props: LayoutProps) => {
     }
   };
 
-  // ソート順を切り替える
   const toggleSortOrder = () => {
-    const newSortOrder = !isSortOrderActive;
-    localStorage.setItem("isSortedAscending", newSortOrder.toString());
-    setIsSortedAscending?.(newSortOrder);
-    setIsSortOrderActive(newSortOrder);
+    if (props.setIsSortedAscending) {
+      const newSortOrder = !props.isSortedAscending;
+      localStorage.setItem("isSortedAscending", newSortOrder.toString());
+      props.setIsSortedAscending(newSortOrder);
+      setIsSortOrderActive(newSortOrder);
+    }
   };
 
-  // 言語を切り替える
   const toggleLanguage = () => {
     const newLocale = props.language === "ja" ? "en" : "ja";
     router.push(router.pathname, router.asPath, { locale: newLocale });
   };
 
-  // メインカラーを変更する
-  const handleMainColorChange = (color: { hex: string }) => {
-    const newColor = color.hex;
-    setMainColor(newColor);
-    localStorage.setItem("mainColor", newColor);
-    document.documentElement.style.setProperty("--main-color", newColor);
-  };
-
-  // サブカラーを変更する
-  const handleSubColorChange = (color: { hex: string }) => {
-    const newColor = color.hex;
-    setSubColor(newColor);
-    localStorage.setItem("subColor", newColor);
-    document.documentElement.style.setProperty("--sub-color", newColor);
-  };
-
-  // カラーをリセットする
-  const resetColors = () => {
-    setMainColor(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
-    setSubColor(COLOR_PRESETS.DEFAULT_SUB_COLOR);
-    localStorage.removeItem("mainColor");
-    localStorage.removeItem("subColor");
-    document.documentElement.style.setProperty(
-      "--main-color",
-      COLOR_PRESETS.DEFAULT_MAIN_COLOR,
-    );
-    document.documentElement.style.setProperty(
-      "--sub-color",
-      COLOR_PRESETS.DEFAULT_SUB_COLOR,
-    );
-  };
-
-  // ページごとのアイコンを設定する
   const icons = (pageName: string) => {
+    let icons = [];
     const commonIcons = [
       <ReactionsIcon
         isOpen={isReactionModalOpen}
         setIsReactionModalOpen={setIsReactionModalOpen}
         key="reaction"
+        id="ReactionsIcon"
       />,
       isReachIconVisible && (
         <ReachIcon
@@ -259,26 +229,30 @@ const Layout = (props: LayoutProps) => {
           isOpen={isReachModalOpen}
           setIsReachModalOpen={setIsReachModalOpen}
           onClick={handleReachIconClick}
+          id="ReachIcon"
         />
       ),
       <SettingsIcon
         key="settings"
         isOpen={isSettingsModalOpen}
         setIsSettingsModalOpen={setIsSettingsModalOpen}
+        id="SettingsIcon"
       />,
     ];
-
     switch (pageName) {
       case "/":
-        return [<PrizesIcon key="prize" />, ...commonIcons];
+        icons = [<PrizesIcon key="prize" id="PrizesIcon" />, commonIcons];
+        break;
       case "/prizes":
-        return [<BackIcon key="back" />, ...commonIcons];
+        icons = [<BackIcon key="back" />, commonIcons];
+        break;
       default:
-        return [<PrizesIcon key="prize" />, ...commonIcons];
+        icons = [<PrizesIcon key="prize" />, commonIcons];
     }
+    return icons.filter(Boolean);
   };
 
-  const iconElements = icons(props.pageName).filter(Boolean);
+  const iconElements = icons(props.pageName);
 
   return (
     <div>
@@ -340,27 +314,6 @@ const Layout = (props: LayoutProps) => {
               <span>{t.settingsModal.drawOrder}</span>
               <span>{t.settingsModal.ascending}</span>
             </ToggleButton>
-          </div>
-          <div>
-            <p>メインカラー</p>
-            <TwitterPicker
-              color={mainColor}
-              colors={COLOR_PRESETS.MAIN_COLORS}
-              triangle="hide"
-              onChange={handleMainColorChange}
-            />
-          </div>
-          <div>
-            <p>サブカラー</p>
-            <TwitterPicker
-              color={subColor}
-              colors={COLOR_PRESETS.SUB_COLORS}
-              triangle="hide"
-              onChange={handleSubColorChange}
-            />
-          </div>
-          <div className={styles.resetButton}>
-            <Button onClick={resetColors}>カラーを初期値に戻す</Button>
           </div>
         </div>
       </Modal>
