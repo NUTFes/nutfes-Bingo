@@ -27,7 +27,21 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  bigint: { input: any; output: any };
   timestamptz: { input: any; output: any };
+};
+
+/** Boolean expression to compare columns of type "bigint". All fields are combined with logical 'AND'. */
+export type BigintComparisonExp = {
+  _eq?: InputMaybe<Scalars["bigint"]["input"]>;
+  _gt?: InputMaybe<Scalars["bigint"]["input"]>;
+  _gte?: InputMaybe<Scalars["bigint"]["input"]>;
+  _in?: InputMaybe<Array<Scalars["bigint"]["input"]>>;
+  _isNull?: InputMaybe<Scalars["Boolean"]["input"]>;
+  _lt?: InputMaybe<Scalars["bigint"]["input"]>;
+  _lte?: InputMaybe<Scalars["bigint"]["input"]>;
+  _neq?: InputMaybe<Scalars["bigint"]["input"]>;
+  _nin?: InputMaybe<Array<Scalars["bigint"]["input"]>>;
 };
 
 /** Boolean expression to compare columns of type "Boolean". All fields are combined with logical 'AND'. */
@@ -50,6 +64,212 @@ export enum CursorOrdering {
   /** descending ordering of the cursor */
   desc = "DESC",
 }
+
+/** columns and relationships of "events" */
+export type Events = {
+  __typename?: "Events";
+  id: Scalars["bigint"]["output"];
+  isSurveyActive: Scalars["Boolean"]["output"];
+  surveyUrl: Scalars["String"]["output"];
+};
+
+/** aggregated selection of "events" */
+export type EventsAggregate = {
+  __typename?: "EventsAggregate";
+  aggregate?: Maybe<EventsAggregateFields>;
+  nodes: Array<Events>;
+};
+
+/** aggregate fields of "events" */
+export type EventsAggregateFields = {
+  __typename?: "EventsAggregateFields";
+  avg?: Maybe<EventsAvgFields>;
+  count: Scalars["Int"]["output"];
+  max?: Maybe<EventsMaxFields>;
+  min?: Maybe<EventsMinFields>;
+  stddev?: Maybe<EventsStddevFields>;
+  stddevPop?: Maybe<EventsStddevPopFields>;
+  stddevSamp?: Maybe<EventsStddevSampFields>;
+  sum?: Maybe<EventsSumFields>;
+  varPop?: Maybe<EventsVarPopFields>;
+  varSamp?: Maybe<EventsVarSampFields>;
+  variance?: Maybe<EventsVarianceFields>;
+};
+
+/** aggregate fields of "events" */
+export type EventsAggregateFieldsCountArgs = {
+  columns?: InputMaybe<Array<EventsSelectColumn>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** aggregate avg on columns */
+export type EventsAvgFields = {
+  __typename?: "EventsAvgFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** Boolean expression to filter rows from the table "events". All fields are combined with a logical 'AND'. */
+export type EventsBoolExp = {
+  _and?: InputMaybe<Array<EventsBoolExp>>;
+  _not?: InputMaybe<EventsBoolExp>;
+  _or?: InputMaybe<Array<EventsBoolExp>>;
+  id?: InputMaybe<BigintComparisonExp>;
+  isSurveyActive?: InputMaybe<BooleanComparisonExp>;
+  surveyUrl?: InputMaybe<StringComparisonExp>;
+};
+
+/** unique or primary key constraints on table "events" */
+export enum EventsConstraint {
+  /** unique or primary key constraint on columns "id" */
+  eventsPkey = "events_pkey",
+}
+
+/** input type for incrementing numeric columns in table "events" */
+export type EventsIncInput = {
+  id?: InputMaybe<Scalars["bigint"]["input"]>;
+};
+
+/** input type for inserting data into table "events" */
+export type EventsInsertInput = {
+  id?: InputMaybe<Scalars["bigint"]["input"]>;
+  isSurveyActive?: InputMaybe<Scalars["Boolean"]["input"]>;
+  surveyUrl?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type EventsMaxFields = {
+  __typename?: "EventsMaxFields";
+  id?: Maybe<Scalars["bigint"]["output"]>;
+  surveyUrl?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** aggregate min on columns */
+export type EventsMinFields = {
+  __typename?: "EventsMinFields";
+  id?: Maybe<Scalars["bigint"]["output"]>;
+  surveyUrl?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** response of any mutation on the table "events" */
+export type EventsMutationResponse = {
+  __typename?: "EventsMutationResponse";
+  /** number of rows affected by the mutation */
+  affectedRows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<Events>;
+};
+
+/** on_conflict condition type for table "events" */
+export type EventsOnConflict = {
+  constraint: EventsConstraint;
+  updateColumns?: Array<EventsUpdateColumn>;
+  where?: InputMaybe<EventsBoolExp>;
+};
+
+/** Ordering options when selecting data from "events". */
+export type EventsOrderBy = {
+  id?: InputMaybe<OrderBy>;
+  isSurveyActive?: InputMaybe<OrderBy>;
+  surveyUrl?: InputMaybe<OrderBy>;
+};
+
+/** primary key columns input for table: events */
+export type EventsPkColumnsInput = {
+  id: Scalars["bigint"]["input"];
+};
+
+/** select columns of table "events" */
+export enum EventsSelectColumn {
+  /** column name */
+  id = "id",
+  /** column name */
+  isSurveyActive = "isSurveyActive",
+  /** column name */
+  surveyUrl = "surveyUrl",
+}
+
+/** input type for updating data in table "events" */
+export type EventsSetInput = {
+  id?: InputMaybe<Scalars["bigint"]["input"]>;
+  isSurveyActive?: InputMaybe<Scalars["Boolean"]["input"]>;
+  surveyUrl?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** aggregate stddev on columns */
+export type EventsStddevFields = {
+  __typename?: "EventsStddevFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** aggregate stddevPop on columns */
+export type EventsStddevPopFields = {
+  __typename?: "EventsStddevPopFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** aggregate stddevSamp on columns */
+export type EventsStddevSampFields = {
+  __typename?: "EventsStddevSampFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** Streaming cursor of the table "events" */
+export type EventsStreamCursorInput = {
+  /** Stream column input with initial value */
+  initialValue: EventsStreamCursorValueInput;
+  /** cursor ordering */
+  ordering?: InputMaybe<CursorOrdering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type EventsStreamCursorValueInput = {
+  id?: InputMaybe<Scalars["bigint"]["input"]>;
+  isSurveyActive?: InputMaybe<Scalars["Boolean"]["input"]>;
+  surveyUrl?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** aggregate sum on columns */
+export type EventsSumFields = {
+  __typename?: "EventsSumFields";
+  id?: Maybe<Scalars["bigint"]["output"]>;
+};
+
+/** update columns of table "events" */
+export enum EventsUpdateColumn {
+  /** column name */
+  id = "id",
+  /** column name */
+  isSurveyActive = "isSurveyActive",
+  /** column name */
+  surveyUrl = "surveyUrl",
+}
+
+export type EventsUpdates = {
+  /** increments the numeric columns with given value of the filtered values */
+  _inc?: InputMaybe<EventsIncInput>;
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<EventsSetInput>;
+  /** filter the rows which have to be updated */
+  where: EventsBoolExp;
+};
+
+/** aggregate varPop on columns */
+export type EventsVarPopFields = {
+  __typename?: "EventsVarPopFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** aggregate varSamp on columns */
+export type EventsVarSampFields = {
+  __typename?: "EventsVarSampFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** aggregate variance on columns */
+export type EventsVarianceFields = {
+  __typename?: "EventsVarianceFields";
+  id?: Maybe<Scalars["Float"]["output"]>;
+};
 
 /** MinIOに保存された画像データのリンクを管理するテーブル */
 export type Images = {
@@ -1332,6 +1552,10 @@ export type MutationRoot = {
   __typename?: "mutation_root";
   /** execute VOLATILE function "decrement_latest_reach_log" which returns "reach_logs" */
   decrementLatestReachLog: Array<ReachLogs>;
+  /** delete data from the table: "events" */
+  deleteEvents?: Maybe<EventsMutationResponse>;
+  /** delete single row from the table: "events" */
+  deleteEventsByPk?: Maybe<Events>;
   /** delete data from the table: "images" */
   deleteImages?: Maybe<ImagesMutationResponse>;
   /** delete single row from the table: "images" */
@@ -1352,6 +1576,10 @@ export type MutationRoot = {
   deleteStampTriggers?: Maybe<StampTriggersMutationResponse>;
   /** execute VOLATILE function "increment_latest_reach_log" which returns "reach_logs" */
   incrementLatestReachLog: Array<ReachLogs>;
+  /** insert data into the table: "events" */
+  insertEvents?: Maybe<EventsMutationResponse>;
+  /** insert a single row into the table: "events" */
+  insertEventsOne?: Maybe<Events>;
   /** insert data into the table: "images" */
   insertImages?: Maybe<ImagesMutationResponse>;
   /** insert a single row into the table: "images" */
@@ -1372,6 +1600,12 @@ export type MutationRoot = {
   insertStampTriggers?: Maybe<StampTriggersMutationResponse>;
   /** insert a single row into the table: "stamp_triggers" */
   insertStampTriggersOne?: Maybe<StampTriggers>;
+  /** update data of the table: "events" */
+  updateEvents?: Maybe<EventsMutationResponse>;
+  /** update single row of the table: "events" */
+  updateEventsByPk?: Maybe<Events>;
+  /** update multiples rows of table: "events" */
+  updateEventsMany?: Maybe<Array<Maybe<EventsMutationResponse>>>;
   /** update data of the table: "images" */
   updateImages?: Maybe<ImagesMutationResponse>;
   /** update single row of the table: "images" */
@@ -1409,6 +1643,16 @@ export type MutationRootDecrementLatestReachLogArgs = {
   offset?: InputMaybe<Scalars["Int"]["input"]>;
   orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
   where?: InputMaybe<ReachLogsBoolExp>;
+};
+
+/** mutation root */
+export type MutationRootDeleteEventsArgs = {
+  where: EventsBoolExp;
+};
+
+/** mutation root */
+export type MutationRootDeleteEventsByPkArgs = {
+  id: Scalars["bigint"]["input"];
 };
 
 /** mutation root */
@@ -1463,6 +1707,18 @@ export type MutationRootIncrementLatestReachLogArgs = {
   offset?: InputMaybe<Scalars["Int"]["input"]>;
   orderBy?: InputMaybe<Array<ReachLogsOrderBy>>;
   where?: InputMaybe<ReachLogsBoolExp>;
+};
+
+/** mutation root */
+export type MutationRootInsertEventsArgs = {
+  objects: Array<EventsInsertInput>;
+  onConflict?: InputMaybe<EventsOnConflict>;
+};
+
+/** mutation root */
+export type MutationRootInsertEventsOneArgs = {
+  object: EventsInsertInput;
+  onConflict?: InputMaybe<EventsOnConflict>;
 };
 
 /** mutation root */
@@ -1521,6 +1777,25 @@ export type MutationRootInsertStampTriggersArgs = {
 /** mutation root */
 export type MutationRootInsertStampTriggersOneArgs = {
   object: StampTriggersInsertInput;
+};
+
+/** mutation root */
+export type MutationRootUpdateEventsArgs = {
+  _inc?: InputMaybe<EventsIncInput>;
+  _set?: InputMaybe<EventsSetInput>;
+  where: EventsBoolExp;
+};
+
+/** mutation root */
+export type MutationRootUpdateEventsByPkArgs = {
+  _inc?: InputMaybe<EventsIncInput>;
+  _set?: InputMaybe<EventsSetInput>;
+  pkColumns: EventsPkColumnsInput;
+};
+
+/** mutation root */
+export type MutationRootUpdateEventsManyArgs = {
+  updates: Array<EventsUpdates>;
 };
 
 /** mutation root */
@@ -1613,6 +1888,12 @@ export type MutationRootUpdateStampTriggersManyArgs = {
 
 export type QueryRoot = {
   __typename?: "query_root";
+  /** fetch data from the table: "events" */
+  events: Array<Events>;
+  /** fetch aggregated fields from the table: "events" */
+  eventsAggregate: EventsAggregate;
+  /** fetch data from the table: "events" using primary key columns */
+  eventsByPk?: Maybe<Events>;
   /** fetch data from the table: "images" */
   images: Array<Images>;
   /** fetch aggregated fields from the table: "images" */
@@ -1641,6 +1922,26 @@ export type QueryRoot = {
   stampTriggers: Array<StampTriggers>;
   /** fetch aggregated fields from the table: "stamp_triggers" */
   stampTriggersAggregate: StampTriggersAggregate;
+};
+
+export type QueryRootEventsArgs = {
+  distinctOn?: InputMaybe<Array<EventsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<EventsOrderBy>>;
+  where?: InputMaybe<EventsBoolExp>;
+};
+
+export type QueryRootEventsAggregateArgs = {
+  distinctOn?: InputMaybe<Array<EventsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<EventsOrderBy>>;
+  where?: InputMaybe<EventsBoolExp>;
+};
+
+export type QueryRootEventsByPkArgs = {
+  id: Scalars["bigint"]["input"];
 };
 
 export type QueryRootImagesArgs = {
@@ -1741,6 +2042,14 @@ export type QueryRootStampTriggersAggregateArgs = {
 
 export type SubscriptionRoot = {
   __typename?: "subscription_root";
+  /** fetch data from the table: "events" */
+  events: Array<Events>;
+  /** fetch aggregated fields from the table: "events" */
+  eventsAggregate: EventsAggregate;
+  /** fetch data from the table: "events" using primary key columns */
+  eventsByPk?: Maybe<Events>;
+  /** fetch data from the table in a streaming manner: "events" */
+  eventsStream: Array<Events>;
   /** fetch data from the table: "images" */
   images: Array<Images>;
   /** fetch aggregated fields from the table: "images" */
@@ -1779,6 +2088,32 @@ export type SubscriptionRoot = {
   stampTriggersAggregate: StampTriggersAggregate;
   /** fetch data from the table in a streaming manner: "stamp_triggers" */
   stampTriggersStream: Array<StampTriggers>;
+};
+
+export type SubscriptionRootEventsArgs = {
+  distinctOn?: InputMaybe<Array<EventsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<EventsOrderBy>>;
+  where?: InputMaybe<EventsBoolExp>;
+};
+
+export type SubscriptionRootEventsAggregateArgs = {
+  distinctOn?: InputMaybe<Array<EventsSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<EventsOrderBy>>;
+  where?: InputMaybe<EventsBoolExp>;
+};
+
+export type SubscriptionRootEventsByPkArgs = {
+  id: Scalars["bigint"]["input"];
+};
+
+export type SubscriptionRootEventsStreamArgs = {
+  batchSize: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<EventsStreamCursorInput>>;
+  where?: InputMaybe<EventsBoolExp>;
 };
 
 export type SubscriptionRootImagesArgs = {
@@ -1905,6 +2240,20 @@ export type SubscriptionRootStampTriggersStreamArgs = {
   batchSize: Scalars["Int"]["input"];
   cursor: Array<InputMaybe<StampTriggersStreamCursorInput>>;
   where?: InputMaybe<StampTriggersBoolExp>;
+};
+
+export type SubscribeLatestEventSurveySubscriptionVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type SubscribeLatestEventSurveySubscription = {
+  __typename?: "subscription_root";
+  events: Array<{
+    __typename?: "Events";
+    id: any;
+    surveyUrl: string;
+    isSurveyActive: boolean;
+  }>;
 };
 
 export type CreateOneImageMutationVariables = Exact<{
@@ -2206,6 +2555,17 @@ export type SubscribeCreatedStampTriggerSubscription = {
   }>;
 };
 
+export const SubscribeLatestEventSurveyDocument = gql`
+  subscription SubscribeLatestEventSurvey {
+    events(orderBy: { id: DESC }, limit: 1) {
+      id
+      surveyUrl
+      isSurveyActive
+    }
+  }
+`;
+export type SubscribeLatestEventSurveySubscriptionResult =
+  Apollo.SubscriptionResult<SubscribeLatestEventSurveySubscription>;
 export const CreateOneImageDocument = gql`
   mutation CreateOneImage(
     $bucketName: String!

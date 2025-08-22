@@ -3,3 +3,4 @@
 - "!include public_prizes.yaml"
 - "!include public_reach_logs.yaml"
 - "!include public_stamp_triggers.yaml"
+- "!include public_events.yaml"

@@ -9,6 +9,7 @@ export { default as Loading } from "./Loading";
 export { default as NavigationBar } from "./NavigationBar";
 export { default as ReactionStampModal } from "./ReactionStampModal";
 export { default as ReachCount } from "./ReachCount";
+export { default as SurveyPromptModal } from "./SurveyPromptModal/SurveyPromptModal";
 
 // Buttons
 export { default as Button } from "./buttons/Button";

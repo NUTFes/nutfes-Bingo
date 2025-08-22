@@ -11,6 +11,8 @@ export const ja = {
     english: "English",
     drawOrder: "抽選順",
     ascending: "昇順",
+    survey: "アンケート",
+    answerSurvey: "アンケートに回答する",
   },
   helpCarousel: {
     close: "閉じる",

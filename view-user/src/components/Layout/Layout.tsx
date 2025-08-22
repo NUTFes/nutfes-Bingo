@@ -1,5 +1,7 @@
-import { useLazyQuery, useMutation } from "@apollo/client";
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useLazyQuery, useMutation, useSubscription } from "@apollo/client";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
+import { useRecoilState } from "recoil";
+import { hasShownSurveyState } from "@/state/survey";
 import { useRouter } from "next/router";
 import styles from "./Layout.module.css";
 import "intro.js/minified/introjs.min.css";
@@ -12,14 +14,16 @@ import {
   ReactionStampModal,
   NavigationBar,
   Header,
-  Modal,
   Button,
+  Modal,
   ToggleButton,
+  SurveyPromptModal,
 } from "@/components/common";
 import {
   CreateOneStampTriggerDocument,
   CreateOneReachRecordDocument,
   GetOneLatestReachLogDocument,
+  SubscribeLatestEventSurveyDocument,
 } from "@/types/graphql";
 import type {
   CreateOneStampTriggerMutation,
@@ -29,6 +33,8 @@ import type {
   GetOneLatestReachLogQuery,
 } from "@/types/graphql";
 import { ja, en } from "@/locales";
+import { TwitterPicker } from "react-color";
+import { useSurveyState } from "@/hooks/useSurveyState";
 
 const images = [
   { name: "crap", src: "/ReactionIcon/crap.png", alt: "crap icon" },
@@ -82,13 +88,23 @@ interface LayoutProps {
 const Layout = (props: LayoutProps) => {
   const router = useRouter();
   const t = props.language === "ja" ? ja : en;
+  
   const [isReactionModalOpen, setIsReactionModalOpen] =
     useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] =
     useState<boolean>(false);
+  const [hasShownSurvey, setHasShownSurvey] =
+    useRecoilState(hasShownSurveyState);
+
   const [isSortOrderActive, setIsSortOrderActive] = useState<boolean>(false);
+  const { setIsSortedAscending } = props;
+
   const [isReachModalOpen, setIsReachModalOpen] = useState<boolean>(false);
   const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
+
+  const [mainColor, setMainColor] = useState(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
+  const [subColor, setSubColor] = useState(COLOR_PRESETS.DEFAULT_SUB_COLOR);
+  
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
   const position: string = isReachIconVisible ? "29%" : "50%";
@@ -104,8 +120,13 @@ const Layout = (props: LayoutProps) => {
     CreateOneReachRecordMutation,
     CreateOneReachRecordMutationVariables
   >(CreateOneReachRecordDocument);
-  5;
-  // navBarの高さをstring型で渡す
+
+  // アンケート配信の軽量サブスク（番号サブスクとは分離）
+  const { data: surveyEvent } = useSubscription(
+    SubscribeLatestEventSurveyDocument,
+  );
+
+  // ナビゲーションバーの高さを設定
   useLayoutEffect(() => {
     if (navRef.current) {
       const navHeight = navRef.current.getBoundingClientRect().height;
@@ -130,10 +151,36 @@ const Layout = (props: LayoutProps) => {
     }
   }, []);
 
+  // 初期設定を適用
+  useEffect(() => {
+    // ソート順を親コンポーネントに伝える
+    setIsSortedAscending?.(isSortOrderActive);
+
+    // カラーを適用
+    document.documentElement.style.setProperty("--main-color", mainColor);
+    document.documentElement.style.setProperty("--sub-color", subColor);
+  }, [isSortOrderActive, mainColor, subColor, setIsSortedAscending]);
+
+  // アンケート状態管理（カスタムフック）
+  const {
+    surveyUrl,
+    setSurveyUrl,
+    isSurveyModalOpen,
+    setIsSurveyModalOpen,
+    isSurveyActive,
+  } = useSurveyState(surveyEvent, hasShownSurvey, setHasShownSurvey);
+
+  // リアクションアイコンがクリックされたときの処理
   const handleReactionClick = (name: string) => {
     createStampRecord({ variables: { name } });
   };
 
+  // 設定内のアンケート回答ボタンの処理
+  const handleAnswerSurvey = () => {
+    if (surveyUrl) window.open(surveyUrl, "_blank", "noopener,noreferrer");
+  };
+
+  // リーチアイコンがクリックされたときの処理
   const handleReachIconClick = async () => {
     try {
       const { data } = await getLatestReachLog();
@@ -217,6 +264,11 @@ const Layout = (props: LayoutProps) => {
           onClick={handleReactionClick}
         />
       )}
+      <SurveyPromptModal
+        isOpened={isSurveyModalOpen}
+        setIsOpened={setIsSurveyModalOpen}
+        surveyUrl={surveyUrl}
+      />
       <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
         <div className={styles.reachModal}>
           <p>{t.reachModal.title}</p>
@@ -233,6 +285,16 @@ const Layout = (props: LayoutProps) => {
         setIsOpened={setIsSettingsModalOpen}
       >
         <div className={styles.settingsModal}>
+          {isSurveyActive && surveyUrl && (
+            <div>
+              <p>{t.settingsModal.survey}</p>
+              <div className={styles.surveyActions}>
+                <Button inversion onClick={handleAnswerSurvey}>
+                  {t.settingsModal.answerSurvey}
+                </Button>
+              </div>
+            </div>
+          )}
           <div>
             <p>{t.settingsModal.languageSelection}</p>
             <ToggleButton

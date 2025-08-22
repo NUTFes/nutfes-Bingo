@@ -11,6 +11,8 @@ export const en = {
     english: "English",
     drawOrder: "Draw Order",
     ascending: "Ascending",
+    survey: "Survey",
+    answerSurvey: "Answer Survey",
   },
   helpCarousel: {
     close: "close",
