@@ -6,6 +6,7 @@ import {
   DeleteOnePrizeDocument,
   DeleteOneImageDocument,
   UpdateOnePrizeBasicDocument,
+  UpdateOnePrizeNamesDocument,
 } from "@/type/graphql";
 import Image from "next/image";
 import type {
@@ -18,6 +19,8 @@ import type {
   DeleteOneImageMutationVariables,
   UpdateOnePrizeBasicMutation,
   UpdateOnePrizeBasicMutationVariables,
+  UpdateOnePrizeNamesMutation,
+  UpdateOnePrizeNamesMutationVariables,
 } from "@/type/graphql";
 import { IoClose, IoCreateOutline } from "react-icons/io5";
 import { toast } from "react-toastify";
@@ -58,6 +61,11 @@ export const PrizeResult = (props: PrizeResultProps) => {
     UpdateOnePrizeBasicMutation,
     UpdateOnePrizeBasicMutationVariables
   >(UpdateOnePrizeBasicDocument);
+
+  const [updatePrizeNames] = useMutation<
+    UpdateOnePrizeNamesMutation,
+    UpdateOnePrizeNamesMutationVariables
+  >(UpdateOnePrizeNamesDocument);
 
   // 画像URLは都度、対象のprizeに紐づくimageから算出する
   const getImageUrl = (prize: GetListPrizesQuery["prizes"][number]) => {
@@ -143,14 +151,30 @@ export const PrizeResult = (props: PrizeResultProps) => {
     if (!selected) return;
     const { nameJp, nameEn, imageId, image } = params;
     try {
-      const { data } = await updatePrizeBasic({
-        variables: {
-          id: selected.prize.id,
-          nameJp,
-          nameEn,
-          imageId: imageId ?? undefined,
-        },
-      });
+      let data;
+
+      // 新しい画像がアップロードされた場合
+      if (imageId !== null && imageId !== undefined) {
+        const result = await updatePrizeBasic({
+          variables: {
+            id: selected.prize.id,
+            nameJp,
+            nameEn,
+            imageId,
+          },
+        });
+        data = result.data;
+      } else {
+        // 名前のみ変更の場合
+        const result = await updatePrizeNames({
+          variables: {
+            id: selected.prize.id,
+            nameJp,
+            nameEn,
+          },
+        });
+        data = result.data;
+      }
       if (data?.updatePrizesByPk) {
         props.setBingoPrize((prev) =>
           prev.map((p) =>
