@@ -209,6 +209,7 @@ const Page: NextPage = () => {
                 ref={fileInputRef}
               />
             </div>
+
             <div className={styles.input_details}>
               <h2>景品名を入力</h2>
               <input

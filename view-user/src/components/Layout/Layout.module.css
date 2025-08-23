@@ -50,6 +50,12 @@
   margin-bottom: 3.5vw;
 }
 
+.surveyActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
 .resetButton > button {
   width: auto;
 }
