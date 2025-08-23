@@ -67,3 +67,40 @@ mutation UpdateOnePrizeIsWon($id: Int!, $isWon: Boolean!) {
     isWon
   }
 }
+
+# 景品の基本情報更新(Update)
+mutation UpdateOnePrizeBasic(
+  $id: Int!
+  $nameJp: String
+  $nameEn: String
+  $imageId: Int
+) {
+  updatePrizesByPk(
+    pkColumns: { id: $id }
+    _set: { nameJp: $nameJp, nameEn: $nameEn, imageId: $imageId }
+  ) {
+    id
+    nameJp
+    nameEn
+    imageId
+    updatedAt
+  }
+}
+
+# 景品の名前のみ更新(Update Names Only)
+mutation UpdateOnePrizeNames(
+  $id: Int!
+  $nameJp: String
+  $nameEn: String
+) {
+  updatePrizesByPk(
+    pkColumns: { id: $id }
+    _set: { nameJp: $nameJp, nameEn: $nameEn }
+  ) {
+    id
+    nameJp
+    nameEn
+    imageId
+    updatedAt
+  }
+}

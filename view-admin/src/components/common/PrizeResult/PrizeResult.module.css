@@ -37,6 +37,32 @@
   box-shadow: 0.9375vw 0.9375vw 0px var(--main-color);
 }
 
+.cardActions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.iconBtn {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--main-color);
+  color: var(--main-color);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  filter: brightness(0.95);
+}
+
 .cardContent {
   font-size: 5vw;
   color: #333;

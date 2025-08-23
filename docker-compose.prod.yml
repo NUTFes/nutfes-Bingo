@@ -1,10 +1,50 @@
-version: "3"
+version: "3.8"
+
 services:
+  db:
+    image: postgres:12
+    container_name: "bingo_db_prod"
+    volumes:
+      - db-prod-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: bingo_db
+      POSTGRES_USER: bingo
+      POSTGRES_PASSWORD: prod_password_change_me
+      POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "pg_isready"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - bingo-network
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: nutfes-minio-prod
+    volumes:
+      - ./tmp/minio/prod-data:/data
+    command: "server /data --console-address :9001"
+    env_file:
+      - ./settings/admin-prod.env
+    restart: unless-stopped
+    networks:
+      - bingo-network
+
   cloudflare:
     image: "cloudflare/cloudflared:latest"
     container_name: "cloudflare"
     volumes: ["./cloudflare/prod:/home/nonroot/.cloudflared"]
     command: tunnel run
+    restart: unless-stopped
+    depends_on:
+      - view-user
+      - view-admin
+    networks:
+      - bingo-network
 
   api: # hasura
     build:
@@ -13,8 +53,15 @@ services:
     container_name: "bingo_api"
     volumes:
       - ./api:/hasura/api
+      - .:/hasura/project # プロジェクト全体をマウント（seedスクリプト用）
     env_file:
       - ./settings/bingo-prod.env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - bingo-network
 
   view-user:
     image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
@@ -22,13 +69,16 @@ services:
     volumes:
       - ./view-user:/app
     working_dir: /app
-    command: sh -c "npm run start"
+    command: sh -c "npm install && npm run build && npm run start"
     ports:
       - "3000:3000"
     env_file:
       - ./settings/bingo-prod.env
     stdin_open: true
     tty: true
+    restart: unless-stopped
+    networks:
+      - bingo-network
 
   view-admin:
     image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
@@ -36,10 +86,20 @@ services:
     volumes:
       - ./view-admin:/app
     working_dir: /app
-    command: sh -c "npm run start"
+    command: sh -c "npm install && npm run build && npm run start"
     ports:
       - "3001:3000"
     env_file:
       - ./settings/admin-prod.env
     stdin_open: true
     tty: true
+    restart: unless-stopped
+    networks:
+      - bingo-network
+
+volumes:
+  db-prod-data:
+
+networks:
+  bingo-network:
+    driver: bridge

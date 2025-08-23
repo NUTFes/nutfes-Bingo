@@ -2324,6 +2324,21 @@ export type DeleteOneImageMutation = {
   deleteImagesByPk?: { __typename?: "Images"; id: number } | null;
 };
 
+export type GetListImagesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetListImagesQuery = {
+  __typename?: "query_root";
+  images: Array<{
+    __typename?: "Images";
+    id: number;
+    bucketName: string;
+    fileName: string;
+    fileType: string;
+    createdAt: any;
+    updatedAt: any;
+  }>;
+};
+
 export type GetListNumbersQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetListNumbersQuery = {
@@ -2468,6 +2483,43 @@ export type UpdateOnePrizeIsWonMutation = {
     __typename?: "Prizes";
     id: number;
     isWon: boolean;
+  } | null;
+};
+
+export type UpdateOnePrizeBasicMutationVariables = Exact<{
+  id: Scalars["Int"]["input"];
+  nameJp?: InputMaybe<Scalars["String"]["input"]>;
+  nameEn?: InputMaybe<Scalars["String"]["input"]>;
+  imageId?: InputMaybe<Scalars["Int"]["input"]>;
+}>;
+
+export type UpdateOnePrizeBasicMutation = {
+  __typename?: "mutation_root";
+  updatePrizesByPk?: {
+    __typename?: "Prizes";
+    id: number;
+    nameJp: string;
+    nameEn?: string | null;
+    imageId: number;
+    updatedAt: any;
+  } | null;
+};
+
+export type UpdateOnePrizeNamesMutationVariables = Exact<{
+  id: Scalars["Int"]["input"];
+  nameJp?: InputMaybe<Scalars["String"]["input"]>;
+  nameEn?: InputMaybe<Scalars["String"]["input"]>;
+}>;
+
+export type UpdateOnePrizeNamesMutation = {
+  __typename?: "mutation_root";
+  updatePrizesByPk?: {
+    __typename?: "Prizes";
+    id: number;
+    nameJp: string;
+    nameEn?: string | null;
+    imageId: number;
+    updatedAt: any;
   } | null;
 };
 
@@ -2650,6 +2702,22 @@ export type DeleteOneImageMutationResult =
 export type DeleteOneImageMutationOptions = Apollo.BaseMutationOptions<
   DeleteOneImageMutation,
   DeleteOneImageMutationVariables
+>;
+export const GetListImagesDocument = gql`
+  query GetListImages {
+    images(orderBy: { id: ASC }) {
+      id
+      bucketName
+      fileName
+      fileType
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export type GetListImagesQueryResult = Apollo.QueryResult<
+  GetListImagesQuery,
+  GetListImagesQueryVariables
 >;
 export const GetListNumbersDocument = gql`
   query GetListNumbers {
@@ -2837,6 +2905,59 @@ export type UpdateOnePrizeIsWonMutationResult =
 export type UpdateOnePrizeIsWonMutationOptions = Apollo.BaseMutationOptions<
   UpdateOnePrizeIsWonMutation,
   UpdateOnePrizeIsWonMutationVariables
+>;
+export const UpdateOnePrizeBasicDocument = gql`
+  mutation UpdateOnePrizeBasic(
+    $id: Int!
+    $nameJp: String
+    $nameEn: String
+    $imageId: Int
+  ) {
+    updatePrizesByPk(
+      pkColumns: { id: $id }
+      _set: { nameJp: $nameJp, nameEn: $nameEn, imageId: $imageId }
+    ) {
+      id
+      nameJp
+      nameEn
+      imageId
+      updatedAt
+    }
+  }
+`;
+export type UpdateOnePrizeBasicMutationFn = Apollo.MutationFunction<
+  UpdateOnePrizeBasicMutation,
+  UpdateOnePrizeBasicMutationVariables
+>;
+export type UpdateOnePrizeBasicMutationResult =
+  Apollo.MutationResult<UpdateOnePrizeBasicMutation>;
+export type UpdateOnePrizeBasicMutationOptions = Apollo.BaseMutationOptions<
+  UpdateOnePrizeBasicMutation,
+  UpdateOnePrizeBasicMutationVariables
+>;
+export const UpdateOnePrizeNamesDocument = gql`
+  mutation UpdateOnePrizeNames($id: Int!, $nameJp: String, $nameEn: String) {
+    updatePrizesByPk(
+      pkColumns: { id: $id }
+      _set: { nameJp: $nameJp, nameEn: $nameEn }
+    ) {
+      id
+      nameJp
+      nameEn
+      imageId
+      updatedAt
+    }
+  }
+`;
+export type UpdateOnePrizeNamesMutationFn = Apollo.MutationFunction<
+  UpdateOnePrizeNamesMutation,
+  UpdateOnePrizeNamesMutationVariables
+>;
+export type UpdateOnePrizeNamesMutationResult =
+  Apollo.MutationResult<UpdateOnePrizeNamesMutation>;
+export type UpdateOnePrizeNamesMutationOptions = Apollo.BaseMutationOptions<
+  UpdateOnePrizeNamesMutation,
+  UpdateOnePrizeNamesMutationVariables
 >;
 export const GetOneLatestReachLogDocument = gql`
   query GetOneLatestReachLog {
