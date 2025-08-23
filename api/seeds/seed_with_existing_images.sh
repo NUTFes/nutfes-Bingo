@@ -17,8 +17,33 @@
 
 set -e  # エラー時に停止
 
-# 環境変数の読み込み
-ENV_FILE="../../settings/bingo.env"
+# 引数で環境を指定（デフォルトは開発環境）
+ENVIRONMENT=${1:-dev}
+ENV="$ENVIRONMENT"  # ENVとENVIRONMENTを統一
+
+echo "🌱 Starting seed data creation for $ENVIRONMENT environment..."
+
+# 環境ファイルの設定
+if [ "$ENVIRONMENT" = "prod" ]; then
+    ENV_FILE="../../settings/bingo-prod.env"
+else
+    ENV_FILE="../../settings/bingo.env"
+fi
+
+# Set environment-specific values
+if [ "$ENV" = "prod" ]; then
+    HASURA_ENDPOINT="http://localhost:8080/v1/graphql"
+    HASURA_ADMIN_SECRET="/4XQdRUHXGtW"
+    COMPOSE_CMD="docker compose -f /root/nutfes-Bingo/docker-compose.prod.yml"
+else
+    HASURA_ENDPOINT="http://localhost:8080/v1/graphql"
+    HASURA_ADMIN_SECRET="myadminsecretkey"
+    COMPOSE_CMD="docker compose"
+fi
+
+# Admin secret設定
+ADMIN_SECRET="$HASURA_ADMIN_SECRET"
+
 if [ -f "$ENV_FILE" ]; then
     # カンマやスペースを含む値でもエラーが出ないように修正
     set -a  # 自動export有効
@@ -30,13 +55,14 @@ else
 fi
 
 # MinIO設定
-MINIO_ENDPOINT="${NEXT_PUBLIC_MINIO_ENDPOINT}"
+if [ "$ENVIRONMENT" = "prod" ]; then
+    MINIO_ENDPOINT="http://minio:9000"  # Docker内部エンドポイント
+else
+    MINIO_ENDPOINT="http://minio:9000"  # Docker内部エンドポイント
+fi
 BUCKET_NAME="${NEXT_PUBLIC_BUCKET_NAME}"
 ACCESS_KEY="${NEXT_PUBLIC_ACCESS_KEY}"
 SECRET_KEY="${NEXT_PUBLIC_SECRET_KEY}"
-HASURA_ENDPOINT="${API_URI}/v1/graphql"
-HASURA_METADATA_ENDPOINT="${API_URI}/v1/metadata"
-ADMIN_SECRET="${HASURA_GRAPHQL_ADMIN_SECRET}"
 
 # 画像ディレクトリ
 PRIZE_IMAGES_DIR="view-user/public/PrizeItem"
@@ -112,25 +138,32 @@ declare -a PRIZE_NAMES_EN=(
 
 echo "🚀 Starting seed data creation with existing images..."
 
+# プロジェクトルートディレクトリに移動（以降このディレクトリで作業）
+cd ../../
+
 # 1. MinIOクライアントの設定（データ操作用）
 # 前提条件: generate_minio_credentials.sh でMinIO環境が適切にセットアップ済み
 echo "🔑 Setting up MinIO client for data operations..."
-docker compose exec api mc alias set local $MINIO_ENDPOINT $ACCESS_KEY $SECRET_KEY
+$COMPOSE_CMD exec api mc alias set local $MINIO_ENDPOINT $ACCESS_KEY $SECRET_KEY
 
 # 2. 画像のアップロードとDB登録
 echo "📷 Uploading images and registering to database..."
 
 # 実際の画像ファイルを確認
 echo "🔍 Checking available image files..."
-cd ../../
+# 現在の作業ディレクトリを確認
+echo "Current directory: $(pwd)"
+echo "Looking for: $PRIZE_IMAGES_DIR"
+
 if [ ! -d "$PRIZE_IMAGES_DIR" ]; then
     echo "❌ Directory not found: $PRIZE_IMAGES_DIR"
+    echo "Available directories:"
+    find . -name "PrizeItem" -type d 2>/dev/null || echo "No PrizeItem directories found"
     exit 1
 fi
 
 # 実際に存在するファイルを動的に取得
 available_files=$(find "$PRIZE_IMAGES_DIR" -name "*.jpg" -exec basename {} \; 2>/dev/null | sort)
-cd api/seeds
 
 if [ -z "$available_files" ]; then
     echo "❌ No image files found in $PRIZE_IMAGES_DIR"
@@ -183,7 +216,8 @@ for filename in "${test_files[@]}"; do
     echo -n "  Uploading $name_jp to MinIO... "
 
     # MinIOに画像をアップロード（特殊文字対応のためprintf使用）
-    upload_result=$(docker compose exec api sh -c "mc cp '$source_path' '$dest_path'" 2>&1)
+    # 既にプロジェクトルートにいるので、cd は不要
+    upload_result=$($COMPOSE_CMD exec api sh -c "mc cp '$source_path' '$dest_path'" 2>&1)
     upload_exit_code=$?
 
     if [ $upload_exit_code -eq 0 ]; then
@@ -202,7 +236,7 @@ for filename in "${test_files[@]}"; do
         escaped_extension=$(printf '%s' "$file_extension" | sed 's/"/\\"/g')
 
         # 既存の画像をチェック
-        existing_image_response=$(curl -s -X POST \
+        existing_image_response=$($COMPOSE_CMD exec api curl -s -X POST \
           "$HASURA_ENDPOINT" \
           -H "Content-Type: application/json" \
           -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
@@ -220,7 +254,7 @@ for filename in "${test_files[@]}"; do
                 echo "✅ Image already exists ID: $image_id"
             else
                 # 新規作成
-                image_response=$(curl -s -X POST \
+                image_response=$($COMPOSE_CMD exec api curl -s -X POST \
                   "$HASURA_ENDPOINT" \
                   -H "Content-Type: application/json" \
                   -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
@@ -250,7 +284,7 @@ for filename in "${test_files[@]}"; do
                 # prizesテーブルに登録（既存チェック後に挿入）
 
                 # 既存の景品をチェック
-                existing_prize_response=$(curl -s -X POST \
+                existing_prize_response=$($COMPOSE_CMD exec api curl -s -X POST \
                   "$HASURA_ENDPOINT" \
                   -H "Content-Type: application/json" \
                   -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
@@ -270,7 +304,7 @@ for filename in "${test_files[@]}"; do
                         escaped_name_jp=$(printf '%s' "$name_jp" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
                         escaped_name_en=$(printf '%s' "$name_en" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
 
-                        prize_response=$(curl -s -X POST \
+                        prize_response=$($COMPOSE_CMD exec api curl -s -X POST \
                           "$HASURA_ENDPOINT" \
                           -H "Content-Type: application/json" \
                           -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
@@ -301,7 +335,7 @@ for filename in "${test_files[@]}"; do
         echo "    Dest: '$dest_path'"
 
         # ファイルが存在するかチェック
-        if docker compose exec api test -f "$source_path"; then
+        if $COMPOSE_CMD exec api test -f "$source_path"; then
             echo "    File exists in container"
         else
             echo "    File NOT found in container"
@@ -318,7 +352,7 @@ echo "🎉 Seed data creation completed!"
 echo "📊 Summary:"
 
 # 結果のサマリーを表示（正しいフィールド名を使用）
-images_response=$(curl -s -X POST \
+images_response=$($COMPOSE_CMD exec api curl -s -X POST \
   "$HASURA_ENDPOINT" \
   -H "Content-Type: application/json" \
   -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
@@ -326,7 +360,7 @@ images_response=$(curl -s -X POST \
 
 images_count=$(echo "$images_response" | grep -o '"count"[[:space:]]*:[[:space:]]*[0-9]*' | grep -o '[0-9]*')
 
-prizes_response=$(curl -s -X POST \
+prizes_response=$($COMPOSE_CMD exec api curl -s -X POST \
   "$HASURA_ENDPOINT" \
   -H "Content-Type: application/json" \
   -H "X-Hasura-Admin-Secret: $ADMIN_SECRET" \
