@@ -61,16 +61,17 @@ export default async function handler(
       };
 
       try {
-        const response = await minioClient.putObject(
+        // formidable で保存された一時ファイルをそのままアップロード
+        await minioClient.fPutObject(
           bucketName,
           fileName,
-          fs.createReadStream(file.filepath),
-          undefined,
+          file.filepath,
           metaData,
         );
         return res.status(200).json({ message: "Upload successful" });
       } catch (uploadError) {
-        return res.status(500).json({ message: uploadError });
+        console.error("MinIO upload error:", uploadError);
+        return res.status(500).json({ message: String(uploadError) });
       }
     });
   } else {
