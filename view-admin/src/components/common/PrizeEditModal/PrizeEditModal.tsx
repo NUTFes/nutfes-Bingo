@@ -15,6 +15,7 @@ import {
   type CreateOneImageMutationVariables,
 } from "@/type/graphql";
 import { IoCloudUploadOutline } from "react-icons/io5";
+import Image from "next/image";
 
 interface Props {
   isOpened: boolean;
@@ -29,7 +30,6 @@ interface Props {
   initialFileName?: string | null;
   initialFileType?: string | null;
   onSubmit: (params: {
-    id: number;
     nameJp: string;
     nameEn: string;
     imageId?: number | null;
@@ -159,7 +159,6 @@ const PrizeEditModal = ({
         const newImageId = data?.insertImagesOne?.id ?? null;
         if (newImageId == null) throw new Error("image id missing");
         await onSubmit({
-          id,
           nameJp,
           nameEn,
           imageId: newImageId,
@@ -172,7 +171,7 @@ const PrizeEditModal = ({
         return; // keep modal open on error
       }
     } else {
-      await onSubmit({ id, nameJp, nameEn });
+      await onSubmit({ nameJp, nameEn });
       toast.success("景品を更新しました");
     }
     close();
@@ -209,11 +208,12 @@ const PrizeEditModal = ({
             <div className={styles.imagePreview}>{currentImageText}</div>
             {previewUrl && (
               <div className={styles.previewContainer}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   className={styles.previewImage}
                   src={previewUrl}
                   alt="preview"
+                  fill
+                  style={{ objectFit: "contain" }}
                 />
               </div>
             )}

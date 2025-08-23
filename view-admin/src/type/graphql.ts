@@ -2141,6 +2141,24 @@ export type UpdateOnePrizeBasicMutation = {
   } | null;
 };
 
+export type UpdateOnePrizeNamesMutationVariables = Exact<{
+  id: Scalars["Int"]["input"];
+  nameJp?: InputMaybe<Scalars["String"]["input"]>;
+  nameEn?: InputMaybe<Scalars["String"]["input"]>;
+}>;
+
+export type UpdateOnePrizeNamesMutation = {
+  __typename?: "mutation_root";
+  updatePrizesByPk?: {
+    __typename?: "Prizes";
+    id: number;
+    nameJp: string;
+    nameEn?: string | null;
+    imageId: number;
+    updatedAt: any;
+  } | null;
+};
+
 export type GetOneLatestReachLogQueryVariables = Exact<{
   [key: string]: never;
 }>;
@@ -2518,6 +2536,30 @@ export type UpdateOnePrizeBasicMutationResult =
 export type UpdateOnePrizeBasicMutationOptions = Apollo.BaseMutationOptions<
   UpdateOnePrizeBasicMutation,
   UpdateOnePrizeBasicMutationVariables
+>;
+export const UpdateOnePrizeNamesDocument = gql`
+  mutation UpdateOnePrizeNames($id: Int!, $nameJp: String, $nameEn: String) {
+    updatePrizesByPk(
+      pkColumns: { id: $id }
+      _set: { nameJp: $nameJp, nameEn: $nameEn }
+    ) {
+      id
+      nameJp
+      nameEn
+      imageId
+      updatedAt
+    }
+  }
+`;
+export type UpdateOnePrizeNamesMutationFn = Apollo.MutationFunction<
+  UpdateOnePrizeNamesMutation,
+  UpdateOnePrizeNamesMutationVariables
+>;
+export type UpdateOnePrizeNamesMutationResult =
+  Apollo.MutationResult<UpdateOnePrizeNamesMutation>;
+export type UpdateOnePrizeNamesMutationOptions = Apollo.BaseMutationOptions<
+  UpdateOnePrizeNamesMutation,
+  UpdateOnePrizeNamesMutationVariables
 >;
 export const GetOneLatestReachLogDocument = gql`
   query GetOneLatestReachLog {

@@ -86,3 +86,21 @@ mutation UpdateOnePrizeBasic(
     updatedAt
   }
 }
+
+# 景品の名前のみ更新(Update Names Only)
+mutation UpdateOnePrizeNames(
+  $id: Int!
+  $nameJp: String
+  $nameEn: String
+) {
+  updatePrizesByPk(
+    pkColumns: { id: $id }
+    _set: { nameJp: $nameJp, nameEn: $nameEn }
+  ) {
+    id
+    nameJp
+    nameEn
+    imageId
+    updatedAt
+  }
+}
