@@ -21,6 +21,8 @@
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  --main-color: #ffd607;
+  --sub-color: #fff8dc;
 }
 
 .image {
