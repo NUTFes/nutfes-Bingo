@@ -88,7 +88,6 @@ interface LayoutProps {
 const Layout = (props: LayoutProps) => {
   const router = useRouter();
   const t = props.language === "ja" ? ja : en;
-  
   const [isReactionModalOpen, setIsReactionModalOpen] =
     useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] =
@@ -104,7 +103,6 @@ const Layout = (props: LayoutProps) => {
 
   const [mainColor, setMainColor] = useState(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
   const [subColor, setSubColor] = useState(COLOR_PRESETS.DEFAULT_SUB_COLOR);
-  
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
   const position: string = isReachIconVisible ? "29%" : "50%";
