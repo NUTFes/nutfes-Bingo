@@ -32,6 +32,8 @@ const Header = () => {
       document.body.style.overflow = "";
     });
 
+    const isPrizePage = router.pathname === "/prizes";
+
     intro.setOptions({
       steps: [
         {
@@ -40,9 +42,13 @@ const Header = () => {
           position: "floating",
         },
         {
-          title: t.helpDescription.page2_title,
-          intro: t.helpDescription.page2_txt,
-          element: "#PrizesIcon",
+          title: isPrizePage
+            ? t.helpDescription.page2_title_back
+            : t.helpDescription.page2_title,
+          intro: isPrizePage
+            ? t.helpDescription.page2_txt_back
+            : t.helpDescription.page2_txt,
+          element: isPrizePage ? "#BackIcon" : "#PrizesIcon",
           position: "bottom-middle-aligned",
         },
         {

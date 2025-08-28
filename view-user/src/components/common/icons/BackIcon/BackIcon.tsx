@@ -3,7 +3,11 @@ import { IconFramework } from "@/components/common";
 import { TiArrowBack } from "react-icons/ti";
 import { useRouter } from "next/router";
 
-const BackIcon = () => {
+interface BackIconProps {
+  id?: string;
+}
+
+const BackIcon = (props: BackIconProps) => {
   const router = useRouter();
 
   const handleClick = () => {
@@ -17,6 +21,7 @@ const BackIcon = () => {
       icon={<TiArrowBack />}
       text="Back"
       onClick={() => handleClick()}
+      id={props.id ? props.id : undefined}
     />
   );
 };
