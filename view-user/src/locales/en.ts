@@ -26,6 +26,9 @@ export const en = {
     page2_title: "Prizes Button",
     page2_txt:
       "Click this button to check your prize! <br>The winning status will be updated from time to time, so please check the prizes you want!",
+    page2_title_back: "Back Button",
+    page2_txt_back:
+      "Tap this to return to the previous screen! <br>Go back to Home and try other features.",
     page3_title: "Reactions Button",
     page3_txt:
       "When you press this button, a reaction stamp will be displayed on the screen on stage! ! <br> Share the fun in real time!",
