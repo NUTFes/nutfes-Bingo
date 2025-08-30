@@ -51,6 +51,11 @@ const Page: NextPage = () => {
     }
   }, [subscription]);
 
+  // ルーターのロケール変更に追従して言語状態を更新
+  useEffect(() => {
+    setLanguage(locale || "ja");
+  }, [locale]);
+
   return (
     <>
       {loading && <Loading />}
