@@ -1,22 +1,26 @@
 import { useLazyQuery, useMutation, useSubscription } from "@apollo/client";
-import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import styles from "@/styles/Home.module.css";
+import { CgLogOut } from "react-icons/cg";
+import { toast } from "react-toastify";
+
 import type { NextPage } from "next";
+
 import {
   Header,
   BingoResult,
   Button,
   JudgementModal,
   UpdateNumberModal,
+  Loading,
 } from "@/components/common";
-import { CgLogOut } from "react-icons/cg";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import styles from "@/styles/Home.module.css";
 import {
   CreateOneNumberDocument,
   DeleteOneNumberDocument,
+  IncrementReachNumMutation,
   SubscribeListNumbersDocument,
   IncrementReachNumDocument,
   DecrementReachNumDocument,
@@ -25,8 +29,9 @@ import {
 } from "@/type/graphql";
 import type {
   SubscribeListNumbersSubscription,
-  IncrementReachNumMutation,
   DecrementReachNumMutation,
+  CreateOneNumberMutation,
+  CreateOneNumberMutationVariables,
   GetLatestEventSurveyQuery,
 } from "@/type/graphql";
 
@@ -82,10 +87,12 @@ const Page: NextPage = () => {
   } = useForm<formDataDelete>({
     mode: "onChange",
   });
-  const { data, loading, error } = useSubscription(
-    SubscribeListNumbersDocument,
-  );
-  const [createNumber] = useMutation(CreateOneNumberDocument);
+  const { data, loading } = useSubscription(SubscribeListNumbersDocument);
+  const [createNumber] = useMutation<
+    CreateOneNumberMutation,
+    CreateOneNumberMutationVariables
+  >(CreateOneNumberDocument);
+
   const [deleteNumber] = useMutation(DeleteOneNumberDocument);
   const [upsertSurvey, { loading: isSubmittingSurvey }] = useMutation(
     CreateEventSurveyDocument,
@@ -133,7 +140,20 @@ const Page: NextPage = () => {
   const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
     const { submitNumber } = getValuesCreate();
     if (submitNumber !== null) {
-      createNumber({ variables: { number: submitNumber } });
+      createNumber({
+        variables: { number: submitNumber },
+        onError: (err) => {
+          if (
+            err.graphQLErrors.some(
+              (e) => e.extensions?.code === "constraint-violation",
+            )
+          ) {
+            toast.warning(`${submitNumber} は既に入力済みです。`);
+          } else {
+            toast.error("エラーが発生しました。");
+          }
+        },
+      });
       resetCreate({ submitNumber: null });
     }
   };
@@ -180,6 +200,10 @@ const Page: NextPage = () => {
       setBingoNumbers(data.numbers);
     }
   }, [data]);
+
+  if (loading) {
+    return <Loading />;
+  }
 
   // if (session) {
   return (

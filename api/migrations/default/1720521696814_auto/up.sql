@@ -169,6 +169,8 @@ ALTER TABLE ONLY public.events
 ALTER TABLE ONLY public.images
     ADD CONSTRAINT images_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.numbers
+    ADD CONSTRAINT numbers_number_key UNIQUE (number);
+ALTER TABLE ONLY public.numbers
     ADD CONSTRAINT numbers_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.prizes
     ADD CONSTRAINT prizes_pkey PRIMARY KEY (id);
