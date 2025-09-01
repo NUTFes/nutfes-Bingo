@@ -14,4 +14,5 @@ body::-webkit-scrollbar {
   --sub-color: #c4deed;
   --background-color: #fff;
   --number-accent-color: var(--sub-color);
+  --footer-border-color: #000000;
 }

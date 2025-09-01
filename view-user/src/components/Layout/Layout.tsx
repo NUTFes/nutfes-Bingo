@@ -172,6 +172,7 @@ const Layout = (props: LayoutProps) => {
   useEffect(() => {
     const backgroundColor = isDarkMode ? "#2C252F" : "#FFFFFF";
     const numberAccentColor = isDarkMode ? "#1a171e" : subColor;
+    const footerBorderColor = isDarkMode ? "var(--main-color)" : "#000000";
     document.documentElement.style.setProperty(
       "--background-color",
       backgroundColor,
@@ -179,6 +180,10 @@ const Layout = (props: LayoutProps) => {
     document.documentElement.style.setProperty(
       "--number-accent-color",
       numberAccentColor,
+    );
+    document.documentElement.style.setProperty(
+      "--footer-border-color",
+      footerBorderColor,
     );
     const metaTheme = document.querySelector(
       'meta[name="theme-color"]',
