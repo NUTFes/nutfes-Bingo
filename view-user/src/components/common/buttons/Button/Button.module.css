@@ -15,7 +15,7 @@
 
 .inversion {
   color: var(--main-color);
-  background-color: white;
+  background-color: var(--background-color);
 }
 
 .button:active {

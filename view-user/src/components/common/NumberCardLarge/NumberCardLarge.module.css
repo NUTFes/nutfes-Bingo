@@ -5,7 +5,11 @@
   width: 62.5vw;
   height: 62.5vw;
   border: 2vw solid var(--main-color);
-  background: linear-gradient(135deg, var(--background-color) 50%, var(--sub-color) 51%);
+  background: linear-gradient(
+    135deg,
+    var(--background-color) 50%,
+    var(--number-accent-color) 51%
+  );
   border-radius: 7vw;
   box-sizing: border-box;
   box-shadow: 1vw 1vw 0vw 0.9vw var(--main-color);
@@ -13,6 +17,10 @@
   font-style: normal;
   font-weight: 400;
   line-height: normal;
+  color: var(--main-color);
+}
+
+.number {
   color: var(--main-color);
 }
 

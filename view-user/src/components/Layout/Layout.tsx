@@ -104,6 +104,7 @@ const Layout = (props: LayoutProps) => {
 
   const [mainColor, setMainColor] = useState(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
   const [subColor, setSubColor] = useState(COLOR_PRESETS.DEFAULT_SUB_COLOR);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
@@ -144,10 +145,16 @@ const Layout = (props: LayoutProps) => {
     const storedSortOrder = localStorage.getItem("isSortedAscending");
     if (storedSortOrder !== null) {
       const isSortedAscending = storedSortOrder === "true";
-      props.setIsSortedAscending?.(isSortedAscending);
       setIsSortOrderActive(isSortedAscending);
     } else {
       localStorage.setItem("isSortedAscending", "false");
+    }
+
+    const storedDarkMode = localStorage.getItem("isDarkMode");
+    if (storedDarkMode !== null) {
+      setIsDarkMode(storedDarkMode === "true");
+    } else {
+      localStorage.setItem("isDarkMode", "false");
     }
   }, []);
 
@@ -160,6 +167,30 @@ const Layout = (props: LayoutProps) => {
     document.documentElement.style.setProperty("--main-color", mainColor);
     document.documentElement.style.setProperty("--sub-color", subColor);
   }, [isSortOrderActive, mainColor, subColor, setIsSortedAscending]);
+
+  // 背景色やテーマカラーを適用
+  useEffect(() => {
+    const backgroundColor = isDarkMode ? "#2C252F" : "#FFFFFF";
+    const numberAccentColor = isDarkMode ? "#1a171e" : subColor;
+    document.documentElement.style.setProperty(
+      "--background-color",
+      backgroundColor,
+    );
+    document.documentElement.style.setProperty(
+      "--number-accent-color",
+      numberAccentColor,
+    );
+    const metaTheme = document.querySelector(
+      'meta[name="theme-color"]',
+    ) as HTMLMetaElement | null;
+    if (metaTheme) metaTheme.content = backgroundColor;
+  }, [isDarkMode, subColor]);
+
+  const toggleDarkMode = () => {
+    const next = !isDarkMode;
+    setIsDarkMode(next);
+    localStorage.setItem("isDarkMode", next.toString());
+  };
 
   // アンケート状態管理（カスタムフック）
   const {
@@ -313,6 +344,13 @@ const Layout = (props: LayoutProps) => {
             >
               <span>{t.settingsModal.drawOrder}</span>
               <span>{t.settingsModal.ascending}</span>
+            </ToggleButton>
+          </div>
+          <div>
+            <p>{t.settingsModal.theme}</p>
+            <ToggleButton isActive={isDarkMode} onClick={toggleDarkMode}>
+              <span>{t.settingsModal.light}</span>
+              <span>{t.settingsModal.dark}</span>
             </ToggleButton>
           </div>
         </div>
