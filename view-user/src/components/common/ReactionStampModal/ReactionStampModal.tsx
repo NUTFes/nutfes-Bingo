@@ -7,11 +7,14 @@ interface ImageProps {
   src: string;
   alt: string;
 }
+
 interface ReactionStampModalProps {
   position?: string;
   height?: string;
   images: ImageProps[];
   onClick: (name: string) => void;
+  disabled?: boolean;
+  activeName?: string;
 }
 
 const ReactionStampModal = (props: ReactionStampModalProps) => {
@@ -25,7 +28,9 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
       : "0px",
   };
 
+  // 押下禁止中は無視、許可時のみ親の送信処理を実行
   const handleClick = (name: string) => {
+    if (props.disabled) return;
     props.onClick(name);
   };
 
@@ -36,15 +41,44 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
         style={{ ...bubbleLeftPosition, ...modalBottom }}
       >
         <div className={styles.grid}>
-          {props.images.map((image) => (
-            <button
-              key={image.name}
-              className={styles.iconButton}
-              onClick={() => handleClick(image.name)}
-            >
-              <Image src={image.src} alt={image.alt} fill />
-            </button>
-          ))}
+          {props.images.map((image) => {
+            // 直近に押されたスタンプかどうか（派手エフェクトの対象）
+            const isActive = props.activeName === image.name;
+            return (
+              <button
+                key={image.name}
+                className={`${styles.iconButton} ${isActive ? styles.active : ""} ${
+                  props.disabled ? styles.disabled : ""
+                }`}
+                onClick={() => handleClick(image.name)}
+                disabled={props.disabled}
+                aria-disabled={props.disabled}
+                type="button"
+              >
+                {isActive && (
+                  <>
+                    {/* リップル（波紋）を2連で表示 */}
+                    <span className={styles.ripple} aria-hidden="true" />
+                    <span
+                      className={`${styles.ripple} ${styles.delay}`}
+                      aria-hidden="true"
+                    />
+                    {/* 押したスタンプ画像が放射状に飛ぶエフェクト */}
+                    <span className={styles.particles} aria-hidden="true">
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <span key={i} className={styles.particle}>
+                          <span className={styles.particleImg}>
+                            <Image src={image.src} alt="" fill />
+                          </span>
+                        </span>
+                      ))}
+                    </span>
+                  </>
+                )}
+                <Image src={image.src} alt={image.alt} fill />
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

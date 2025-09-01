@@ -1,8 +1,10 @@
+/* モーダル整列用 */
 .horizontalCenter {
   display: flex;
   justify-content: center;
 }
 
+/* 吹き出し本体 */
 .bubble {
   width: 87.5vw;
   height: 50.9vw;
@@ -15,6 +17,7 @@
   z-index: 100;
 }
 
+/* 吹き出しの三角（アウトライン） */
 .bubble:before {
   content: "";
   position: absolute;
@@ -29,6 +32,7 @@
   filter: drop-shadow(0.546875vw 1.09375vw var(--main-color));
 }
 
+/* 吹き出しの三角（中身） */
 .bubble:after {
   content: "";
   position: absolute;
@@ -42,11 +46,13 @@
   margin-left: -2.1875vw;
 }
 
+/* 三角の左右位置をCSS変数で調整 */
 .bubble:before,
 .bubble:after {
   left: var(--bubble-left-position, 50%);
 }
 
+/* アイコンのグリッド配置 */
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -57,6 +63,7 @@
   align-items: center;
 }
 
+/* アイコンボタンのベース */
 .iconButton {
   position: relative;
   border-radius: 50%;
@@ -68,10 +75,109 @@
   aspect-ratio: 1 / 1;
 }
 
+/* 押下中の柔らかいバウンス */
 .iconButton:active {
   animation: softBounce 1.5s infinite;
 }
 
+/* 直近に押されたアイコンに短いバウンス */
+.iconButton.active {
+  animation: softBounce 0.8s ease-in-out;
+}
+
+/* クールダウン中は操作無効＆半透明 */
+.iconButton.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* リップル（波紋） */
+.iconButton .ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20%;
+  height: 20%;
+  border-radius: 50%;
+  border: 0.5vw solid var(--main-color);
+  opacity: 0.7;
+  animation: rippleExpand 0.8s ease-out forwards;
+  pointer-events: none;
+}
+
+/* リップルの2発目タイミングずらし */
+.iconButton .ripple.delay {
+  animation-delay: 0.15s;
+}
+
+/* 押した画像が放射状に飛ぶ層のラッパー */
+.particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* 放射する1つ1つのパーティクル（中に画像を含む） */
+.particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6.4vw;
+  height: 6.4vw;
+  transform: translate(-50%, -50%);
+  animation: burst 0.8s ease-out forwards;
+}
+
+/* パーティクル内の画像（塗り潰し） */
+.particleImg {
+  position: absolute;
+  inset: 0;
+}
+
+/* 10方向に飛ばすベクトルをnth-childで割り当て */
+.particle:nth-child(1) {
+  --tx: 0;
+  --ty: -18vw;
+}
+.particle:nth-child(2) {
+  --tx: 12vw;
+  --ty: -12vw;
+}
+.particle:nth-child(3) {
+  --tx: 18vw;
+  --ty: 0;
+}
+.particle:nth-child(4) {
+  --tx: 12vw;
+  --ty: 12vw;
+}
+.particle:nth-child(5) {
+  --tx: 0;
+  --ty: 18vw;
+}
+.particle:nth-child(6) {
+  --tx: -12vw;
+  --ty: 12vw;
+}
+.particle:nth-child(7) {
+  --tx: -18vw;
+  --ty: 0;
+}
+.particle:nth-child(8) {
+  --tx: -12vw;
+  --ty: -12vw;
+}
+.particle:nth-child(9) {
+  --tx: 8vw;
+  --ty: -16vw;
+}
+.particle:nth-child(10) {
+  --tx: -8vw;
+  --ty: 16vw;
+}
+
+/* 柔らかいバウンスのアニメーション */
 @keyframes softBounce {
   0% {
     transform: scale(1, 0.8);
@@ -84,5 +190,33 @@
   }
   100% {
     transform: scale(1, 0.8);
+  }
+}
+
+/* リップル拡大のアニメーション */
+@keyframes rippleExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+/* パーティクルが放射して消えるアニメーション */
+@keyframes burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty)))
+      scale(0.6);
+    opacity: 0;
   }
 }
