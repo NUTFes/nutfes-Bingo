@@ -175,19 +175,17 @@ const Layout = (props: LayoutProps) => {
   } = useSurveyState(surveyEvent, hasShownSurvey, setHasShownSurvey);
 
   // スタンプ押下時の送信処理（短いクールダウンで二重送信を防止）
-  const handleReactionClick = async (name: string) => {
+  const handleReactionClick = (name: string) => {
     if (isStampSending) return;
-    try {
-      setActiveStampName(name);
-      setIsStampSending(true);
-      await createStampRecord({ variables: { name } });
-    } finally {
-      // 押下アニメの体感時間に合わせて解除（約0.8秒）
-      setTimeout(() => {
-        setIsStampSending(false);
-        setActiveStampName(null);
-      }, 800);
-    }
+    setActiveStampName(name);
+    setIsStampSending(true);
+    // 結果に関わらず固定時間で解除するためawait/エラーハンドリングは行わない
+    void createStampRecord({ variables: { name } });
+    // 押下アニメの体感時間に合わせて解除（約0.8秒）
+    setTimeout(() => {
+      setIsStampSending(false);
+      setActiveStampName(null);
+    }, 800);
   };
 
   // 設定内のアンケート回答ボタンの処理
