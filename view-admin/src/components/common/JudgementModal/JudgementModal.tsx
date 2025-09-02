@@ -136,7 +136,6 @@ const JudgementModal = ({
   };
 
   const resetAll = () => {
-    finalizePendingInput(true);
     setBingoCard(createEmptyBingoCard());
     setSelectedCell({ row: 0, col: 0 });
     setInputValue("");
