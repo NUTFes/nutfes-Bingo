@@ -104,7 +104,7 @@ const Layout = (props: LayoutProps) => {
 
   const [mainColor, setMainColor] = useState(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
   const [subColor, setSubColor] = useState(COLOR_PRESETS.DEFAULT_SUB_COLOR);
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
@@ -154,7 +154,8 @@ const Layout = (props: LayoutProps) => {
     if (storedDarkMode !== null) {
       setIsDarkMode(storedDarkMode === "true");
     } else {
-      localStorage.setItem("isDarkMode", "false");
+      localStorage.setItem("isDarkMode", "true");
+      setIsDarkMode(true);
     }
   }, []);
 
