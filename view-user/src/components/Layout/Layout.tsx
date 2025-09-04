@@ -173,6 +173,7 @@ const Layout = (props: LayoutProps) => {
     const backgroundColor = isDarkMode ? "#2C252F" : "#FFFFFF";
     const numberAccentColor = isDarkMode ? "#1a171e" : subColor;
     const footerBorderColor = isDarkMode ? "var(--main-color)" : "#000000";
+    const navTopShadowColor = isDarkMode ? "var(--main-color)" : "transparent";
     document.documentElement.style.setProperty(
       "--background-color",
       backgroundColor,
@@ -184,6 +185,10 @@ const Layout = (props: LayoutProps) => {
     document.documentElement.style.setProperty(
       "--footer-border-color",
       footerBorderColor,
+    );
+    document.documentElement.style.setProperty(
+      "--nav-top-shadow-color",
+      navTopShadowColor,
     );
     const metaTheme = document.querySelector(
       'meta[name="theme-color"]',

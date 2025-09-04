@@ -7,8 +7,9 @@
   width: 100%;
   padding: 3.125vw 6.25vw;
   background-color: var(--background-color);
-  border-top: 0.6vw solid var(--footer-border-color);
-  box-shadow: 0 -0.625vw 3.125vw rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 -0.625vw 3.125vw 0 var(--nav-top-shadow-color, transparent),
+    0 -0.625vw 3.125vw rgba(0, 0, 0, 0.1);
 }
 
 .center {
