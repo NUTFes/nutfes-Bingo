@@ -175,6 +175,7 @@ const Layout = (props: LayoutProps) => {
     const numberAccentColor = isDarkMode ? "#1a171e" : subColor;
     const footerBorderColor = isDarkMode ? "var(--main-color)" : "#000000";
     const navTopShadowColor = isDarkMode ? "var(--main-color)" : "transparent";
+    const helpBgColor = isDarkMode ? backgroundColor : "var(--sub-color)";
     document.documentElement.style.setProperty(
       "--background-color",
       backgroundColor,
@@ -191,6 +192,7 @@ const Layout = (props: LayoutProps) => {
       "--nav-top-shadow-color",
       navTopShadowColor,
     );
+    document.documentElement.style.setProperty("--help-bg-color", helpBgColor);
     const metaTheme = document.querySelector(
       'meta[name="theme-color"]',
     ) as HTMLMetaElement | null;

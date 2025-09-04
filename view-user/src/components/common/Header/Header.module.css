@@ -43,5 +43,5 @@
   border-color: var(--main-color) !important;
   text-shadow: none !important;
   color: var(--main-color) !important;
-  background-color: var(--sub-color) !important;
+  background-color: var(--help-bg-color, var(--sub-color)) !important;
 }
