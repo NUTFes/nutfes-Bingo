@@ -60,7 +60,6 @@ const Page: NextPage = () => {
     }
   }, [data]);
 
-
   useEffect(() => {
     updateBingoNumbers();
   }, [updateBingoNumbers]);
