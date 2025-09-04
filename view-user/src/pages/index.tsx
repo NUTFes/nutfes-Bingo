@@ -7,6 +7,8 @@ import { SubscribeListNumbersDocument } from "@/types/graphql";
 import type { SubscribeListNumbersSubscription } from "@/types/graphql";
 import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
 import { ja, en } from "@/locales";
+import { useRecoilValue } from "recoil";
+import { languageState } from "@/state/language";
 
 type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
 
@@ -37,7 +39,7 @@ const getDisplayBingoNumbers = (
 
 const Page: NextPage = () => {
   const { pathname: pageName, locale } = useRouter();
-  const [language, setLanguage] = useState<string>(locale || "ja");
+  const language = useRecoilValue(languageState);
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
   const { data, loading } = useSubscription(SubscribeListNumbersDocument);
   const t = locale === "ja" ? ja : en;
@@ -58,17 +60,10 @@ const Page: NextPage = () => {
     }
   }, [data]);
 
-  const updateLanguage = useCallback(() => {
-    setLanguage(locale || "ja");
-  }, [locale]);
 
   useEffect(() => {
     updateBingoNumbers();
   }, [updateBingoNumbers]);
-
-  useEffect(() => {
-    updateLanguage();
-  }, [updateLanguage]);
 
   const displayBingoNumbers = getDisplayBingoNumbers(
     isSortedAscending,
@@ -82,8 +77,6 @@ const Page: NextPage = () => {
         pageName={pageName}
         isSortedAscending={isSortedAscending}
         setIsSortedAscending={setIsSortedAscending}
-        language={language}
-        setLanguage={setLanguage}
       >
         <div className={styles.numberCardLarge}>
           {!isSortedAscending && displayBingoNumbers.large && (

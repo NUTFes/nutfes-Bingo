@@ -1,6 +1,6 @@
 import { useLazyQuery, useMutation, useSubscription } from "@apollo/client";
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import { hasShownSurveyState } from "@/state/survey";
 import { useRouter } from "next/router";
 import styles from "./Layout.module.css";
@@ -33,6 +33,7 @@ import type {
   GetOneLatestReachLogQuery,
 } from "@/types/graphql";
 import { ja, en } from "@/locales";
+import { languageState } from "@/state/language";
 import { TwitterPicker } from "react-color";
 import { useSurveyState } from "@/hooks/useSurveyState";
 
@@ -81,13 +82,12 @@ interface LayoutProps {
   pageName: string;
   isSortedAscending?: boolean;
   setIsSortedAscending?: (value: boolean) => void;
-  language?: string;
-  setLanguage?: (value: string) => void;
 }
 
 const Layout = (props: LayoutProps) => {
   const router = useRouter();
-  const t = props.language === "ja" ? ja : en;
+  const language = useRecoilValue(languageState);
+  const t = language === "ja" ? ja : en;
 
   const [isReactionModalOpen, setIsReactionModalOpen] =
     useState<boolean>(false);
@@ -144,12 +144,12 @@ const Layout = (props: LayoutProps) => {
     const storedSortOrder = localStorage.getItem("isSortedAscending");
     if (storedSortOrder !== null) {
       const isSortedAscending = storedSortOrder === "true";
-      props.setIsSortedAscending?.(isSortedAscending);
+      setIsSortedAscending?.(isSortedAscending);
       setIsSortOrderActive(isSortedAscending);
     } else {
       localStorage.setItem("isSortedAscending", "false");
     }
-  }, []);
+  }, [setIsSortedAscending]);
 
   // 初期設定を適用
   useEffect(() => {
@@ -210,7 +210,7 @@ const Layout = (props: LayoutProps) => {
   };
 
   const toggleLanguage = () => {
-    const newLocale = props.language === "ja" ? "en" : "ja";
+    const newLocale = language === "ja" ? "en" : "ja";
     router.push(router.pathname, router.asPath, { locale: newLocale });
   };
 
@@ -297,10 +297,7 @@ const Layout = (props: LayoutProps) => {
           )}
           <div>
             <p>{t.settingsModal.languageSelection}</p>
-            <ToggleButton
-              isActive={props.language !== "ja"}
-              onClick={toggleLanguage}
-            >
+            <ToggleButton isActive={language !== "ja"} onClick={toggleLanguage}>
               <span>{t.settingsModal.japanese}</span>
               <span>{t.settingsModal.english}</span>
             </ToggleButton>

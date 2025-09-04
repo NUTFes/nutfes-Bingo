@@ -3,6 +3,7 @@ import { PrizeCardList, Loading, Layout } from "@/components";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { ja, en } from "@/locales";
+import { useRecoilState } from "recoil";
 import { useQuery, useSubscription } from "@apollo/client";
 import {
   GetListPrizesDocument,
@@ -12,14 +13,12 @@ import type {
   GetListPrizesQuery,
   SubscribeListPrizesIsWonSubscription,
 } from "@/types/graphql";
-import { useRecoilState } from "recoil";
 import { bingoPrizeState } from "../../Atom/atom";
 
 const Page: NextPage = () => {
   const { pathname: pageName, locale } = useRouter();
   const t = locale === "ja" ? ja : en;
   const [bingoPrize, setBingoPrize] = useRecoilState(bingoPrizeState);
-  const [language, setLanguage] = useState<string>(locale || "ja");
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
 
   const { data: query, loading } = useQuery<GetListPrizesQuery>(
@@ -34,12 +33,12 @@ const Page: NextPage = () => {
     if (query) {
       setBingoPrize(query?.prizes);
     }
-  }, [query]);
+  }, [query, setBingoPrize]);
 
   useEffect(() => {
     if (subscription && subscription.prizes) {
-      setBingoPrize((prizes) =>
-        prizes.map((prize) => {
+      setBingoPrize((prizes: GetListPrizesQuery["prizes"]) =>
+        prizes.map((prize: GetListPrizesQuery["prizes"][0]) => {
           const updatePrize = subscription.prizes.find(
             (
               subscriptionPrize: SubscribeListPrizesIsWonSubscription["prizes"][0],
@@ -49,12 +48,7 @@ const Page: NextPage = () => {
         }),
       );
     }
-  }, [subscription]);
-
-  // ルーターのロケール変更に追従して言語状態を更新
-  useEffect(() => {
-    setLanguage(locale || "ja");
-  }, [locale]);
+  }, [subscription, setBingoPrize]);
 
   return (
     <>
@@ -63,8 +57,6 @@ const Page: NextPage = () => {
         pageName={pageName}
         isSortedAscending={isSortedAscending}
         setIsSortedAscending={setIsSortedAscending}
-        language={language}
-        setLanguage={setLanguage}
       >
         <PrizeCardList BingoPrize={bingoPrize} />
       </Layout>

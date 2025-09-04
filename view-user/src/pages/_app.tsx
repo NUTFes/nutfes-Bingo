@@ -1,10 +1,13 @@
 import "@/styles/reset.css";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 import { ApolloProvider, ApolloClient, InMemoryCache } from "@apollo/client";
 import { createClient } from "graphql-ws";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
-import { RecoilRoot } from "recoil";
+import { RecoilRoot, useSetRecoilState } from "recoil";
+import { languageState } from "@/state/language";
 import localFont from "next/font/local";
 
 const silom = localFont({
@@ -33,10 +36,22 @@ const client = new ApolloClient({
 
 // const inter = Inter({ subsets: ["latin"] });
 
+const LanguageSync: React.FC = () => {
+  const { locale } = useRouter();
+  const setLanguage = useSetRecoilState(languageState);
+
+  useEffect(() => {
+    setLanguage((locale as "ja" | "en") || "ja");
+  }, [locale, setLanguage]);
+
+  return null;
+};
+
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ApolloProvider client={client}>
       <RecoilRoot>
+        <LanguageSync />
         <main className={silom.className}>
           <Component {...pageProps} />
         </main>
