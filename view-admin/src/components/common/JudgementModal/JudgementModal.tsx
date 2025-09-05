@@ -29,8 +29,6 @@ const createEmptyBingoCard = (): BingoCard => {
 const isCenter = (row: number, col: number) =>
   row === CENTER.row && col === CENTER.col;
 
-const hasSelection = (pos: CellPos | null): pos is CellPos => pos !== null;
-
 const isCellSatisfied = (cell: string, drawnNumbers: number[]) => {
   if (cell === FREE) return true;
   if (cell === "") return false;
@@ -81,17 +79,20 @@ const ALL_LINES = generateAllLines();
 
 const cloneCard = (card: BingoCard): BingoCard => card.map((r) => r.slice());
 
-// 次に編集可能なセル（中央はスキップ）
-const getNextEditableCell = (from: CellPos): CellPos => {
-  const startIndex = from.row * BOARD_SIZE + from.col;
-  for (let step = 1; step <= BOARD_SIZE * BOARD_SIZE; step++) {
-    const idx = (startIndex + step) % (BOARD_SIZE * BOARD_SIZE);
-    const row = Math.floor(idx / BOARD_SIZE);
-    const col = idx % BOARD_SIZE;
-    if (!isCenter(row, col)) return { row, col };
-  }
-  return from;
-};
+const KEYPAD = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "消去",
+  "0",
+  "確定",
+] as const;
 
 interface JudgementModalProps {
   isOpened: boolean;
@@ -121,6 +122,19 @@ const JudgementModal = ({
     [bingoNumbers],
   );
 
+  const finalizePendingInput = (commitState: boolean): BingoCard => {
+    let working = bingoCard;
+    if (!hasJudged && inputValue && selectedCell) {
+      working = cloneCard(bingoCard);
+      working[selectedCell.row][selectedCell.col] = inputValue;
+      if (commitState) {
+        setBingoCard(working);
+        setInputValue("");
+      }
+    }
+    return working;
+  };
+
   const resetAll = () => {
     setBingoCard(createEmptyBingoCard());
     setSelectedCell({ row: 0, col: 0 });
@@ -134,27 +148,28 @@ const JudgementModal = ({
     resetAll();
   };
 
-  // セルに値を反映して次セルへ進む
+  // セルに値を反映
   const commitValueAt = (pos: CellPos, value: string) => {
-    if (!hasSelection(pos)) return;
     setBingoCard((prev) => {
       const next = cloneCard(prev);
       next[pos.row][pos.col] = value;
       return next;
     });
     setInputValue("");
-    setSelectedCell(getNextEditableCell(pos));
   };
 
   // ビンゴ判定
   const handleJudge = () => {
+    const workingCard = finalizePendingInput(false);
+
     const done: LineId[] = [];
     for (const line of ALL_LINES) {
       const ok = line.cells.every(({ row, col }) =>
-        isCellSatisfied(bingoCard[row][col], drawnNumbers),
+        isCellSatisfied(workingCard[row][col], drawnNumbers),
       );
       if (ok) done.push(line.id);
     }
+    setBingoCard(workingCard);
     setCompletedLines(done);
     setHasJudged(true);
     setSelectedCell(null);
@@ -163,25 +178,33 @@ const JudgementModal = ({
 
   const handleCellClick = (row: number, col: number) => {
     if (hasJudged || isCenter(row, col)) return;
+
+    if (
+      selectedCell &&
+      (selectedCell.row !== row || selectedCell.col !== col) &&
+      inputValue
+    ) {
+      commitValueAt(selectedCell, inputValue);
+    }
+
     setSelectedCell({ row, col });
     setInputValue(bingoCard[row][col]);
   };
 
   // 数字ボタン押下（0-9）
   const handleDigitClick = (digit: string) => {
-    if (hasJudged || !hasSelection(selectedCell)) return;
+    if (hasJudged || !selectedCell) return;
 
     const next = (inputValue + digit).slice(0, MAX_DIGIT_LENGTH);
     const n = Number.parseInt(next, 10);
     if (Number.isNaN(n) || n < 1 || n > MAX_BINGO_NUMBER) return;
 
     setInputValue(next);
-    if (next.length === MAX_DIGIT_LENGTH) commitValueAt(selectedCell, next);
   };
 
   // 削除
   const handleDelete = () => {
-    if (hasJudged || !hasSelection(selectedCell)) return;
+    if (hasJudged || !selectedCell) return;
     setInputValue("");
     setBingoCard((prev) => {
       const next = cloneCard(prev);
@@ -190,11 +213,10 @@ const JudgementModal = ({
     });
   };
 
-  // 確定（1桁でも確定可能にする）
-  const handleConfirm = () => {
-    if (!hasJudged && inputValue && hasSelection(selectedCell)) {
-      commitValueAt(selectedCell, inputValue);
-    }
+  // 確定ボタン押下
+  const handleCommit = () => {
+    if (hasJudged || !selectedCell || !inputValue) return;
+    commitValueAt(selectedCell, inputValue);
   };
 
   const handleBackgroundClick = (e: React.MouseEvent) => {
@@ -213,7 +235,7 @@ const JudgementModal = ({
   };
 
   const shouldHighlight = (row: number, col: number) => {
-    if (!hasJudged || completedLines.length === 0) return false;
+    if (!hasJudged) return false;
     return (
       completedLines.includes(getRowLineId(row)) ||
       completedLines.includes(getColLineId(col)) ||
@@ -223,8 +245,16 @@ const JudgementModal = ({
     );
   };
 
+  // キーボードイベント処理
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !hasJudged && selectedCell && inputValue) {
+      e.preventDefault();
+      handleCommit();
+    }
+  };
+
   const getCurrentInputDescription = () => {
-    if (hasJudged || !hasSelection(selectedCell)) return "";
+    if (hasJudged || !selectedCell) return "";
     if (isCenter(selectedCell.row, selectedCell.col)) return "FREE（中央マス）";
     if (inputValue) return `"${inputValue}" 入力中...`;
     const existing = bingoCard[selectedCell.row][selectedCell.col];
@@ -232,26 +262,11 @@ const JudgementModal = ({
     return "数字を入力してください";
   };
 
-  const keypad = [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "消去",
-    "0",
-    "確定",
-  ] as const;
-
   if (!isOpened) return null;
 
   return (
     <div className={styles.wrapper} onClick={handleBackgroundClick}>
-      <div className={styles.frame}>
+      <div className={styles.frame} onKeyDown={handleKeyDown} tabIndex={-1}>
         <button
           className={styles.btnClose}
           onClick={closeModal}
@@ -277,11 +292,7 @@ const JudgementModal = ({
                     {row.map((_, c) => {
                       const classNames = [styles.bingoCell];
                       if (isCenter(r, c)) classNames.push(styles.freeCell);
-                      if (
-                        !hasJudged &&
-                        isSelected(r, c) &&
-                        hasSelection(selectedCell)
-                      ) {
+                      if (!hasJudged && isSelected(r, c) && selectedCell) {
                         classNames.push(styles.activeCell);
                         if (inputValue) classNames.push(styles.typingCell);
                       }
@@ -323,23 +334,25 @@ const JudgementModal = ({
                 </div>
 
                 <div className={styles.numpad}>
-                  {keypad.map((label) => (
-                    <button
-                      key={label}
-                      onClick={() => {
-                        if (label === "消去") handleDelete();
-                        else if (label === "確定") handleConfirm();
-                        else handleDigitClick(label);
-                      }}
-                      className={`${styles.button} ${
-                        label === "消去" || label === "確定"
-                          ? styles.functionButton
-                          : ""
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+                  {KEYPAD.map((label) => {
+                    return (
+                      <button
+                        key={label}
+                        onClick={() => {
+                          if (label === "消去") handleDelete();
+                          else if (label === "確定") handleCommit();
+                          else handleDigitClick(label);
+                        }}
+                        className={`${styles.button} ${
+                          label === "消去" || label === "確定"
+                            ? styles.functionButton
+                            : ""
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div className={styles.actionButtonsContainer}>
