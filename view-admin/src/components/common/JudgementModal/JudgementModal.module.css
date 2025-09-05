@@ -282,7 +282,6 @@
 }
 
 .bingoCardContainer {
-  margin-bottom: 18px;
   width: 100%;
 }
 
@@ -591,11 +590,8 @@
 
 .currentInputDisplay {
   width: 100%;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 2px solid var(--main-color);
-  padding: 12px 16px;
+  padding: 0px 16px;
   border-radius: 12px;
-  margin-bottom: 16px;
   text-align: center;
   font-size: 1.1rem;
   font-weight: bold;
@@ -604,7 +600,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(155, 104, 159, 0.15);
   transition: all 0.3s ease;
 }
 
