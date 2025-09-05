@@ -13,6 +13,9 @@ export const ja = {
     ascending: "昇順",
     survey: "アンケート",
     answerSurvey: "アンケートに回答する",
+    theme: "テーマ",
+    light: "ライト",
+    dark: "ダーク",
   },
   helpCarousel: {
     close: "閉じる",

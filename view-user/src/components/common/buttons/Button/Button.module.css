@@ -5,7 +5,7 @@
   font-weight: 700;
   border-radius: 1vw;
   border: 1vw solid var(--main-color);
-  color: white;
+  color: var(--background-color);
   background-color: var(--main-color);
   width: 25vw;
   height: 5.6vh;
@@ -15,7 +15,7 @@
 
 .inversion {
   color: var(--main-color);
-  background-color: white;
+  background-color: var(--background-color);
 }
 
 .button:active {

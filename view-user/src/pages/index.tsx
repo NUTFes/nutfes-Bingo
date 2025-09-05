@@ -12,29 +12,34 @@ import { languageState } from "@/state/language";
 
 type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
 
-const sortedBingoNumbers = (bingoNumbers: BingoNumbers) => {
+const sortById = (bingoNumbers: BingoNumbers) => {
   return [...bingoNumbers].sort((a, b) => a.id - b.id);
+};
+
+const sortByNumber = (bingoNumbers: BingoNumbers) => {
+  return [...bingoNumbers].sort((a, b) => a.number - b.number);
 };
 
 // 最後に追加されたビンゴ番号（最新の番号）を取得
 const getLastBingoNumber = (bingoNumbers: BingoNumbers) => {
-  const sortedNumbers = sortedBingoNumbers(bingoNumbers);
-  return sortedNumbers[sortedNumbers.length - 1];
+  const sortedById = sortById(bingoNumbers);
+  return sortedById[sortedById.length - 1];
 };
 
 const getDisplayBingoNumbers = (
   isSortedAscending: boolean,
   bingoNumbers: BingoNumbers,
 ) => {
-  const sortedNumbers = sortedBingoNumbers(bingoNumbers);
-  const lastBingoNumber = getLastBingoNumber(bingoNumbers);
+  if (isSortedAscending) {
+    return { list: sortByNumber(bingoNumbers) };
+  }
 
-  return isSortedAscending
-    ? { list: sortedNumbers }
-    : {
-        large: lastBingoNumber,
-        list: sortedNumbers.slice(0, -1).reverse(),
-      };
+  const sortedById = sortById(bingoNumbers);
+  const lastBingoNumber = sortedById[sortedById.length - 1];
+  return {
+    large: lastBingoNumber,
+    list: sortedById.slice(0, -1).reverse(),
+  };
 };
 
 const Page: NextPage = () => {

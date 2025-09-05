@@ -1,8 +1,12 @@
 {
-    "eslint.workingDirectories": ["./frontend"],
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "markdownlint.config": {
-      "MD041": false
-    }
+  "eslint.workingDirectories": ["./frontend"],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSaveMode": "file",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "markdownlint.config": {
+    "MD041": false
   }
+}

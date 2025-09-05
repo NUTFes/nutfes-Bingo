@@ -104,10 +104,15 @@ const Layout = (props: LayoutProps) => {
 
   const [mainColor, setMainColor] = useState(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
   const [subColor, setSubColor] = useState(COLOR_PRESETS.DEFAULT_SUB_COLOR);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
   const position: string = isReachIconVisible ? "29%" : "50%";
+  // スタンプ送信中フラグ（クールダウン中の連打防止）
+  const [isStampSending, setIsStampSending] = useState<boolean>(false);
+  // 直近に押したスタンプ名（押下中エフェクトの対象）
+  const [activeStampName, setActiveStampName] = useState<string | null>(null);
   const [createStampRecord] = useMutation<
     CreateOneStampTriggerMutation,
     CreateOneStampTriggerMutationVariables
@@ -149,6 +154,14 @@ const Layout = (props: LayoutProps) => {
     } else {
       localStorage.setItem("isSortedAscending", "false");
     }
+
+    const storedDarkMode = localStorage.getItem("isDarkMode");
+    if (storedDarkMode !== null) {
+      setIsDarkMode(storedDarkMode === "true");
+    } else {
+      localStorage.setItem("isDarkMode", "true");
+      setIsDarkMode(true);
+    }
   }, [setIsSortedAscending]);
 
   // 初期設定を適用
@@ -161,6 +174,42 @@ const Layout = (props: LayoutProps) => {
     document.documentElement.style.setProperty("--sub-color", subColor);
   }, [isSortOrderActive, mainColor, subColor, setIsSortedAscending]);
 
+  // 背景色やテーマカラーを適用
+  useEffect(() => {
+    const backgroundColor = isDarkMode ? "#2C252F" : "#FFFFFF";
+    const numberAccentColor = isDarkMode ? "#1a171e" : subColor;
+    const footerBorderColor = isDarkMode ? "var(--main-color)" : "#000000";
+    const navTopShadowColor = isDarkMode ? "var(--main-color)" : "transparent";
+    const helpBgColor = isDarkMode ? backgroundColor : "var(--sub-color)";
+    document.documentElement.style.setProperty(
+      "--background-color",
+      backgroundColor,
+    );
+    document.documentElement.style.setProperty(
+      "--number-accent-color",
+      numberAccentColor,
+    );
+    document.documentElement.style.setProperty(
+      "--footer-border-color",
+      footerBorderColor,
+    );
+    document.documentElement.style.setProperty(
+      "--nav-top-shadow-color",
+      navTopShadowColor,
+    );
+    document.documentElement.style.setProperty("--help-bg-color", helpBgColor);
+    const metaTheme = document.querySelector(
+      'meta[name="theme-color"]',
+    ) as HTMLMetaElement | null;
+    if (metaTheme) metaTheme.content = backgroundColor;
+  }, [isDarkMode, subColor]);
+
+  const toggleDarkMode = () => {
+    const next = !isDarkMode;
+    setIsDarkMode(next);
+    localStorage.setItem("isDarkMode", next.toString());
+  };
+
   // アンケート状態管理（カスタムフック）
   const {
     surveyUrl,
@@ -170,9 +219,18 @@ const Layout = (props: LayoutProps) => {
     isSurveyActive,
   } = useSurveyState(surveyEvent, hasShownSurvey, setHasShownSurvey);
 
-  // リアクションアイコンがクリックされたときの処理
+  // スタンプ押下時の送信処理（短いクールダウンで二重送信を防止）
   const handleReactionClick = (name: string) => {
-    createStampRecord({ variables: { name } });
+    if (isStampSending) return;
+    setActiveStampName(name);
+    setIsStampSending(true);
+    // 結果に関わらず固定時間で解除するためawait/エラーハンドリングは行わない
+    void createStampRecord({ variables: { name } });
+    // 押下アニメの体感時間に合わせて解除（約0.8秒）
+    setTimeout(() => {
+      setIsStampSending(false);
+      setActiveStampName(null);
+    }, 800);
   };
 
   // 設定内のアンケート回答ボタンの処理
@@ -257,10 +315,13 @@ const Layout = (props: LayoutProps) => {
   return (
     <div>
       {isReactionModalOpen && (
+        // 押下中は全スタンプボタンを無効化し、押したスタンプのみエフェクト適用
         <ReactionStampModal
           position={position}
           height={navBarHeight}
           images={images}
+          disabled={isStampSending}
+          activeName={activeStampName || undefined}
           onClick={handleReactionClick}
         />
       )}
@@ -310,6 +371,13 @@ const Layout = (props: LayoutProps) => {
             >
               <span>{t.settingsModal.drawOrder}</span>
               <span>{t.settingsModal.ascending}</span>
+            </ToggleButton>
+          </div>
+          <div>
+            <p>{t.settingsModal.theme}</p>
+            <ToggleButton isActive={isDarkMode} onClick={toggleDarkMode}>
+              <span>{t.settingsModal.light}</span>
+              <span>{t.settingsModal.dark}</span>
             </ToggleButton>
           </div>
         </div>
