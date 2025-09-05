@@ -5,7 +5,9 @@ import {
   ApolloClient,
   InMemoryCache,
   HttpLink,
+  split,
 } from "@apollo/client";
+import { getMainDefinition } from "@apollo/client/utilities";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
 import { SessionProvider } from "next-auth/react";
@@ -25,9 +27,50 @@ const wsClient = createClient({
 // ヘッダーを含んだ websocket リンクを作成
 const wsLink = new GraphQLWsLink(wsClient);
 
+// HTTP リンク（query/mutation 用）: API_URI が未設定の場合は WS_API_URL から http(s) を推測してフォールバック
+const resolveHttpGraphqlUri = () => {
+  const apiBase = process.env.API_URI;
+  if (apiBase) return apiBase.replace(/\/$/, "") + "/v1/graphql";
+  const wsBase = process.env.WS_API_URL;
+  if (wsBase) {
+    try {
+      const u = new URL(wsBase);
+      u.protocol = u.protocol === "wss:" ? "https:" : "http:";
+      u.pathname = "/v1/graphql";
+      return u.toString();
+    } catch (_) {
+      // noop
+    }
+  }
+  console.error(
+    "[Apollo] API_URI が未設定で、WS_API_URL からのフォールバックにも失敗しました。/v1/graphql にフォールバックします。",
+  );
+  return "/v1/graphql";
+};
+
+const httpLink = new HttpLink({
+  uri: resolveHttpGraphqlUri(),
+  headers: {
+    "x-hasura-admin-secret": process.env.HASURA_GRAPHQL_ADMIN_SECRET as string,
+  },
+});
+
+// subscription は WS、それ以外は HTTP
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === "OperationDefinition" &&
+      (definition as any).operation === "subscription"
+    );
+  },
+  wsLink,
+  httpLink,
+);
+
 // Apollo client を作成
 const client = new ApolloClient({
-  link: wsLink,
+  link: splitLink,
   cache: new InMemoryCache(),
 });
 
