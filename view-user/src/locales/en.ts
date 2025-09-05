@@ -13,6 +13,9 @@ export const en = {
     ascending: "Ascending",
     survey: "Survey",
     answerSurvey: "Answer Survey",
+    theme: "Theme",
+    light: "Light",
+    dark: "Dark",
   },
   helpCarousel: {
     close: "close",
