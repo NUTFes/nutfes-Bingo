@@ -12,6 +12,7 @@
 }
 
 .content {
+  position: relative;
   min-width: 87.5vw;
   min-height: 58.1vw;
   max-height: 70vh;
