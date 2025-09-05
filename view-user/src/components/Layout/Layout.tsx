@@ -109,6 +109,10 @@ const Layout = (props: LayoutProps) => {
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const navRef = useRef<HTMLDivElement>(null);
   const position: string = isReachIconVisible ? "29%" : "50%";
+  // スタンプ送信中フラグ（クールダウン中の連打防止）
+  const [isStampSending, setIsStampSending] = useState<boolean>(false);
+  // 直近に押したスタンプ名（押下中エフェクトの対象）
+  const [activeStampName, setActiveStampName] = useState<string | null>(null);
   const [createStampRecord] = useMutation<
     CreateOneStampTriggerMutation,
     CreateOneStampTriggerMutationVariables
@@ -145,6 +149,7 @@ const Layout = (props: LayoutProps) => {
     const storedSortOrder = localStorage.getItem("isSortedAscending");
     if (storedSortOrder !== null) {
       const isSortedAscending = storedSortOrder === "true";
+      setIsSortedAscending?.(isSortedAscending);
       setIsSortOrderActive(isSortedAscending);
     } else {
       localStorage.setItem("isSortedAscending", "false");
@@ -157,7 +162,7 @@ const Layout = (props: LayoutProps) => {
       localStorage.setItem("isDarkMode", "true");
       setIsDarkMode(true);
     }
-  }, []);
+  }, [setIsSortedAscending]);
 
   // 初期設定を適用
   useEffect(() => {
@@ -214,9 +219,18 @@ const Layout = (props: LayoutProps) => {
     isSurveyActive,
   } = useSurveyState(surveyEvent, hasShownSurvey, setHasShownSurvey);
 
-  // リアクションアイコンがクリックされたときの処理
+  // スタンプ押下時の送信処理（短いクールダウンで二重送信を防止）
   const handleReactionClick = (name: string) => {
-    createStampRecord({ variables: { name } });
+    if (isStampSending) return;
+    setActiveStampName(name);
+    setIsStampSending(true);
+    // 結果に関わらず固定時間で解除するためawait/エラーハンドリングは行わない
+    void createStampRecord({ variables: { name } });
+    // 押下アニメの体感時間に合わせて解除（約0.8秒）
+    setTimeout(() => {
+      setIsStampSending(false);
+      setActiveStampName(null);
+    }, 800);
   };
 
   // 設定内のアンケート回答ボタンの処理
@@ -301,10 +315,13 @@ const Layout = (props: LayoutProps) => {
   return (
     <div>
       {isReactionModalOpen && (
+        // 押下中は全スタンプボタンを無効化し、押したスタンプのみエフェクト適用
         <ReactionStampModal
           position={position}
           height={navBarHeight}
           images={images}
+          disabled={isStampSending}
+          activeName={activeStampName || undefined}
           onClick={handleReactionClick}
         />
       )}
