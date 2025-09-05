@@ -21,13 +21,23 @@
   left: 10%;
 }
 
-.icon path {
-  fill: var(--background-color);
+.icon path,
+.icon circle,
+.icon rect,
+.icon polygon {
+  fill: var(--background-color) !important;
+}
+
+/* ダーク/ライトで内側塗りを切替（SVGに背景色が使われる前提） */
+.reachIcon {
+  --reach-icon-fill: var(--background-color);
 }
 
 .inverted path,
-.inverted circle {
-  fill: var(--main-color);
+.inverted circle,
+.inverted rect,
+.inverted polygon {
+  fill: var(--main-color) !important;
 }
 
 .text {
@@ -38,6 +48,7 @@
   font-family: "Noto Sans Jp";
   margin-left: 13.5vw;
   margin-right: 2vw;
+  color: var(--background-color);
 }
 
 .color_inversion {

@@ -2,7 +2,11 @@
   width: 20vw;
   height: 20vw;
   border: 1.25vw solid var(--main-color);
-  background: linear-gradient(135deg, var(--background-color) 50%, var(--sub-color) 51%);
+  background: linear-gradient(
+    135deg,
+    var(--background-color) 50%,
+    var(--number-accent-color) 51%
+  );
   border-radius: 3.125vw;
   box-sizing: border-box;
   box-shadow: 0.9375vw 0.9375vw 0px var(--main-color);
@@ -10,6 +14,10 @@
   justify-content: center;
   align-items: center;
   font-size: 11.25vw;
+  color: var(--main-color);
+}
+
+.container p {
   color: var(--main-color);
 }
 @media (min-width: 1024px) {
