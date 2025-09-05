@@ -1,9 +1,14 @@
 import React, { useMemo, useState } from "react";
+import { useLazyQuery } from "@apollo/client";
 import styles from "./JudgementModal.module.css";
 import { RxCrossCircled, RxCross1 } from "react-icons/rx";
 import { GiPartyPopper } from "react-icons/gi";
 
-import { SubscribeListNumbersSubscription } from "@/type/graphql";
+import {
+  SubscribeListNumbersSubscription,
+  GetListNumbersDocument,
+  GetListNumbersQuery,
+} from "@/type/graphql";
 
 type BingoCard = string[][];
 type CellPos = { row: number; col: number };
@@ -114,6 +119,11 @@ const JudgementModal = ({
   const [inputValue, setInputValue] = useState("");
   const [hasJudged, setHasJudged] = useState(false);
   const [completedLines, setCompletedLines] = useState<LineId[]>([]);
+  // network-only: キャッシュを参照せず、毎回ネットワークから取得。取得結果はキャッシュに書き込み
+  const [getLatestNumbers, { loading: isGettingLatest }] =
+    useLazyQuery<GetListNumbersQuery>(GetListNumbersDocument, {
+      fetchPolicy: "network-only",
+    });
 
   // 抽選済みの数字一覧
   const drawnNumbers = useMemo(
@@ -147,11 +157,25 @@ const JudgementModal = ({
   };
 
   // ビンゴ判定
-  const handleJudge = () => {
+  const handleJudge = async () => {
+    let numbersForJudgement = drawnNumbers;
+    try {
+      const res = await getLatestNumbers();
+      const latest = res.data?.numbers ?? [];
+      if (latest.length > 0) {
+        numbersForJudgement = latest.map((n) => n.number);
+      }
+    } catch (_) {
+      // 取得失敗時は subscription 由来の値でフォールバック
+      console.warn(
+        "[JudgementModal] 最新番号の取得に失敗したため、subscriptionの値で判定を継続します。",
+      );
+    }
+
     const done: LineId[] = [];
     for (const line of ALL_LINES) {
       const ok = line.cells.every(({ row, col }) =>
-        isCellSatisfied(bingoCard[row][col], drawnNumbers),
+        isCellSatisfied(bingoCard[row][col], numbersForJudgement),
       );
       if (ok) done.push(line.id);
     }
@@ -343,7 +367,11 @@ const JudgementModal = ({
                 </div>
 
                 <div className={styles.actionButtonsContainer}>
-                  <button onClick={handleJudge} className={styles.submitButton}>
+                  <button
+                    onClick={handleJudge}
+                    className={styles.submitButton}
+                    disabled={isGettingLatest}
+                  >
                     ビンゴ判定
                   </button>
                   <button onClick={resetAll} className={styles.resetButton}>
