@@ -197,17 +197,16 @@
 .loginContainer {
   height: 100vh;
   width: 100vw;
-  background-color: aliceblue;
-  background-image: white;
+  background: radial-gradient(circle at 20% 20%, #ffffff, #e5f1ff 70%);
+  display: flex;
+  flex-direction: column;
 }
 
 .loginButton {
-  position: fixed;
-  width: 100vw;
-  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 2rem;
 }
 
 .btnOpen {
@@ -246,4 +245,116 @@
 
 .img {
   max-width: 100vw;
+}
+
+.loginFormWrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem 4rem;
+}
+
+.loginFormBox {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffffcc;
+  backdrop-filter: blur(6px);
+  border: 1px solid #cfd9e4;
+  border-radius: 1rem;
+  padding: 2.4rem 2.2rem 2rem;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 2px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  animation: fadeIn 0.4s ease;
+}
+
+.loginFormBox h2 {
+  margin: 0 0 0.2rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: #222;
+}
+
+.loginFormField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.loginFormField input {
+  border: 2px solid #b7c6d6;
+  background: #fff;
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.55rem;
+  font-size: 0.95rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  color: #222; /* ensure text is visible */
+  font-weight: 600;
+}
+
+.loginFormField input::placeholder {
+  color: #9aa6b5; /* subtle contrast */
+  opacity: 1;
+}
+
+.loginFormField input:focus {
+  outline: none;
+  border-color: var(--main-color);
+  box-shadow: 0 0 0 3px rgba(66, 139, 202, 0.25);
+}
+
+.loginFormActions {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.loginHint {
+  font-size: 0.7rem;
+  text-align: center;
+  color: #666;
+  line-height: 1.2;
+}
+
+.loginDivider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, #cfd9e4, transparent);
+  margin: 0.2rem 0 0.4rem;
+}
+
+.loginFooterNote {
+  margin-top: 0.6rem;
+  font-size: 0.65rem;
+  color: #888;
+  text-align: center;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 560px) {
+  .loginFormBox {
+    padding: 2rem 1.4rem 1.6rem;
+  }
+  .loginFormBox h2 {
+    font-size: 1.25rem;
+  }
 }

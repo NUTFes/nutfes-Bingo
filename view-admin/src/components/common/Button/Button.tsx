@@ -7,6 +7,8 @@ interface ButtonProps {
   size: string;
   shape: string;
   onClick: () => void;
+  disabled?: boolean;
+  fullWidth?: boolean;
 }
 const Button = (props: ButtonProps) => {
   return (
@@ -17,8 +19,11 @@ const Button = (props: ButtonProps) => {
             styles.primary,
             styles[props.size],
             styles[props.shape],
+            props.fullWidth && styles.fullWidth,
+            props.disabled && styles.disabled,
           )}
           onClick={props.onClick}
+          disabled={props.disabled}
         >
           {props.children}
         </button>
