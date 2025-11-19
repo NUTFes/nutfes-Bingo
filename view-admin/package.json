@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.7.17",
+    "@aws-sdk/client-s3": "^3.709.0",
     "@types/formidable": "^3.4.5",
     "@types/node": "20.3.1",
     "@types/react": "18.2.13",

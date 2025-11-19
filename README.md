@@ -18,23 +18,48 @@
 
 ## セットアップ
 
+### オブジェクトストレージ
+
+このアプリケーションは、景品画像の管理に RustFS という高性能な S3 互換オブジェクトストレージシステムを使用しています。
+
 ### 基本的なセットアップ
+
+完全なセットアップ（RustFS の初期化を含む）:
 
 ```bash
 make setup
 ```
 
-### MinIO 認証情報を新規生成してセットアップ
+これにより以下が実行されます:
+1. すべての Docker コンテナを起動（RustFS を含む）
+2. 必要なバケットと権限を持つ RustFS を初期化
+3. サンプル景品画像をシード
+
+### 手動セットアップ
+
+個別にセットアップする場合:
 
 ```bash
-make setup-with-new-keys
+# サービスを起動
+docker compose up -d
+
+# RustFS を初期化
+make setup-rustfs
+
+# 設定を適用するため再起動
+docker compose restart
+
+# 画像をシード
+make seed-images
 ```
 
-### MinIO 認証情報のみ生成
+### RustFS コンソールへのアクセス
 
-```bash
-make generate-minio-keys
-```
+RustFS Web コンソールは http://localhost:9001 で利用できます
+
+デフォルトの認証情報は `settings/admin.env` で定義されています:
+- ユーザー名: admin
+- パスワード: （env ファイルの RUSTFS_ROOT_PASSWORD を参照）
 
 ## 実装メモ
 
@@ -43,13 +68,19 @@ make generate-minio-keys
   - `chown +x -R .`　で実行権限を与える
   - `exit`でそのコンテナから出る
 
-### MinIO 認証情報について
+### オブジェクトストレージについて
 
-- MinIO のアクセスキーとシークレットキーは `api/seeds/generate_minio_credentials.sh` で自動生成可能
-- GUI 操作不要で、mc コマンドを使用して認証情報を生成・更新
-- 環境変数ファイル (`settings/bingo.env`, `settings/admin.env`) は自動的にバックアップ・更新される
-- **バケット作成も認証情報生成時に自動実行される**
+- RustFS は S3 互換の API を提供し、AWS SDK v3 を使用してアクセスされます
+- 認証情報は `api/seeds/setup_rustfs.js` で自動生成されます
+- 環境変数ファイル (`settings/admin.env`, `settings/admin-prod.env`) は自動的に更新されます
+- バケット作成と公開読み取りポリシーの設定も自動的に行われます
 
 ### スクリプトの役割分担
-- `generate_minio_credentials.sh`: MinIO 環境セットアップ（認証情報生成 + バケット作成）
-- `seed_with_existing_images.sh`: データ投入のみ（画像アップロード + DB 登録）
+- `api/seeds/setup_rustfs.js`: RustFS 環境セットアップ（認証情報生成 + バケット作成）
+- `api/seeds/seed_images_rustfs.js`: データ投入のみ（画像アップロード）
+
+### レガシー MinIO コマンド
+
+以前の MinIO ベースのコマンドは非推奨となりました:
+- `make generate-minio-keys` → `make setup-rustfs` を使用してください
+- `make seed` → `make seed-images` を使用してください

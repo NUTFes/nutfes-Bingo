@@ -133,7 +133,7 @@ const PrizeEditModal = ({
     }
     if (initialBucketName && initialFileName) {
       setPreviewUrl(
-        `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${initialBucketName}/${initialFileName}`,
+        `${process.env.NEXT_PUBLIC_STORAGE_ENDPOINT}/${initialBucketName}/${initialFileName}`,
       );
     } else {
       setPreviewUrl("");

@@ -22,14 +22,22 @@ services:
     networks:
       - bingo-network
 
-  minio:
-    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
-    container_name: nutfes-minio-prod
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: nutfes-rustfs-prod
+    ports:
+      - "9000:9000"      # API port
+      - "9001:9001"      # Console port
     volumes:
-      - ./tmp/minio/prod-data:/data
-    command: "server /data --console-address :9001"
+      - rustfs-prod-data:/data
+    command: "rustfs /data"
     env_file:
       - ./settings/admin-prod.env
+    environment:
+      - RUSTFS_ROOT_USER=${MINIO_ROOT_USER}
+      - RUSTFS_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - RUSTFS_ACCESS_KEY=${MINIO_ROOT_USER}
+      - RUSTFS_SECRET_KEY=${MINIO_ROOT_PASSWORD}
     restart: unless-stopped
     networks:
       - bingo-network
@@ -99,6 +107,7 @@ services:
 
 volumes:
   db-prod-data:
+  rustfs-prod-data:
 
 networks:
   bingo-network:

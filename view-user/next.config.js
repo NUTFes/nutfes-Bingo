@@ -5,6 +5,7 @@ const nextConfig = {
     API_URI: process.env.API_URI,
     WS_API_URL: process.env.WS_API_URL,
     HASURA_GRAPHQL_ADMIN_SECRET: process.env.HASURA_GRAPHQL_ADMIN_SECRET,
+    NEXT_PUBLIC_STORAGE_ENDPOINT: process.env.NEXT_PUBLIC_STORAGE_ENDPOINT,
   },
   i18n: {
     locales: ["ja", "en"],
@@ -14,7 +15,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "minio",
+        hostname: "rustfs",
         port: "9000",
         pathname: "/bingo/**",
       },

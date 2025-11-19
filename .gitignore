@@ -5,3 +5,5 @@ settings/
 .env
 
 tmp/*
+
+node_modules/

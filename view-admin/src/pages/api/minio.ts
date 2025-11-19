@@ -1,7 +1,7 @@
+import type { NextApiRequest, NextApiResponse } from "next";
+import formidable from "formidable";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import fs from "fs";
-import formidable, { Fields, Files } from "formidable";
-import { Client } from "minio";
-import { NextApiRequest, NextApiResponse } from "next";
 
 export const config = {
   api: {
@@ -9,74 +9,63 @@ export const config = {
   },
 };
 
-const minioClient = new Client({
-  endPoint: process.env.NEXT_PUBLIC_ENDPOINT || "",
-  port: Number(process.env.NEXT_PUBLIC_PORT) || 9000,
-  accessKey: process.env.NEXT_PUBLIC_ACCESS_KEY || "",
-  secretKey: process.env.NEXT_PUBLIC_SECRET_KEY || "",
-  useSSL: false,
+// Initialize S3 client for RustFS
+const s3Client = new S3Client({
+  endpoint: `http://${process.env.NEXT_PUBLIC_ENDPOINT}:${process.env.NEXT_PUBLIC_PORT || 9000}`,
+  region: "us-east-1", // RustFS requires a region but doesn't validate it
+  credentials: {
+    accessKeyId: process.env.NEXT_PUBLIC_ACCESS_KEY || "",
+    secretAccessKey: process.env.NEXT_PUBLIC_SECRET_KEY || "",
+  },
+  forcePathStyle: true, // Required for S3-compatible services
 });
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse,
+  res: NextApiResponse
 ) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (req.method === "POST") {
-    const form = formidable();
+  const form = formidable({});
+  const bucketName = process.env.NEXT_PUBLIC_BUCKET_NAME || "bingo";
 
-    form.parse(req, async (err, fields: Fields, files: Files) => {
-      if (err) {
-        console.error("Error parsing form:", err);
-        return res.status(400).json({ message: "Form parsing error" });
-      }
+  try {
+    const [fields, files] = await form.parse(req);
+    const file = Array.isArray(files.file) ? files.file[0] : files.file;
 
-      const fileArray = Array.isArray(files.file) ? files.file : [files.file];
-      const file = fileArray[0];
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
-      if (!file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
+    const fileName = file.originalFilename || "unnamed";
+    // RustFS doesn't handle streams well, read file as buffer instead
+    const fileBuffer = fs.readFileSync(file.filepath);
 
-      const bucketName = "bingo";
-      const fileName = file.originalFilename;
-
-      if (!fileName) {
-        return res.status(400).json({ message: "file name is missing" });
-      }
-      if (!bucketName) {
-        return res.status(400).json({ message: "bucket name is missing" });
-      }
-
-      const mimetype = file.mimetype;
-      const metaData = {
-        "Content-Type": mimetype,
-      };
-
-      try {
-        // formidable で保存された一時ファイルをそのままアップロード
-        await minioClient.fPutObject(
-          bucketName,
-          fileName,
-          file.filepath,
-          metaData,
-        );
-        return res.status(200).json({ message: "Upload successful" });
-      } catch (uploadError) {
-        console.error("MinIO upload error:", uploadError);
-        return res.status(500).json({ message: String(uploadError) });
-      }
+    // Upload to RustFS using AWS SDK v3
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+      Body: fileBuffer,
+      ContentType: file.mimetype || "application/octet-stream",
     });
-  } else {
-    return res
-      .status(405)
-      .json({ message: `Method ${req.method} Not Allowed` });
+
+    await s3Client.send(command);
+
+    // Clean up temporary file
+    fs.unlinkSync(file.filepath);
+
+    return res.status(200).json({
+      message: "File uploaded successfully",
+      fileName,
+      bucketName,
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    return res.status(500).json({
+      error: "Upload failed",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 }

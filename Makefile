@@ -25,39 +25,50 @@ run-prod:
 	sleep 15
 	make db-apply-prod
 
-# MinIO credentials management for production
-generate-minio-keys-prod:
-	cd api/seeds && ./generate_minio_credentials.sh prod
+# RustFS setup for production
+setup-rustfs-prod:
+	cd api && npm install && npm run setup-rustfs-prod
 
-# Seed data commands for production
-seed-prod:
-	cd api/seeds && ./seed_with_existing_images.sh prod
+# Seed images to RustFS for production
+seed-images-prod:
+	cd api && npm run seed-images-prod
 
-# Complete setup for production with new MinIO credentials and seed data
+# Complete setup for production with RustFS initialization and seed data
 setup-prod:
 	make run-prod
-	make generate-minio-keys-prod
+	sleep 5
+	make setup-rustfs-prod
 	@echo "🔄 Restarting containers to apply new credentials..."
 	docker compose -f docker-compose.prod.yml restart
 	sleep 15
-	make seed-prod
+	make seed-images-prod
 
-# MinIO credentials management
-generate-minio-keys:
-	cd api/seeds && ./generate_minio_credentials.sh
+# RustFS setup for development
+setup-rustfs:
+	cd api && npm install && npm run setup-rustfs
 
-# Seed data commands
-seed:
-	cd api/seeds && ./seed_with_existing_images.sh
+# Seed images to RustFS for development
+seed-images:
+	cd api && npm run seed-images
 
-# Complete setup with new MinIO credentials and seed data
+# Complete setup with RustFS initialization and seed data
 setup:
 	make run
-	make generate-minio-keys
+	sleep 5
+	make setup-rustfs
 	@echo "🔄 Restarting containers to apply new credentials..."
 	docker compose restart
 	sleep 10
-	make seed
+	make seed-images
+
+# Legacy MinIO commands (deprecated, kept for reference)
+generate-minio-keys:
+	@echo "⚠️  This command is deprecated. Use 'make setup-rustfs' instead."
+	cd api/seeds && ./generate_minio_credentials.sh
+
+seed:
+	@echo "⚠️  This command is deprecated. Use 'make seed-images' instead."
+	cd api/seeds && ./seed_with_existing_images.sh
 
 codegen/user:
 	docker compose run --rm view-user npm run codegen

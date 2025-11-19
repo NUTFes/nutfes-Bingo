@@ -71,7 +71,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
   const getImageUrl = (prize: GetListPrizesQuery["prizes"][number]) => {
     if (!prize.image) return "";
     const { bucketName, fileName } = prize.image;
-    return `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${bucketName}/${fileName}`;
+    return `${process.env.NEXT_PUBLIC_STORAGE_ENDPOINT}/${bucketName}/${fileName}`;
   };
 
   const handleToggleChange = (id: number, isWon: boolean) => {
