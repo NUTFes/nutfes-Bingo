@@ -33,7 +33,7 @@ services:
       - ./settings/bingo.env
 
   view-user:
-    image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
+    image: node:25-alpine
     container_name: "view-user"
     volumes:
       - ./view-user:/app
@@ -47,7 +47,7 @@ services:
     tty: true
 
   view-admin:
-    image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
+    image: node:25-alpine
     container_name: "view-admin"
     volumes:
       - ./view-admin:/app
