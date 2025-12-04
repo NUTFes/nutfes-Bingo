@@ -1,11 +1,11 @@
-import { SVGProps } from "react";
+import React, { SVGProps } from "react";
 
 const Loading = ({
   width = 100,
   height = 100,
   color = "purple",
   dur = "0.75s",
-}: SVGProps<SVGElement>): JSX.Element => {
+}: SVGProps<SVGElement>): React.JSX.Element => {
   return (
     <div
       style={{

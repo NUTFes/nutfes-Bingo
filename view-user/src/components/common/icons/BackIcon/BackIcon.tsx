@@ -2,7 +2,7 @@ import React from "react";
 import { IconFramework } from "@/components/common";
 import { TiArrowBack } from "react-icons/ti";
 import { useRouter } from "next/router";
-import { useRecoilValue } from "recoil";
+import { useAtomValue } from "jotai";
 import { languageState } from "@/state/language";
 
 interface BackIconProps {
@@ -11,7 +11,7 @@ interface BackIconProps {
 
 const BackIcon = (props: BackIconProps) => {
   const router = useRouter();
-  const language = useRecoilValue(languageState);
+  const language = useAtomValue(languageState);
 
   const handleClick = () => {
     if (typeof window !== "undefined") {

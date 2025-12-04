@@ -1,6 +1,3 @@
-import { atom } from "recoil";
+import { atom } from "jotai";
 
-export const hasShownSurveyState = atom<boolean>({
-  key: "hasShownSurvey",
-  default: false,
-});
+export const hasShownSurveyState = atom<boolean>(false);

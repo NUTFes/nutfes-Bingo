@@ -7,7 +7,7 @@ import { SubscribeListNumbersDocument } from "@/types/graphql";
 import type { SubscribeListNumbersSubscription } from "@/types/graphql";
 import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
 import { ja, en } from "@/locales";
-import { useRecoilValue } from "recoil";
+import { useAtomValue } from "jotai";
 import { languageState } from "@/state/language";
 
 type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
@@ -44,7 +44,7 @@ const getDisplayBingoNumbers = (
 
 const Page: NextPage = () => {
   const { pathname: pageName, locale } = useRouter();
-  const language = useRecoilValue(languageState);
+  const language = useAtomValue(languageState);
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
   const { data, loading } = useSubscription(SubscribeListNumbersDocument);
   const t = locale === "ja" ? ja : en;

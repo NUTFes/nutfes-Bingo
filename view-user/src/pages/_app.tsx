@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 import { ApolloProvider, ApolloClient, InMemoryCache } from "@apollo/client";
 import { createClient } from "graphql-ws";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
-import { RecoilRoot, useSetRecoilState } from "recoil";
+import { Provider, useSetAtom } from "jotai";
 import { languageState } from "@/state/language";
 import localFont from "next/font/local";
 
@@ -38,7 +38,7 @@ const client = new ApolloClient({
 
 const LanguageSync: React.FC = () => {
   const { locale } = useRouter();
-  const setLanguage = useSetRecoilState(languageState);
+  const setLanguage = useSetAtom(languageState);
 
   useEffect(() => {
     setLanguage((locale as "ja" | "en") || "ja");
@@ -50,12 +50,12 @@ const LanguageSync: React.FC = () => {
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ApolloProvider client={client}>
-      <RecoilRoot>
+      <Provider>
         <LanguageSync />
         <main className={silom.className}>
           <Component {...pageProps} />
         </main>
-      </RecoilRoot>
+      </Provider>
     </ApolloProvider>
   );
 }

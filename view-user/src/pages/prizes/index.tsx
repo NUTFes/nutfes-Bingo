@@ -3,7 +3,7 @@ import { PrizeCardList, Loading, Layout } from "@/components";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { ja, en } from "@/locales";
-import { useRecoilState } from "recoil";
+import { useAtom } from "jotai";
 import { useQuery, useSubscription } from "@apollo/client";
 import {
   GetListPrizesDocument,
@@ -18,7 +18,7 @@ import { bingoPrizeState } from "../../Atom/atom";
 const Page: NextPage = () => {
   const { pathname: pageName, locale } = useRouter();
   const t = locale === "ja" ? ja : en;
-  const [bingoPrize, setBingoPrize] = useRecoilState(bingoPrizeState);
+  const [bingoPrize, setBingoPrize] = useAtom(bingoPrizeState);
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
 
   const { data: query, loading } = useQuery<GetListPrizesQuery>(

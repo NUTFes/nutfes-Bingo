@@ -1,6 +1,6 @@
 import { useLazyQuery, useMutation, useSubscription } from "@apollo/client";
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useAtom, useAtomValue } from "jotai";
 import { hasShownSurveyState } from "@/state/survey";
 import { useRouter } from "next/router";
 import styles from "./Layout.module.css";
@@ -86,15 +86,14 @@ interface LayoutProps {
 
 const Layout = (props: LayoutProps) => {
   const router = useRouter();
-  const language = useRecoilValue(languageState);
+  const language = useAtomValue(languageState);
   const t = language === "ja" ? ja : en;
 
   const [isReactionModalOpen, setIsReactionModalOpen] =
     useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] =
     useState<boolean>(false);
-  const [hasShownSurvey, setHasShownSurvey] =
-    useRecoilState(hasShownSurveyState);
+  const [hasShownSurvey, setHasShownSurvey] = useAtom(hasShownSurveyState);
 
   const [isSortOrderActive, setIsSortOrderActive] = useState<boolean>(false);
   const { setIsSortedAscending } = props;

@@ -1,4 +1,4 @@
-import { atom } from "recoil";
+import { atom } from "jotai";
 import type { GetListPrizesQuery } from "@/types/graphql";
 
 const defaultPrize = {
@@ -18,7 +18,6 @@ const defaultPrize = {
   updatedAt: "",
 };
 
-export const bingoPrizeState = atom<GetListPrizesQuery["prizes"]>({
-  key: "bingoPrizeState",
-  default: [defaultPrize],
-});
+export const bingoPrizeState = atom<GetListPrizesQuery["prizes"]>([
+  defaultPrize,
+]);
