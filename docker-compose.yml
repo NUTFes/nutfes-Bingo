@@ -1,27 +1,16 @@
 services:
-  view-user:
-    image: node:25-alpine
-    container_name: "view-user"
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: "bingo-web"
     volumes:
-      - ./view-user:/app
+      - ./:/app
+      - node_modules:/app/node_modules
     working_dir: /app
-    command: sh -c "npm ci && npm run dev"
+    command: pnpm dev
     ports:
-      - "10000:3000"
-    env_file:
-      - ./.env
-    stdin_open: true
-    tty: true
-
-  view-admin:
-    image: node:25-alpine
-    container_name: "view-admin"
-    volumes:
-      - ./view-admin:/app
-    working_dir: /app
-    command: sh -c "npm ci && npm run dev"
-    ports:
-      - "10001:3000"
+      - "3001:3000"
     env_file:
       - ./.env
     stdin_open: true
@@ -31,3 +20,6 @@ networks:
   default:
     name: bingo-network
     external: true
+
+volumes:
+  node_modules:

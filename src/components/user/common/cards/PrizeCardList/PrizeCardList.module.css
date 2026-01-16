@@ -1,0 +1,12 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.frame {
+  display: grid;
+  grid-template-columns: repeat(3, 30vw);
+  place-items: start center;
+  row-gap: 5vw;
+}

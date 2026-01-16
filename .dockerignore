@@ -1,0 +1,28 @@
+# Dependency caches
+node_modules
+.pnpm-store
+
+# Build outputs
+.next
+out
+
+# Local env
+.env
+
+# Supabase (large volumes / permissions)
+supabase-project/volumes
+supabase-project/dev
+supabase-project/logs
+supabase-project/.tmp
+
+# Load tests and temp data
+loadtest
+.tmp
+/tmp
+
+# VCS and editor
+.git
+.vscode
+
+# OS
+.DS_Store

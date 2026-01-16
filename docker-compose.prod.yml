@@ -5,41 +5,24 @@ services:
     command: tunnel --no-autoupdate run --token eyJhIjoiMzBhYmFkZjQ2NmYyOGU1NDc5Y2RhNjRlN2JiNWM5YWUiLCJ0IjoiNTE1YTk0YWYtODhmZC00MGQ0LWJiNzgtOWM3YTk0YjA2OTZiIiwicyI6InJud2wzeUxnUVp4akZIK2FwZXlQclNlRWt1bmdjNFJBbGlTd3hlN0FrcHM9In0=
     restart: unless-stopped
     depends_on:
-      - view-user
-      - view-admin
+      - web
     networks:
       - bingo-network
       - supabase_default
 
-  view-user:
-    image: node:25-alpine
-    container_name: "view-user"
-    volumes:
-      - ./view-user:/app
-      - ./shared:/shared
-    working_dir: /app
-    command: sh -c "npm install && npm run build && npm run start"
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+        SUPABASE_INTERNAL_URL: ${SUPABASE_INTERNAL_URL}
+        NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET: ${NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET}
+    container_name: "bingo-web"
     ports:
-      - "10000:3000"
-    env_file:
-      - ./.env
-    stdin_open: true
-    tty: true
-    restart: unless-stopped
-    networks:
-      - bingo-network
-      - supabase_default
-
-  view-admin:
-    image: node:25-alpine
-    container_name: "view-admin"
-    volumes:
-      - ./view-admin:/app
-      - ./shared:/shared
-    working_dir: /app
-    command: sh -c "npm install && npm run build && npm run start"
-    ports:
-      - "10001:3000"
+      - "3001:3000"
     env_file:
       - ./.env
     stdin_open: true
@@ -54,4 +37,3 @@ networks:
     external: true
   supabase_default:
     external: true
-

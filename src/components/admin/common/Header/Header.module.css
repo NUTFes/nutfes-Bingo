@@ -1,0 +1,54 @@
+/* Header */
+.container {
+  width: 100vw;
+  background-color: var(--main-color);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 6vw;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 0;
+  margin: 1rem;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.title:hover {
+  color: #ffffff25;
+}
+
+.title:active {
+  color: #ffffff;
+}
+
+.title p {
+  padding: 0.9rem 0rem 0.5rem 1rem;
+}
+
+@media (min-width: 1300px) {
+  .title p {
+    font-size: 3rem;
+    margin: 1rem;
+  }
+}
+
+@media (max-width: 1300px) {
+  .main {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 1300px) and (min-width: 700px) {
+  .title {
+    font-size: 3vw;
+  }
+}

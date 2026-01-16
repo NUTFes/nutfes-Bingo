@@ -2,39 +2,60 @@
 
 SUPABASE_DIR := supabase-project
 
-.PHONY: help setup up down run supa-up supa-down supa-restart supa-reset logs logs-supa db-status db-query db-shell
+.PHONY: help setup up down run supa-up supa-down supa-restart supa-reset logs logs-supa db-status db-query db-shell up-prod run-prod down-prod logs-prod
 
 help: ## このヘルプを表示
 	@echo ""
 	@echo "🎯 Bingo Project コマンド一覧"
 	@echo "=============================="
 	@echo ""
-	@echo "📦 基本コマンド:"
+	@echo "📦 基本コマンド (Dev):"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 
 # ============================================================
-# 基本コマンド
+# 基本コマンド (Dev Environment)
 # ============================================================
 
-setup: ## 初回セットアップ（ネットワーク作成、Supabase起動、アプリ起動）
+setup: ## 初回セットアップ（ネットワーク作成、Supabase起動、Devアプリ起動）
 	@echo "🔧 Dockerネットワークを作成中..."
 	docker network inspect bingo-network >/dev/null 2>&1 || docker network create bingo-network
 	@make up
 
-up: ## すべて起動（Supabase → アプリ）
+up: ## Dev環境をすべて起動（Supabase → Devアプリ）
 	@make supa-up
 	@echo "⏳ Supabaseの起動を待機中..."
 	@sleep 5
 	@$(SUPABASE_DIR)/scripts/db-setup.sh
 	@make run
 
-down: ## すべて停止
+run: ## Devアプリのみ起動
+	docker compose up -d
+
+down: ## すべて停止（Dev, Prod, Supabase）
 	docker compose down
+	docker compose -f docker-compose.prod.yml down
 	@make supa-down
 
-run: ## フロントエンドアプリのみ起動
-	docker compose up -d
+# ============================================================
+# 本番環境コマンド (Prod Environment)
+# ============================================================
+
+up-prod: ## Prod環境をすべて起動（Supabase → Prodアプリ）
+	@make supa-up
+	@echo "⏳ Supabaseの起動を待機中..."
+	@sleep 5
+	@$(SUPABASE_DIR)/scripts/db-setup.sh
+	@make run-prod
+
+run-prod: ## Prodアプリのみ起動
+	docker compose -f docker-compose.prod.yml up -d
+
+down-prod: ## Prodアプリのみ停止
+	docker compose -f docker-compose.prod.yml down
+
+logs-prod: ## Prodアプリのログを表示
+	docker compose -f docker-compose.prod.yml logs -f
 
 # ============================================================
 # Supabase コマンド
@@ -96,7 +117,7 @@ db-schema: ## スキーマ詳細を表示（例: make db-schema TABLE=numbers）
 # ログ確認コマンド
 # ============================================================
 
-logs: ## フロントエンドのログを表示
+logs: ## Devアプリのログを表示
 	docker compose logs -f
 
 logs-supa: ## Supabase全体のログを表示
@@ -112,28 +133,14 @@ logs-storage: ## Storageのログを表示
 	docker compose -f $(SUPABASE_DIR)/docker-compose.yml logs -f storage
 
 # ============================================================
-# 本番環境コマンド
-# ============================================================
-
-run-prod: ## 本番モードでフロントエンドを起動
-	docker compose -f docker-compose.prod.yml up -d
-
-down-prod: ## 本番フロントエンドを停止
-	docker compose -f docker-compose.prod.yml down
-
-logs-prod: ## 本番フロントエンドのログを表示
-	docker compose -f docker-compose.prod.yml logs -f
-
-# ============================================================
 # キャッシュ・クリーンアップ
 # ============================================================
 
 clean-cache: ## Next.jsビルドキャッシュをクリア
-	rm -rf view-admin/.next view-user/.next
-	@echo "✅ キャッシュをクリアしました。'npm run dev'で再ビルドしてください。"
+	rm -rf .next
+	@echo "✅ キャッシュをクリアしました。'pnpm dev'で再ビルドしてください。"
 
 clean-cache-sudo: ## Next.jsビルドキャッシュをクリア（sudo権限）
-	sudo rm -rf view-admin/.next view-user/.next
-	sudo chown -R $(shell whoami) view-admin view-user
+	sudo rm -rf .next
+	sudo chown -R $(shell whoami) .next
 	@echo "✅ キャッシュをクリアし、権限を修正しました。"
-

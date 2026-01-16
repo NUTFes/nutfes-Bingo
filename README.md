@@ -1,6 +1,6 @@
 # nutfes-Bingo
 
-技大祭当日に使うビンゴアプリです。
+技大祭当日に使うビンゴアプリです。ユーザー画面と管理画面を単一の Next.js アプリに統合しています。
 
 ## Branch 命名規則
 
@@ -24,17 +24,17 @@
 make setup
 ```
 
-### MinIO 認証情報を新規生成してセットアップ
+### フロントエンドのみ起動
 
 ```bash
-make setup-with-new-keys
+pnpm install
+pnpm dev
 ```
 
-### MinIO 認証情報のみ生成
+起動後に以下へアクセスします。
 
-```bash
-make generate-minio-keys
-```
+- http://localhost:3000/ （ユーザー画面）
+- http://localhost:3000/admin （管理画面）
 
 ## 実装メモ
 
@@ -42,14 +42,3 @@ make generate-minio-keys
   - `docker compose run --rm [コンテナ名] bash` でそのコンテナに入る
   - `chown +x -R .`　で実行権限を与える
   - `exit`でそのコンテナから出る
-
-### MinIO 認証情報について
-
-- MinIO のアクセスキーとシークレットキーは `api/seeds/generate_minio_credentials.sh` で自動生成可能
-- GUI 操作不要で、mc コマンドを使用して認証情報を生成・更新
-- 環境変数ファイル (`settings/bingo.env`, `settings/admin.env`) は自動的にバックアップ・更新される
-- **バケット作成も認証情報生成時に自動実行される**
-
-### スクリプトの役割分担
-- `generate_minio_credentials.sh`: MinIO 環境セットアップ（認証情報生成 + バケット作成）
-- `seed_with_existing_images.sh`: データ投入のみ（画像アップロード + DB 登録）
