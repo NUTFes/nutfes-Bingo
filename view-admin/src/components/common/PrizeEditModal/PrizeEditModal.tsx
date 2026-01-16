@@ -7,13 +7,8 @@ import React, {
 } from "react";
 import styles from "./PrizeEditModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
-import { useMutation } from "@apollo/client";
 import { toast } from "react-toastify";
-import {
-  CreateOneImageDocument,
-  type CreateOneImageMutation,
-  type CreateOneImageMutationVariables,
-} from "@/type/graphql";
+import { supabase } from "@/lib/supabase";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import Image from "next/image";
 
@@ -112,11 +107,6 @@ const PrizeEditModal = ({
     }
   }, [isOpened, initialNameJp, initialNameEn, initialImageId]);
 
-  const [createImage] = useMutation<
-    CreateOneImageMutation,
-    CreateOneImageMutationVariables
-  >(CreateOneImageDocument);
-
   const currentImageText = useMemo(() => {
     if (initialImageId && initialBucketName && initialFileName) {
       return `${initialBucketName}/${initialFileName}`;
@@ -132,37 +122,57 @@ const PrizeEditModal = ({
       return () => URL.revokeObjectURL(url);
     }
     if (initialBucketName && initialFileName) {
-      setPreviewUrl(
-        `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${initialBucketName}/${initialFileName}`,
-      );
+      const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+      if (baseUrl) {
+        setPreviewUrl(
+          `${baseUrl}/storage/v1/object/public/${initialBucketName}/${initialFileName}`,
+        );
+      } else {
+        setPreviewUrl("");
+      }
     } else {
       setPreviewUrl("");
     }
   }, [newFile, initialBucketName, initialFileName]);
 
   const handleSubmit = async () => {
-    // If a new file is chosen, upload to MinIO first and insert DB record
+    // If a new file is chosen, upload to Supabase Storage first and insert DB record
     if (newFile) {
       try {
         const form = new FormData();
         form.append("file", newFile);
-        const res = await fetch("/api/minio", { method: "POST", body: form });
+        const res = await fetch("/api/upload", { method: "POST", body: form });
         if (!res.ok) throw new Error("upload failed");
+        const payload = await res.json().catch(() => null);
 
-        const bucketName = "bingo"; // default bucket used by API/seeds
-        const fileName = newFile.name;
+        const bucketName =
+          process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || "bingo";
+        const fileName = payload?.fileName || newFile.name;
+        const storedBucket = payload?.bucketName || bucketName;
         const fileType = newFile.type || "application/octet-stream";
 
-        const { data } = await createImage({
-          variables: { bucketName, fileName, fileType },
-        });
-        const newImageId = data?.insertImagesOne?.id ?? null;
+        const { data, error } = await supabase
+          .from("images")
+          .insert({
+            bucket_name: storedBucket,
+            file_name: fileName,
+            file_type: fileType,
+          })
+          .select("id")
+          .single();
+        if (error) throw error;
+        const newImageId = data?.id ?? null;
         if (newImageId == null) throw new Error("image id missing");
         await onSubmit({
           nameJp,
           nameEn,
           imageId: newImageId,
-          image: { id: newImageId, bucketName, fileName, fileType },
+          image: {
+            id: newImageId,
+            bucketName: storedBucket,
+            fileName,
+            fileType,
+          },
         });
         toast.success("景品を更新しました");
       } catch (e) {

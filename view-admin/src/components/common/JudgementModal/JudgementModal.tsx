@@ -1,14 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { useLazyQuery } from "@apollo/client";
 import styles from "./JudgementModal.module.css";
 import { RxCrossCircled, RxCross1 } from "react-icons/rx";
 import { GiPartyPopper } from "react-icons/gi";
-
-import {
-  SubscribeListNumbersSubscription,
-  GetListNumbersDocument,
-  GetListNumbersQuery,
-} from "@/type/graphql";
+import { supabase, mapNumberRow, type BingoNumber } from "@/lib/supabase";
 
 type BingoCard = string[][];
 type CellPos = { row: number; col: number };
@@ -103,7 +97,7 @@ interface JudgementModalProps {
   isOpened: boolean;
   canCloseByClickingBackground?: boolean;
   setIsOpened: (isOpened: boolean) => void;
-  bingoNumbers: SubscribeListNumbersSubscription["numbers"];
+  bingoNumbers: BingoNumber[];
 }
 
 const JudgementModal = ({
@@ -120,11 +114,7 @@ const JudgementModal = ({
   const [inputValue, setInputValue] = useState("");
   const [hasJudged, setHasJudged] = useState(false);
   const [completedLines, setCompletedLines] = useState<LineId[]>([]);
-  // network-only: キャッシュを参照せず、毎回ネットワークから取得。取得結果はキャッシュに書き込み
-  const [getLatestNumbers, { loading: isGettingLatest }] =
-    useLazyQuery<GetListNumbersQuery>(GetListNumbersDocument, {
-      fetchPolicy: "network-only",
-    });
+  const [isGettingLatest, setIsGettingLatest] = useState(false);
 
   // 抽選済みの数字一覧
   const drawnNumbers = useMemo(
@@ -172,16 +162,21 @@ const JudgementModal = ({
   const handleJudge = async () => {
     let numbersForJudgement = drawnNumbers;
     try {
-      const res = await getLatestNumbers();
-      const latest = res.data?.numbers ?? [];
-      if (latest.length > 0) {
-        numbersForJudgement = latest.map((n) => n.number);
+      setIsGettingLatest(true);
+      const { data, error } = await supabase
+        .from("numbers")
+        .select("id, number, created_at, updated_at")
+        .order("id", { ascending: true });
+      if (!error && data && data.length > 0) {
+        numbersForJudgement = data.map(mapNumberRow).map((n) => n.number);
       }
     } catch (_) {
       // 取得失敗時は subscription 由来の値でフォールバック
       console.warn(
         "[JudgementModal] 最新番号の取得に失敗したため、subscriptionの値で判定を継続します。",
       );
+    } finally {
+      setIsGettingLatest(false);
     }
     const workingCard = finalizePendingInput(false);
 

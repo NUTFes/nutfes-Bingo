@@ -2,15 +2,10 @@ import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import React, { useEffect, useState, useCallback } from "react";
 import styles from "@/styles/Home.module.css";
-import { useSubscription } from "@apollo/client";
-import { SubscribeListNumbersDocument } from "@/types/graphql";
-import type { SubscribeListNumbersSubscription } from "@/types/graphql";
+import { supabase, type BingoNumber, mapNumberRow } from "@/lib/supabase";
 import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
-import { ja, en } from "@/locales";
-import { useRecoilValue } from "recoil";
-import { languageState } from "@/state/language";
 
-type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
+type BingoNumbers = BingoNumber[];
 
 const sortById = (bingoNumbers: BingoNumbers) => {
   return [...bingoNumbers].sort((a, b) => a.id - b.id);
@@ -43,31 +38,50 @@ const getDisplayBingoNumbers = (
 };
 
 const Page: NextPage = () => {
-  const { pathname: pageName, locale } = useRouter();
-  const language = useRecoilValue(languageState);
+  const { pathname: pageName } = useRouter();
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
-  const { data, loading } = useSubscription(SubscribeListNumbersDocument);
-  const t = locale === "ja" ? ja : en;
-  const [bingoNumbers, setBingoNumbers] = useState<
-    SubscribeListNumbersSubscription["numbers"]
-  >([
-    {
-      number: 0,
-      id: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
 
-  const updateBingoNumbers = useCallback(() => {
-    if (data) {
-      setBingoNumbers(data?.numbers);
+  const fetchNumbers = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("numbers")
+      .select("id, number, created_at, updated_at")
+      .order("id", { ascending: true });
+    if (!error && data) {
+      setBingoNumbers(data.map(mapNumberRow));
     }
-  }, [data]);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    updateBingoNumbers();
-  }, [updateBingoNumbers]);
+    let isMounted = true;
+    const load = async () => {
+      if (isMounted) await fetchNumbers();
+    };
+    load();
+
+    const channel = supabase
+      .channel("numbers-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "numbers" },
+        () => {
+          fetchNumbers();
+        },
+      )
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR") {
+          console.error("[Realtime] numbers channel error:", err);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, [fetchNumbers]);
 
   const displayBingoNumbers = getDisplayBingoNumbers(
     isSortedAscending,

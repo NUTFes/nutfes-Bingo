@@ -16,9 +16,11 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@nutfes-bingo/shared": ["../shared/types/index.ts"],
+      "@nutfes-bingo/shared/*": ["../shared/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "../shared/**/*.ts"],
   "exclude": ["node_modules"]
 }

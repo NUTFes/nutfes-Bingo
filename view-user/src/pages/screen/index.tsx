@@ -1,15 +1,13 @@
 import type { NextPage } from "next";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Matter from "matter-js";
-import { useSubscription } from "@apollo/client";
 import {
-  SubscribeListNumbersDocument,
-  SubscribeCreatedStampTriggerDocument,
-  SubscribeOneLatestReachLogDocument,
-  type SubscribeListNumbersSubscription,
-  type SubscribeCreatedStampTriggerSubscription,
-  type SubscribeOneLatestReachLogSubscription,
-} from "@/types/graphql";
+  supabase,
+  type BingoNumber,
+  type ReachLog,
+  mapNumberRow,
+  mapReachLogRow,
+} from "@/lib/supabase";
 import {
   NumberCardLarge,
   NumberCardList,
@@ -32,13 +30,7 @@ const images: { [key: string]: string } = {
   surprise: "/ReactionIcon/surprise.png",
 };
 
-type Stamp = {
-  id: number;
-  name: string;
-  createdAt?: string;
-};
-
-type BingoNumbers = SubscribeListNumbersSubscription["numbers"];
+type BingoNumbers = BingoNumber[];
 
 const sortedBingoNumbers = (bingoNumbers: BingoNumbers) => {
   return [...bingoNumbers].sort((a, b) => a.id - b.id);
@@ -65,62 +57,140 @@ const Page: NextPage = () => {
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
-  const [latestCreatedAt, setLatestCreatedAt] = useState<string>(
-    new Date().toISOString(),
-  );
-  const [bingoNumbers, setBingoNumbers] = useState<
-    SubscribeListNumbersSubscription["numbers"]
-  >([
-    {
-      number: 0,
-      id: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ]);
+  const latestCreatedAtRef = useRef<string>(new Date().toISOString());
+  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
+  const [latestReachLog, setLatestReachLog] = useState<ReachLog | null>(null);
   const displayBingoNumbers = getDisplayBingoNumbers(bingoNumbers);
 
-  // Bingo番号リストのサブスクリプション
-  const { data: numbers } = useSubscription(SubscribeListNumbersDocument);
-  // スタンプトリガーのサブスクリプション
-  const { data: triggers } =
-    useSubscription<SubscribeCreatedStampTriggerSubscription>(
-      SubscribeCreatedStampTriggerDocument,
-      {
-        variables: { createdAt: latestCreatedAt },
-      },
-    );
-  // リーチログのサブスクリプション
-  const { data: reachLog } =
-    useSubscription<SubscribeOneLatestReachLogSubscription>(
-      SubscribeOneLatestReachLogDocument,
-    );
+  const fetchNumbers = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("numbers")
+      .select("id, number, created_at, updated_at")
+      .order("id", { ascending: true });
+    if (!error && data) {
+      setBingoNumbers(data.map(mapNumberRow));
+    }
+  }, []);
+
+  const fetchLatestReachLog = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("reach_logs")
+      .select("id, status, created_at, reach_num")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (!error && data && data[0]) {
+      setLatestReachLog(mapReachLogRow(data[0]));
+    }
+  }, []);
+
+  const fetchLatestStampCursor = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("stamp_triggers")
+      .select("created_at")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (!error && data && data[0]?.created_at) {
+      latestCreatedAtRef.current = data[0].created_at;
+    }
+  }, []);
+
+  const pollNewStamps = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("stamp_triggers")
+      .select("name, created_at")
+      .gt("created_at", latestCreatedAtRef.current)
+      .order("created_at", { ascending: true })
+      .limit(20);
+    if (error || !data || data.length === 0) return;
+    data.forEach((row) => {
+      if (!row?.name) return;
+      addCircleById(row.name);
+      if (row.created_at) {
+        latestCreatedAtRef.current = row.created_at;
+      }
+    });
+  }, []);
 
   useEffect(() => {
-    const stamps = triggers?.stampTriggers;
-    if (stamps?.length) {
-      stamps.forEach((stamp: Stamp) => {
-        addCircleById(stamp.name);
+    fetchNumbers();
+    fetchLatestReachLog();
+    fetchLatestStampCursor();
+
+    const numbersChannel = supabase
+      .channel("numbers-changes-screen")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "numbers" },
+        () => {
+          fetchNumbers();
+        },
+      )
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR") {
+          console.error("[Realtime] numbers-screen channel error:", err);
+        }
       });
 
-      const latestStamp = stamps.reduce((latest, stamp) => {
-        return new Date(stamp.createdAt) > new Date(latest.createdAt)
-          ? stamp
-          : latest;
-      }, stamps[0]);
+    const reachChannel = supabase
+      .channel("reach-logs-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "reach_logs" },
+        (payload) => {
+          const row = payload.new as {
+            id: number;
+            status: boolean;
+            created_at: string;
+            reach_num: number;
+          };
+          setLatestReachLog(mapReachLogRow(row));
+        },
+      )
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR") {
+          console.error("[Realtime] reach-logs channel error:", err);
+        }
+      });
 
-      if (new Date(latestStamp.createdAt) > new Date(latestCreatedAt)) {
-        setLatestCreatedAt(latestStamp.createdAt);
-      }
-    }
-  }, [triggers, latestCreatedAt]);
+    const stampChannel = supabase
+      .channel("stamp-triggers-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "stamp_triggers" },
+        (payload) => {
+          const row = payload.new as {
+            name: string;
+            created_at: string | null;
+          };
+          const createdAt = row.created_at || new Date().toISOString();
+          addCircleById(row.name);
+          if (new Date(createdAt) > new Date(latestCreatedAtRef.current)) {
+            latestCreatedAtRef.current = createdAt;
+          }
+        },
+      )
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR") {
+          console.error("[Realtime] stamp-triggers channel error:", err);
+        }
+      });
 
-  // ビンゴ番号のuseEffect
-  useEffect(() => {
-    if (numbers) {
-      setBingoNumbers(numbers.numbers);
-    }
-  }, [numbers]);
+    const intervalId = window.setInterval(() => {
+      void pollNewStamps();
+    }, 2000);
+
+    return () => {
+      supabase.removeChannel(numbersChannel);
+      supabase.removeChannel(reachChannel);
+      supabase.removeChannel(stampChannel);
+      window.clearInterval(intervalId);
+    };
+  }, [
+    fetchNumbers,
+    fetchLatestReachLog,
+    fetchLatestStampCursor,
+    pollNewStamps,
+  ]);
 
   // スタンプをMatter.jsで降らせる処理
   const addCircleById = (key: string) => {
@@ -220,7 +290,7 @@ const Page: NextPage = () => {
           <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
           <div className={styles.column}>
             <NumberCardList screen bingoNumber={displayBingoNumbers.list} />
-            <ReachCount count={reachLog?.reachLogs[0]?.reachNum || 0} />
+            <ReachCount count={latestReachLog?.reachNum || 0} />
           </div>
         </div>
       </div>

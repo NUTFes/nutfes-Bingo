@@ -1,10 +1,9 @@
-import { useLazyQuery, useMutation, useSubscription } from "@apollo/client";
 import { useRouter } from "next/router";
-import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { CgLogOut } from "react-icons/cg";
 import { toast } from "react-toastify";
+import { useRecoilState } from "recoil";
 
 import type { NextPage } from "next";
 
@@ -18,22 +17,12 @@ import {
 } from "@/components/common";
 import styles from "@/styles/Home.module.css";
 import {
-  CreateOneNumberDocument,
-  DeleteOneNumberDocument,
-  IncrementReachNumMutation,
-  SubscribeListNumbersDocument,
-  IncrementReachNumDocument,
-  DecrementReachNumDocument,
-  CreateEventSurveyDocument,
-  GetLatestEventSurveyDocument,
-} from "@/type/graphql";
-import type {
-  SubscribeListNumbersSubscription,
-  DecrementReachNumMutation,
-  CreateOneNumberMutation,
-  CreateOneNumberMutationVariables,
-  GetLatestEventSurveyQuery,
-} from "@/type/graphql";
+  supabase,
+  mapNumberRow,
+  mapEventRow,
+  type BingoNumber,
+} from "@/lib/supabase";
+import { adminSessionState, persistAdminSession } from "@/state/adminSession";
 
 interface formDataCreate {
   submitNumber: number | null;
@@ -49,24 +38,14 @@ interface FormSurvey {
 }
 
 const Page: NextPage = () => {
-  const { data: session } = useSession();
   const router = useRouter();
+  const [, setAdminSession] = useRecoilState(adminSessionState);
 
-  const [bingoNumbers, setBingoNumbers] = useState<
-    SubscribeListNumbersSubscription["numbers"]
-  >([]);
+  const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
   const [isOpened, setIsOpened] = useState<boolean>(false);
   const isopenBool = () => setIsOpened(!isOpened);
   const [isOpenUpdateNumberModal, setIsOpenUpdateNumberModal] =
     useState<boolean>(false);
-
-  const [incrementReach] = useMutation<IncrementReachNumMutation>(
-    IncrementReachNumDocument,
-  );
-
-  const [decrementReach] = useMutation<DecrementReachNumMutation>(
-    DecrementReachNumDocument,
-  );
 
   const {
     register: registerCreate,
@@ -87,16 +66,8 @@ const Page: NextPage = () => {
   } = useForm<formDataDelete>({
     mode: "onChange",
   });
-  const { data, loading } = useSubscription(SubscribeListNumbersDocument);
-  const [createNumber] = useMutation<
-    CreateOneNumberMutation,
-    CreateOneNumberMutationVariables
-  >(CreateOneNumberDocument);
-
-  const [deleteNumber] = useMutation(DeleteOneNumberDocument);
-  const [upsertSurvey, { loading: isSubmittingSurvey }] = useMutation(
-    CreateEventSurveyDocument,
-  );
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isSubmittingSurvey, setIsSubmittingSurvey] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState<number>();
 
   const handleNumberClick = (id: number) => {
@@ -120,86 +91,122 @@ const Page: NextPage = () => {
   });
 
   // 最新イベント状態取得
-  const [fetchLatestSurvey] = useLazyQuery<GetLatestEventSurveyQuery>(
-    GetLatestEventSurveyDocument,
-  );
-
   useEffect(() => {
-    // 初回ロード時に現在の状態を取得
     const load = async () => {
-      const res = await fetchLatestSurvey();
-      const latest = res.data?.events?.[0];
-      if (latest) {
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, survey_url, is_survey_active")
+        .order("id", { ascending: false })
+        .limit(1);
+      if (!error && data && data[0]) {
+        const latest = mapEventRow(data[0]);
         resetSurvey({ surveyUrl: latest.surveyUrl || "" });
       }
     };
     load();
-  }, [fetchLatestSurvey, resetSurvey]);
+  }, [resetSurvey]);
 
   //番号の追加
   const onSubmitCreate: SubmitHandler<formDataCreate> = () => {
     const { submitNumber } = getValuesCreate();
     if (submitNumber !== null) {
-      createNumber({
-        variables: { number: submitNumber },
-        onError: (err) => {
-          if (
-            err.graphQLErrors.some(
-              (e) => e.extensions?.code === "constraint-violation",
-            )
-          ) {
-            toast.warning(`${submitNumber} は既に入力済みです。`);
-          } else {
-            toast.error("エラーが発生しました。");
+      supabase
+        .from("numbers")
+        .insert({ number: submitNumber })
+        .then(({ error }) => {
+          if (error) {
+            if (error.message.includes("duplicate key")) {
+              toast.warning(`${submitNumber} は既に入力済みです。`);
+            } else {
+              toast.error("エラーが発生しました。");
+            }
           }
-        },
-      });
+        });
       resetCreate({ submitNumber: null });
     }
   };
 
   //番号の削除
-  const onSubmitDelete = () => {
+  const onSubmitDelete = async () => {
     const { inputedNumber, selectedNumber } = getValuesDelete();
-    if (inputedNumber) {
-      deleteNumber({ variables: { number: inputedNumber } });
-      resetDelete({ inputedNumber: null });
-    } else if (selectedNumber) {
-      deleteNumber({ variables: { number: selectedNumber } });
-      resetDelete({ selectedNumber: null });
+    const targetNumber = inputedNumber ?? selectedNumber;
+    if (!targetNumber) return;
+    const { error } = await supabase
+      .from("numbers")
+      .delete()
+      .eq("number", targetNumber);
+    if (error) {
+      toast.error("番号の削除に失敗しました。");
+      return;
     }
+    resetDelete({ inputedNumber: null, selectedNumber: null });
   };
 
   // アンケート配信即時送信
   const handleSendSurvey = async () => {
     const { surveyUrl } = getValuesSurvey();
     try {
-      await upsertSurvey({
-        variables: { surveyUrl: surveyUrl || "", isSurveyActive: true },
-      });
+      setIsSubmittingSurvey(true);
+      const { error } = await supabase
+        .from("events")
+        .insert({ survey_url: surveyUrl || "", is_survey_active: true });
+      if (error) throw error;
       toast.success("アンケートを送信しました。");
     } catch (error) {
       toast.error("アンケートの送信に失敗しました。");
+    } finally {
+      setIsSubmittingSurvey(false);
     }
   };
   const handleStopSurvey = async () => {
     const { surveyUrl } = getValuesSurvey();
     try {
-      await upsertSurvey({
-        variables: { surveyUrl: surveyUrl || "", isSurveyActive: false },
-      });
+      setIsSubmittingSurvey(true);
+      const { error } = await supabase
+        .from("events")
+        .insert({ survey_url: surveyUrl || "", is_survey_active: false });
+      if (error) throw error;
       toast.success("アンケートを停止しました。");
     } catch (error) {
       toast.error("アンケートの停止に失敗しました。");
+    } finally {
+      setIsSubmittingSurvey(false);
     }
   };
-
-  //subscriptionを行うためのuseEffect
   useEffect(() => {
-    if (data) {
-      setBingoNumbers(data.numbers);
-    }
-  }, [data]);
+    const fetchNumbers = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("numbers")
+        .select("id, number, created_at, updated_at")
+        .order("id", { ascending: true });
+      if (!error && data) {
+        setBingoNumbers(data.map(mapNumberRow));
+      }
+      setLoading(false);
+    };
+
+    fetchNumbers();
+
+    const channel = supabase
+      .channel("numbers-changes-admin")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "numbers" },
+        () => {
+          fetchNumbers();
+        },
+      )
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR") {
+          console.error("[Realtime] numbers channel error:", err);
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   if (loading) {
     return <Loading />;
@@ -240,7 +247,11 @@ const Page: NextPage = () => {
           <Button
             size="m"
             shape="circle"
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={() => {
+              setAdminSession(null);
+              persistAdminSession(null);
+              router.push("/login");
+            }}
           >
             <CgLogOut className={styles.buttonIcon} />
             <p>ログアウト</p>
@@ -334,14 +345,28 @@ const Page: NextPage = () => {
             <button
               type="button"
               className={styles.Button}
-              onClick={() => incrementReach()}
+              onClick={async () => {
+                const { error } = await supabase.rpc(
+                  "increment_latest_reach_log",
+                );
+                if (error) {
+                  toast.error("リーチ数の更新に失敗しました。");
+                }
+              }}
             >
               リーチ数を 1 増加する
             </button>
             <button
               type="button"
               className={styles.Button}
-              onClick={() => decrementReach()}
+              onClick={async () => {
+                const { error } = await supabase.rpc(
+                  "decrement_latest_reach_log",
+                );
+                if (error) {
+                  toast.error("リーチ数の更新に失敗しました。");
+                }
+              }}
             >
               リーチ数を 1 減少する
             </button>
@@ -396,20 +421,6 @@ const Page: NextPage = () => {
         bingoResultNumber={bingoNumbers}
         onClick={handleNumberClick}
       />
-    </div>
-  );
-  // }
-
-  return (
-    <div className={styles.loginContainer}>
-      <Header user="Admin Login">
-        <div className={styles.main}></div>
-      </Header>
-      <div className={styles.loginButton}>
-        <Button size="l" shape="square" onClick={() => signIn()}>
-          Log in
-        </Button>
-      </div>
     </div>
   );
 };

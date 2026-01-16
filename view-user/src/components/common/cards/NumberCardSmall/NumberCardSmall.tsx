@@ -1,9 +1,9 @@
 import React from "react";
 import styles from "./NumberCardSmall.module.css";
-import type { SubscribeListNumbersSubscription } from "@/types/graphql";
+import type { BingoNumber } from "@/lib/supabase";
 
 interface NumberCardSmallProps {
-  BingoNumber: SubscribeListNumbersSubscription["numbers"][number];
+  BingoNumber: BingoNumber;
 }
 
 const NumberCardSmall = (props: NumberCardSmallProps) => {

@@ -5,3 +5,5 @@ settings/
 .env
 
 tmp/*
+
+supabase-project/volumes/storage/stub/stub/*

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import type { Event } from "@/lib/supabase";
 
 export const useSurveyState = (
-  surveyEvent: any,
+  latestEvent: Event | null,
   hasShownSurvey: boolean,
   setHasShownSurvey: (value: boolean) => void,
 ) => {
@@ -10,23 +11,22 @@ export const useSurveyState = (
   const [isSurveyActive, setIsSurveyActive] = useState<boolean>(false);
 
   useEffect(() => {
-    const latest = surveyEvent?.events?.[0];
-    if (!latest) return;
+    if (!latestEvent) return;
 
-    setIsSurveyActive(!!latest.isSurveyActive);
-    setSurveyUrl(latest.surveyUrl || "");
+    setIsSurveyActive(!!latestEvent.isSurveyActive);
+    setSurveyUrl(latestEvent.surveyUrl || "");
 
-    if (!latest.isSurveyActive && hasShownSurvey) {
+    if (!latestEvent.isSurveyActive && hasShownSurvey) {
       setHasShownSurvey(false);
       return;
     }
 
-    if (latest.isSurveyActive && !hasShownSurvey) {
-      setSurveyUrl(latest.surveyUrl || "");
+    if (latestEvent.isSurveyActive && !hasShownSurvey) {
+      setSurveyUrl(latestEvent.surveyUrl || "");
       setIsSurveyModalOpen(true);
       setHasShownSurvey(true);
     }
-  }, [surveyEvent, hasShownSurvey, setHasShownSurvey]);
+  }, [latestEvent, hasShownSurvey, setHasShownSurvey]);
 
   return {
     surveyUrl,

@@ -1,10 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ["@nutfes-bingo/shared"],
   env: {
-    API_URI: process.env.API_URI,
-    WS_API_URL: process.env.WS_API_URL,
-    HASURA_GRAPHQL_ADMIN_SECRET: process.env.HASURA_GRAPHQL_ADMIN_SECRET,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET:
+      process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET,
   },
   i18n: {
     locales: ["ja", "en"],
@@ -14,14 +16,25 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "minio",
-        port: "9000",
-        pathname: "/bingo/**",
+        hostname: "localhost",
+        port: "8000",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "8000",
+        pathname: "/storage/v1/object/public/**",
       },
       {
         protocol: "https",
         hostname: "storage.nutfes.net",
-        pathname: "/**",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "https",
+        hostname: "bingo-api.nutfes.net",
+        pathname: "/storage/v1/object/public/**",
       },
     ],
     disableStaticImages: true,

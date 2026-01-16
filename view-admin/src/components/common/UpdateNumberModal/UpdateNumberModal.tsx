@@ -1,12 +1,7 @@
 import React, { useState } from "react";
 import styles from "./UpdateNumberModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
-import { useMutation } from "@apollo/client";
-import { UpdateOneNumberDocument } from "@/type/graphql";
-import type {
-  UpdateOneNumberMutation,
-  UpdateOneNumberMutationVariables,
-} from "@/type/graphql";
+import { supabase } from "@/lib/supabase";
 
 interface UpdateNumberModalProps {
   isOpened: boolean;
@@ -22,11 +17,6 @@ const UpdateNumberModal = ({
   id,
 }: UpdateNumberModalProps) => {
   const [number, setNumber] = useState<number>(0);
-  const [updateNumber] = useMutation<
-    UpdateOneNumberMutation,
-    UpdateOneNumberMutationVariables
-  >(UpdateOneNumberDocument);
-
   const closeModal = () => {
     setIsOpened(false);
   };
@@ -37,7 +27,7 @@ const UpdateNumberModal = ({
 
   const handleSubmit = (id: number) => {
     if (id !== null) {
-      updateNumber({ variables: { id: id, number: number } });
+      supabase.from("numbers").update({ number }).eq("id", id);
       closeModal();
     }
   };

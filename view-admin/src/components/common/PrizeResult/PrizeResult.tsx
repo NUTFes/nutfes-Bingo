@@ -1,37 +1,16 @@
 import React, { useMemo, useState } from "react";
 import styles from "./PrizeResult.module.css";
-import { useMutation } from "@apollo/client";
-import {
-  UpdateOnePrizeIsWonDocument,
-  DeleteOnePrizeDocument,
-  DeleteOneImageDocument,
-  UpdateOnePrizeBasicDocument,
-  UpdateOnePrizeNamesDocument,
-} from "@/type/graphql";
+import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import type {
-  UpdateOnePrizeIsWonMutation,
-  UpdateOnePrizeIsWonMutationVariables,
-  GetListPrizesQuery,
-  DeleteOnePrizeMutation,
-  DeleteOnePrizeMutationVariables,
-  DeleteOneImageMutation,
-  DeleteOneImageMutationVariables,
-  UpdateOnePrizeBasicMutation,
-  UpdateOnePrizeBasicMutationVariables,
-  UpdateOnePrizeNamesMutation,
-  UpdateOnePrizeNamesMutationVariables,
-} from "@/type/graphql";
+import type { Prize } from "@/lib/supabase";
 import { IoClose, IoCreateOutline } from "react-icons/io5";
 import { toast } from "react-toastify";
 import PrizeDeleteModal from "@/components/common/PrizeDeleteModal/PrizeDeleteModal";
 import PrizeEditModal from "@/components/common/PrizeEditModal/PrizeEditModal";
 
 interface PrizeResultProps {
-  prizeResult: GetListPrizesQuery["prizes"];
-  setBingoPrize: React.Dispatch<
-    React.SetStateAction<GetListPrizesQuery["prizes"]>
-  >;
+  prizeResult: Prize[];
+  setBingoPrize: React.Dispatch<React.SetStateAction<Prize[]>>;
   showOverlay: boolean;
   showToggle: boolean;
 }
@@ -42,45 +21,33 @@ export const PrizeResult = (props: PrizeResultProps) => {
     setIsImageVisible(false);
   };
 
-  const [updatePrize] = useMutation<
-    UpdateOnePrizeIsWonMutation,
-    UpdateOnePrizeIsWonMutationVariables
-  >(UpdateOnePrizeIsWonDocument);
-
-  const [deletePrize] = useMutation<
-    DeleteOnePrizeMutation,
-    DeleteOnePrizeMutationVariables
-  >(DeleteOnePrizeDocument);
-
-  const [deleteImage] = useMutation<
-    DeleteOneImageMutation,
-    DeleteOneImageMutationVariables
-  >(DeleteOneImageDocument);
-
-  const [updatePrizeBasic] = useMutation<
-    UpdateOnePrizeBasicMutation,
-    UpdateOnePrizeBasicMutationVariables
-  >(UpdateOnePrizeBasicDocument);
-
-  const [updatePrizeNames] = useMutation<
-    UpdateOnePrizeNamesMutation,
-    UpdateOnePrizeNamesMutationVariables
-  >(UpdateOnePrizeNamesDocument);
-
   // 画像URLは都度、対象のprizeに紐づくimageから算出する
-  const getImageUrl = (prize: GetListPrizesQuery["prizes"][number]) => {
+  const getImageUrl = (prize: Prize) => {
     if (!prize.image) return "";
     const { bucketName, fileName } = prize.image;
-    return `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${bucketName}/${fileName}`;
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+    if (!baseUrl || !bucketName || !fileName) return "";
+    return `${baseUrl}/storage/v1/object/public/${bucketName}/${fileName}`;
   };
 
-  const handleToggleChange = (id: number, isWon: boolean) => {
-    updatePrize({ variables: { id: id, isWon: isWon } });
-    props.setBingoPrize((prev) =>
-      prev.map((prize) =>
-        prize.id === id ? { ...prize, isWon: isWon } : prize,
-      ),
-    );
+  const handleToggleChange = async (id: number, isWon: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("prizes")
+        .update({ is_won: isWon })
+        .eq("id", id)
+        .select("id")
+        .single();
+      if (error) throw error;
+      props.setBingoPrize((prev) =>
+        prev.map((prize) =>
+          prize.id === id ? { ...prize, isWon: isWon } : prize,
+        ),
+      );
+    } catch (e) {
+      console.error(e);
+      toast.error("当選状態の更新に失敗しました");
+    }
   };
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -96,7 +63,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
   };
   const [selected, setSelected] = useState<Selected | null>(null);
 
-  const toSelected = (p: GetListPrizesQuery["prizes"][number]): Selected => ({
+  const toSelected = (p: Prize): Selected => ({
     prize: { id: p.id, nameJp: p.nameJp ?? "", nameEn: p.nameEn ?? "" },
     image: p.image
       ? {
@@ -108,7 +75,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
       : null,
   });
 
-  const openDelete = (p: GetListPrizesQuery["prizes"][number]) => {
+  const openDelete = (p: Prize) => {
     setSelected(toSelected(p));
     setIsDeleteOpen(true);
   };
@@ -116,12 +83,20 @@ export const PrizeResult = (props: PrizeResultProps) => {
   const confirmDelete = async () => {
     if (!selected) return;
     try {
-      const res = await deletePrize({ variables: { id: selected.prize.id } });
-      const imageId = res.data?.deletePrizesByPk?.imageId || null;
+      const { data, error } = await supabase
+        .from("prizes")
+        .delete()
+        .eq("id", selected.prize.id)
+        .select("image_id")
+        .single();
+      if (error) throw error;
+      const imageId = data?.image_id || null;
       props.setBingoPrize((prev) =>
         prev.filter((p) => p.id !== selected.prize.id),
       );
-      if (imageId) await deleteImage({ variables: { id: imageId } });
+      if (imageId) {
+        await supabase.from("images").delete().eq("id", imageId);
+      }
       toast.success("景品を削除しました");
     } catch (e) {
       console.error(e);
@@ -132,7 +107,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
     }
   };
 
-  const openEdit = (p: GetListPrizesQuery["prizes"][number]) => {
+  const openEdit = (p: Prize) => {
     setSelected(toSelected(p));
     setIsEditOpen(true);
   };
@@ -151,31 +126,20 @@ export const PrizeResult = (props: PrizeResultProps) => {
     if (!selected) return;
     const { nameJp, nameEn, imageId, image } = params;
     try {
-      let data;
-
-      // 新しい画像がアップロードされた場合
+      const payload: Record<string, unknown> = {
+        name_jp: nameJp,
+        name_en: nameEn,
+      };
       if (imageId !== null && imageId !== undefined) {
-        const result = await updatePrizeBasic({
-          variables: {
-            id: selected.prize.id,
-            nameJp,
-            nameEn,
-            imageId,
-          },
-        });
-        data = result.data;
-      } else {
-        // 名前のみ変更の場合
-        const result = await updatePrizeNames({
-          variables: {
-            id: selected.prize.id,
-            nameJp,
-            nameEn,
-          },
-        });
-        data = result.data;
+        payload.image_id = imageId;
       }
-      if (data?.updatePrizesByPk) {
+      const { error } = await supabase
+        .from("prizes")
+        .update(payload)
+        .eq("id", selected.prize.id)
+        .select("id")
+        .single();
+      if (!error) {
         props.setBingoPrize((prev) =>
           prev.map((p) =>
             p.id === selected.prize.id
@@ -190,7 +154,9 @@ export const PrizeResult = (props: PrizeResultProps) => {
                         bucketName: image.bucketName,
                         fileName: image.fileName,
                         fileType: image.fileType,
-                        updatedAt: new Date(),
+                        createdAt:
+                          p.image?.createdAt || new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
                       }
                     : p.image,
                 }

@@ -1,4 +1,3 @@
-import { useLazyQuery, useMutation, useSubscription } from "@apollo/client";
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { hasShownSurveyState } from "@/state/survey";
@@ -19,19 +18,7 @@ import {
   ToggleButton,
   SurveyPromptModal,
 } from "@/components/common";
-import {
-  CreateOneStampTriggerDocument,
-  CreateOneReachRecordDocument,
-  GetOneLatestReachLogDocument,
-  SubscribeLatestEventSurveyDocument,
-} from "@/types/graphql";
-import type {
-  CreateOneStampTriggerMutation,
-  CreateOneStampTriggerMutationVariables,
-  CreateOneReachRecordMutation,
-  CreateOneReachRecordMutationVariables,
-  GetOneLatestReachLogQuery,
-} from "@/types/graphql";
+import { supabase, type Event, mapEventRow } from "@/lib/supabase";
 import { ja, en } from "@/locales";
 import { languageState } from "@/state/language";
 import { TwitterPicker } from "react-color";
@@ -113,23 +100,7 @@ const Layout = (props: LayoutProps) => {
   const [isStampSending, setIsStampSending] = useState<boolean>(false);
   // 直近に押したスタンプ名（押下中エフェクトの対象）
   const [activeStampName, setActiveStampName] = useState<string | null>(null);
-  const [createStampRecord] = useMutation<
-    CreateOneStampTriggerMutation,
-    CreateOneStampTriggerMutationVariables
-  >(CreateOneStampTriggerDocument);
-  const [getLatestReachLog] = useLazyQuery<GetOneLatestReachLogQuery>(
-    GetOneLatestReachLogDocument,
-  );
-
-  const [createOneReachRecord] = useMutation<
-    CreateOneReachRecordMutation,
-    CreateOneReachRecordMutationVariables
-  >(CreateOneReachRecordDocument);
-
-  // アンケート配信の軽量サブスク（番号サブスクとは分離）
-  const { data: surveyEvent } = useSubscription(
-    SubscribeLatestEventSurveyDocument,
-  );
+  const [latestEvent, setLatestEvent] = useState<Event | null>(null);
 
   // ナビゲーションバーの高さを設定
   useLayoutEffect(() => {
@@ -204,6 +175,45 @@ const Layout = (props: LayoutProps) => {
     if (metaTheme) metaTheme.content = backgroundColor;
   }, [isDarkMode, subColor]);
 
+  useEffect(() => {
+    const fetchLatestEvent = async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, survey_url, is_survey_active")
+        .order("id", { ascending: false })
+        .limit(1);
+      if (!error && data && data[0]) {
+        setLatestEvent(mapEventRow(data[0]));
+      }
+    };
+
+    fetchLatestEvent();
+
+    const channel = supabase
+      .channel("events-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "events" },
+        (payload) => {
+          const row = payload.new as {
+            id: number;
+            survey_url: string;
+            is_survey_active: boolean;
+          };
+          if (row) setLatestEvent(mapEventRow(row));
+        },
+      )
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR") {
+          console.error("[Realtime] events channel error:", err);
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const toggleDarkMode = () => {
     const next = !isDarkMode;
     setIsDarkMode(next);
@@ -211,21 +221,18 @@ const Layout = (props: LayoutProps) => {
   };
 
   // アンケート状態管理（カスタムフック）
-  const {
-    surveyUrl,
-    setSurveyUrl,
-    isSurveyModalOpen,
-    setIsSurveyModalOpen,
-    isSurveyActive,
-  } = useSurveyState(surveyEvent, hasShownSurvey, setHasShownSurvey);
+  const { surveyUrl, isSurveyModalOpen, setIsSurveyModalOpen, isSurveyActive } =
+    useSurveyState(latestEvent, hasShownSurvey, setHasShownSurvey);
 
   // スタンプ押下時の送信処理（短いクールダウンで二重送信を防止）
-  const handleReactionClick = (name: string) => {
+  const handleReactionClick = async (name: string) => {
     if (isStampSending) return;
     setActiveStampName(name);
     setIsStampSending(true);
-    // 結果に関わらず固定時間で解除するためawait/エラーハンドリングは行わない
-    void createStampRecord({ variables: { name } });
+    const { error } = await supabase.from("stamp_triggers").insert({ name });
+    if (error) {
+      console.error("Failed to send stamp:", error);
+    }
     // 押下アニメの体感時間に合わせて解除（約0.8秒）
     setTimeout(() => {
       setIsStampSending(false);
@@ -241,14 +248,17 @@ const Layout = (props: LayoutProps) => {
   // リーチアイコンがクリックされたときの処理
   const handleReachIconClick = async () => {
     try {
-      const { data } = await getLatestReachLog();
-      const latestReachLogNumber = data?.reachLogs[0]?.reachNum || 0;
-      await createOneReachRecord({
-        variables: {
-          status: true,
-          reachNum: latestReachLogNumber + 1,
-        },
-      });
+      const { data, error } = await supabase
+        .from("reach_logs")
+        .select("reach_num")
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      const latestReachLogNumber = data?.[0]?.reach_num || 0;
+      const { error: insertError } = await supabase
+        .from("reach_logs")
+        .insert({ status: true, reach_num: latestReachLogNumber + 1 });
+      if (insertError) throw insertError;
 
       setReachIconVisible(false);
       localStorage.setItem("isReachIconVisible", "false");

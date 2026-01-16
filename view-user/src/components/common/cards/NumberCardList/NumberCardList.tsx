@@ -1,10 +1,10 @@
 import React from "react";
-import type { SubscribeListNumbersSubscription } from "@/types/graphql";
+import type { BingoNumber } from "@/lib/supabase";
 import styles from "./NumberCardList.module.css";
 import NumberCardSmall from "../NumberCardSmall";
 
 interface NumberCardListProps {
-  bingoNumber: SubscribeListNumbersSubscription["numbers"];
+  bingoNumber: BingoNumber[];
   firstNumber?: boolean;
   screen?: boolean;
 }

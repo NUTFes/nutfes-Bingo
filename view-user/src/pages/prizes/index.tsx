@@ -1,54 +1,53 @@
 import type { NextPage } from "next";
 import { PrizeCardList, Loading, Layout } from "@/components";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
-import { ja, en } from "@/locales";
+import { useState, useEffect, useCallback } from "react";
 import { useRecoilState } from "recoil";
-import { useQuery, useSubscription } from "@apollo/client";
-import {
-  GetListPrizesDocument,
-  SubscribeListPrizesIsWonDocument,
-} from "@/types/graphql";
-import type {
-  GetListPrizesQuery,
-  SubscribeListPrizesIsWonSubscription,
-} from "@/types/graphql";
-import { bingoPrizeState } from "../../Atom/atom";
+import { supabase, mapPrizeRow } from "@/lib/supabase";
+import { bingoPrizeState } from "@/state/prize";
 
 const Page: NextPage = () => {
-  const { pathname: pageName, locale } = useRouter();
-  const t = locale === "ja" ? ja : en;
+  const { pathname: pageName } = useRouter();
   const [bingoPrize, setBingoPrize] = useRecoilState(bingoPrizeState);
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const { data: query, loading } = useQuery<GetListPrizesQuery>(
-    GetListPrizesDocument,
-  );
-  const { data: subscription } =
-    useSubscription<SubscribeListPrizesIsWonSubscription>(
-      SubscribeListPrizesIsWonDocument,
-    );
+  const fetchPrizes = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("prizes")
+      .select(
+        "id, is_won, image_id, name_jp, name_en, created_at, updated_at, image:images(id, bucket_name, file_name, file_type, created_at, updated_at)",
+      )
+      .order("id", { ascending: true });
+    if (!error && data) {
+      setBingoPrize(data.map(mapPrizeRow));
+    }
+    setLoading(false);
+  }, [setBingoPrize]);
 
   useEffect(() => {
-    if (query) {
-      setBingoPrize(query?.prizes);
-    }
-  }, [query, setBingoPrize]);
+    fetchPrizes();
 
-  useEffect(() => {
-    if (subscription && subscription.prizes) {
-      setBingoPrize((prizes: GetListPrizesQuery["prizes"]) =>
-        prizes.map((prize: GetListPrizesQuery["prizes"][0]) => {
-          const updatePrize = subscription.prizes.find(
-            (
-              subscriptionPrize: SubscribeListPrizesIsWonSubscription["prizes"][0],
-            ) => subscriptionPrize.id === prize.id,
-          );
-          return updatePrize ? { ...prize, isWon: updatePrize.isWon } : prize;
-        }),
-      );
-    }
-  }, [subscription, setBingoPrize]);
+    const channel = supabase
+      .channel("prizes-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "prizes" },
+        () => {
+          fetchPrizes();
+        },
+      )
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR") {
+          console.error("[Realtime] prizes channel error:", err);
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchPrizes]);
 
   return (
     <>

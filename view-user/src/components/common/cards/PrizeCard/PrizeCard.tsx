@@ -1,17 +1,17 @@
 import React from "react";
 import styles from "./PrizeCard.module.css";
-import type { GetListPrizesQuery } from "@/types/graphql";
+import type { Prize } from "@/lib/supabase";
 import { useRouter } from "next/router";
 import classNames from "classnames";
 import { en, ja } from "@/locales";
 import Image from "next/image";
 
 interface PrizeCardProps {
-  BingoPrize: GetListPrizesQuery["prizes"][number];
+  BingoPrize: Prize;
 }
 
 const PrizeCard = (props: PrizeCardProps) => {
-  // TODO lacaleでnameJpとnameEnの切り替えを実装する。
+  // TODO localeでnameJpとnameEnの切り替えを実装する。
   // nameEnがない場合はnameJpを表示
   const { locale } = useRouter();
   const t = locale === "ja" ? ja : en;
@@ -19,16 +19,19 @@ const PrizeCard = (props: PrizeCardProps) => {
   const bingoPrize = props.BingoPrize;
   const prizeImage = bingoPrize.image;
 
-  const imageURL: string = prizeImage
-    ? `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${prizeImage.bucketName}/${prizeImage.fileName}`
-    : "";
+  const imageURL: string = (() => {
+    if (!prizeImage) return "";
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+    if (!baseUrl || !prizeImage.bucketName || !prizeImage.fileName) return "";
+    return `${baseUrl}/storage/v1/object/public/${prizeImage.bucketName}/${prizeImage.fileName}`;
+  })();
 
   return (
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.image}>
           <div className={styles.imageWrapper}>
-            {imageURL && prizeImage.bucketName && prizeImage.fileName && (
+            {imageURL && prizeImage?.bucketName && prizeImage?.fileName && (
               <Image src={imageURL} alt="PrizeImage" fill />
             )}
           </div>

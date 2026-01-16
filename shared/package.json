@@ -1,0 +1,11 @@
+{
+  "name": "@nutfes-bingo/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./types/index.ts",
+  "types": "./types/index.ts",
+  "exports": {
+    ".": "./types/index.ts",
+    "./types": "./types/index.ts"
+  }
+}

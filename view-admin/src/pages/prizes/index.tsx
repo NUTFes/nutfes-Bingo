@@ -3,28 +3,29 @@ import styles from "./prizes.module.css";
 import { Header, Button, PrizeResult } from "@/components/common";
 import { useRouter } from "next/router";
 import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@apollo/client";
-import { GetListPrizesDocument } from "@/type/graphql";
-import type { GetListPrizesQuery } from "@/type/graphql";
+import { supabase, mapPrizeRow, type Prize } from "@/lib/supabase";
 
 const Page: NextPage = () => {
   const router = useRouter();
-  const [bingoPrize, setBingoPrize] = useState<GetListPrizesQuery["prizes"]>(
-    [],
-  );
+  const [bingoPrize, setBingoPrize] = useState<Prize[]>([]);
   const [searchText, setSearchText] = useState("");
-  const [searchResults, setSearchResults] = useState<
-    GetListPrizesQuery["prizes"]
-  >([]);
+  const [searchResults, setSearchResults] = useState<Prize[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const { data } = useQuery<GetListPrizesQuery>(GetListPrizesDocument);
-
   useEffect(() => {
-    if (data) {
-      setBingoPrize(data.prizes);
-    }
-  }, [data]);
+    const fetchPrizes = async () => {
+      const { data, error } = await supabase
+        .from("prizes")
+        .select(
+          "id, is_won, image_id, name_jp, name_en, created_at, updated_at, image:images(id, bucket_name, file_name, file_type, created_at, updated_at)",
+        )
+        .order("id", { ascending: true });
+      if (!error && data) {
+        setBingoPrize(data.map(mapPrizeRow));
+      }
+    };
+    fetchPrizes();
+  }, []);
 
   useEffect(() => {
     if (searchText === "") {

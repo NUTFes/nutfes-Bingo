@@ -1,30 +1,16 @@
-import { useQuery, useMutation } from "@apollo/client";
 /* eslint-disable @next/next/no-img-element */
 import type { NextPage } from "next";
 import styles from "./postPrizes.module.css";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Header, PrizeResult, Loading } from "@/components/common";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import {
-  GetListPrizesDocument,
-  CreateOnePrizeDocument,
-  CreateOneImageDocument,
-} from "@/type/graphql";
-import type {
-  GetListPrizesQuery,
-  CreateOneImageMutation,
-  CreateOnePrizeMutation,
-  CreateOneImageMutationVariables,
-  CreateOnePrizeMutationVariables,
-} from "@/type/graphql";
+import { supabase, mapPrizeRow, type Prize } from "@/lib/supabase";
 
 import { useRouter } from "next/router";
 import { toast } from "react-toastify";
 
 const Page: NextPage = () => {
-  const [bingoPrize, setBingoPrize] = useState<GetListPrizesQuery["prizes"]>(
-    [],
-  );
+  const [bingoPrize, setBingoPrize] = useState<Prize[]>([]);
   const [prizeNameJp, setPrizeNameJp] = useState<string>("");
   const [prizeNameEn, setPrizeNameEn] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -36,23 +22,23 @@ const Page: NextPage = () => {
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const { data } = useQuery<GetListPrizesQuery>(GetListPrizesDocument);
-  const [postPrize] = useMutation<
-    CreateOnePrizeMutation,
-    CreateOnePrizeMutationVariables
-  >(CreateOnePrizeDocument);
-  const [postImage] = useMutation<
-    CreateOneImageMutation,
-    CreateOneImageMutationVariables
-  >(CreateOneImageDocument);
-
   const router = useRouter();
 
-  useEffect(() => {
-    if (data) {
-      setBingoPrize(data.prizes);
+  const fetchPrizes = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("prizes")
+      .select(
+        "id, is_won, image_id, name_jp, name_en, created_at, updated_at, image:images(id, bucket_name, file_name, file_type, created_at, updated_at)",
+      )
+      .order("id", { ascending: true });
+    if (!error && data) {
+      setBingoPrize(data.map(mapPrizeRow));
     }
-  }, [data]);
+  }, []);
+
+  useEffect(() => {
+    fetchPrizes();
+  }, [fetchPrizes]);
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,11 +53,12 @@ const Page: NextPage = () => {
         type: targetFile.type,
       });
 
-      const bucketName = process.env.NEXT_PUBLIC_BUCKET_NAME;
+      const bucketName =
+        process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || "bingo";
       const fileName = targetFile.name;
       const fileType = targetFile.type;
 
-      setBucketName(bucketName || "");
+      setBucketName(bucketName);
       setFileName(fileName);
       setFileType(fileType);
     },
@@ -79,14 +66,17 @@ const Page: NextPage = () => {
   );
 
   const insertPrize = async (imageId: number) => {
-    postPrize({
-      variables: {
-        isWon: false,
-        imageId: imageId,
-        nameJp: prizeNameJp,
-        nameEn: prizeNameEn,
-      },
+    const { error } = await supabase.from("prizes").insert({
+      is_won: false,
+      image_id: imageId,
+      name_jp: prizeNameJp,
+      name_en: prizeNameEn,
     });
+    if (error) {
+      toast.error("景品の登録に失敗しました");
+    } else {
+      fetchPrizes();
+    }
     setPrizeNameJp("");
     setPrizeNameEn("");
     setPreview({ uploadImageURL: "", type: "" });
@@ -97,22 +87,27 @@ const Page: NextPage = () => {
     setIsLoading(false);
   };
 
-  const insertImage = async () => {
-    const result = await postImage({
-      variables: {
-        bucketName: bucketName,
-        fileName: fileName,
-        fileType: fileType,
-      },
-    });
-    // ここでimageIdをuseStateに設定する
-    const imageId = result.data?.insertImagesOne?.id;
+  const insertImage = async (storedFileName: string, storedBucket: string) => {
+    const { data, error } = await supabase
+      .from("images")
+      .insert({
+        bucket_name: storedBucket,
+        file_name: storedFileName,
+        file_type: fileType,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      toast.error("画像情報の登録に失敗しました");
+      return;
+    }
+    const imageId = data?.id;
     if (imageId) {
       insertPrize(imageId);
     }
   };
 
-  const postMinio = async () => {
+  const postStorage = async () => {
     if (!imageFile) {
       return alert("画像を選択してください");
     }
@@ -127,17 +122,26 @@ const Page: NextPage = () => {
     const fileName = imageFile?.name || "";
     formData.append("fileName", fileName);
 
-    const response = await fetch("/api/minio", {
+    const response = await fetch("/api/upload", {
       method: "POST",
       body: formData,
     });
-    insertImage();
+    if (!response.ok) {
+      toast.error("画像のアップロードに失敗しました");
+      setIsDisabled(false);
+      setIsLoading(false);
+      return;
+    }
+    const payload = await response.json().catch(() => null);
+    const storedFileName = payload?.fileName || fileName;
+    const storedBucket = payload?.bucketName || bucketName;
+    insertImage(storedFileName, storedBucket);
   };
 
   const submit = async () => {
     setIsDisabled(true);
     setIsLoading(true);
-    postMinio();
+    postStorage();
     toast.success("景品画像を登録しました");
   };
 

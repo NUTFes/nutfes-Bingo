@@ -1,9 +1,9 @@
 import React, { ReactNode } from "react";
 import styles from "./BingoResult.module.css";
-import { SubscribeListNumbersSubscription } from "@/type/graphql";
+import type { BingoNumber } from "@/lib/supabase";
 
 interface BingoResultProps {
-  bingoResultNumber: SubscribeListNumbersSubscription["numbers"];
+  bingoResultNumber: BingoNumber[];
   onClick: (id: number) => void;
 }
 
