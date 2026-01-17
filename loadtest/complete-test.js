@@ -54,12 +54,12 @@ const SAMPLE_IMAGES = [
   "bingo/1768486355023_101373249_p0_master1200.jpg",
 ];
 
-export default function () {
+export default function completeTest() {
   // 1. Fetch bingo numbers
   const numbersStart = Date.now();
   const numbersRes = http.get(
     `${SUPABASE_URL}/rest/v1/numbers?select=id,number,created_at,updated_at&order=id.asc`,
-    { headers, tags: { name: "fetch_numbers" } }
+    { headers, tags: { name: "fetch_numbers" } },
   );
   numbersLatency.add(Date.now() - numbersStart);
 
@@ -79,7 +79,7 @@ export default function () {
   const prizesStart = Date.now();
   const prizesRes = http.get(
     `${SUPABASE_URL}/rest/v1/prizes?select=id,is_won,image_id,name_jp,name_en,image:images(id,bucket_name,file_name)`,
-    { headers, tags: { name: "fetch_prizes" } }
+    { headers, tags: { name: "fetch_prizes" } },
   );
   prizesLatency.add(Date.now() - prizesStart);
 
@@ -92,7 +92,7 @@ export default function () {
   const reachStart = Date.now();
   const reachRes = http.get(
     `${SUPABASE_URL}/rest/v1/reach_logs?select=id,status,created_at,reach_num&order=created_at.desc&limit=1`,
-    { headers, tags: { name: "fetch_reach_logs" } }
+    { headers, tags: { name: "fetch_reach_logs" } },
   );
   reachLogsLatency.add(Date.now() - reachStart);
 

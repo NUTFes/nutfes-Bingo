@@ -57,12 +57,12 @@ const headers = {
 };
 
 // Simulate initial page load - fetch all necessary data
-export default function () {
+export default function restApiTest() {
   // 1. Fetch bingo numbers (main data)
   const numbersStart = Date.now();
   const numbersRes = http.get(
     `${SUPABASE_URL}/rest/v1/numbers?select=id,number,created_at,updated_at&order=id.asc`,
-    { headers }
+    { headers },
   );
   numbersLatency.add(Date.now() - numbersStart);
 
@@ -82,7 +82,7 @@ export default function () {
   const prizesStart = Date.now();
   const prizesRes = http.get(
     `${SUPABASE_URL}/rest/v1/prizes?select=id,is_won,image_id,name_jp,name_en,created_at,updated_at,image:images(id,bucket_name,file_name,file_type)`,
-    { headers }
+    { headers },
   );
   prizesLatency.add(Date.now() - prizesStart);
 
@@ -102,7 +102,7 @@ export default function () {
   const reachStart = Date.now();
   const reachRes = http.get(
     `${SUPABASE_URL}/rest/v1/reach_logs?select=id,status,created_at,reach_num&order=created_at.desc&limit=1`,
-    { headers }
+    { headers },
   );
   reachLogsLatency.add(Date.now() - reachStart);
 

@@ -12,13 +12,13 @@
 import http from "k6/http";
 import ws from "k6/ws";
 import { check, sleep } from "k6";
-import { Rate, Trend, Counter } from "k6/metrics";
+import { Rate, Trend } from "k6/metrics";
 
 // Configuration
 const SUPABASE_URL = __ENV.SUPABASE_URL || "http://localhost:8000";
 const WS_URL = SUPABASE_URL.replace("http://", "ws://").replace(
   "https://",
-  "wss://"
+  "wss://",
 );
 const ANON_KEY =
   __ENV.SUPABASE_ANON_KEY ||
@@ -74,7 +74,7 @@ function getRef() {
   return String(++messageRef);
 }
 
-export default function () {
+export default function combinedTest() {
   const pageLoadStart = Date.now();
 
   // Phase 1: Initial page load (REST API calls)
@@ -112,7 +112,7 @@ export default function () {
             },
           },
           ref: getRef(),
-        })
+        }),
       );
 
       // Subscribe to reach_logs channel
@@ -130,7 +130,7 @@ export default function () {
             },
           },
           ref: getRef(),
-        })
+        }),
       );
 
       // Heartbeat to keep connection alive
@@ -141,12 +141,12 @@ export default function () {
             event: "heartbeat",
             payload: {},
             ref: getRef(),
-          })
+          }),
         );
       }, 30000);
     });
 
-    socket.on("error", function (e) {
+    socket.on("error", function () {
       wsErrors.add(1);
     });
 
@@ -169,7 +169,7 @@ export default function () {
         const refreshStart = Date.now();
         const refreshRes = http.get(
           `${SUPABASE_URL}/rest/v1/reach_logs?select=id,reach_num&order=created_at.desc&limit=1`,
-          { headers }
+          { headers },
         );
         httpLatency.add(Date.now() - refreshStart);
 
@@ -195,7 +195,7 @@ function fetchInitialData() {
   const numbersStart = Date.now();
   const numbersRes = http.get(
     `${SUPABASE_URL}/rest/v1/numbers?select=id,number,created_at,updated_at&order=id.asc`,
-    { headers }
+    { headers },
   );
   httpLatency.add(Date.now() - numbersStart);
 
@@ -207,7 +207,7 @@ function fetchInitialData() {
   const prizesStart = Date.now();
   const prizesRes = http.get(
     `${SUPABASE_URL}/rest/v1/prizes?select=id,is_won,name_jp`,
-    { headers }
+    { headers },
   );
   httpLatency.add(Date.now() - prizesStart);
 
@@ -219,7 +219,7 @@ function fetchInitialData() {
   const reachStart = Date.now();
   const reachRes = http.get(
     `${SUPABASE_URL}/rest/v1/reach_logs?select=id,reach_num&order=created_at.desc&limit=1`,
-    { headers }
+    { headers },
   );
   httpLatency.add(Date.now() - reachStart);
 

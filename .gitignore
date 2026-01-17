@@ -21,6 +21,9 @@ supabase-project/volumes/storage/stub/stub/*
 
 # testing
 /coverage
+/loadtest/results
+loadtest_error.log
+k6_error.log
 
 # next.js
 /.next/

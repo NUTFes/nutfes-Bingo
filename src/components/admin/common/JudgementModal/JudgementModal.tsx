@@ -174,7 +174,7 @@ const JudgementModal = ({
       if (!error && data && data.length > 0) {
         numbersForJudgement = data.map(mapNumberRow).map((n) => n.number);
       }
-    } catch (_) {
+    } catch {
       // 取得失敗時は subscription 由来の値でフォールバック
       console.warn(
         "[JudgementModal] 最新番号の取得に失敗したため、subscriptionの値で判定を継続します。",

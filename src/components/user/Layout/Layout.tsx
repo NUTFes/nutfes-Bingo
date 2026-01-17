@@ -19,8 +19,7 @@ import {
 } from "@/components/user/common";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { type Event, mapEventRow } from "@/types";
-import { ja, en } from "@/locales";
-import { TwitterPicker } from "react-color";
+import { en, ja } from "@/locales";
 import { useSurveyState } from "@/hooks/useSurveyState";
 import { useUserStore } from "@/stores/useUserStore";
 
@@ -91,8 +90,8 @@ const Layout = (props: LayoutProps) => {
   const [isReachModalOpen, setIsReachModalOpen] = useState<boolean>(false);
   const [isReachIconVisible, setReachIconVisible] = useState<boolean>(true);
 
-  const [mainColor, setMainColor] = useState(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
-  const [subColor, setSubColor] = useState(COLOR_PRESETS.DEFAULT_SUB_COLOR);
+  const [mainColor] = useState(COLOR_PRESETS.DEFAULT_MAIN_COLOR);
+  const [subColor] = useState(COLOR_PRESETS.DEFAULT_SUB_COLOR);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
   const [navBarHeight, setNavBarHeight] = useState<string>();

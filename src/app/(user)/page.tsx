@@ -19,12 +19,6 @@ const sortByNumber = (bingoNumbers: BingoNumbers) => {
   return [...bingoNumbers].sort((a, b) => a.number - b.number);
 };
 
-// 最後に追加されたビンゴ番号（最新の番号）を取得
-const getLastBingoNumber = (bingoNumbers: BingoNumbers) => {
-  const sortedById = sortById(bingoNumbers);
-  return sortedById[sortedById.length - 1];
-};
-
 const getDisplayBingoNumbers = (
   isSortedAscending: boolean,
   bingoNumbers: BingoNumbers,

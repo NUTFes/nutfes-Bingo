@@ -18,7 +18,7 @@ import { Rate, Trend, Counter } from "k6/metrics";
 const SUPABASE_URL = __ENV.SUPABASE_URL || "http://localhost:8000";
 const WS_URL = SUPABASE_URL.replace("http://", "ws://").replace(
   "https://",
-  "wss://"
+  "wss://",
 );
 const ANON_KEY =
   __ENV.SUPABASE_ANON_KEY ||
@@ -59,7 +59,7 @@ function getRef() {
   return String(++messageRef);
 }
 
-export default function () {
+export default function realtimeTest() {
   const url = `${WS_URL}/realtime/v1/websocket?apikey=${ANON_KEY}&vsn=1.0.0`;
 
   const connectStart = Date.now();
@@ -69,7 +69,6 @@ export default function () {
     wsConnectTime.add(connectDuration);
     wsConnectionsActive.add(1);
 
-    let joinedChannels = 0;
     let heartbeatInterval = null;
 
     socket.on("open", function () {
@@ -80,7 +79,7 @@ export default function () {
         { topic: "realtime:public:stamp_triggers", event: "INSERT" },
       ];
 
-      channels.forEach((channel, index) => {
+      channels.forEach((channel) => {
         const subscribeStart = Date.now();
 
         // Join channel
@@ -102,7 +101,7 @@ export default function () {
               },
             },
             ref: getRef(),
-          })
+          }),
         );
 
         wsSubscribeTime.add(Date.now() - subscribeStart);
@@ -116,7 +115,7 @@ export default function () {
             event: "heartbeat",
             payload: {},
             ref: getRef(),
-          })
+          }),
         );
       }, 30000);
     });
@@ -127,17 +126,11 @@ export default function () {
       try {
         const data = JSON.parse(message);
 
-        // Track successful channel joins
-        if (data.event === "phx_reply" && data.payload?.status === "ok") {
-          joinedChannels++;
-        }
-
-        // Handle postgres_changes events
         if (data.event === "postgres_changes") {
           // Successfully received a realtime update
           wsMessageReceived.add(1);
         }
-      } catch (e) {
+      } catch {
         // Non-JSON message, ignore
       }
     });

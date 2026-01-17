@@ -13,7 +13,7 @@ import { Trend, Counter } from "k6/metrics";
 const SUPABASE_URL = __ENV.SUPABASE_URL || "http://localhost:8000";
 const WS_URL = SUPABASE_URL.replace("http://", "ws://").replace(
   "https://",
-  "wss://"
+  "wss://",
 );
 const ANON_KEY =
   __ENV.SUPABASE_ANON_KEY ||
@@ -37,7 +37,7 @@ function getRef() {
   return String(++messageRef);
 }
 
-export default function () {
+export default function quickRealtimeTest() {
   const url = `${WS_URL}/realtime/v1/websocket?apikey=${ANON_KEY}&vsn=1.0.0`;
 
   const connectStart = Date.now();
@@ -65,7 +65,7 @@ export default function () {
               },
             },
             ref: getRef(),
-          })
+          }),
         );
       });
 
@@ -75,12 +75,12 @@ export default function () {
           if (data.event === "phx_reply" && data.payload?.status === "ok") {
             wsSubscribeSuccess.add(1);
           }
-        } catch (e) {
+        } catch {
           // ignore non-JSON
         }
       });
 
-      socket.on("error", function (e) {
+      socket.on("error", function () {
         wsConnectionErrors.add(1);
       });
 
@@ -91,7 +91,7 @@ export default function () {
       // Short session: 5-10 seconds
       sleep(5 + Math.random() * 5);
       socket.close();
-    }
+    },
   );
 
   const connected = check(res, {

@@ -227,7 +227,7 @@ services:
       DNS_NODES: "''"
       RLIMIT_NOFILE: "10000"
       APP_NAME: realtime
-      SEED_SELF_HOST: "true"
+      SEED_SELF_HOST: "false"
       RUN_JANITOR: "true"
 
   # To use S3 backed storage: docker compose -f docker-compose.yml -f docker-compose.s3.yml up
@@ -420,6 +420,8 @@ services:
         "postgres",
         "-c",
         "config_file=/etc/postgresql/postgresql.conf",
+        "-c",
+        "max_connections=1000",
         "-c",
         "log_min_messages=fatal", # prevents Realtime polling queries from appearing in logs
       ]

@@ -148,7 +148,7 @@ const Page = () => {
         .insert({ survey_url: surveyUrl || "", is_survey_active: true });
       if (error) throw error;
       toast.success("アンケートを送信しました。");
-    } catch (error) {
+    } catch {
       toast.error("アンケートの送信に失敗しました。");
     } finally {
       setIsSubmittingSurvey(false);
@@ -163,7 +163,7 @@ const Page = () => {
         .insert({ survey_url: surveyUrl || "", is_survey_active: false });
       if (error) throw error;
       toast.success("アンケートを停止しました。");
-    } catch (error) {
+    } catch {
       toast.error("アンケートの停止に失敗しました。");
     } finally {
       setIsSubmittingSurvey(false);

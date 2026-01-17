@@ -43,13 +43,11 @@ const PrizeEditModal = ({
   isOpened,
   setIsOpened,
   canCloseByClickingBackground = true,
-  id,
   initialNameJp = "",
   initialNameEn = "",
   initialImageId = null,
   initialBucketName,
   initialFileName,
-  initialFileType,
   onSubmit,
 }: Props) => {
   const supabase = createSupabaseBrowserClient();
@@ -57,7 +55,6 @@ const PrizeEditModal = ({
 
   const [nameJp, setNameJp] = useState<string>(initialNameJp || "");
   const [nameEn, setNameEn] = useState<string>(initialNameEn || "");
-  const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
   const [newFile, setNewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,9 +103,8 @@ const PrizeEditModal = ({
     if (isOpened) {
       setNameJp(initialNameJp || "");
       setNameEn(initialNameEn || "");
-      setSelectedImageId(initialImageId ?? null);
     }
-  }, [isOpened, initialNameJp, initialNameEn, initialImageId]);
+  }, [isOpened, initialNameJp, initialNameEn]);
 
   const currentImageText = useMemo(() => {
     if (initialImageId && initialBucketName && initialFileName) {

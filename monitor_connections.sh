@@ -1,31 +1,37 @@
 #!/bin/bash
 
-current_connections=0
-max_connections=0
+# Configuration
+CONTAINER_NAME="realtime-dev.supabase-realtime"
+PORT_HEX="0FA0" # Port 4000 in Hex
 
-HEADER_COLOR='\033[38;5;196m'
-DATA_COLOR='\033[38;5;222m'
-RESET_COLOR='\033[0m'
+# Check if container is running
+if ! docker ps | grep -q "$CONTAINER_NAME"; then
+    echo "Error: Container $CONTAINER_NAME is not running."
+    exit 1
+fi
 
-DOCKER_COMPOSE_FILE=${1:-docker-compose.prod.yml}
+echo "Starting connection monitor for Supabase Realtime..."
+echo "Container: $CONTAINER_NAME"
+echo "Listening Port: 4000 (0FA0)"
+echo "---------------------------------------------------"
 
-sudo docker compose -f "$DOCKER_COMPOSE_FILE" logs -f api 2>/dev/null | while read -r line; do
-  if [[ "$line" == *"accepted"* ]]; then
-    ((current_connections++))
-    if ((current_connections > max_connections)); then
-      max_connections=$current_connections
-    fi
-  elif [[ "$line" == *"closed"* ]]; then
-    ((current_connections--))
-  fi
+while true; do
+    # Count IPv4 connections
+    # Field 2: local_address, Field 4: state (01 = ESTABLISHED)
+    TCP4_COUNT=$(docker exec "$CONTAINER_NAME" cat /proc/net/tcp 2>/dev/null | awk -v pat=":${PORT_HEX}$" '$2 ~ pat && $4 == "01" {count++} END {print count+0}')
 
-  if [[ "$current_connections" != "$prevConnections" ]]; then
-    clear
-    prevConnections="$current_connections"
+    # Count IPv6 connections
+    TCP6_COUNT=$(docker exec "$CONTAINER_NAME" cat /proc/net/tcp6 2>/dev/null | awk -v pat=":${PORT_HEX}$" '$2 ~ pat && $4 == "01" {count++} END {print count+0}')
 
-    echo -e "${HEADER_COLOR}BINGO CONNECTION MONITOR${RESET_COLOR}\n"
-    echo -e "同時接続数: ${DATA_COLOR}$current_connections${RESET_COLOR}\n"
-    echo -e "最大同時接続数: ${DATA_COLOR}$max_connections${RESET_COLOR}\n"
-    echo -e "タイムスタンプ: ${DATA_COLOR}$(date +"%Y-%m-%d %H:%M:%S")${RESET_COLOR}\n"
-  fi
+    # Total connections
+    TOTAL=$((TCP4_COUNT + TCP6_COUNT))
+
+    # Get current timestamp
+    TIMESTAMP=$(date "+%H:%M:%S")
+
+    # Display output on the same line (using carriage return) or new line
+    # Using printf to format nicely
+    printf "[%s] Active Connections: %d (IPv4: %d, IPv6: %d)\n" "$TIMESTAMP" "$TOTAL" "$TCP4_COUNT" "$TCP6_COUNT"
+
+    sleep 1
 done
