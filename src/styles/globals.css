@@ -1,12 +1,15 @@
+@import "driver.js/dist/driver.css";
+
 :root {
   --max-width: 1100px;
   --border-radius: 12px;
-  --font-mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
+  --font-mono:
+    ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
     "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
     "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
+  --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
 
   --primary-glow: conic-gradient(
@@ -41,10 +44,10 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --background-start-rgb: 44, 37, 47;
+    --background-end-rgb: 44, 37, 47;
 
     --primary-glow: radial-gradient(rgba(1, 65, 255, 0.4), rgba(1, 65, 255, 0));
     --secondary-glow: linear-gradient(
@@ -70,6 +73,13 @@
     --callout-border-rgb: 108, 108, 108;
     --card-rgb: 100, 100, 100;
     --card-border-rgb: 200, 200, 200;
+
+    --background-color: #2c252f;
+    --number-accent-color: #1a171e;
+    --footer-border-color: var(--main-color);
+    --nav-top-shadow-color: var(--main-color);
+    --help-bg-color: var(--background-color);
+    color-scheme: dark;
   }
 }
 
@@ -100,14 +110,122 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+:root {
+  --main-color: #ffd607;
+  --sub-color: #fff8dc;
+  --background-color: #fff;
+  --number-accent-color: #fff8dc;
+  --footer-border-color: #000000;
+  --nav-top-shadow-color: transparent;
+  --help-bg-color: var(--sub-color);
+  color-scheme: light;
 }
 
-:root {
-  --main-color: #FFD607;
-  --sub-color: #FFF8DC;
-  --background-color: #fff;
+:root[data-theme="dark"] {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 44, 37, 47;
+  --background-end-rgb: 44, 37, 47;
+
+  --primary-glow: radial-gradient(rgba(1, 65, 255, 0.4), rgba(1, 65, 255, 0));
+  --secondary-glow: linear-gradient(
+    to bottom right,
+    rgba(1, 65, 255, 0),
+    rgba(1, 65, 255, 0),
+    rgba(1, 65, 255, 0.3)
+  );
+
+  --tile-start-rgb: 2, 13, 46;
+  --tile-end-rgb: 2, 5, 19;
+  --tile-border: conic-gradient(
+    #ffffff80,
+    #ffffff40,
+    #ffffff30,
+    #ffffff20,
+    #ffffff10,
+    #ffffff10,
+    #ffffff80
+  );
+
+  --callout-rgb: 20, 20, 20;
+  --callout-border-rgb: 108, 108, 108;
+  --card-rgb: 100, 100, 100;
+  --card-border-rgb: 200, 200, 200;
+
+  --background-color: #2c252f;
+  --number-accent-color: #1a171e;
+  --footer-border-color: var(--main-color);
+  --nav-top-shadow-color: var(--main-color);
+  --help-bg-color: var(--background-color);
+  color-scheme: dark;
+}
+
+.driver-popover.help-tour-popover {
+  background-color: var(--help-bg-color, var(--sub-color));
+  color: var(--main-color);
+  border: 2px solid var(--main-color);
+  border-radius: clamp(12px, 3vw, 18px);
+  min-width: min(70vw, 340px);
+  max-width: min(92vw, 460px);
+  padding: clamp(12px, 3vw, 20px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.driver-popover.help-tour-popover .driver-popover-title {
+  font-size: clamp(16px, 4.5vw, 22px);
+  font-weight: 700;
+  color: var(--main-color);
+  margin-bottom: 6px;
+}
+
+.driver-popover.help-tour-popover .driver-popover-description {
+  font-size: clamp(13px, 3.8vw, 18px);
+  line-height: 1.6;
+  color: var(--main-color);
+}
+
+.driver-popover.help-tour-popover .driver-popover-progress-text {
+  font-size: clamp(11px, 3vw, 14px);
+  color: var(--main-color);
+  opacity: 0.7;
+}
+
+.driver-popover.help-tour-popover .driver-popover-footer {
+  margin-top: clamp(10px, 2.5vw, 16px);
+}
+
+.driver-popover.help-tour-popover .driver-popover-footer button {
+  background-color: var(--main-color);
+  color: var(--background-color);
+  border-color: var(--main-color);
+  border-radius: 999px;
+  padding: clamp(6px, 1.6vw, 10px) clamp(12px, 3vw, 18px);
+  font-size: clamp(12px, 3.4vw, 16px);
+  text-shadow: none;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.driver-popover.help-tour-popover .driver-popover-footer button:hover,
+.driver-popover.help-tour-popover .driver-popover-footer button:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.driver-popover.help-tour-popover .driver-popover-close-btn {
+  color: var(--main-color);
+}
+
+.driver-popover.help-tour-popover .driver-popover-close-btn:hover,
+.driver-popover.help-tour-popover .driver-popover-close-btn:focus {
+  color: var(--main-color);
+  opacity: 0.8;
+}
+
+.driver-popover.help-tour-popover .driver-popover-arrow {
+  border-color: var(--help-bg-color, var(--sub-color));
+}
+
+.driver-popover.help-tour-popover .driver-popover-navigation-btns {
+  gap: clamp(6px, 1.8vw, 10px);
 }

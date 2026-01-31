@@ -2,7 +2,6 @@
 
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import styles from "./Layout.module.css";
-import "intro.js/minified/introjs.min.css";
 import {
   ReachIcon,
   PrizesIcon,
@@ -18,6 +17,7 @@ import {
   SurveyPromptModal,
 } from "@/components/user/common";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { logRealtimeChannelError } from "@/lib/supabase/realtime";
 import { type Event, mapEventRow } from "@/types";
 import { en, ja } from "@/locales";
 import { useSurveyState } from "@/hooks/useSurveyState";
@@ -126,15 +126,27 @@ const Layout = (props: LayoutProps) => {
     } else {
       localStorage.setItem("isSortedAscending", "false");
     }
-
-    const storedDarkMode = localStorage.getItem("isDarkMode");
-    if (storedDarkMode !== null) {
-      setIsDarkMode(storedDarkMode === "true");
-    } else {
-      localStorage.setItem("isDarkMode", "true");
-      setIsDarkMode(true);
-    }
   }, [setIsSortedAscending]);
+
+  // テーマ初期化
+  useEffect(() => {
+    const root = document.documentElement;
+    const legacyDarkMode = localStorage.getItem("isDarkMode");
+    if (legacyDarkMode !== null) {
+      const legacyIsDark = legacyDarkMode === "true";
+      const nextTheme = legacyIsDark ? "dark" : "light";
+      root.dataset.theme = nextTheme;
+      setIsDarkMode(legacyIsDark);
+      document.cookie = `theme=${nextTheme}; path=/; max-age=31536000; samesite=lax`;
+      localStorage.removeItem("isDarkMode");
+      return;
+    }
+
+    const theme = root.dataset.theme;
+    if (theme === "dark" || theme === "light") {
+      setIsDarkMode(theme === "dark");
+    }
+  }, []);
 
   // 初期設定を適用
   useEffect(() => {
@@ -148,33 +160,21 @@ const Layout = (props: LayoutProps) => {
 
   // 背景色やテーマカラーを適用
   useEffect(() => {
-    const backgroundColor = isDarkMode ? "#2C252F" : "#FFFFFF";
-    const numberAccentColor = isDarkMode ? "#1a171e" : subColor;
-    const footerBorderColor = isDarkMode ? "var(--main-color)" : "#000000";
-    const navTopShadowColor = isDarkMode ? "var(--main-color)" : "transparent";
-    const helpBgColor = isDarkMode ? backgroundColor : "var(--sub-color)";
-    document.documentElement.style.setProperty(
-      "--background-color",
-      backgroundColor,
-    );
-    document.documentElement.style.setProperty(
-      "--number-accent-color",
-      numberAccentColor,
-    );
-    document.documentElement.style.setProperty(
-      "--footer-border-color",
-      footerBorderColor,
-    );
-    document.documentElement.style.setProperty(
-      "--nav-top-shadow-color",
-      navTopShadowColor,
-    );
-    document.documentElement.style.setProperty("--help-bg-color", helpBgColor);
+    const theme = isDarkMode ? "dark" : "light";
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme;
     const metaTheme = document.querySelector(
       'meta[name="theme-color"]',
     ) as HTMLMetaElement | null;
-    if (metaTheme) metaTheme.content = backgroundColor;
-  }, [isDarkMode, subColor]);
+    if (metaTheme) {
+      const computedBackground = getComputedStyle(root)
+        .getPropertyValue("--background-color")
+        .trim();
+      metaTheme.content =
+        computedBackground || (isDarkMode ? "#2C252F" : "#FFFFFF");
+    }
+  }, [isDarkMode]);
 
   useEffect(() => {
     const fetchLatestEvent = async () => {
@@ -206,7 +206,7 @@ const Layout = (props: LayoutProps) => {
       )
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
-          console.error("[Realtime] events channel error:", err);
+          logRealtimeChannelError("events", err);
         }
       });
 
@@ -216,9 +216,10 @@ const Layout = (props: LayoutProps) => {
   }, []);
 
   const toggleDarkMode = () => {
-    const next = !isDarkMode;
-    setIsDarkMode(next);
-    localStorage.setItem("isDarkMode", next.toString());
+    const nextTheme = isDarkMode ? "light" : "dark";
+    document.documentElement.dataset.theme = nextTheme;
+    document.cookie = `theme=${nextTheme}; path=/; max-age=31536000; samesite=lax`;
+    setIsDarkMode(nextTheme === "dark");
   };
 
   // アンケート状態管理（カスタムフック）

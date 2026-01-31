@@ -11,6 +11,8 @@ interface IconFrameworkProps {
   inversion?: boolean;
   id?: string;
   onClick?: () => void;
+  size?: "normal" | "wide";
+  className?: string;
 }
 
 const IconFramework = (props: IconFrameworkProps) => {
@@ -29,10 +31,15 @@ const IconFramework = (props: IconFrameworkProps) => {
 
   return (
     <button
-      className={classNames(styles.iconContainer, {
-        [styles.outline]: props.outline,
-        [styles.color_inversion]: isInverted,
-      })}
+      className={classNames(
+        styles.iconContainer,
+        {
+          [styles.outline]: props.outline,
+          [styles.color_inversion]: isInverted,
+          [styles.wide]: props.size === "wide",
+        },
+        props.className,
+      )}
       onClick={handleClick}
       id={props.id}
     >

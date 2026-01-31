@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { PrizeCardList, Loading, Layout } from "@/components";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { logRealtimeChannelError } from "@/lib/supabase/realtime";
 import { mapPrizeRow } from "@/types";
 import { useUserStore } from "@/stores/useUserStore";
 
@@ -45,7 +46,7 @@ const Page = () => {
       )
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
-          console.error("[Realtime] prizes channel error:", err);
+          logRealtimeChannelError("prizes", err);
         }
       });
 

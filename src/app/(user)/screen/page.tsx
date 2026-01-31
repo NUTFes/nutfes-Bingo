@@ -9,6 +9,7 @@ import {
   type ReachLog,
 } from "@/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { logRealtimeChannelError } from "@/lib/supabase/realtime";
 import {
   NumberCardLarge,
   NumberCardList,
@@ -162,7 +163,7 @@ const Page = () => {
       )
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
-          console.error("[Realtime] numbers-screen channel error:", err);
+          logRealtimeChannelError("numbers-screen", err);
         }
       });
 
@@ -183,7 +184,7 @@ const Page = () => {
       )
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
-          console.error("[Realtime] reach-logs channel error:", err);
+          logRealtimeChannelError("reach-logs", err);
         }
       });
 
@@ -206,7 +207,7 @@ const Page = () => {
       )
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
-          console.error("[Realtime] stamp-triggers channel error:", err);
+          logRealtimeChannelError("stamp-triggers", err);
         }
       });
 

@@ -30,15 +30,19 @@ const PrizeCard = (props: PrizeCardProps) => {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.image}>
-          <div className={styles.imageWrapper}>
+          <div
+            className={classNames(styles.imageWrapper, {
+              [styles.wonImage]: bingoPrize.isWon,
+            })}
+          >
             {imageURL && prizeImage?.bucketName && prizeImage?.fileName && (
               <Image src={imageURL} alt="PrizeImage" fill />
             )}
           </div>
         </div>
         {bingoPrize.isWon && (
-          <div className={classNames(styles.overlay, styles.center)}>
-            <p className={styles.center}>当選済み</p>
+          <div className={styles.overlay}>
+            <span className={styles.wonBadge}>当選済み</span>
           </div>
         )}
       </div>

@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import styles from "./ReachIcon.module.css";
 import classNames from "classnames";
-import Image from "next/image";
+import styles from "./ReachIcon.module.css";
 
 interface ReachIconProps {
   onClick: () => void;
@@ -19,21 +18,15 @@ const ReachIcon = (props: ReachIconProps) => {
 
   return (
     <button
-      className={classNames(styles.reachIcon, {
-        [styles.color_inversion]: props.isOpen,
+      type="button"
+      className={classNames(styles.reachButton, {
+        [styles.inverted]: props.isOpen,
       })}
       onClick={handleClick}
       id={props.id}
+      aria-label="REACH"
     >
-      <div className={styles.icon}>
-        <Image
-          src="/icon_reach.svg"
-          alt="Reach"
-          width={48}
-          height={48}
-          className={props.isOpen ? styles.inverted : ""}
-        />
-      </div>
+      <span className={styles.icon} aria-hidden="true" />
       <span className={styles.text}>REACH</span>
     </button>
   );

@@ -18,9 +18,11 @@ export const en = {
     dark: "Dark",
   },
   helpCarousel: {
+    open: "Help",
     close: "close",
     back: "back",
     next: "next",
+    progress: "{{current}} / {{total}}",
   },
   helpDescription: {
     page1_title: "Wellcome!!",

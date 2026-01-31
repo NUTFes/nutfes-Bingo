@@ -4,6 +4,7 @@
   align-items: center;
   width: 62.5vw;
   height: 62.5vw;
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
   border: 2vw solid var(--main-color);
   background: linear-gradient(
     135deg,

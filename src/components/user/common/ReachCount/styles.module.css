@@ -36,6 +36,7 @@
   left: 46%;
   color: var(--main-color);
   background-color: var(--background-color);
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
   font-size: 6.7vw;
   line-height: 102%;
 }

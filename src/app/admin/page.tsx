@@ -17,6 +17,7 @@ import {
 import styles from "@/styles/Home.module.css";
 import { mapNumberRow, mapEventRow, type BingoNumber } from "@/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { logRealtimeChannelError } from "@/lib/supabase/realtime";
 import { useAdminStore } from "@/stores/useAdminStore";
 
 interface formDataCreate {
@@ -195,7 +196,7 @@ const Page = () => {
       )
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
-          console.error("[Realtime] numbers channel error:", err);
+          logRealtimeChannelError("numbers", err);
         }
       });
 

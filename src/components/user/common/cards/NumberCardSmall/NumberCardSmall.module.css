@@ -1,6 +1,7 @@
 .container {
   width: 20vw;
   height: 20vw;
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
   border: 1.25vw solid var(--main-color);
   background: linear-gradient(
     135deg,

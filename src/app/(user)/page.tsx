@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import styles from "@/styles/Home.module.css";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { logRealtimeChannelError } from "@/lib/supabase/realtime";
 import { mapNumberRow, type BingoNumber } from "@/types";
 import { Layout, Loading, NumberCardLarge, NumberCardList } from "@/components";
 
@@ -71,7 +72,7 @@ const Page = () => {
       )
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
-          console.error("[Realtime] numbers channel error:", err);
+          logRealtimeChannelError("numbers", err);
         }
       });
 
