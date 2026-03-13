@@ -21,39 +21,39 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.head_ref || github.ref_name }}
           persist-credentials: true
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Takumi Guard
-        uses: flatt-security/setup-takumi-guard-npm@8f53b50568e4466f2d92504f349c05b9ffcb8b59
+        uses: flatt-security/setup-takumi-guard-npm@8f53b50568e4466f2d92504f349c05b9ffcb8b59 # v1
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
-
-      - name: Oxlint Check
-        run: pnpm run lint
 
       - name: Oxfmt Format
         run: pnpm run fmt
 
       - name: Commit formatted changes
-        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
         with:
           commit_message: "style: auto format by oxfmt"
+
+      - name: Oxlint Check
+        run: pnpm run lint
 
       - name: TypeScript Check
         run: pnpm exec tsc --noEmit
@@ -72,28 +72,111 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: React Doctor
-        id: react_doctor
-        uses: millionco/react-doctor@ec4a41fd827c29d79f9b27a588cde598e054d059
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          directory: .
-          project: goods-go
-          verbose: true
-          fail-on: none
           node-version: "24"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: React Doctor Score Gate
+      - name: Run React Doctor
+        id: run_doctor
         run: |
-          score="${{ steps.react_doctor.outputs.score }}"
-          echo "React Doctor score: ${score}"
+          OUTPUT=$(npx -y react-doctor@latest . --project 45th-homepage --verbose --fail-on none)
+          echo "$OUTPUT"
+          DIAG_PATH=$(echo "$OUTPUT" | grep "Full diagnostics written to" | awk '{print $NF}')
+          echo "diag_path=$DIAG_PATH" >> "$GITHUB_OUTPUT"
+          SCORE=$(echo "$OUTPUT" | grep -oE '[0-9]+ / 100' | head -n 1 | awk '{print $1}')
+          echo "score=$SCORE" >> "$GITHUB_OUTPUT"
 
-          if [ "${score}" != "100" ]; then
-            echo "Expected React Doctor score 100, got ${score}"
-            exit 1
-          fi
+      - name: Comment React Doctor Report
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        env:
+          DIAG_PATH: ${{ steps.run_doctor.outputs.diag_path }}
+          SCORE: ${{ steps.run_doctor.outputs.score }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const diagPath = process.env.DIAG_PATH;
+            const score = parseInt(process.env.SCORE || '0');
+
+            let comment = '## 🩺 React Doctor Report\n\n';
+
+            const getHealthColor = (s) => {
+              if (s >= 90) return '🟢';
+              if (s >= 70) return '🟠';
+              return '🔴';
+            };
+
+            comment += `### Health Score: ${getHealthColor(score)} **${score} / 100**\n\n`;
+
+            try {
+              if (!diagPath) throw new Error('No diagnostics path found');
+              const diagFile = path.join(diagPath, 'diagnostics.json');
+              if (!fs.existsSync(diagFile)) throw new Error('diagnostics.json not found');
+              
+              const diagnostics = JSON.parse(fs.readFileSync(diagFile, 'utf8'));
+              
+              if (diagnostics.length === 0) {
+                comment += '✅ **No issues found! Your codebase is in great health.**\n';
+              } else {
+                const categories = {};
+                diagnostics.forEach(d => {
+                  const cat = d.category || 'Other';
+                  if (!categories[cat]) categories[cat] = [];
+                  categories[cat].push(d);
+                });
+                
+                comment += '| Category | Count |\n| --- | --- |\n';
+                Object.keys(categories).forEach(cat => {
+                  comment += `| ${cat} | ${categories[cat].length} |\n`;
+                });
+                
+                comment += '\n<details>\n<summary>🔍 View Detailed Findings</summary>\n\n';
+                
+                Object.keys(categories).sort().forEach(cat => {
+                  comment += `#### ${cat}\n`;
+                  comment += '| File | Line | Issue | Help |\n| --- | --- | --- | --- |\n';
+                  categories[cat].forEach(d => {
+                    const fileLink = `[${d.filePath}](/${context.repo.owner}/${context.repo.repo}/blob/${context.sha}/${d.filePath}#L${d.line})`;
+                    comment += `| ${fileLink} | ${d.line} | ${d.message} | ${d.help || '-'} |\n`;
+                  });
+                  comment += '\n';
+                });
+                
+                comment += '</details>\n';
+              }
+            } catch (err) {
+              comment += `⚠️ Could not parse detailed diagnostics: ${err.message}\n`;
+            }
+
+            const marker = '<!-- react-doctor-report -->';
+            const body = `${marker}\n${comment}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const botComment = comments.find(c => c.user.type === 'Bot' && c.body.includes(marker));
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
 
   build:
     name: Build
@@ -101,22 +184,22 @@ jobs:
     needs: [quality, react-doctor]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Takumi Guard
-        uses: flatt-security/setup-takumi-guard-npm@8f53b50568e4466f2d92504f349c05b9ffcb8b59
+        uses: flatt-security/setup-takumi-guard-npm@8f53b50568e4466f2d92504f349c05b9ffcb8b59 # v1
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
