@@ -1,0 +1,386 @@
+.wrapper {
+  padding: 2rem;
+}
+
+.container {
+  border-radius: 1rem;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: #ffffff80;
+  border: solid 1vw var(--main-color);
+}
+
+.title {
+  font-size: clamp(12px, calc(100vw / 18), 24px);
+  font-weight: bold;
+  color: #333;
+  padding-left: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(30%, 300px), 2fr));
+  gap: 10px;
+  margin-bottom: 0.4rem;
+}
+
+.card {
+  aspect-ratio: 1 / 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1.25vw solid var(--main-color);
+  border-radius: 3.125vw;
+  box-sizing: border-box;
+  box-shadow: 0.9375vw 0.9375vw 0px var(--main-color);
+}
+
+.cardActions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.iconBtn {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--main-color);
+  color: var(--main-color);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  filter: brightness(0.95);
+}
+
+.cardContent {
+  font-size: 5vw;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 1.9vw 1.9vw 0 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlayText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.8;
+  width: 100%;
+  height: 35%;
+  font-size: 5vw;
+  font-weight: 700;
+  color: #fff;
+}
+
+.toggleInput {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.toggleLabel {
+  width: 85px;
+  height: 42px;
+  background: #fff;
+  border: 3px solid #eee;
+  position: relative;
+  display: inline-block;
+  border-radius: 40px;
+  transition: 0.4s;
+  box-sizing: border-box;
+}
+
+.toggleLabel:after {
+  content: "";
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 100%;
+  left: 2px;
+  top: 2px;
+  z-index: 2;
+  background: #eee;
+  transition: 0.4s;
+}
+
+.toggleInput:checked + .toggleLabel {
+  border: 3px solid var(--main-color);
+}
+
+.toggleInput:checked + .toggleLabel:after {
+  left: 42px;
+  background: var(--main-color);
+}
+
+.toggleContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.loading {
+  color: var(--main-color);
+  font-size: 20px;
+  margin: 100px auto;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  position: relative;
+  text-indent: -9999em;
+  -webkit-animation: load 1.3s infinite linear;
+  animation: load 1.3s infinite linear;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+@-webkit-keyframes load {
+  0%,
+  100% {
+    box-shadow:
+      0 -3em 0 0.2em,
+      2em -2em 0 0em,
+      3em 0 0 -1em,
+      2em 2em 0 -1em,
+      0 3em 0 -1em,
+      -2em 2em 0 -1em,
+      -3em 0 0 -1em,
+      -2em -2em 0 0;
+  }
+  12.5% {
+    box-shadow:
+      0 -3em 0 0,
+      2em -2em 0 0.2em,
+      3em 0 0 0,
+      2em 2em 0 -1em,
+      0 3em 0 -1em,
+      -2em 2em 0 -1em,
+      -3em 0 0 -1em,
+      -2em -2em 0 -1em;
+  }
+  25% {
+    box-shadow:
+      0 -3em 0 -0.5em,
+      2em -2em 0 0,
+      3em 0 0 0.2em,
+      2em 2em 0 0,
+      0 3em 0 -1em,
+      -2em 2em 0 -1em,
+      -3em 0 0 -1em,
+      -2em -2em 0 -1em;
+  }
+  37.5% {
+    box-shadow:
+      0 -3em 0 -1em,
+      2em -2em 0 -1em,
+      3em 0em 0 0,
+      2em 2em 0 0.2em,
+      0 3em 0 0em,
+      -2em 2em 0 -1em,
+      -3em 0em 0 -1em,
+      -2em -2em 0 -1em;
+  }
+  50% {
+    box-shadow:
+      0 -3em 0 -1em,
+      2em -2em 0 -1em,
+      3em 0 0 -1em,
+      2em 2em 0 0em,
+      0 3em 0 0.2em,
+      -2em 2em 0 0,
+      -3em 0em 0 -1em,
+      -2em -2em 0 -1em;
+  }
+  62.5% {
+    box-shadow:
+      0 -3em 0 -1em,
+      2em -2em 0 -1em,
+      3em 0 0 -1em,
+      2em 2em 0 -1em,
+      0 3em 0 0,
+      -2em 2em 0 0.2em,
+      -3em 0 0 0,
+      -2em -2em 0 -1em;
+  }
+  75% {
+    box-shadow:
+      0em -3em 0 -1em,
+      2em -2em 0 -1em,
+      3em 0em 0 -1em,
+      2em 2em 0 -1em,
+      0 3em 0 -1em,
+      -2em 2em 0 0,
+      -3em 0em 0 0.2em,
+      -2em -2em 0 0;
+  }
+  87.5% {
+    box-shadow:
+      0em -3em 0 0,
+      2em -2em 0 -1em,
+      3em 0 0 -1em,
+      2em 2em 0 -1em,
+      0 3em 0 -1em,
+      -2em 2em 0 0,
+      -3em 0em 0 0,
+      -2em -2em 0 0.2em;
+  }
+}
+
+@keyframes load {
+  0%,
+  100% {
+    box-shadow:
+      0 -3em 0 0.2em,
+      2em -2em 0 0em,
+      3em 0 0 -1em,
+      2em 2em 0 -1em,
+      0 3em 0 -1em,
+      -2em 2em 0 -1em,
+      -3em 0 0 -1em,
+      -2em -2em 0 0;
+  }
+  12.5% {
+    box-shadow:
+      0 -3em 0 0,
+      2em -2em 0 0.2em,
+      3em 0 0 0,
+      2em 2em 0 -1em,
+      0 3em 0 -1em,
+      -2em 2em 0 -1em,
+      -3em 0 0 -1em,
+      -2em -2em 0 -1em;
+  }
+  25% {
+    box-shadow:
+      0 -3em 0 -0.5em,
+      2em -2em 0 0,
+      3em 0 0 0.2em,
+      2em 2em 0 0,
+      0 3em 0 -1em,
+      -2em 2em 0 -1em,
+      -3em 0 0 -1em,
+      -2em -2em 0 -1em;
+  }
+  37.5% {
+    box-shadow:
+      0 -3em 0 -1em,
+      2em -2em 0 -1em,
+      3em 0em 0 0,
+      2em 2em 0 0.2em,
+      0 3em 0 0em,
+      -2em 2em 0 -1em,
+      -3em 0em 0 -1em,
+      -2em -2em 0 -1em;
+  }
+  50% {
+    box-shadow:
+      0 -3em 0 -1em,
+      2em -2em 0 -1em,
+      3em 0 0 -1em,
+      2em 2em 0 0em,
+      0 3em 0 0.2em,
+      -2em 2em 0 0,
+      -3em 0em 0 -1em,
+      -2em -2em 0 -1em;
+  }
+  62.5% {
+    box-shadow:
+      0 -3em 0 -1em,
+      2em -2em 0 -1em,
+      3em 0 0 -1em,
+      2em 2em 0 -1em,
+      0 3em 0 0,
+      -2em 2em 0 0.2em,
+      -3em 0 0 0,
+      -2em -2em 0 -1em;
+  }
+  75% {
+    box-shadow:
+      0em -3em 0 -1em,
+      2em -2em 0 -1em,
+      3em 0em 0 -1em,
+      2em 2em 0 -1em,
+      0 3em 0 -1em,
+      -2em 2em 0 0,
+      -3em 0em 0 0.2em,
+      -2em -2em 0 0;
+  }
+  87.5% {
+    box-shadow:
+      0em -3em 0 0,
+      2em -2em 0 -1em,
+      3em 0 0 -1em,
+      2em 2em 0 -1em,
+      0 3em 0 -1em,
+      -2em 2em 0 0,
+      -3em 0em 0 0,
+      -2em -2em 0 0.2em;
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+.image {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image img {
+  border-radius: 1.9vw 1.9vw 0 0;
+}
+
+@media (max-width: 767px) {
+  .wrapper {
+    padding: 0.5rem;
+  }
+  .container {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+  .cardContent {
+    font-weight: normal;
+  }
+}
+
+@media (min-width: 768px) {
+  .cardContent {
+    font-size: 2vw;
+  }
+
+  .overlayText {
+    font-size: 4vw;
+  }
+}

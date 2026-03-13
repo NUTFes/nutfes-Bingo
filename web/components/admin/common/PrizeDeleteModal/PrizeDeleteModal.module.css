@@ -1,0 +1,86 @@
+.wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(51, 51, 51, 0.6);
+}
+
+.frame {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: white;
+  width: 380px;
+  animation: zoomIn 0.2s ease-out forwards;
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 0.75rem;
+}
+.desc {
+  color: #555;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+.strong {
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+.btn {
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+.danger {
+  background: #e74c3c;
+  color: #fff;
+  border-color: #e74c3c;
+}
+.cancel {
+  background: #fff;
+  color: #333;
+}
+
+.background {
+  position: fixed;
+  inset: 0;
+}
+
+.btnClose {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.6rem;
+  color: var(--main-color);
+}
