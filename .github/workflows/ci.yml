@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24.13.0"
+  PNPM_VERSION: "10.28.1"
+
+jobs:
+  quality:
+    name: Quality Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Takumi Guard
+        uses: flatt-security/setup-takumi-guard-npm@8f53b50568e4466f2d92504f349c05b9ffcb8b59
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Oxlint Check
+        run: pnpm run lint
+
+      - name: Oxfmt Format
+        run: pnpm run fmt
+
+      - name: Commit formatted changes
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9
+        with:
+          commit_message: "style: auto format by oxfmt"
+
+      - name: TypeScript Check
+        run: pnpm exec tsc --noEmit
+
+  react-doctor:
+    name: React Doctor
+    runs-on: ubuntu-latest
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      NO_COLOR: "1"
+      FORCE_COLOR: "0"
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: React Doctor
+        id: react_doctor
+        uses: millionco/react-doctor@ec4a41fd827c29d79f9b27a588cde598e054d059
+        with:
+          directory: .
+          project: goods-go
+          verbose: true
+          fail-on: none
+          node-version: "24"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: React Doctor Score Gate
+        run: |
+          score="${{ steps.react_doctor.outputs.score }}"
+          echo "React Doctor score: ${score}"
+
+          if [ "${score}" != "100" ]; then
+            echo "Expected React Doctor score 100, got ${score}"
+            exit 1
+          fi
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [quality, react-doctor]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Takumi Guard
+        uses: flatt-security/setup-takumi-guard-npm@8f53b50568e4466f2d92504f349c05b9ffcb8b59
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Build
+        run: pnpm run build
