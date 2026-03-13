@@ -11,14 +11,7 @@ import type {
   StampTriggerRow,
   EventRow,
 } from "./database";
-import type {
-  BingoNumber,
-  PrizeImage,
-  Prize,
-  ReachLog,
-  StampTrigger,
-  Event,
-} from "./bingo";
+import type { BingoNumber, PrizeImage, Prize, ReachLog, StampTrigger, Event } from "./bingo";
 
 export const mapNumberRow = (row: NumberRow): BingoNumber => ({
   id: row.id,

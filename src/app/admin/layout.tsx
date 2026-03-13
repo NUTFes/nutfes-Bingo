@@ -9,11 +9,7 @@ import { useAdminStore } from "@/stores/useAdminStore";
 
 const supabase = createSupabaseBrowserClient();
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/admin";
   const router = useRouter();
   const setAuthenticated = useAdminStore((state) => state.setAuthenticated);

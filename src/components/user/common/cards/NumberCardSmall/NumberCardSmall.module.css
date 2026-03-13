@@ -3,11 +3,7 @@
   height: 20vw;
   font-family: var(--font-silom), "Noto Sans JP", sans-serif;
   border: 1.25vw solid var(--main-color);
-  background: linear-gradient(
-    135deg,
-    var(--background-color) 50%,
-    var(--number-accent-color) 51%
-  );
+  background: linear-gradient(135deg, var(--background-color) 50%, var(--number-accent-color) 51%);
   border-radius: 3.125vw;
   box-sizing: border-box;
   box-shadow: 0.9375vw 0.9375vw 0px var(--main-color);

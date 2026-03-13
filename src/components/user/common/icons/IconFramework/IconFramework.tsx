@@ -17,8 +17,7 @@ interface IconFrameworkProps {
 
 const IconFramework = (props: IconFrameworkProps) => {
   const [internalInversion, setInternalInversion] = useState<boolean>(false);
-  const isInverted =
-    props.inversion !== undefined ? props.inversion : internalInversion;
+  const isInverted = props.inversion !== undefined ? props.inversion : internalInversion;
 
   const handleClick = () => {
     if (props.inversion === undefined) {

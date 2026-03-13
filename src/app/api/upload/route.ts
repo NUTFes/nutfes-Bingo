@@ -15,8 +15,7 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 });
 
 const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
-  const { data: buckets, error: listError } =
-    await supabase.storage.listBuckets();
+  const { data: buckets, error: listError } = await supabase.storage.listBuckets();
 
   if (listError) {
     console.error("[upload API] Failed to list buckets:", listError);
@@ -29,12 +28,9 @@ const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
     return true;
   }
 
-  const { error: createError } = await supabase.storage.createBucket(
-    bucketName,
-    {
-      public: true,
-    },
-  );
+  const { error: createError } = await supabase.storage.createBucket(bucketName, {
+    public: true,
+  });
 
   if (createError) {
     console.error("[upload API] Failed to create bucket:", createError);
@@ -57,10 +53,7 @@ export const POST = async (request: Request) => {
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
-      return NextResponse.json(
-        { message: "No file uploaded" },
-        { status: 400 },
-      );
+      return NextResponse.json({ message: "No file uploaded" }, { status: 400 });
     }
 
     const bucketName =
@@ -70,10 +63,7 @@ export const POST = async (request: Request) => {
     const fileName = file.name;
 
     if (!fileName) {
-      return NextResponse.json(
-        { message: "file name is missing" },
-        { status: 400 },
-      );
+      return NextResponse.json({ message: "file name is missing" }, { status: 400 });
     }
 
     const bucketReady = await ensureBucketExists(bucketName);
@@ -86,23 +76,15 @@ export const POST = async (request: Request) => {
 
     const arrayBuffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(arrayBuffer);
-    const safeFileName = `${Date.now()}_${fileName}`.replace(
-      /[^a-zA-Z0-9._-]/g,
-      "_",
-    );
+    const safeFileName = `${Date.now()}_${fileName}`.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-    const { error } = await supabase.storage
-      .from(bucketName)
-      .upload(safeFileName, fileBuffer, {
-        contentType: file.type || "application/octet-stream",
-        upsert: true,
-      });
+    const { error } = await supabase.storage.from(bucketName).upload(safeFileName, fileBuffer, {
+      contentType: file.type || "application/octet-stream",
+      upsert: true,
+    });
 
     if (error) {
-      console.error(
-        "Supabase Storage upload error:",
-        JSON.stringify(error, null, 2),
-      );
+      console.error("Supabase Storage upload error:", JSON.stringify(error, null, 2));
       return NextResponse.json(
         {
           message: error.message,

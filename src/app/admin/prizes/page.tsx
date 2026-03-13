@@ -26,9 +26,7 @@ const Page = () => {
   const handleSearch = () => {
     const searchInput = searchRef.current;
     if (searchInput && searchResults.length > 0) {
-      const firstResultElement = document.getElementById(
-        `prize-${searchResults[0].id}`,
-      );
+      const firstResultElement = document.getElementById(`prize-${searchResults[0].id}`);
       firstResultElement?.scrollIntoView({
         behavior: "smooth",
         block: "center",
@@ -82,11 +80,7 @@ const Page = () => {
         </div>
       </div>
       <PrizeResult
-        prizeResult={
-          searchText !== "" && searchResults.length > 0
-            ? searchResults
-            : bingoPrize
-        }
+        prizeResult={searchText !== "" && searchResults.length > 0 ? searchResults : bingoPrize}
         setBingoPrize={setBingoPrize}
         showOverlay={true}
         showToggle={true}

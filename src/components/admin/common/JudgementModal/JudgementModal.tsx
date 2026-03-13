@@ -28,8 +28,7 @@ const createEmptyBingoCard = (): BingoCard => {
   return card;
 };
 
-const isCenter = (row: number, col: number) =>
-  row === CENTER.row && col === CENTER.col;
+const isCenter = (row: number, col: number) => row === CENTER.row && col === CENTER.col;
 
 const isCellSatisfied = (cell: string, drawnNumbers: number[]) => {
   if (cell === FREE) return true;
@@ -81,20 +80,7 @@ const ALL_LINES = generateAllLines();
 
 const cloneCard = (card: BingoCard): BingoCard => card.map((r) => r.slice());
 
-const KEYPAD = [
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "消去",
-  "0",
-  "確定",
-] as const;
+const KEYPAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "消去", "0", "確定"] as const;
 
 interface JudgementModalProps {
   isOpened: boolean;
@@ -121,10 +107,7 @@ const JudgementModal = ({
   const [isGettingLatest, setIsGettingLatest] = useState(false);
 
   // 抽選済みの数字一覧
-  const drawnNumbers = useMemo(
-    () => bingoNumbers.map((n) => n.number),
-    [bingoNumbers],
-  );
+  const drawnNumbers = useMemo(() => bingoNumbers.map((n) => n.number), [bingoNumbers]);
 
   const finalizePendingInput = (commitState: boolean): BingoCard => {
     let working = bingoCard;
@@ -201,11 +184,7 @@ const JudgementModal = ({
   const handleCellClick = (row: number, col: number) => {
     if (hasJudged || isCenter(row, col)) return;
 
-    if (
-      selectedCell &&
-      (selectedCell.row !== row || selectedCell.col !== col) &&
-      inputValue
-    ) {
+    if (selectedCell && (selectedCell.row !== row || selectedCell.col !== col) && inputValue) {
       commitValueAt(selectedCell, inputValue);
     }
 
@@ -262,8 +241,7 @@ const JudgementModal = ({
       completedLines.includes(getRowLineId(row)) ||
       completedLines.includes(getColLineId(col)) ||
       (row === col && completedLines.includes(getDiagMainLineId())) ||
-      (row + col === BOARD_SIZE - 1 &&
-        completedLines.includes(getDiagAntiLineId()))
+      (row + col === BOARD_SIZE - 1 && completedLines.includes(getDiagAntiLineId()))
     );
   };
 
@@ -289,11 +267,7 @@ const JudgementModal = ({
   return (
     <div className={styles.wrapper} onClick={handleBackgroundClick}>
       <div className={styles.frame} onKeyDown={handleKeyDown} tabIndex={-1}>
-        <button
-          className={styles.btnClose}
-          onClick={closeModal}
-          aria-label="閉じる"
-        >
+        <button className={styles.btnClose} onClick={closeModal} aria-label="閉じる">
           <RxCrossCircled className={styles.icon} />
         </button>
 
@@ -318,8 +292,7 @@ const JudgementModal = ({
                         classNames.push(styles.activeCell);
                         if (inputValue) classNames.push(styles.typingCell);
                       }
-                      if (shouldHighlight(r, c))
-                        classNames.push(styles.bingoHighlight);
+                      if (shouldHighlight(r, c)) classNames.push(styles.bingoHighlight);
 
                       return (
                         <div
@@ -334,9 +307,7 @@ const JudgementModal = ({
                           }}
                           tabIndex={0}
                           role="button"
-                          aria-label={`行${r + 1} 列${COL_HEADERS[c]} ${
-                            getCellText(r, c) || "空"
-                          }`}
+                          aria-label={`行${r + 1} 列${COL_HEADERS[c]} ${getCellText(r, c) || "空"}`}
                         >
                           {getCellText(r, c)}
                         </div>
@@ -368,9 +339,7 @@ const JudgementModal = ({
                           else handleDigitClick(label);
                         }}
                         className={`${styles.button} ${
-                          label === "消去" || label === "確定"
-                            ? styles.functionButton
-                            : ""
+                          label === "消去" || label === "確定" ? styles.functionButton : ""
                         }`}
                       >
                         {label}

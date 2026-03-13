@@ -2,19 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Matter from "matter-js";
-import {
-  mapNumberRow,
-  mapReachLogRow,
-  type BingoNumber,
-  type ReachLog,
-} from "@/types";
+import { mapNumberRow, mapReachLogRow, type BingoNumber, type ReachLog } from "@/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { logRealtimeChannelError } from "@/lib/supabase/realtime";
-import {
-  NumberCardLarge,
-  NumberCardList,
-  ReachCount,
-} from "@/components/user/common";
+import { NumberCardLarge, NumberCardList, ReachCount } from "@/components/user/common";
 import styles from "./screen.module.css";
 import Image from "next/image";
 
@@ -154,13 +145,9 @@ const Page = () => {
 
     const numbersChannel = supabase
       .channel("numbers-changes-screen")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "numbers" },
-        () => {
-          fetchNumbers();
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "numbers" }, () => {
+        fetchNumbers();
+      })
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
           logRealtimeChannelError("numbers-screen", err);
@@ -221,13 +208,7 @@ const Page = () => {
       supabase.removeChannel(stampChannel);
       window.clearInterval(intervalId);
     };
-  }, [
-    fetchNumbers,
-    fetchLatestReachLog,
-    fetchLatestStampCursor,
-    pollNewStamps,
-    addCircleById,
-  ]);
+  }, [fetchNumbers, fetchLatestReachLog, fetchLatestStampCursor, pollNewStamps, addCircleById]);
 
   // Matter.jsのエンジン設定とシーンの初期化
   useEffect(() => {
@@ -258,13 +239,10 @@ const Page = () => {
       { isStatic: true, render: { visible: false } },
     );
 
-    const leftWall = Bodies.rectangle(
-      0,
-      window.innerHeight / 2,
-      1,
-      window.innerHeight,
-      { isStatic: true, render: { visible: false } },
-    );
+    const leftWall = Bodies.rectangle(0, window.innerHeight / 2, 1, window.innerHeight, {
+      isStatic: true,
+      render: { visible: false },
+    });
 
     Composite.add(engine.current.world, [leftWall, rightWall]);
     Render.run(render.current);

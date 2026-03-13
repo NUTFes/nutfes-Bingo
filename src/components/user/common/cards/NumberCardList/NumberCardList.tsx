@@ -20,12 +20,8 @@ const NumberCardList: React.FC<NumberCardListProps> = ({
   return (
     <div className={styles.container}>
       {screen
-        ? screenNumbers.map((number) => (
-            <NumberCardSmall key={number.id} BingoNumber={number} />
-          ))
-        : numbersToRender.map((number) => (
-            <NumberCardSmall key={number.id} BingoNumber={number} />
-          ))}
+        ? screenNumbers.map((number) => <NumberCardSmall key={number.id} BingoNumber={number} />)
+        : numbersToRender.map((number) => <NumberCardSmall key={number.id} BingoNumber={number} />)}
     </div>
   );
 };

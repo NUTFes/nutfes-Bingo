@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import styles from "./PrizeEditModal.module.css";
 import { RxCrossCircled } from "react-icons/rx";
 import { toast } from "react-toastify";
@@ -60,17 +54,14 @@ const PrizeEditModal = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
 
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const targetFile = e.target.files?.[0];
-      if (!targetFile) {
-        setNewFile(null);
-        return;
-      }
-      setNewFile(targetFile);
-    },
-    [],
-  );
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const targetFile = e.target.files?.[0];
+    if (!targetFile) {
+      setNewFile(null);
+      return;
+    }
+    setNewFile(targetFile);
+  }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -144,8 +135,7 @@ const PrizeEditModal = ({
         if (!res.ok) throw new Error("upload failed");
         const payload = await res.json().catch(() => null);
 
-        const bucketName =
-          process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || "bingo";
+        const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || "bingo";
         const fileName = payload?.fileName || newFile.name;
         const storedBucket = payload?.bucketName || bucketName;
         const fileType = newFile.type || "application/octet-stream";
@@ -227,9 +217,7 @@ const PrizeEditModal = ({
               </div>
             )}
             <div
-              className={
-                isDragOver ? styles.drop_area_drag_over : styles.drop_area
-              }
+              className={isDragOver ? styles.drop_area_drag_over : styles.drop_area}
               onDragOver={handleDragOver}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
@@ -250,24 +238,16 @@ const PrizeEditModal = ({
             />
           </div>
           <div className={styles.actions}>
-            <button
-              className={`${styles.btn} ${styles.cancel}`}
-              onClick={close}
-            >
+            <button className={`${styles.btn} ${styles.cancel}`} onClick={close}>
               キャンセル
             </button>
-            <button
-              className={`${styles.btn} ${styles.primary}`}
-              onClick={handleSubmit}
-            >
+            <button className={`${styles.btn} ${styles.primary}`} onClick={handleSubmit}>
               保存
             </button>
           </div>
         </div>
       </div>
-      {canCloseByClickingBackground && (
-        <div className={styles.background} onClick={close} />
-      )}
+      {canCloseByClickingBackground && <div className={styles.background} onClick={close} />}
     </div>
   );
 };

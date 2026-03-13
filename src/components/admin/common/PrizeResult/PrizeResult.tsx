@@ -43,9 +43,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
         .single();
       if (error) throw error;
       props.setBingoPrize((prev) =>
-        prev.map((prize) =>
-          prize.id === id ? { ...prize, isWon: isWon } : prize,
-        ),
+        prev.map((prize) => (prize.id === id ? { ...prize, isWon: isWon } : prize)),
       );
     } catch (e) {
       console.error(e);
@@ -94,9 +92,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
         .single();
       if (error) throw error;
       const imageId = data?.image_id || null;
-      props.setBingoPrize((prev) =>
-        prev.filter((p) => p.id !== selected.prize.id),
-      );
+      props.setBingoPrize((prev) => prev.filter((p) => p.id !== selected.prize.id));
       if (imageId) {
         await supabase.from("images").delete().eq("id", imageId);
       }
@@ -157,8 +153,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
                         bucketName: image.bucketName,
                         fileName: image.fileName,
                         fileType: image.fileType,
-                        createdAt:
-                          p.image?.createdAt || new Date().toISOString(),
+                        createdAt: p.image?.createdAt || new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
                       }
                     : p.image,
@@ -186,17 +181,10 @@ export const PrizeResult = (props: PrizeResultProps) => {
     <div className={styles.wrapper}>
       <div className={styles.container}>
         <div className={styles.title}>景品一覧</div>
-        <div
-          id="loading"
-          className={isImageVisible ? styles.loading : styles.hidden}
-        ></div>
+        <div id="loading" className={isImageVisible ? styles.loading : styles.hidden}></div>
         <div className={styles.grid}>
           {sortedPrizes.map((prizeResult) => (
-            <div
-              className={styles.card}
-              key={prizeResult.id}
-              id={`prize-${prizeResult.id}`}
-            >
+            <div className={styles.card} key={prizeResult.id} id={`prize-${prizeResult.id}`}>
               <div className={styles.cardActions}>
                 <button
                   aria-label="edit"
@@ -241,10 +229,7 @@ export const PrizeResult = (props: PrizeResultProps) => {
                         handleToggleChange(prizeResult.id, e.target.checked)
                       }
                     />
-                    <label
-                      htmlFor={`toggle-${prizeResult.id}`}
-                      className={styles.toggleLabel}
-                    />
+                    <label htmlFor={`toggle-${prizeResult.id}`} className={styles.toggleLabel} />
                   </div>
                 </div>
               )}

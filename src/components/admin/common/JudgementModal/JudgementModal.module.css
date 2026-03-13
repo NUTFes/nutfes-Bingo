@@ -491,18 +491,20 @@
   align-items: center;
   justify-content: center;
   gap: 0.8rem;
-  box-shadow: 
+  box-shadow:
     0 8px 25px rgba(76, 175, 80, 0.3),
     0 0 0 1px rgba(76, 175, 80, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  animation: resultAppear 0.6s ease-out forwards, successPulse 2s ease-in-out infinite;
+  animation:
+    resultAppear 0.6s ease-out forwards,
+    successPulse 2s ease-in-out infinite;
   position: relative;
   cursor: default;
   user-select: none;
 }
 
 .bingoResult::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -4px;
   border-radius: inherit;
@@ -525,7 +527,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.8rem;
-  box-shadow: 
+  box-shadow:
     0 6px 20px rgba(244, 67, 54, 0.25),
     0 0 0 1px rgba(244, 67, 54, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);

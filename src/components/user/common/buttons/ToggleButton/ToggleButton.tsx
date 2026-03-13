@@ -23,14 +23,10 @@ const ToggleButton = (props: ToggleButtonProps) => {
           damping: 30,
         }}
       />
-      <button
-        className={`${styles.toggleButton} ${!props.isActive && styles.active}`}
-      >
+      <button className={`${styles.toggleButton} ${!props.isActive && styles.active}`}>
         {props.children[0]}
       </button>
-      <button
-        className={`${styles.toggleButton} ${props.isActive && styles.active}`}
-      >
+      <button className={`${styles.toggleButton} ${props.isActive && styles.active}`}>
         {props.children[1]}
       </button>
     </div>

@@ -42,8 +42,7 @@ const Page = () => {
   const [bingoNumbers, setBingoNumbers] = useState<BingoNumber[]>([]);
   const [isOpened, setIsOpened] = useState<boolean>(false);
   const isopenBool = () => setIsOpened(!isOpened);
-  const [isOpenUpdateNumberModal, setIsOpenUpdateNumberModal] =
-    useState<boolean>(false);
+  const [isOpenUpdateNumberModal, setIsOpenUpdateNumberModal] = useState<boolean>(false);
 
   const {
     register: registerCreate,
@@ -128,10 +127,7 @@ const Page = () => {
     const { inputedNumber, selectedNumber } = getValuesDelete();
     const targetNumber = inputedNumber ?? selectedNumber;
     if (!targetNumber) return;
-    const { error } = await supabase
-      .from("numbers")
-      .delete()
-      .eq("number", targetNumber);
+    const { error } = await supabase.from("numbers").delete().eq("number", targetNumber);
     if (error) {
       toast.error("番号の削除に失敗しました。");
       return;
@@ -187,13 +183,9 @@ const Page = () => {
 
     const channel = supabase
       .channel("numbers-changes-admin")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "numbers" },
-        () => {
-          fetchNumbers();
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "numbers" }, () => {
+        fetchNumbers();
+      })
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
           logRealtimeChannelError("numbers", err);
@@ -211,11 +203,7 @@ const Page = () => {
 
   return (
     <div className={styles.container}>
-      <JudgementModal
-        isOpened={isOpened}
-        setIsOpened={setIsOpened}
-        bingoNumbers={bingoNumbers}
-      />
+      <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} bingoNumbers={bingoNumbers} />
       <UpdateNumberModal
         isOpened={isOpenUpdateNumberModal}
         setIsOpened={setIsOpenUpdateNumberModal}
@@ -223,18 +211,10 @@ const Page = () => {
       />
       <Header user="Admin">
         <div className={styles.main}>
-          <Button
-            size="m"
-            shape="circle"
-            onClick={() => router.push("/admin/postPrizes")}
-          >
+          <Button size="m" shape="circle" onClick={() => router.push("/admin/postPrizes")}>
             <p>景品追加</p>
           </Button>
-          <Button
-            size="m"
-            shape="circle"
-            onClick={() => router.push("/admin/prizes")}
-          >
+          <Button size="m" shape="circle" onClick={() => router.push("/admin/prizes")}>
             <p>景品管理</p>
           </Button>
           <Button size="m" shape="circle" onClick={isopenBool}>
@@ -271,19 +251,13 @@ const Page = () => {
                   })}
                 />
                 {errorsCreate.submitNumber && (
-                  <div className={styles.errormessage}>
-                    1~99の番号を入力してください
-                  </div>
+                  <div className={styles.errormessage}>1~99の番号を入力してください</div>
                 )}
               </div>
               <button
                 type="submit"
                 disabled={!isValidCreateSubmit}
-                className={
-                  errorsCreate.submitNumber
-                    ? styles.not_hover_Button
-                    : styles.Button
-                }
+                className={errorsCreate.submitNumber ? styles.not_hover_Button : styles.Button}
               >
                 送信
               </button>
@@ -304,9 +278,7 @@ const Page = () => {
                 })}
               />
               {(errorsDelete.inputedNumber || errorsDelete.selectedNumber) && (
-                <div className={styles.errormessage}>
-                  1~99の番号を入力してください
-                </div>
+                <div className={styles.errormessage}>1~99の番号を入力してください</div>
               )}
             </div>
             <select
@@ -342,9 +314,7 @@ const Page = () => {
               type="button"
               className={styles.Button}
               onClick={async () => {
-                const { error } = await supabase.rpc(
-                  "increment_latest_reach_log",
-                );
+                const { error } = await supabase.rpc("increment_latest_reach_log");
                 if (error) {
                   toast.error("リーチ数の更新に失敗しました。");
                 }
@@ -356,9 +326,7 @@ const Page = () => {
               type="button"
               className={styles.Button}
               onClick={async () => {
-                const { error } = await supabase.rpc(
-                  "decrement_latest_reach_log",
-                );
+                const { error } = await supabase.rpc("decrement_latest_reach_log");
                 if (error) {
                   toast.error("リーチ数の更新に失敗しました。");
                 }
@@ -385,9 +353,7 @@ const Page = () => {
                 })}
               />
               {errorsSurvey?.surveyUrl && (
-                <div className={styles.errormessage}>
-                  {errorsSurvey.surveyUrl.message}
-                </div>
+                <div className={styles.errormessage}>{errorsSurvey.surveyUrl.message}</div>
               )}
             </div>
           </div>
@@ -413,10 +379,7 @@ const Page = () => {
           </div>
         </div>
       </div>
-      <BingoResult
-        bingoResultNumber={bingoNumbers}
-        onClick={handleNumberClick}
-      />
+      <BingoResult bingoResultNumber={bingoNumbers} onClick={handleNumberClick} />
     </div>
   );
 };

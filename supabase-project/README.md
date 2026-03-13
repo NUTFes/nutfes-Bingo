@@ -7,6 +7,7 @@ This is the official Docker Compose setup for self-hosted Supabase. It provides 
 Follow the detailed setup guide in our documentation: [Self-Hosting with Docker](https://supabase.com/docs/guides/self-hosting/docker)
 
 The guide covers:
+
 - Prerequisites (Git and Docker)
 - Initial setup and configuration
 - Securing your installation
@@ -53,6 +54,7 @@ To update your self-hosted Supabase instance:
 ## Community & Support
 
 For troubleshooting common issues, see:
+
 - [GitHub Discussions](https://github.com/orgs/supabase/discussions?discussions_q=is%3Aopen+label%3Aself-hosted) - Questions, feature requests, and workarounds
 - [GitHub Issues](https://github.com/supabase/supabase/issues?q=is%3Aissue%20state%3Aopen%20label%3Aself-hosted) - Known issues
 - [Documentation](https://supabase.com/docs/guides/self-hosting) - Setup and configuration guides
@@ -73,6 +75,7 @@ Share your self-hosting experience:
 ⚠️ **The default configuration is not secure for production use.**
 
 Before deploying to production, you must:
+
 - Update all default passwords and secrets in the `.env` file
 - Generate new JWT secrets
 - Review and update CORS settings

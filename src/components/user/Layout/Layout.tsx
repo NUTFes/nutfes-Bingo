@@ -77,10 +77,8 @@ const Layout = (props: LayoutProps) => {
   const setLanguage = useUserStore((state) => state.setLanguage);
   const t = language === "ja" ? ja : en;
 
-  const [isReactionModalOpen, setIsReactionModalOpen] =
-    useState<boolean>(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] =
-    useState<boolean>(false);
+  const [isReactionModalOpen, setIsReactionModalOpen] = useState<boolean>(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const hasShownSurvey = useUserStore((state) => state.hasShownSurvey);
   const setHasShownSurvey = useUserStore((state) => state.setHasShownSurvey);
 
@@ -164,15 +162,12 @@ const Layout = (props: LayoutProps) => {
     const root = document.documentElement;
     root.dataset.theme = theme;
     root.style.colorScheme = theme;
-    const metaTheme = document.querySelector(
-      'meta[name="theme-color"]',
-    ) as HTMLMetaElement | null;
+    const metaTheme = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
     if (metaTheme) {
       const computedBackground = getComputedStyle(root)
         .getPropertyValue("--background-color")
         .trim();
-      metaTheme.content =
-        computedBackground || (isDarkMode ? "#2C252F" : "#FFFFFF");
+      metaTheme.content = computedBackground || (isDarkMode ? "#2C252F" : "#FFFFFF");
     }
   }, [isDarkMode]);
 
@@ -192,18 +187,14 @@ const Layout = (props: LayoutProps) => {
 
     const channel = supabase
       .channel("events-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "events" },
-        (payload) => {
-          const row = payload.new as {
-            id: number;
-            survey_url: string;
-            is_survey_active: boolean;
-          };
-          if (row) setLatestEvent(mapEventRow(row));
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "events" }, (payload) => {
+        const row = payload.new as {
+          id: number;
+          survey_url: string;
+          is_survey_active: boolean;
+        };
+        if (row) setLatestEvent(mapEventRow(row));
+      })
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
           logRealtimeChannelError("events", err);
@@ -223,8 +214,11 @@ const Layout = (props: LayoutProps) => {
   };
 
   // アンケート状態管理（カスタムフック）
-  const { surveyUrl, isSurveyModalOpen, setIsSurveyModalOpen, isSurveyActive } =
-    useSurveyState(latestEvent, hasShownSurvey, setHasShownSurvey);
+  const { surveyUrl, isSurveyModalOpen, setIsSurveyModalOpen, isSurveyActive } = useSurveyState(
+    latestEvent,
+    hasShownSurvey,
+    setHasShownSurvey,
+  );
 
   // スタンプ押下時の送信処理（短いクールダウンで二重送信を防止）
   const handleReactionClick = async (name: string) => {
@@ -348,15 +342,10 @@ const Layout = (props: LayoutProps) => {
           <Button inversion onClick={handleReachIconClick}>
             {t.reachModal.yes}
           </Button>
-          <Button onClick={() => setIsReachModalOpen(!isReachModalOpen)}>
-            {t.reachModal.no}
-          </Button>
+          <Button onClick={() => setIsReachModalOpen(!isReachModalOpen)}>{t.reachModal.no}</Button>
         </div>
       </Modal>
-      <Modal
-        isOpened={isSettingsModalOpen}
-        setIsOpened={setIsSettingsModalOpen}
-      >
+      <Modal isOpened={isSettingsModalOpen} setIsOpened={setIsSettingsModalOpen}>
         <div className={styles.settingsModal}>
           {isSurveyActive && surveyUrl && (
             <div>
@@ -377,10 +366,7 @@ const Layout = (props: LayoutProps) => {
           </div>
           <div>
             <p>{t.settingsModal.sortOrder}</p>
-            <ToggleButton
-              isActive={isSortOrderActive}
-              onClick={toggleSortOrder}
-            >
+            <ToggleButton isActive={isSortOrderActive} onClick={toggleSortOrder}>
               <span>{t.settingsModal.drawOrder}</span>
               <span>{t.settingsModal.ascending}</span>
             </ToggleButton>

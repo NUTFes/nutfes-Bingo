@@ -30,12 +30,8 @@ const Header = () => {
       {
         element: isPrizePage ? "#BackIcon" : "#PrizesIcon",
         popover: {
-          title: isPrizePage
-            ? t.helpDescription.page2_title_back
-            : t.helpDescription.page2_title,
-          description: isPrizePage
-            ? t.helpDescription.page2_txt_back
-            : t.helpDescription.page2_txt,
+          title: isPrizePage ? t.helpDescription.page2_title_back : t.helpDescription.page2_title,
+          description: isPrizePage ? t.helpDescription.page2_txt_back : t.helpDescription.page2_txt,
           side: "top",
           align: "center",
         },
@@ -110,8 +106,7 @@ const Header = () => {
 
   useEffect(() => {
     const isHelpShown =
-      localStorage.getItem("isHelpTourShown") ??
-      localStorage.getItem("isStartIntrojs");
+      localStorage.getItem("isHelpTourShown") ?? localStorage.getItem("isStartIntrojs");
     if (isHelpShown === null) {
       localStorage.setItem("isHelpTourShown", JSON.stringify(true));
       startTour();

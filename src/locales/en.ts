@@ -41,8 +41,7 @@ export const en = {
     page4_txt:
       "Please press this button when you reach it! <br>Everyone's reach number will be displayed on the screen!",
     page5_title: "Settings Button",
-    page5_txt:
-      "Press this button to change the number display order and language!",
+    page5_txt: "Press this button to change the number display order and language!",
     next: "Next",
     back: "Back",
     close: "Close",

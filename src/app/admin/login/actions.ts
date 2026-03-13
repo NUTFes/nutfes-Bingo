@@ -7,10 +7,7 @@ export type LoginState = {
   error: string | null;
 };
 
-export const login = async (
-  _prevState: LoginState,
-  formData: FormData,
-): Promise<LoginState> => {
+export const login = async (_prevState: LoginState, formData: FormData): Promise<LoginState> => {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
 

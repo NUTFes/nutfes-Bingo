@@ -34,24 +34,18 @@ const PrizeDeleteModal = ({
         </button>
         <div className={styles.title}>景品を削除しますか？</div>
         <div className={styles.desc}>
-          次の景品を削除します:{" "}
-          <span className={styles.strong}>{prizeName}</span>
+          次の景品を削除します: <span className={styles.strong}>{prizeName}</span>
         </div>
         <div className={styles.actions}>
           <button className={`${styles.btn} ${styles.cancel}`} onClick={close}>
             キャンセル
           </button>
-          <button
-            className={`${styles.btn} ${styles.danger}`}
-            onClick={handleConfirm}
-          >
+          <button className={`${styles.btn} ${styles.danger}`} onClick={handleConfirm}>
             削除する
           </button>
         </div>
       </div>
-      {canCloseByClickingBackground && (
-        <div className={styles.background} onClick={close} />
-      )}
+      {canCloseByClickingBackground && <div className={styles.background} onClick={close} />}
     </div>
   );
 };

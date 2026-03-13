@@ -20,10 +20,7 @@ const sortByNumber = (bingoNumbers: BingoNumbers) => {
   return [...bingoNumbers].sort((a, b) => a.number - b.number);
 };
 
-const getDisplayBingoNumbers = (
-  isSortedAscending: boolean,
-  bingoNumbers: BingoNumbers,
-) => {
+const getDisplayBingoNumbers = (isSortedAscending: boolean, bingoNumbers: BingoNumbers) => {
   if (isSortedAscending) {
     return { list: sortByNumber(bingoNumbers) };
   }
@@ -63,13 +60,9 @@ const Page = () => {
 
     const channel = supabase
       .channel("numbers-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "numbers" },
-        () => {
-          fetchNumbers();
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "numbers" }, () => {
+        fetchNumbers();
+      })
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
           logRealtimeChannelError("numbers", err);
@@ -82,10 +75,7 @@ const Page = () => {
     };
   }, [fetchNumbers]);
 
-  const displayBingoNumbers = getDisplayBingoNumbers(
-    isSortedAscending,
-    bingoNumbers,
-  );
+  const displayBingoNumbers = getDisplayBingoNumbers(isSortedAscending, bingoNumbers);
 
   return (
     <>

@@ -43,28 +43,24 @@ const Page = () => {
     fetchPrizes();
   }, [fetchPrizes]);
 
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const targetFile = e.target.files![0]!;
-      if (!targetFile) {
-        setPreview({ uploadImageURL: "", type: "" });
-        return;
-      }
-      setImageFile(targetFile);
-      setPreview({
-        uploadImageURL: URL.createObjectURL(targetFile),
-        type: targetFile.type,
-      });
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const targetFile = e.target.files![0]!;
+    if (!targetFile) {
+      setPreview({ uploadImageURL: "", type: "" });
+      return;
+    }
+    setImageFile(targetFile);
+    setPreview({
+      uploadImageURL: URL.createObjectURL(targetFile),
+      type: targetFile.type,
+    });
 
-      const bucketName =
-        process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || "bingo";
-      const fileType = targetFile.type;
+    const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || "bingo";
+    const fileType = targetFile.type;
 
-      setBucketName(bucketName);
-      setFileType(fileType);
-    },
-    [],
-  );
+    setBucketName(bucketName);
+    setFileType(fileType);
+  }, []);
 
   const insertPrize = async (imageId: number) => {
     const { error } = await supabase.from("prizes").insert({
@@ -195,9 +191,7 @@ const Page = () => {
             <div>
               <h2>登録する画像を選択</h2>
               <div
-                className={
-                  isDragOver ? styles.drop_area_drag_over : styles.drop_area
-                }
+                className={isDragOver ? styles.drop_area_drag_over : styles.drop_area}
                 onDragOver={handleDragOver}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
@@ -209,11 +203,7 @@ const Page = () => {
                   ここに画像をドラッグ&ドロップ
                 </div>
               </div>
-              <input
-                type="file"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-              />
+              <input type="file" onChange={handleFileChange} ref={fileInputRef} />
             </div>
 
             <div className={styles.input_details}>

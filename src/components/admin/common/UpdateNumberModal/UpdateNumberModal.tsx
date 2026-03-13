@@ -45,10 +45,7 @@ const UpdateNumberModal = ({
             </button>
             <div className={styles.title}>番号の修正</div>
             <div className={styles.contents}>
-              <input
-                onChange={handleInputChange}
-                className={styles.input}
-              ></input>
+              <input onChange={handleInputChange} className={styles.input}></input>
               <button
                 onClick={() => {
                   if (id != undefined) handleSubmit(id);

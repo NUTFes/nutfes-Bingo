@@ -13,11 +13,7 @@ const Button = (props: ButtonProps) => {
     <main>
       <div>
         <button
-          className={classNames(
-            styles.primary,
-            styles[props.size],
-            styles[props.shape],
-          )}
+          className={classNames(styles.primary, styles[props.size], styles[props.shape])}
           onClick={props.onClick}
         >
           {props.children}

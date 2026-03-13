@@ -23,9 +23,7 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
   } as React.CSSProperties;
 
   const modalBottom: React.CSSProperties = {
-    bottom: props.height
-      ? `calc(${props.height}px + (${props.height}px / 7))`
-      : "0px",
+    bottom: props.height ? `calc(${props.height}px + (${props.height}px / 7))` : "0px",
   };
 
   // 押下禁止中は無視、許可時のみ親の送信処理を実行
@@ -36,10 +34,7 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
 
   return (
     <div className={styles.horizontalCenter}>
-      <div
-        className={styles.bubble}
-        style={{ ...bubbleLeftPosition, ...modalBottom }}
-      >
+      <div className={styles.bubble} style={{ ...bubbleLeftPosition, ...modalBottom }}>
         <div className={styles.grid}>
           {props.images.map((image) => {
             // 直近に押されたスタンプかどうか（派手エフェクトの対象）
@@ -59,10 +54,7 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
                   <>
                     {/* リップル（波紋）を2連で表示 */}
                     <span className={styles.ripple} aria-hidden="true" />
-                    <span
-                      className={`${styles.ripple} ${styles.delay}`}
-                      aria-hidden="true"
-                    />
+                    <span className={`${styles.ripple} ${styles.delay}`} aria-hidden="true" />
                     {/* 押したスタンプ画像が放射状に飛ぶエフェクト */}
                     <span className={styles.particles} aria-hidden="true">
                       {Array.from({ length: 10 }).map((_, i) => (

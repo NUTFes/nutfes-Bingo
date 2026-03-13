@@ -37,13 +37,9 @@ const Page = () => {
 
     const channel = supabase
       .channel("prizes-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "prizes" },
-        () => {
-          fetchPrizes();
-        },
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "prizes" }, () => {
+        fetchPrizes();
+      })
       .subscribe((status, err) => {
         if (status === "CHANNEL_ERROR") {
           logRealtimeChannelError("prizes", err);
