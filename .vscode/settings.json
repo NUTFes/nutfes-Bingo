@@ -1,12 +1,5 @@
 {
-  "eslint.workingDirectories": ["./frontend"],
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSaveMode": "file",
   "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-  "markdownlint.config": {
-    "MD041": false
-  }
+  "editor.formatOnSaveMode": "file",
+  "editor.defaultFormatter": "oxc.oxc-vscode"
 }
