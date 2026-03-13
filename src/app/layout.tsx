@@ -17,7 +17,7 @@ const notoSansJp = Noto_Sans_JP({
 });
 
 const silom = localFont({
-  src: "../public/fonts/Silom.ttf",
+  src: "../../public/fonts/Silom.ttf",
   variable: "--font-silom",
   display: "swap",
 });
