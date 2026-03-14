@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 
+import { Separator } from "@/components/ui/Separator";
 import { cn } from "@/lib/utils";
 
-export const AdminSectionTitle = ({
+const AdminSectionTitle = ({
   children,
   className,
 }: {
@@ -41,22 +42,25 @@ export const AdminPanel = ({
   return (
     <section
       className={cn(
-        "rounded-3xl border border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface)_96%,transparent)] p-5 shadow-lg sm:p-6",
+        "rounded-3xl border border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface)_96%,transparent)] p-5 shadow-[0_12px_30px_color-mix(in_srgb,var(--admin-overlay)_25%,transparent)] sm:p-6",
         className,
       )}
     >
       {(title || actions || description) && (
-        <header className="mb-5 flex flex-wrap items-start justify-between gap-3 sm:gap-4">
-          <div className="space-y-2">
-            {title && <AdminSectionTitle>{title}</AdminSectionTitle>}
-            {description ? (
-              <p className="m-0 text-base leading-relaxed text-[var(--admin-muted-text)]">
-                {description}
-              </p>
-            ) : null}
-          </div>
-          {actions}
-        </header>
+        <>
+          <header className="mb-4 flex flex-wrap items-start justify-between gap-3 sm:gap-4">
+            <div className="max-w-3xl space-y-2">
+              {title && <AdminSectionTitle>{title}</AdminSectionTitle>}
+              {description ? (
+                <p className="m-0 text-sm leading-relaxed text-[var(--admin-muted-text)] sm:text-base">
+                  {description}
+                </p>
+              ) : null}
+            </div>
+            {actions}
+          </header>
+          <Separator className="mb-4" />
+        </>
       )}
       <div className={cn("space-y-4", contentClassName)}>{children}</div>
     </section>

@@ -1,4 +1,4 @@
-import { ScreenPage } from "@/components/public/pages/screen-page";
+import { ScreenPage } from "@/components/user/pages/screen-page";
 import { getLatestReachLog, getNumbers } from "@/lib/bingo/queries";
 
 export default async function Page() {

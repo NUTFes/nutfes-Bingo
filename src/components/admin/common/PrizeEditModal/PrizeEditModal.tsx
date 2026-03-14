@@ -1,16 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { isFileDropItem, type DropEvent } from "react-aria";
+import { FileTrigger } from "react-aria-components";
 import { IoCloudUploadOutline } from "react-icons/io5";
 
-import {
-  AdminButton,
-  AdminDropzone,
-  AdminInput,
-  AdminLabel,
-  AdminModalShell,
-} from "@/components/admin/ui";
+import { AdminModalShell } from "@/components/admin/ui/modal-shell";
+import { Button } from "@/components/ui/Button";
+import { DropZone } from "@/components/ui/DropZone";
+import { Form } from "@/components/ui/Form";
+import { Separator } from "@/components/ui/Separator";
+import { TextField } from "@/components/ui/TextField";
 
 interface Props {
   isOpened: boolean;
@@ -37,12 +38,10 @@ const PrizeEditModal = ({
   onSubmit,
 }: Props) => {
   const close = () => setIsOpened(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [nameJp, setNameJp] = useState(initialNameJp || "");
   const [nameEn, setNameEn] = useState(initialNameEn || "");
   const [newFile, setNewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(initialImageUrl || "");
-  const [isDragOver, setIsDragOver] = useState(false);
 
   useEffect(() => {
     if (isOpened) {
@@ -66,24 +65,21 @@ const PrizeEditModal = ({
     };
   }, [newFile]);
 
-  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const targetFile = event.target.files?.[0];
-    if (!targetFile) {
-      setNewFile(null);
-      return;
-    }
-    setNewFile(targetFile);
-  }, []);
-
-  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragOver(false);
-    const file = event.dataTransfer.files?.[0];
-    if (!file) {
-      return;
-    }
+  const handleFileSelected = useCallback((file: File | null) => {
     setNewFile(file);
   }, []);
+
+  const handleDrop = useCallback(
+    async (event: DropEvent) => {
+      for (const item of event.items) {
+        if (isFileDropItem(item)) {
+          handleFileSelected(await item.getFile());
+          return;
+        }
+      }
+    },
+    [handleFileSelected],
+  );
 
   const handleSubmit = async () => {
     await onSubmit({ nameJp, nameEn, file: newFile });
@@ -99,26 +95,29 @@ const PrizeEditModal = ({
       panelClassName="max-w-2xl"
       footer={
         <>
-          <AdminButton variant="secondary" onClick={close}>
+          <Button variant="secondary" onPress={close}>
             キャンセル
-          </AdminButton>
-          <AdminButton onClick={handleSubmit}>保存</AdminButton>
+          </Button>
+          <Button variant="primary" onPress={handleSubmit}>
+            保存
+          </Button>
         </>
       }
     >
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <AdminLabel>日本語名</AdminLabel>
-          <AdminInput value={nameJp} onChange={(e) => setNameJp(e.target.value)} />
-        </div>
+      <Form
+        className="space-y-5"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleSubmit();
+        }}
+      >
+        <TextField label="日本語名" value={nameJp} onChange={setNameJp} />
+        <TextField label="英語名" value={nameEn} onChange={setNameEn} />
+
+        <Separator />
 
         <div className="space-y-2">
-          <AdminLabel>英語名</AdminLabel>
-          <AdminInput value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
-        </div>
-
-        <div className="space-y-2">
-          <AdminLabel>画像</AdminLabel>
+          <p className="m-0 text-sm font-medium text-[var(--admin-text)]">画像</p>
           {previewUrl ? (
             <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface-strong)_86%,transparent)] p-2">
               <Image
@@ -136,38 +135,24 @@ const PrizeEditModal = ({
             </div>
           )}
 
-          <AdminDropzone
-            isDragOver={isDragOver}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragOver(true);
-            }}
-            onDragEnter={(e) => {
-              e.preventDefault();
-              setIsDragOver(true);
-            }}
-            onDragLeave={(e) => {
-              e.preventDefault();
-              setIsDragOver(false);
-            }}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <DropZone onDrop={handleDrop} className="w-full">
             <div className="flex flex-col items-center gap-2">
               <IoCloudUploadOutline size="3rem" />
               ここに画像をドラッグ&ドロップ
             </div>
-          </AdminDropzone>
+          </DropZone>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
+          <FileTrigger
+            acceptedFileTypes={["image/*"]}
+            onSelect={(files) => {
+              const file = files ? Array.from(files)[0] : null;
+              handleFileSelected(file ?? null);
+            }}
+          >
+            <Button variant="secondary">ファイルを選択</Button>
+          </FileTrigger>
         </div>
-      </div>
+      </Form>
     </AdminModalShell>
   );
 };

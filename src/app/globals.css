@@ -1,4 +1,3 @@
-@import "../styles/public/reset.css";
 @import "../styles/public/globals.css";
 @import "driver.js/dist/driver.css";
 @import "tailwindcss";

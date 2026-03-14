@@ -1,4 +1,4 @@
-import { PrizesPage } from "@/components/public/pages/prizes-page";
+import { PrizesPage } from "@/components/user/pages/prizes-page";
 import { DEFAULT_PUBLIC_PREFERENCES } from "@/lib/bingo/public-preferences";
 import { getAppState, getPrizes } from "@/lib/bingo/queries";
 

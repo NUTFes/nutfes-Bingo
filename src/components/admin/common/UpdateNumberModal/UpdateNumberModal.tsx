@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-import { AdminButton, AdminInput, AdminModalShell } from "@/components/admin/ui";
+import { AdminModalShell } from "@/components/admin/ui/modal-shell";
+import { Button } from "@/components/ui/Button";
+import { Form } from "@/components/ui/Form";
+import { NumberField } from "@/components/ui/NumberField";
 
 interface UpdateNumberModalProps {
   isOpened: boolean;
@@ -22,6 +25,7 @@ const UpdateNumberModal = ({
   onSubmit,
 }: UpdateNumberModalProps) => {
   const [number, setNumber] = useState<number>(initialNumber);
+  const isValidNumber = Number.isInteger(number) && number >= 1 && number <= 99;
 
   useEffect(() => {
     setNumber(initialNumber);
@@ -30,7 +34,7 @@ const UpdateNumberModal = ({
   const closeModal = () => setIsOpened(false);
 
   const handleSubmit = async () => {
-    if (id === undefined || Number.isNaN(number) || number < 1 || number > 99) {
+    if (id === undefined || !isValidNumber) {
       return;
     }
 
@@ -47,25 +51,43 @@ const UpdateNumberModal = ({
       panelClassName="max-w-md"
       footer={
         <>
-          <AdminButton variant="secondary" onClick={closeModal}>
+          <Button variant="secondary" onPress={closeModal}>
             キャンセル
-          </AdminButton>
-          <AdminButton onClick={handleSubmit}>修正</AdminButton>
+          </Button>
+          <Button
+            variant="primary"
+            onPress={handleSubmit}
+            isDisabled={id === undefined || !isValidNumber}
+          >
+            修正
+          </Button>
         </>
       }
     >
-      <div className="space-y-2">
+      <Form
+        className="gap-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleSubmit();
+        }}
+      >
         <p className="m-0 text-base text-[var(--admin-muted-text)]">
           1〜99の範囲で入力してください。
         </p>
-        <AdminInput
-          type="number"
-          min={1}
-          max={99}
-          value={number}
-          onChange={(event) => setNumber(Number(event.target.value))}
+        <NumberField
+          key={`${isOpened}-${initialNumber}`}
+          minValue={1}
+          maxValue={99}
+          defaultValue={initialNumber > 0 ? initialNumber : undefined}
+          placeholder="番号を入力"
+          className="w-full max-w-xs"
+          onInput={(event) => {
+            const nextValue = Number(event.currentTarget.value);
+            setNumber(Number.isFinite(nextValue) ? nextValue : 0);
+          }}
+          onChange={(value) => setNumber(Number.isFinite(value) ? value : 0)}
         />
-      </div>
+      </Form>
     </AdminModalShell>
   );
 };

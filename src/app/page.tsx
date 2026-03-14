@@ -1,4 +1,4 @@
-import { HomePage } from "@/components/public/pages/home-page";
+import { HomePage } from "@/components/user/pages/home-page";
 import { DEFAULT_PUBLIC_PREFERENCES } from "@/lib/bingo/public-preferences";
 import { getAppState, getNumbers } from "@/lib/bingo/queries";
 

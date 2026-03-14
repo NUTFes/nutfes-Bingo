@@ -1,31 +1,36 @@
-'use client';
-import { CalendarIcon } from 'lucide-react';
-import React from 'react';
+"use client";
+import { CalendarIcon } from "lucide-react";
+import React from "react";
 import {
   DatePicker as AriaDatePicker,
   DatePickerProps as AriaDatePickerProps,
   DateValue,
-  ValidationResult
-} from 'react-aria-components';
-import { Calendar } from '@/components/ui/Calendar';
-import { DateInput } from '@/components/ui/DateField';
-import { Description, FieldError, FieldGroup, Label } from '@/components/ui/Field';
-import { Popover } from '@/components/ui/Popover';
-import { composeTailwindRenderProps } from '@/lib/react-aria-utils';
-import { FieldButton } from '@/components/ui/FieldButton';
+  ValidationResult,
+} from "react-aria-components";
+import { Calendar } from "@/components/ui/Calendar";
+import { DateInput } from "@/components/ui/DateField";
+import { Description, FieldError, FieldGroup, Label } from "@/components/ui/Field";
+import { Popover } from "@/components/ui/Popover";
+import { composeTailwindRenderProps } from "@/lib/react-aria-utils";
+import { FieldButton } from "@/components/ui/FieldButton";
 
-export interface DatePickerProps<T extends DateValue>
-  extends AriaDatePickerProps<T> {
+export interface DatePickerProps<T extends DateValue> extends AriaDatePickerProps<T> {
   label?: string;
   description?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
 }
 
-export function DatePicker<T extends DateValue>(
-  { label, description, errorMessage, ...props }: DatePickerProps<T>
-) {
+export function DatePicker<T extends DateValue>({
+  label,
+  description,
+  errorMessage,
+  ...props
+}: DatePickerProps<T>) {
   return (
-    <AriaDatePicker {...props} className={composeTailwindRenderProps(props.className, 'group flex flex-col gap-1 font-sans')}>
+    <AriaDatePicker
+      {...props}
+      className={composeTailwindRenderProps(props.className, "group flex flex-col gap-1 font-sans")}
+    >
       {label && <Label>{label}</Label>}
       <FieldGroup className="min-w-[208px] w-auto cursor-text disabled:cursor-default">
         <DateInput className="flex-1 min-w-[150px] px-3 text-sm" />

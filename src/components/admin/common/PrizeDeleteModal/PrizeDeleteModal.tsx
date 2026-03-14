@@ -1,4 +1,6 @@
-import { AdminButton, AdminModalShell } from "@/components/admin/ui";
+import { AdminModalShell } from "@/components/admin/ui/modal-shell";
+import { Button } from "@/components/ui/Button";
+import { Separator } from "@/components/ui/Separator";
 
 interface Props {
   isOpened: boolean;
@@ -31,15 +33,16 @@ const PrizeDeleteModal = ({
       panelClassName="max-w-md"
       footer={
         <>
-          <AdminButton variant="secondary" onClick={close}>
+          <Button variant="secondary" onPress={close}>
             キャンセル
-          </AdminButton>
-          <AdminButton variant="danger" onClick={handleConfirm}>
+          </Button>
+          <Button variant="destructive" onPress={handleConfirm}>
             削除する
-          </AdminButton>
+          </Button>
         </>
       }
     >
+      <Separator className="mb-4" />
       <p className="text-base leading-relaxed text-[var(--admin-muted-text)]">
         次の景品を削除します:{" "}
         <span className="font-bold text-[var(--admin-text)]">{prizeName}</span>

@@ -1,4 +1,4 @@
-import { DashboardPage } from "@/components/admin/pages/dashboard-page";
+import { DashboardPage } from "@/components/admin/features/dashboard/pages/dashboard-page";
 import { getAppState, getNumbers } from "@/lib/bingo/queries";
 
 export default async function Page() {

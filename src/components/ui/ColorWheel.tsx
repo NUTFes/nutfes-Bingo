@@ -1,9 +1,13 @@
-'use client';
-import React from 'react';
-import {ColorWheel as AriaColorWheel, ColorWheelProps as AriaColorWheelProps, ColorWheelTrack} from 'react-aria-components';
-import { ColorThumb } from '@/components/ui/ColorThumb';
+"use client";
+import React from "react";
+import {
+  ColorWheel as AriaColorWheel,
+  ColorWheelProps as AriaColorWheelProps,
+  ColorWheelTrack,
+} from "react-aria-components";
+import { ColorThumb } from "@/components/ui/ColorThumb";
 
-export interface ColorWheelProps extends Omit<AriaColorWheelProps, 'outerRadius' | 'innerRadius'> {}
+export interface ColorWheelProps extends Omit<AriaColorWheelProps, "outerRadius" | "innerRadius"> {}
 
 export function ColorWheel(props: ColorWheelProps) {
   return (
@@ -12,8 +16,11 @@ export function ColorWheel(props: ColorWheelProps) {
         className="disabled:bg-neutral-300 dark:disabled:bg-neutral-800 forced-colors:disabled:bg-[GrayText]"
         style={({ defaultStyle, isDisabled }) => ({
           ...defaultStyle,
-          background: isDisabled ? undefined : `${defaultStyle.background}, repeating-conic-gradient(#CCC 0% 25%, white 0% 50%) 50% / 16px 16px`
-        })} />
+          background: isDisabled
+            ? undefined
+            : `${defaultStyle.background}, repeating-conic-gradient(#CCC 0% 25%, white 0% 50%) 50% / 16px 16px`,
+        })}
+      />
       <ColorThumb />
     </AriaColorWheel>
   );

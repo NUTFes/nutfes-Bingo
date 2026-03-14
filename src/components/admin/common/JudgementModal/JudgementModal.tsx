@@ -4,9 +4,10 @@ import React, { useMemo, useState } from "react";
 import { GiPartyPopper } from "react-icons/gi";
 import { RxCross1 } from "react-icons/rx";
 
+import { Button } from "@/components/ui/Button";
+import { AdminModalShell } from "@/components/admin/ui/modal-shell";
 import type { NumberRow } from "@/lib/bingo/types";
 import { cn } from "@/lib/utils";
-import { AdminButton, AdminModalShell } from "@/components/admin/ui";
 
 type BingoCard = string[][];
 type CellPos = { row: number; col: number };
@@ -270,39 +271,39 @@ const JudgementModal = ({
 
             <div className="mb-5 grid w-full max-w-sm grid-cols-3 gap-3">
               {KEYPAD.map((label) => (
-                <AdminButton
+                <Button
                   key={label}
                   type="button"
                   variant={label === "消去" || label === "確定" ? "secondary" : "primary"}
                   className="min-h-16 text-2xl"
-                  onClick={() => {
+                  onPress={() => {
                     if (label === "消去") handleDelete();
                     else if (label === "確定") handleCommit();
                     else handleDigitClick(label);
                   }}
                 >
                   {label}
-                </AdminButton>
+                </Button>
               ))}
             </div>
 
             <div className="flex w-full flex-col items-center gap-3">
-              <AdminButton
+              <Button
                 type="button"
-                onClick={handleJudge}
-                size="lg"
-                className="w-full max-w-sm"
+                variant="primary"
+                onPress={handleJudge}
+                className="h-12 w-full max-w-sm"
               >
                 ビンゴ判定
-              </AdminButton>
-              <AdminButton
+              </Button>
+              <Button
                 type="button"
                 variant="secondary"
-                onClick={resetAll}
+                onPress={resetAll}
                 className="w-full max-w-sm"
               >
                 リセット
-              </AdminButton>
+              </Button>
             </div>
           </div>
         ) : (
@@ -319,14 +320,14 @@ const JudgementModal = ({
                 </div>
               )}
             </div>
-            <AdminButton
+            <Button
               type="button"
               variant="secondary"
-              onClick={resetAll}
+              onPress={resetAll}
               className="mt-5 w-full max-w-sm"
             >
               もう一度入力する
-            </AdminButton>
+            </Button>
           </div>
         )}
       </div>
