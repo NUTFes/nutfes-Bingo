@@ -130,7 +130,10 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
       </Header>
 
       <AdminPageContent className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <AdminPanel title="抽選した番号を入力" description="1〜99の番号を入力して抽選結果に追加します。">
+        <AdminPanel
+          title="抽選した番号を入力"
+          description="1〜99の番号を入力して抽選結果に追加します。"
+        >
           <div className="flex flex-wrap items-end gap-4 max-sm:flex-col max-sm:items-stretch">
             <AdminInput
               type="number"
@@ -151,7 +154,10 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
           </div>
         </AdminPanel>
 
-        <AdminPanel title="抽選した番号を削除" description="手入力または一覧選択で抽選済み番号を取り消します。">
+        <AdminPanel
+          title="抽選した番号を削除"
+          description="手入力または一覧選択で抽選済み番号を取り消します。"
+        >
           <div className="flex flex-wrap items-end gap-4 max-sm:flex-col max-sm:items-stretch">
             <AdminInput
               type="number"

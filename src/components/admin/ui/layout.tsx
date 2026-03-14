@@ -10,14 +10,14 @@ export const AdminPageShell = ({
   className?: string;
 }) => {
   return (
-      <div
-        className={cn(
-          "admin-theme min-h-screen bg-[var(--admin-bg)] pb-10 text-[var(--admin-text)] sm:pb-12",
-          className,
-        )}
-      >
-        {children}
-      </div>
+    <div
+      className={cn(
+        "admin-theme min-h-screen bg-[var(--admin-bg)] pb-10 text-[var(--admin-text)] sm:pb-12",
+        className,
+      )}
+    >
+      {children}
+    </div>
   );
 };
 
@@ -40,5 +40,7 @@ export const AdminActionBar = ({
   children: ReactNode;
   className?: string;
 }) => {
-  return <div className={cn("flex flex-wrap items-center gap-3 sm:gap-4", className)}>{children}</div>;
+  return (
+    <div className={cn("flex flex-wrap items-center gap-3 sm:gap-4", className)}>{children}</div>
+  );
 };

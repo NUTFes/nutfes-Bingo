@@ -30,11 +30,11 @@ export const AdminModalShell = ({
   if (!isOpen) return null;
 
   return (
-      <div
-        className={cn(
-          "fixed inset-0 z-30 flex items-center justify-center bg-[color-mix(in_srgb,var(--admin-overlay)_88%,transparent)] p-5 sm:p-8",
-          className,
-        )}
+    <div
+      className={cn(
+        "fixed inset-0 z-30 flex items-center justify-center bg-[color-mix(in_srgb,var(--admin-overlay)_88%,transparent)] p-5 sm:p-8",
+        className,
+      )}
       onClick={(event) => {
         if (canCloseByClickingBackground && event.target === event.currentTarget) {
           onClose();
@@ -42,12 +42,12 @@ export const AdminModalShell = ({
       }}
       role="presentation"
     >
-        <div
-          className={cn(
-            "relative max-h-[92vh] w-full max-w-2xl overflow-auto rounded-3xl border border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface)_97%,transparent)] p-5 text-[var(--admin-text)] shadow-2xl sm:p-7",
-            panelClassName,
-          )}
-        >
+      <div
+        className={cn(
+          "relative max-h-[92vh] w-full max-w-2xl overflow-auto rounded-3xl border border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface)_97%,transparent)] p-5 text-[var(--admin-text)] shadow-2xl sm:p-7",
+          panelClassName,
+        )}
+      >
         <AdminButton
           variant="ghost"
           size="sm"

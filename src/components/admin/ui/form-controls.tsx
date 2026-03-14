@@ -10,7 +10,10 @@ export const AdminLabel = ({
   ...props
 }: React.LabelHTMLAttributes<HTMLLabelElement>) => {
   return (
-    <label className={cn("text-base font-semibold text-[var(--admin-text)]", className)} {...props} />
+    <label
+      className={cn("text-base font-semibold text-[var(--admin-text)]", className)}
+      {...props}
+    />
   );
 };
 
@@ -38,11 +41,11 @@ export const AdminDropzone = ({
 }: React.HTMLAttributes<HTMLDivElement> & { isDragOver?: boolean }) => {
   return (
     <div
-        className={cn(
-          "flex cursor-pointer flex-col items-center rounded-2xl border border-dashed border-[var(--admin-border-subtle)] px-6 py-8 text-center text-base font-semibold transition-colors",
-          isDragOver
-            ? "bg-[color-mix(in_srgb,var(--main-color)_22%,transparent)]"
-            : "bg-[color-mix(in_srgb,var(--admin-surface-soft)_74%,transparent)] text-[var(--admin-text)]",
+      className={cn(
+        "flex cursor-pointer flex-col items-center rounded-2xl border border-dashed border-[var(--admin-border-subtle)] px-6 py-8 text-center text-base font-semibold transition-colors",
+        isDragOver
+          ? "bg-[color-mix(in_srgb,var(--main-color)_22%,transparent)]"
+          : "bg-[color-mix(in_srgb,var(--admin-surface-soft)_74%,transparent)] text-[var(--admin-text)]",
         className,
       )}
       {...props}

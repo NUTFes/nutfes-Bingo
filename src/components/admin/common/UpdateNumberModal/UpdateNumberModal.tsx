@@ -55,7 +55,9 @@ const UpdateNumberModal = ({
       }
     >
       <div className="space-y-2">
-        <p className="m-0 text-base text-[var(--admin-muted-text)]">1〜99の範囲で入力してください。</p>
+        <p className="m-0 text-base text-[var(--admin-muted-text)]">
+          1〜99の範囲で入力してください。
+        </p>
         <AdminInput
           type="number"
           min={1}

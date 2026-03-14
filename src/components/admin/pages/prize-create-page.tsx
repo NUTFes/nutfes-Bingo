@@ -98,7 +98,10 @@ export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
       </Header>
 
       <AdminPageContent className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <AdminPanel title="登録する画像を選択" description="画像を選び、景品名を入力して登録します。">
+        <AdminPanel
+          title="登録する画像を選択"
+          description="画像を選び、景品名を入力して登録します。"
+        >
           <div className="space-y-4">
             <AdminDropzone
               isDragOver={isDragOver}
