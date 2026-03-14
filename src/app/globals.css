@@ -4,6 +4,9 @@
 @import "tailwindcss";
 @config "../../tailwind.config.mjs";
 
+@plugin "tailwindcss-react-aria-components";
+@plugin "tailwindcss-animate";
+
 @layer base {
   :root {
     --background-color: #2c252f;
