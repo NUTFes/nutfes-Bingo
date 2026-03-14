@@ -1,10 +1,8 @@
 @import "../styles/public/reset.css";
 @import "../styles/public/globals.css";
 @import "driver.js/dist/driver.css";
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.mjs";
 
 @layer base {
   :root {
@@ -104,13 +102,21 @@
   --admin-surface-soft: rgba(255, 255, 255, 0.08);
   --admin-text: #f8f5ff;
   --admin-muted-text: #d4cee0;
-  --admin-border: var(--main-color);
+  --admin-border: color-mix(in_srgb, var(--main-color) 42%, var(--admin-text));
+  --admin-border-subtle: color-mix(in_srgb, var(--admin-text) 16%, transparent);
   --admin-overlay: rgba(0, 0, 0, 0.46);
   --admin-button-text: #2c252f;
   --admin-card-bg: #fff;
   --admin-card-text: #2c252f;
-  --admin-card-border: rgba(255, 214, 7, 0.55);
+  --admin-card-border: rgba(255, 214, 7, 0.3);
   --admin-shadow: rgba(0, 0, 0, 0.24);
+  --admin-status-success: #2a7e34;
+  --admin-status-success-bg: rgba(95, 198, 108, 0.24);
+  --admin-status-error: #a73333;
+  --admin-status-error-bg: rgba(230, 101, 101, 0.2);
+  --admin-status-highlight: #9b7000;
+  --admin-status-highlight-bg: rgba(255, 201, 56, 0.3);
+  --admin-status-highlight-text: #3f2b00;
 }
 
 :root[data-theme="light"] .admin-theme {
@@ -120,13 +126,21 @@
   --admin-surface-soft: rgba(32, 32, 32, 0.05);
   --admin-text: #2c252f;
   --admin-muted-text: #5a4f61;
-  --admin-border: var(--main-color);
+  --admin-border: color-mix(in_srgb, var(--main-color) 58%, #7f6942);
+  --admin-border-subtle: color-mix(in_srgb, var(--admin-muted-text) 32%, transparent);
   --admin-overlay: rgba(33, 30, 34, 0.42);
   --admin-button-text: #2c252f;
   --admin-card-bg: #ffffff;
   --admin-card-text: #2c252f;
-  --admin-card-border: rgba(255, 214, 7, 0.35);
+  --admin-card-border: rgba(255, 214, 7, 0.22);
   --admin-shadow: rgba(0, 0, 0, 0.14);
+  --admin-status-success: #21672a;
+  --admin-status-success-bg: rgba(126, 215, 139, 0.22);
+  --admin-status-error: #992a2a;
+  --admin-status-error-bg: rgba(247, 128, 128, 0.22);
+  --admin-status-highlight: #8a6200;
+  --admin-status-highlight-bg: rgba(255, 210, 86, 0.28);
+  --admin-status-highlight-text: #3a2a00;
 }
 
 .driver-popover.help-tour-popover {

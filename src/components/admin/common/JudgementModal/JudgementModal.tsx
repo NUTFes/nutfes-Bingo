@@ -2,10 +2,11 @@
 
 import React, { useMemo, useState } from "react";
 import { GiPartyPopper } from "react-icons/gi";
-import { RxCross1, RxCrossCircled } from "react-icons/rx";
+import { RxCross1 } from "react-icons/rx";
 
 import type { NumberRow } from "@/lib/bingo/types";
-import styles from "./JudgementModal.module.css";
+import { cn } from "@/lib/utils";
+import { AdminButton, AdminModalShell } from "@/components/admin/ui";
 
 type BingoCard = string[][];
 type CellPos = { row: number; col: number };
@@ -195,132 +196,141 @@ const JudgementModal = ({
     );
   };
 
-  if (!isOpened) {
-    return null;
-  }
-
   return (
-    <div
-      className={styles.wrapper}
-      onClick={(event) =>
-        canCloseByClickingBackground && event.target === event.currentTarget && closeModal()
-      }
+    <AdminModalShell
+      isOpen={isOpened}
+      onClose={closeModal}
+      canCloseByClickingBackground={canCloseByClickingBackground}
+      title="ビンゴ正誤判定"
+      panelClassName="max-w-5xl"
+      bodyClassName="mx-auto w-full max-w-2xl"
     >
-      <div className={styles.frame} tabIndex={-1}>
-        <button type="button" className={styles.btnClose} onClick={closeModal} aria-label="閉じる">
-          <RxCrossCircled className={styles.icon} />
-        </button>
-        <div className={styles.title}>ビンゴ正誤判定</div>
-        <div className={styles.contents}>
-          <div className={styles.container}>
-            <div className={styles.bingoCardContainer}>
-              <div className={styles.columnHeaders}>
-                {COL_HEADERS.map((header) => (
-                  <div key={header}>{header}</div>
-                ))}
-              </div>
-              <div className={styles.bingoGrid}>
-                {bingoCard.map((row, rowIndex) => (
-                  <div key={rowIndex} className={styles.bingoRow}>
-                    {row.map((_, colIndex) => {
-                      const classNames = [styles.bingoCell];
-                      if (isCenter(rowIndex, colIndex)) classNames.push(styles.freeCell);
-                      if (
-                        !hasJudged &&
+      <div className="rounded-3xl border border-[var(--admin-border-subtle)] bg-[var(--admin-bg)] p-5 sm:p-7">
+        <div className="mx-auto w-full max-w-lg">
+          <div className="mb-2 grid grid-cols-5 gap-2 text-center text-2xl font-semibold text-[var(--main-color)] sm:gap-2.5 sm:text-3xl">
+            {COL_HEADERS.map((header) => (
+              <div key={header}>{header}</div>
+            ))}
+          </div>
+          <div className="grid grid-rows-5 gap-2 sm:gap-2.5">
+            {bingoCard.map((row, rowIndex) => (
+              <div key={rowIndex} className="grid grid-cols-5 gap-2 sm:gap-2.5">
+                {row.map((_, colIndex) => (
+                  <div
+                    key={`${rowIndex}-${colIndex}`}
+                    className={cn(
+                      "relative flex aspect-square min-h-12 min-w-12 items-center justify-center rounded-xl border border-[var(--admin-card-border)] bg-[var(--admin-card-bg)] text-xl font-semibold text-[var(--admin-card-text)] shadow-sm transition sm:min-h-14 sm:min-w-14 sm:rounded-2xl sm:text-2xl",
+                      !isCenter(rowIndex, colIndex) &&
+                        "cursor-pointer hover:-translate-y-0.5 hover:border-[var(--main-color)]",
+                      isCenter(rowIndex, colIndex) &&
+                        "cursor-default border-[var(--main-color)] bg-[var(--main-color)] text-[var(--admin-button-text)]",
+                      !hasJudged &&
                         selectedCell?.row === rowIndex &&
-                        selectedCell?.col === colIndex
-                      ) {
-                        classNames.push(styles.activeCell);
-                        if (inputValue) classNames.push(styles.typingCell);
+                        selectedCell?.col === colIndex &&
+                        "border-[var(--main-color)] bg-[color-mix(in_srgb,var(--main-color)_18%,var(--admin-card-bg))] ring-2 ring-[color-mix(in_srgb,var(--main-color)_44%,transparent)]",
+                      !hasJudged &&
+                        selectedCell?.row === rowIndex &&
+                        selectedCell?.col === colIndex &&
+                        inputValue &&
+                        "text-[var(--main-color)]",
+                      shouldHighlight(rowIndex, colIndex) &&
+                        "border-[var(--admin-status-highlight)] bg-[var(--admin-status-highlight-bg)] text-[var(--admin-status-highlight-text)] shadow-lg",
+                    )}
+                    onClick={() => handleCellClick(rowIndex, colIndex)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleCellClick(rowIndex, colIndex);
                       }
-                      if (shouldHighlight(rowIndex, colIndex))
-                        classNames.push(styles.bingoHighlight);
-
-                      return (
-                        <div
-                          key={`${rowIndex}-${colIndex}`}
-                          className={classNames.join(" ")}
-                          onClick={() => handleCellClick(rowIndex, colIndex)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              handleCellClick(rowIndex, colIndex);
-                            }
-                          }}
-                          tabIndex={0}
-                          role="button"
-                          aria-label={`行${rowIndex + 1} 列${COL_HEADERS[colIndex]} ${getCellText(rowIndex, colIndex) || "空"}`}
-                        >
-                          {getCellText(rowIndex, colIndex)}
-                        </div>
-                      );
-                    })}
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`行${rowIndex + 1} 列${COL_HEADERS[colIndex]} ${getCellText(rowIndex, colIndex) || "空"}`}
+                  >
+                    {getCellText(rowIndex, colIndex)}
                   </div>
                 ))}
               </div>
-            </div>
-
-            {!hasJudged ? (
-              <div className={styles.controlsContainer}>
-                <div
-                  className={`${styles.currentInputDisplay} ${selectedCell ? "" : styles.empty}`}
-                >
-                  {selectedCell ? "数字を入力してください" : "セルをタップして数字を入力"}
-                </div>
-                <div className={styles.numpad}>
-                  {KEYPAD.map((label) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => {
-                        if (label === "消去") handleDelete();
-                        else if (label === "確定") handleCommit();
-                        else handleDigitClick(label);
-                      }}
-                      className={`${styles.button} ${label === "消去" || label === "確定" ? styles.functionButton : ""}`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <div className={styles.actionButtonsContainer}>
-                  <button type="button" onClick={handleJudge} className={styles.submitButton}>
-                    ビンゴ判定
-                  </button>
-                  <button type="button" onClick={resetAll} className={styles.resetButton}>
-                    リセット
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className={styles.resultContainer}>
-                <div className={styles.resultDisplay}>
-                  {completedLines.length > 0 ? (
-                    <div className={styles.bingoResult}>
-                      <GiPartyPopper className={styles.resultIcon} /> BINGO！
-                    </div>
-                  ) : (
-                    <div className={styles.noWinResult}>
-                      <RxCross1 className={styles.resultIcon} />
-                      ビンゴはありません
-                    </div>
-                  )}
-                </div>
-                <div className={styles.actionButtonsContainer}>
-                  <button
-                    type="button"
-                    onClick={resetAll}
-                    className={`${styles.resetButton} ${styles.largeButton}`}
-                  >
-                    もう一度入力する
-                  </button>
-                </div>
-              </div>
-            )}
+            ))}
           </div>
         </div>
+
+        {!hasJudged ? (
+          <div className="mt-5 flex w-full flex-col items-center">
+            <div
+              className={cn(
+                "mb-5 min-h-12 w-full max-w-sm rounded-2xl px-4 text-center text-xl font-semibold text-[var(--main-color)]",
+                !selectedCell && "text-[var(--admin-muted-text)] italic opacity-85",
+              )}
+            >
+              <div className="flex min-h-12 items-center justify-center">
+                {selectedCell ? "数字を入力してください" : "セルをタップして数字を入力"}
+              </div>
+            </div>
+
+            <div className="mb-5 grid w-full max-w-sm grid-cols-3 gap-3">
+              {KEYPAD.map((label) => (
+                <AdminButton
+                  key={label}
+                  type="button"
+                  variant={label === "消去" || label === "確定" ? "secondary" : "primary"}
+                  className="min-h-16 text-2xl"
+                  onClick={() => {
+                    if (label === "消去") handleDelete();
+                    else if (label === "確定") handleCommit();
+                    else handleDigitClick(label);
+                  }}
+                >
+                  {label}
+                </AdminButton>
+              ))}
+            </div>
+
+            <div className="flex w-full flex-col items-center gap-3">
+              <AdminButton
+                type="button"
+                onClick={handleJudge}
+                size="lg"
+                className="w-full max-w-sm"
+              >
+                ビンゴ判定
+              </AdminButton>
+              <AdminButton
+                type="button"
+                variant="secondary"
+                onClick={resetAll}
+                className="w-full max-w-sm"
+              >
+                リセット
+              </AdminButton>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-5 flex w-full flex-col items-center">
+            <div className="w-full max-w-sm text-center">
+              {completedLines.length > 0 ? (
+                <div className="flex items-center justify-center gap-3 rounded-3xl border-2 border-[var(--admin-status-success)] bg-[var(--admin-status-success-bg)] px-4 py-5 text-3xl font-extrabold text-[var(--admin-status-success)] shadow-xl">
+                  <GiPartyPopper className="text-3xl sm:text-4xl" /> BINGO！
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-3 rounded-3xl border-2 border-[var(--admin-status-error)] bg-[var(--admin-status-error-bg)] px-4 py-5 text-2xl font-bold text-[var(--admin-status-error)] shadow-lg">
+                  <RxCross1 className="text-3xl sm:text-4xl" />
+                  ビンゴはありません
+                </div>
+              )}
+            </div>
+            <AdminButton
+              type="button"
+              variant="secondary"
+              onClick={resetAll}
+              className="mt-5 w-full max-w-sm"
+            >
+              もう一度入力する
+            </AdminButton>
+          </div>
+        )}
       </div>
-    </div>
+    </AdminModalShell>
   );
 };
 

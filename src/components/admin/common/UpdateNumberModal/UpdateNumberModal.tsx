@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RxCrossCircled } from "react-icons/rx";
 
-import styles from "./UpdateNumberModal.module.css";
+import { AdminButton, AdminInput, AdminModalShell } from "@/components/admin/ui";
 
 interface UpdateNumberModalProps {
   isOpened: boolean;
@@ -39,33 +38,33 @@ const UpdateNumberModal = ({
     closeModal();
   };
 
-  if (!isOpened) {
-    return null;
-  }
-
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.frame}>
-        <button type="button" className={styles.btnClose} onClick={closeModal}>
-          <RxCrossCircled className={styles.icon} />
-        </button>
-        <div className={styles.title}>番号の修正</div>
-        <div className={styles.contents}>
-          <input
-            type="number"
-            min={1}
-            max={99}
-            value={number}
-            onChange={(event) => setNumber(Number(event.target.value))}
-            className={styles.input}
-          />
-          <button type="button" onClick={handleSubmit} className={styles.submitButton}>
-            修正
-          </button>
-        </div>
+    <AdminModalShell
+      isOpen={isOpened}
+      onClose={closeModal}
+      canCloseByClickingBackground={canCloseByClickingBackground}
+      title="番号の修正"
+      panelClassName="max-w-md"
+      footer={
+        <>
+          <AdminButton variant="secondary" onClick={closeModal}>
+            キャンセル
+          </AdminButton>
+          <AdminButton onClick={handleSubmit}>修正</AdminButton>
+        </>
+      }
+    >
+      <div className="space-y-2">
+        <p className="m-0 text-base text-[var(--admin-muted-text)]">1〜99の範囲で入力してください。</p>
+        <AdminInput
+          type="number"
+          min={1}
+          max={99}
+          value={number}
+          onChange={(event) => setNumber(Number(event.target.value))}
+        />
       </div>
-      {canCloseByClickingBackground && <div className={styles.background} onClick={closeModal} />}
-    </div>
+    </AdminModalShell>
   );
 };
 

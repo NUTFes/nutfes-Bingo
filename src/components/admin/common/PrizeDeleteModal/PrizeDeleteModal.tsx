@@ -1,6 +1,4 @@
-import React from "react";
-import styles from "./PrizeDeleteModal.module.css";
-import { RxCrossCircled } from "react-icons/rx";
+import { AdminButton, AdminModalShell } from "@/components/admin/ui";
 
 interface Props {
   isOpened: boolean;
@@ -24,29 +22,29 @@ const PrizeDeleteModal = ({
     close();
   };
 
-  if (!isOpened) return null;
-
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.frame}>
-        <button className={styles.btnClose} onClick={close}>
-          <RxCrossCircled />
-        </button>
-        <div className={styles.title}>景品を削除しますか？</div>
-        <div className={styles.desc}>
-          次の景品を削除します: <span className={styles.strong}>{prizeName}</span>
-        </div>
-        <div className={styles.actions}>
-          <button className={`${styles.btn} ${styles.cancel}`} onClick={close}>
+    <AdminModalShell
+      isOpen={isOpened}
+      onClose={close}
+      canCloseByClickingBackground={canCloseByClickingBackground}
+      title="景品を削除しますか？"
+      panelClassName="max-w-md"
+      footer={
+        <>
+          <AdminButton variant="secondary" onClick={close}>
             キャンセル
-          </button>
-          <button className={`${styles.btn} ${styles.danger}`} onClick={handleConfirm}>
+          </AdminButton>
+          <AdminButton variant="danger" onClick={handleConfirm}>
             削除する
-          </button>
-        </div>
-      </div>
-      {canCloseByClickingBackground && <div className={styles.background} onClick={close} />}
-    </div>
+          </AdminButton>
+        </>
+      }
+    >
+      <p className="text-base leading-relaxed text-[var(--admin-muted-text)]">
+        次の景品を削除します:{" "}
+        <span className="font-bold text-[var(--admin-text)]">{prizeName}</span>
+      </p>
+    </AdminModalShell>
   );
 };
 

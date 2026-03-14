@@ -16,14 +16,15 @@ import {
 import { logout as logoutAction } from "@/app/auth/actions";
 import { useNumbers } from "@/lib/bingo/client";
 import type { AppStateRow, NumberRow } from "@/lib/bingo/types";
+import { BingoResult, Header, JudgementModal, UpdateNumberModal } from "@/components/admin/common";
 import {
-  BingoResult,
-  Button,
-  Header,
-  JudgementModal,
-  UpdateNumberModal,
-} from "@/components/admin/common";
-import styles from "@/styles/admin/Home.module.css";
+  AdminButton,
+  AdminInput,
+  AdminPageContent,
+  AdminPageShell,
+  AdminPanel,
+  AdminSelect,
+} from "@/components/admin/ui";
 
 interface DashboardPageProps {
   initialNumbers: NumberRow[];
@@ -99,7 +100,7 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
   };
 
   return (
-    <div className={styles.container}>
+    <AdminPageShell>
       <ToastContainer position="top-center" />
       <JudgementModal isOpened={isOpened} setIsOpened={setIsOpened} bingoNumbers={bingoNumbers} />
       <UpdateNumberModal
@@ -113,63 +114,57 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
         }}
       />
       <Header user="Admin">
-        <div className={styles.main}>
-          <Button size="m" shape="circle" onClick={() => router.push("/admin/prizes/new")}>
-            <p>景品追加</p>
-          </Button>
-          <Button size="m" shape="circle" onClick={() => router.push("/admin/prizes")}>
-            <p>景品管理</p>
-          </Button>
-          <Button size="m" shape="circle" onClick={() => setIsOpened(true)}>
-            <p>ビンゴ正誤判定</p>
-          </Button>
-          <Button size="m" shape="circle" onClick={handleLogout}>
-            <CgLogOut className={styles.buttonIcon} />
-            <p>ログアウト</p>
-          </Button>
-        </div>
+        <AdminButton rounded="pill" onClick={() => router.push("/admin/prizes/new")}>
+          景品追加
+        </AdminButton>
+        <AdminButton rounded="pill" onClick={() => router.push("/admin/prizes")}>
+          景品管理
+        </AdminButton>
+        <AdminButton rounded="pill" onClick={() => setIsOpened(true)}>
+          ビンゴ正誤判定
+        </AdminButton>
+        <AdminButton rounded="pill" onClick={handleLogout}>
+          <CgLogOut className="size-5" />
+          ログアウト
+        </AdminButton>
       </Header>
-      <div className={styles.form}>
-        <div className={styles.frame}>
-          <p>抽選した番号を入力</p>
-          <div className={styles.item}>
-            <div className={styles.flexerror}>
-              <input
-                type="number"
-                min={1}
-                max={99}
-                placeholder="番号を入力"
-                className={styles.inputForm}
-                value={submitNumber}
-                onChange={(event) => setSubmitNumber(event.target.value)}
-              />
-            </div>
-            <button
-              type="button"
+
+      <AdminPageContent className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <AdminPanel title="抽選した番号を入力" description="1〜99の番号を入力して抽選結果に追加します。">
+          <div className="flex flex-wrap items-end gap-4 max-sm:flex-col max-sm:items-stretch">
+            <AdminInput
+              type="number"
+              min={1}
+              max={99}
+              placeholder="番号を入力"
+              className="w-full max-w-md"
+              value={submitNumber}
+              onChange={(event) => setSubmitNumber(event.target.value)}
+            />
+            <AdminButton
               disabled={!submitNumber}
-              className={styles.Button}
+              className="min-w-36"
               onClick={() => void handleCreate()}
             >
               送信
-            </button>
+            </AdminButton>
           </div>
-        </div>
-        <div className={styles.frame}>
-          <p className={styles.centerText}>抽選した番号を削除</p>
-          <div className={styles.item}>
-            <div className={styles.flexerror}>
-              <input
-                type="number"
-                min={1}
-                max={99}
-                placeholder="番号を入力"
-                className={styles.inputForm}
-                value={deleteInput}
-                onChange={(event) => setDeleteInput(event.target.value)}
-              />
-            </div>
-            <select
+        </AdminPanel>
+
+        <AdminPanel title="抽選した番号を削除" description="手入力または一覧選択で抽選済み番号を取り消します。">
+          <div className="flex flex-wrap items-end gap-4 max-sm:flex-col max-sm:items-stretch">
+            <AdminInput
+              type="number"
+              min={1}
+              max={99}
+              placeholder="番号を入力"
+              className="w-full max-w-md"
+              value={deleteInput}
+              onChange={(event) => setDeleteInput(event.target.value)}
+            />
+            <AdminSelect
               value={selectedDeleteNumber}
+              className="w-full max-w-60"
               onChange={(event) => {
                 setSelectedDeleteNumber(event.target.value);
                 setDeleteInput("");
@@ -183,22 +178,25 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
                   {bingoNumber.number}
                 </option>
               ))}
-            </select>
-            <button
-              type="button"
+            </AdminSelect>
+            <AdminButton
               disabled={!deleteInput && !selectedDeleteNumber}
-              className={styles.Button}
+              className="min-w-36"
               onClick={() => void handleDelete()}
             >
               送信
-            </button>
+            </AdminButton>
           </div>
-        </div>
-        <div className={styles.frame}>
-          <div className={styles.item}>
-            <button
-              type="button"
-              className={styles.Button}
+        </AdminPanel>
+
+        <AdminPanel
+          className="lg:col-span-2"
+          title="リーチ数の制御"
+          description="現在のリーチ数を1ずつ増減します。"
+        >
+          <div className="flex flex-wrap gap-4 max-sm:flex-col">
+            <AdminButton
+              className="max-sm:w-full"
               onClick={async () => {
                 try {
                   await incrementReachAction();
@@ -209,10 +207,9 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
               }}
             >
               リーチ数を 1 増加する
-            </button>
-            <button
-              type="button"
-              className={styles.Button}
+            </AdminButton>
+            <AdminButton
+              className="max-sm:w-full"
               onClick={async () => {
                 try {
                   await decrementReachAction();
@@ -223,43 +220,38 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
               }}
             >
               リーチ数を 1 減少する
-            </button>
+            </AdminButton>
           </div>
-        </div>
-        <div className={styles.frame}>
-          <p>アンケートURLと配信制御</p>
-          <div className={`${styles.item} ${styles.surveyRow}`}>
-            <div className={styles.flexerror}>
-              <input
-                type="url"
-                placeholder="https://forms.gle/..."
-                className={styles.inputForm}
-                value={surveyUrl}
-                onChange={(event) => setSurveyUrl(event.target.value)}
-              />
-            </div>
-          </div>
-          <div className={`${styles.item} ${styles.surveyRow}`}>
-            <div className={styles.surveyButtons}>
-              <button
-                type="button"
-                className={styles.Button}
-                onClick={() => void handleSurvey(true)}
-              >
+        </AdminPanel>
+
+        <AdminPanel
+          className="lg:col-span-2"
+          title="アンケートURLと配信制御"
+          description="URL設定後に配信開始/停止を選択してください"
+        >
+          <div className="space-y-4">
+            <AdminInput
+              type="url"
+              placeholder="https://forms.gle/..."
+              className="w-full"
+              value={surveyUrl}
+              onChange={(event) => setSurveyUrl(event.target.value)}
+            />
+            <div className="flex flex-wrap gap-4 max-sm:flex-col">
+              <AdminButton className="max-sm:w-full" onClick={() => void handleSurvey(true)}>
                 配信する
-              </button>
-              <button
-                type="button"
-                className={styles.Button}
-                onClick={() => void handleSurvey(false)}
-              >
+              </AdminButton>
+              <AdminButton className="max-sm:w-full" onClick={() => void handleSurvey(false)}>
                 配信を停止する
-              </button>
+              </AdminButton>
             </div>
           </div>
-        </div>
-      </div>
-      <BingoResult bingoResultNumber={bingoNumbers} onClick={handleNumberClick} />
-    </div>
+        </AdminPanel>
+      </AdminPageContent>
+
+      <AdminPageContent className="mt-6">
+        <BingoResult bingoResultNumber={bingoNumbers} onClick={handleNumberClick} />
+      </AdminPageContent>
+    </AdminPageShell>
   );
 }

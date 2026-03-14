@@ -1,11 +1,19 @@
-import styles from "./Loading.module.css";
-
 const Loading = () => {
   return (
-    <div className={styles.overlay} role="status" aria-live="polite">
-      <div className={styles.card}>
-        <div className={styles.brand}>Admin Console</div>
-        <svg className={styles.spinner} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color-mix(in_srgb,var(--admin-overlay)_84%,transparent)] p-6 backdrop-blur-sm">
+      <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-3xl border border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface)_94%,transparent)] p-7 text-[var(--admin-text)] shadow-xl">
+        <p
+          className="text-2xl tracking-wider text-[var(--main-color)]"
+          style={{ fontFamily: 'var(--font-silom), "Noto Sans JP", sans-serif' }}
+        >
+          Admin Console
+        </p>
+        <svg
+          className="size-12 fill-[var(--main-color)]"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
           <title>読み込み中</title>
           <path
             d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
@@ -21,7 +29,7 @@ const Loading = () => {
             />
           </path>
         </svg>
-        <p className={styles.message}>管理画面を読み込み中...</p>
+        <p className="text-base sm:text-lg">管理画面を読み込み中...</p>
       </div>
     </div>
   );

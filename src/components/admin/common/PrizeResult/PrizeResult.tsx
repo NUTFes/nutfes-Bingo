@@ -6,9 +6,9 @@ import { IoClose, IoCreateOutline } from "react-icons/io5";
 import { toast } from "react-toastify";
 
 import type { PrizeWithImageUrl } from "@/lib/bingo/types";
+import { AdminPanel, AdminButton } from "@/components/admin/ui";
 import PrizeDeleteModal from "@/components/admin/common/PrizeDeleteModal/PrizeDeleteModal";
 import PrizeEditModal from "@/components/admin/common/PrizeEditModal/PrizeEditModal";
-import styles from "./PrizeResult.module.css";
 
 interface PrizeResultProps {
   prizeResult: PrizeWithImageUrl[];
@@ -37,7 +37,6 @@ export const PrizeResult = ({
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selected, setSelected] = useState<PrizeWithImageUrl | null>(null);
-  const [isImageVisible, setIsImageVisible] = useState(true);
 
   const sortedPrizes = useMemo(() => [...prizeResult].sort((a, b) => a.id - b.id), [prizeResult]);
 
@@ -89,74 +88,82 @@ export const PrizeResult = ({
   };
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.container}>
-        <div className={styles.title}>景品一覧</div>
-        <div id="loading" className={isImageVisible ? styles.loading : styles.hidden}></div>
-        <div className={styles.grid}>
+    <div className="py-3 sm:py-4">
+      <AdminPanel title="景品一覧" description={`${sortedPrizes.length}件の景品を表示しています。`}>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {sortedPrizes.map((prize) => (
-            <div className={styles.card} key={prize.id} id={`prize-${prize.id}`}>
-              <div className={styles.cardActions}>
-                <button
-                  type="button"
+            <div
+              className="group relative flex flex-col gap-3 rounded-2xl border border-[var(--admin-card-border)] bg-[var(--admin-card-bg)] p-3 text-[var(--admin-card-text)] shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--admin-border)] hover:shadow-md sm:p-4"
+              key={prize.id}
+              id={`prize-${prize.id}`}
+            >
+              <div className="absolute right-2 top-2 z-10 flex gap-2">
+                <AdminButton
+                  variant="icon"
+                  size="icon"
                   aria-label="edit"
-                  className={styles.iconBtn}
                   onClick={() => {
                     setSelected(prize);
                     setIsEditOpen(true);
                   }}
                 >
                   <IoCreateOutline />
-                </button>
-                <button
-                  type="button"
+                </AdminButton>
+                <AdminButton
+                  variant="icon"
+                  size="icon"
                   aria-label="delete"
-                  className={styles.iconBtn}
                   onClick={() => {
                     setSelected(prize);
                     setIsDeleteOpen(true);
                   }}
                 >
                   <IoClose />
-                </button>
+                </AdminButton>
               </div>
-              <div className={styles.image}>
+
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[color-mix(in_srgb,var(--admin-surface-soft)_72%,var(--admin-card-bg))]">
                 {prize.image_url ? (
                   <Image
                     src={prize.image_url}
                     alt={prize.name_jp}
                     fill
                     sizes="(max-width: 768px) 42vw, 220px"
-                    onLoad={() => setIsImageVisible(false)}
                   />
                 ) : null}
                 {showOverlay && prize.is_won && (
-                  <div className={styles.overlay}>
-                    <p className={styles.overlayText}>当選済み</p>
+                  <div className="absolute inset-0 flex items-center justify-center bg-[var(--admin-overlay)]">
+                    <p className="m-0 inline-flex w-4/5 items-center justify-center rounded-full bg-[var(--main-color)] px-3 py-2 text-base font-semibold text-[var(--admin-button-text)]">
+                      当選済み
+                    </p>
                   </div>
                 )}
               </div>
-              <div className={styles.cardContent}>
-                <p>{prize.name_jp}</p>
-              </div>
+
+              <p className="m-0 min-h-12 px-1 text-center text-base font-semibold leading-7 sm:text-lg">
+                {prize.name_jp}
+              </p>
+
               {showToggle && (
-                <div className={styles.toggleContainer}>
-                  <div className={styles.toggleButton}>
+                <div className="mt-auto flex justify-center pb-0.5">
+                  <label className="relative inline-flex h-10 w-20 cursor-pointer items-center">
                     <input
                       id={`toggle-${prize.id}`}
-                      className={styles.toggleInput}
+                      className="peer sr-only"
                       type="checkbox"
                       checked={prize.is_won}
                       onChange={(event) => void handleToggleChange(prize.id, event.target.checked)}
                     />
-                    <label htmlFor={`toggle-${prize.id}`} className={styles.toggleLabel} />
-                  </div>
+                    <span className="h-full w-full rounded-full border-2 border-[color-mix(in_srgb,var(--admin-muted-text)_62%,transparent)] bg-[color-mix(in_srgb,var(--admin-surface-soft)_45%,var(--admin-card-bg))] transition-colors peer-checked:border-[var(--admin-border)] peer-checked:bg-[color-mix(in_srgb,var(--main-color)_18%,var(--admin-card-bg))]" />
+                    <span className="absolute left-1 top-1 size-8 rounded-full border border-[color-mix(in_srgb,var(--admin-muted-text)_35%,transparent)] bg-[color-mix(in_srgb,var(--admin-card-text)_35%,var(--admin-card-bg))] shadow-sm transition-all peer-checked:left-11 peer-checked:border-[var(--main-color)] peer-checked:bg-[var(--main-color)]" />
+                  </label>
                 </div>
               )}
             </div>
           ))}
         </div>
-      </div>
+      </AdminPanel>
+
       <PrizeDeleteModal
         isOpened={isDeleteOpen}
         setIsOpened={setIsDeleteOpen}

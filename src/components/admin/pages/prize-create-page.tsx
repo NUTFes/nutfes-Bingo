@@ -9,7 +9,15 @@ import { ToastContainer, toast } from "react-toastify";
 import { createPrize, deletePrize, togglePrizeWon, updatePrize } from "@/app/admin/actions";
 import type { PrizeWithImageUrl } from "@/lib/bingo/types";
 import { Header, PrizeResult } from "@/components/admin/common";
-import styles from "@/styles/admin/postPrizes.module.css";
+import {
+  AdminButton,
+  AdminDropzone,
+  AdminInput,
+  AdminLabel,
+  AdminPageContent,
+  AdminPageShell,
+  AdminPanel,
+} from "@/components/admin/ui";
 
 interface PrizeCreatePageProps {
   initialPrizes: PrizeWithImageUrl[];
@@ -81,68 +89,73 @@ export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
   };
 
   return (
-    <div className={styles.container}>
+    <AdminPageShell>
       <ToastContainer position="top-center" />
-      <div>
-        <Header user="Admin">
-          <button type="button" onClick={() => router.push("/admin")} className={styles.backButton}>
-            戻る
-          </button>
-        </Header>
-        <div className={styles.input_group}>
-          <div className={styles.input_group_content}>
-            <div>
-              <h2>登録する画像を選択</h2>
-              <div
-                className={isDragOver ? styles.drop_area_drag_over : styles.drop_area}
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  setIsDragOver(true);
-                }}
-                onDragEnter={(event) => {
-                  event.preventDefault();
-                  setIsDragOver(true);
-                }}
-                onDragLeave={(event) => {
-                  event.preventDefault();
-                  setIsDragOver(false);
-                }}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <div className={styles.input_center_item}>
-                  <IoCloudUploadOutline size="4rem" />
-                  ここに画像をドラッグ&ドロップ
-                </div>
-              </div>
-              <input type="file" onChange={handleFileChange} ref={fileInputRef} accept="image/*" />
-            </div>
+      <Header user="Admin">
+        <AdminButton rounded="pill" onClick={() => router.push("/admin")}>
+          戻る
+        </AdminButton>
+      </Header>
 
-            <div className={styles.input_details}>
-              <h2>景品名を入力</h2>
-              <input
+      <AdminPageContent className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <AdminPanel title="登録する画像を選択" description="画像を選び、景品名を入力して登録します。">
+          <div className="space-y-4">
+            <AdminDropzone
+              isDragOver={isDragOver}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setIsDragOver(true);
+              }}
+              onDragEnter={(event) => {
+                event.preventDefault();
+                setIsDragOver(true);
+              }}
+              onDragLeave={(event) => {
+                event.preventDefault();
+                setIsDragOver(false);
+              }}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className="py-10"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <IoCloudUploadOutline size="4rem" />
+                ここに画像をドラッグ&ドロップ
+              </div>
+            </AdminDropzone>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+            />
+
+            <div className="space-y-2">
+              <AdminLabel>景品名を入力</AdminLabel>
+              <AdminInput
                 value={prizeNameJp}
-                className={styles.input_form}
                 type="text"
                 name="nameJp"
                 onChange={(event) => setPrizeNameJp(event.target.value)}
               />
             </div>
-            <div className={styles.input_details}>
-              <h2>英語名を入力</h2>
-              <input
+            <div className="space-y-2">
+              <AdminLabel>英語名を入力</AdminLabel>
+              <AdminInput
                 value={prizeNameEn}
-                className={styles.input_form}
                 type="text"
                 name="nameEn"
                 onChange={(event) => setPrizeNameEn(event.target.value)}
               />
             </div>
           </div>
-          <div className={styles.preview_group_content}>
-            <h2>景品プレビュー</h2>
+        </AdminPanel>
+
+        <AdminPanel title="景品プレビュー" description="選択中の画像と登録内容を確認できます。">
+          <div className="flex flex-col items-center gap-4">
             {previewUrl ? (
-              <div className={styles.previewImageWrap}>
+              <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl bg-[var(--admin-surface-soft)]">
                 <Image
                   src={previewUrl}
                   alt="preview"
@@ -152,17 +165,23 @@ export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
                 />
               </div>
             ) : (
-              <div className={styles.previewPlaceholder}>画像を選択してください</div>
+              <div className="grid aspect-square w-full max-w-sm place-items-center rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--admin-border)_70%,transparent)] text-[var(--admin-muted-text)]">
+                画像を選択してください
+              </div>
             )}
-            <input
-              className={styles.button}
-              type="submit"
-              value="送信"
+            <AdminButton
+              size="lg"
+              className="w-full max-w-sm"
               onClick={() => void submit()}
               disabled={isSubmitting}
-            />
+            >
+              送信
+            </AdminButton>
           </div>
-        </div>
+        </AdminPanel>
+      </AdminPageContent>
+
+      <AdminPageContent className="mt-6">
         <PrizeResult
           prizeResult={bingoPrize}
           setBingoPrize={setBingoPrize}
@@ -185,7 +204,7 @@ export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
             return updatePrize(formData);
           }}
         />
-      </div>
-    </div>
+      </AdminPageContent>
+    </AdminPageShell>
   );
 }

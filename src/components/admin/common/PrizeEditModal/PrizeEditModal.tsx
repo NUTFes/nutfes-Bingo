@@ -3,9 +3,14 @@
 import Image from "next/image";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import { RxCrossCircled } from "react-icons/rx";
 
-import styles from "./PrizeEditModal.module.css";
+import {
+  AdminButton,
+  AdminDropzone,
+  AdminInput,
+  AdminLabel,
+  AdminModalShell,
+} from "@/components/admin/ui";
 
 interface Props {
   isOpened: boolean;
@@ -85,96 +90,85 @@ const PrizeEditModal = ({
     close();
   };
 
-  if (!isOpened) {
-    return null;
-  }
-
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.frame}>
-        <button type="button" className={styles.btnClose} onClick={close}>
-          <RxCrossCircled />
-        </button>
-        <div className={styles.title}>景品を編集</div>
-        <div className={styles.form}>
-          <div className={styles.row}>
-            <label className={styles.label}>日本語名</label>
-            <input
-              className={styles.input}
-              value={nameJp}
-              onChange={(e) => setNameJp(e.target.value)}
-            />
-          </div>
-          <div className={styles.row}>
-            <label className={styles.label}>英語名</label>
-            <input
-              className={styles.input}
-              value={nameEn}
-              onChange={(e) => setNameEn(e.target.value)}
-            />
-          </div>
-          <div className={styles.row}>
-            <label className={styles.label}>画像</label>
-            {previewUrl ? (
-              <div className={styles.previewContainer}>
-                <Image
-                  className={styles.previewImage}
-                  src={previewUrl}
-                  alt="preview"
-                  fill
-                  sizes="(max-width: 768px) 72vw, 360px"
-                  style={{ objectFit: "contain" }}
-                />
-              </div>
-            ) : (
-              <div className={styles.imagePreview}>(画像なし)</div>
-            )}
-            <div
-              className={isDragOver ? styles.drop_area_drag_over : styles.drop_area}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragOver(true);
-              }}
-              onDragEnter={(e) => {
-                e.preventDefault();
-                setIsDragOver(true);
-              }}
-              onDragLeave={(e) => {
-                e.preventDefault();
-                setIsDragOver(false);
-              }}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <div className={styles.input_center_item}>
-                <IoCloudUploadOutline size="3rem" />
-                ここに画像をドラッグ&ドロップ
-              </div>
+    <AdminModalShell
+      isOpen={isOpened}
+      onClose={close}
+      canCloseByClickingBackground={canCloseByClickingBackground}
+      title="景品を編集"
+      panelClassName="max-w-2xl"
+      footer={
+        <>
+          <AdminButton variant="secondary" onClick={close}>
+            キャンセル
+          </AdminButton>
+          <AdminButton onClick={handleSubmit}>保存</AdminButton>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        <div className="space-y-2">
+          <AdminLabel>日本語名</AdminLabel>
+          <AdminInput value={nameJp} onChange={(e) => setNameJp(e.target.value)} />
+        </div>
+
+        <div className="space-y-2">
+          <AdminLabel>英語名</AdminLabel>
+          <AdminInput value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+        </div>
+
+        <div className="space-y-2">
+          <AdminLabel>画像</AdminLabel>
+          {previewUrl ? (
+            <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface-strong)_86%,transparent)] p-2">
+              <Image
+                className="rounded-lg"
+                src={previewUrl}
+                alt="preview"
+                fill
+                sizes="(max-width: 768px) 72vw, 360px"
+                style={{ objectFit: "contain" }}
+              />
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              style={{ display: "none" }}
-            />
-          </div>
-          <div className={styles.actions}>
-            <button type="button" className={`${styles.btn} ${styles.cancel}`} onClick={close}>
-              キャンセル
-            </button>
-            <button
-              type="button"
-              className={`${styles.btn} ${styles.primary}`}
-              onClick={handleSubmit}
-            >
-              保存
-            </button>
-          </div>
+          ) : (
+            <div className="grid min-h-24 place-items-center rounded-2xl border border-dashed border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface-soft)_72%,transparent)] text-base text-[var(--admin-muted-text)]">
+              (画像なし)
+            </div>
+          )}
+
+          <AdminDropzone
+            isDragOver={isDragOver}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragOver(true);
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setIsDragOver(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              setIsDragOver(false);
+            }}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="flex flex-col items-center gap-2">
+              <IoCloudUploadOutline size="3rem" />
+              ここに画像をドラッグ&ドロップ
+            </div>
+          </AdminDropzone>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </div>
       </div>
-      {canCloseByClickingBackground && <div className={styles.background} onClick={close} />}
-    </div>
+    </AdminModalShell>
   );
 };
 
