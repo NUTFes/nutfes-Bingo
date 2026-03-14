@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/Button";
-import { AdminPageContent } from "@/components/admin/ui/layout";
 
 interface HeaderProps {
   children?: ReactNode;
@@ -41,7 +40,7 @@ const Header = ({ children, user }: HeaderProps) => {
 
   return (
     <header className="sticky top-0 z-20 w-full border-b border-zinc-700/80 bg-zinc-900/85 shadow-md backdrop-blur-md supports-[backdrop-filter]:bg-zinc-900/75">
-      <AdminPageContent className="py-2.5 sm:py-3">
+      <div className="mx-auto w-full max-w-7xl px-4 py-2.5 sm:px-6 sm:py-3 lg:px-8">
         <div className="flex items-center gap-2.5">
           <Button
             variant="quiet"
@@ -66,7 +65,7 @@ const Header = ({ children, user }: HeaderProps) => {
             ))}
           </ul>
         </nav>
-      </AdminPageContent>
+      </div>
     </header>
   );
 };

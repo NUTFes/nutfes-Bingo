@@ -8,16 +8,15 @@ import { Button } from "@/components/ui/Button";
 import { Form } from "@/components/ui/Form";
 import { Link } from "@/components/ui/Link";
 import { TextField } from "@/components/ui/TextField";
-import { cn } from "@/lib/utils";
 
-export function ForgotPasswordForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+export function ForgotPasswordForm() {
   const [state, formAction, isPending] = useActionState(
     forgotPassword,
     INITIAL_FORGOT_PASSWORD_ACTION_STATE,
   );
 
   return (
-    <div className={cn("flex flex-col gap-5", className)} {...props}>
+    <div className="flex flex-col gap-5">
       <div className="rounded-3xl border border-zinc-800 bg-zinc-900 text-zinc-100 shadow-xl">
         <div className="space-y-2 border-b border-zinc-800 p-6 sm:p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">

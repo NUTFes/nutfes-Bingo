@@ -1,8 +1,8 @@
-import { PrizeCreatePage } from "@/components/admin/features/prizes/pages/prize-create-page";
+import { AdminPrizeCreatePage } from "@/components/admin/features/prizes/prize-create-page";
 import { getPrizes } from "@/lib/bingo/queries";
 
 export default async function Page() {
   const prizes = await getPrizes();
 
-  return <PrizeCreatePage initialPrizes={prizes} />;
+  return <AdminPrizeCreatePage initialPrizes={prizes} />;
 }
