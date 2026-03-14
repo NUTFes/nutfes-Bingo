@@ -30,6 +30,7 @@ const PrizeCard = ({ BingoPrize }: PrizeCardProps) => {
                 src={BingoPrize.image_url}
                 alt={BingoPrize.name_jp}
                 fill
+                className={styles.prizeImage}
                 sizes="(max-width: 768px) 50vw, 20vw"
               />
             )}

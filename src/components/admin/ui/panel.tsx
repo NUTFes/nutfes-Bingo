@@ -12,10 +12,7 @@ const AdminSectionTitle = ({
 }) => {
   return (
     <h2
-      className={cn(
-        "m-0 text-xl font-semibold leading-tight text-[color-mix(in_srgb,var(--admin-text)_90%,var(--main-color))] sm:text-2xl",
-        className,
-      )}
+      className={cn("m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl", className)}
     >
       {children}
     </h2>
@@ -42,27 +39,27 @@ export const AdminPanel = ({
   return (
     <section
       className={cn(
-        "rounded-3xl border border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface)_96%,transparent)] p-5 shadow-[0_12px_30px_color-mix(in_srgb,var(--admin-overlay)_25%,transparent)] sm:p-6",
+        "rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6",
         className,
       )}
     >
       {(title || actions || description) && (
         <>
-          <header className="mb-4 flex flex-wrap items-start justify-between gap-3 sm:gap-4">
+          <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
             <div className="max-w-3xl space-y-2">
               {title && <AdminSectionTitle>{title}</AdminSectionTitle>}
               {description ? (
-                <p className="m-0 text-sm leading-relaxed text-[var(--admin-muted-text)] sm:text-base">
+                <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
                   {description}
                 </p>
               ) : null}
             </div>
             {actions}
           </header>
-          <Separator className="mb-4" />
+          <Separator className="mb-4 opacity-70" />
         </>
       )}
-      <div className={cn("space-y-4", contentClassName)}>{children}</div>
+      <div className={cn("space-y-4 sm:space-y-5", contentClassName)}>{children}</div>
     </section>
   );
 };

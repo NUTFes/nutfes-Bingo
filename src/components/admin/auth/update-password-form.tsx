@@ -14,15 +14,15 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
 
   return (
     <div className={cn("flex flex-col gap-5", className)} {...props}>
-      <div className="rounded-2xl border border-border/80 bg-card/95 text-card-foreground shadow-xl backdrop-blur">
-        <div className="space-y-2 border-b border-border/60 p-6 sm:p-7">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="rounded-3xl border border-zinc-800 bg-zinc-900 text-zinc-100 shadow-xl">
+        <div className="space-y-2 border-b border-zinc-800 p-6 sm:p-7">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
             Admin Auth
           </p>
-          <h1 className="text-2xl font-semibold leading-tight tracking-tight">
+          <h2 className="text-2xl font-semibold leading-tight tracking-tight">
             新しいパスワードを設定
-          </h1>
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          </h2>
+          <p className="text-sm leading-relaxed text-zinc-300">
             管理画面で利用する新しいパスワードを入力してください。
           </p>
         </div>
@@ -36,9 +36,11 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
               isRequired
             />
             {state.error && (
-              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p>
+              <p className="rounded-md border border-red-500/40 bg-red-500/15 px-3 py-2 text-sm text-red-200">
+                {state.error}
+              </p>
             )}
-            <Button type="submit" className="h-10 w-full" isDisabled={isPending}>
+            <Button type="submit" className="h-11 w-full" isDisabled={isPending}>
               {isPending ? "保存中..." : "パスワードを更新"}
             </Button>
           </Form>

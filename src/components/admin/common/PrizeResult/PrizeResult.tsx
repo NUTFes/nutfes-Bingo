@@ -2,14 +2,15 @@
 
 import Image from "next/image";
 import React, { useMemo, useState } from "react";
+import { GridLayout, GridList, GridListItem, Virtualizer } from "react-aria-components";
 import { IoClose, IoCreateOutline } from "react-icons/io5";
-import { GridLayout, GridList, GridListItem, Size, Virtualizer } from "react-aria-components";
 
 import PrizeDeleteModal from "@/components/admin/common/PrizeDeleteModal/PrizeDeleteModal";
 import PrizeEditModal from "@/components/admin/common/PrizeEditModal/PrizeEditModal";
 import { AdminPanel } from "@/components/admin/ui/panel";
 import type { PrizeWithImageUrl } from "@/lib/bingo/types";
 import { Button } from "@/components/ui/Button";
+import { Switch } from "@/components/ui/Switch";
 import { queue } from "@/components/ui/Toast";
 
 interface PrizeResultProps {
@@ -102,34 +103,29 @@ export const PrizeResult = ({
   };
 
   return (
-    <div className="py-3 sm:py-4">
-      <AdminPanel title="景品一覧" description={`${sortedPrizes.length}件の景品を表示しています。`}>
+    <>
+      <AdminPanel
+        title="景品一覧"
+        description={`${sortedPrizes.length}件の景品を表示しています。カード右上から編集・削除できます。`}
+      >
         <Virtualizer
           layout={GridLayout}
           layoutOptions={{
-            minItemSize: new Size(236, 332),
-            minSpace: new Size(16, 16),
             maxColumns: 5,
           }}
         >
-          <GridList
-            layout="grid"
-            aria-label="景品一覧"
-            selectionMode="none"
-            items={sortedPrizes}
-            className="block h-[42rem] w-full overflow-auto rounded-2xl"
-          >
+          <GridList layout="grid" aria-label="景品一覧" items={sortedPrizes}>
             {(prize) => (
-              <GridListItem id={prize.id} textValue={prize.name_jp} className="h-full w-full p-0">
+              <GridListItem id={prize.id} textValue={prize.name_jp}>
                 <div
-                  className="group relative flex h-full flex-col gap-3 rounded-2xl border border-[var(--admin-card-border)] bg-[var(--admin-card-bg)] p-3 text-[var(--admin-card-text)] shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--admin-border)] hover:shadow-md sm:p-4"
+                  className="group relative flex h-full flex-col gap-3 rounded-2xl border border-zinc-700 bg-zinc-900 p-3 text-zinc-100 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-400/70 hover:shadow-md sm:p-4"
                   id={`prize-${prize.id}`}
                 >
                   <div className="absolute right-2 top-2 z-10 flex gap-2">
                     <Button
                       variant="secondary"
                       aria-label="edit"
-                      className="size-10 p-0"
+                      className="size-9 p-0"
                       onPress={() => {
                         setSelected(prize);
                         setIsEditOpen(true);
@@ -140,7 +136,7 @@ export const PrizeResult = ({
                     <Button
                       variant="secondary"
                       aria-label="delete"
-                      className="size-10 p-0"
+                      className="size-9 p-0"
                       onPress={() => {
                         setSelected(prize);
                         setIsDeleteOpen(true);
@@ -150,43 +146,43 @@ export const PrizeResult = ({
                     </Button>
                   </div>
 
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[color-mix(in_srgb,var(--admin-surface-soft)_72%,var(--admin-card-bg))]">
+                  <div className="relative aspect-4/3 overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950">
                     {prize.image_url ? (
                       <Image
                         src={prize.image_url}
                         alt={prize.name_jp}
                         fill
                         sizes="(max-width: 768px) 42vw, 220px"
+                        className="bg-white object-contain p-2"
                       />
                     ) : null}
                     {showOverlay && prize.is_won && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-[var(--admin-overlay)]">
-                        <p className="m-0 inline-flex w-4/5 items-center justify-center rounded-full bg-[var(--main-color)] px-3 py-2 text-base font-semibold text-[var(--admin-button-text)]">
+                      <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/70">
+                        <p className="m-0 inline-flex w-4/5 items-center justify-center rounded-full bg-amber-400 px-3 py-2 text-base font-semibold text-zinc-900">
                           当選済み
                         </p>
                       </div>
                     )}
                   </div>
 
-                  <p className="m-0 min-h-12 px-1 text-center text-base font-semibold leading-7 sm:text-lg">
-                    {prize.name_jp}
-                  </p>
+                  <div className="space-y-1 px-1 text-center">
+                    <p className="font-medium text-zinc-100">{prize.name_jp}</p>
+                  </div>
 
                   {showToggle && (
-                    <div className="mt-auto flex justify-center pb-0.5">
-                      <label className="relative inline-flex h-10 w-20 cursor-pointer items-center">
-                        <input
+                    <div className="mt-auto pb-0.5">
+                      <div className="flex justify-center">
+                        <Switch
                           id={`toggle-${prize.id}`}
-                          className="peer sr-only"
-                          type="checkbox"
-                          checked={prize.is_won}
-                          onChange={(event) =>
-                            void handleToggleChange(prize.id, event.target.checked)
-                          }
-                        />
-                        <span className="h-full w-full rounded-full border-2 border-[color-mix(in_srgb,var(--admin-muted-text)_62%,transparent)] bg-[color-mix(in_srgb,var(--admin-surface-soft)_45%,var(--admin-card-bg))] transition-colors peer-checked:border-[var(--admin-border)] peer-checked:bg-[color-mix(in_srgb,var(--main-color)_18%,var(--admin-card-bg))]" />
-                        <span className="absolute left-1 top-1 size-8 rounded-full border border-[color-mix(in_srgb,var(--admin-muted-text)_35%,transparent)] bg-[color-mix(in_srgb,var(--admin-card-text)_35%,var(--admin-card-bg))] shadow-sm transition-all peer-checked:left-11 peer-checked:border-[var(--main-color)] peer-checked:bg-[var(--main-color)]" />
-                      </label>
+                          aria-label={`${prize.name_jp}の当選状態`}
+                          isSelected={prize.is_won}
+                          onChange={(isSelected) => void handleToggleChange(prize.id, isSelected)}
+                        >
+                          <span className="text-xs font-medium text-zinc-100">
+                            {prize.is_won ? "当選済み" : "未当選"}
+                          </span>
+                        </Switch>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -213,7 +209,7 @@ export const PrizeResult = ({
           onSubmit={submitEdit}
         />
       )}
-    </div>
+    </>
   );
 };
 

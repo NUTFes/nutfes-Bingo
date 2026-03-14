@@ -10,6 +10,7 @@ if (supabaseUrl && URL.canParse(supabaseUrl)) {
 }
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   cacheComponents: true,
   images: {
     remotePatterns,

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
 import { isFileDropItem, type DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
 import { IoCloudUploadOutline } from "react-icons/io5";
@@ -12,7 +11,6 @@ import Header from "@/components/admin/common/Header/Header";
 import PrizeResult from "@/components/admin/common/PrizeResult/PrizeResult";
 import { AdminPageContent, AdminPageShell } from "@/components/admin/ui/layout";
 import { AdminPanel } from "@/components/admin/ui/panel";
-import { Breadcrumb, Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import type { PrizeWithImageUrl } from "@/lib/bingo/types";
 import { Button } from "@/components/ui/Button";
 import { DropZone } from "@/components/ui/DropZone";
@@ -31,7 +29,6 @@ const showToast = (content: { title: string; description?: string }) => {
 };
 
 export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
-  const router = useRouter();
   const [bingoPrize, setBingoPrize] = useState<PrizeWithImageUrl[]>(initialPrizes);
   const [prizeNameJp, setPrizeNameJp] = useState("");
   const [prizeNameEn, setPrizeNameEn] = useState("");
@@ -93,30 +90,19 @@ export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
   return (
     <AdminPageShell>
       <MyToastRegion />
-      <Header user="Admin">
-        <Button onPress={() => router.push("/admin")}>戻る</Button>
-      </Header>
+      <Header user="Admin" />
 
       <AdminPageContent className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <div className="xl:col-span-2">
-          <Breadcrumbs>
-            <Breadcrumb href="/admin">Dashboard</Breadcrumb>
-            <Breadcrumb href="/admin/prizes">Prizes</Breadcrumb>
-            <Breadcrumb href="/admin/prizes/new">New Prize</Breadcrumb>
-          </Breadcrumbs>
-        </div>
         <AdminPanel
-          title="登録する画像を選択"
-          description="画像を選び、景品名を入力して登録します。"
+          title="景品情報を入力"
+          description="画像・景品名を入力して新しい景品を登録します。"
           contentClassName="space-y-5"
         >
-          <DropZone onDrop={handleDrop} className="w-full py-10">
+          <DropZone onDrop={handleDrop} className="w-full rounded-2xl py-10">
             <div className="flex flex-col items-center gap-2">
               <IoCloudUploadOutline size="4rem" />
               <p>ここに画像をドラッグ&ドロップ</p>
-              <p className="text-sm font-normal text-[var(--admin-muted-text)]">
-                または下のボタンから選択
-              </p>
+              <p className="text-sm font-normal text-zinc-400">または下のボタンから選択</p>
             </div>
           </DropZone>
           <FileTrigger
@@ -136,15 +122,15 @@ export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
               void submit();
             }}
           >
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-4">
               <TextField
-                label="景品名を入力"
+                label="景品名（日本語）"
                 name="nameJp"
                 value={prizeNameJp}
                 onChange={setPrizeNameJp}
               />
               <TextField
-                label="英語名を入力"
+                label="景品名（英語）"
                 name="nameEn"
                 value={prizeNameEn}
                 onChange={setPrizeNameEn}
@@ -155,12 +141,12 @@ export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
 
         <AdminPanel
           title="景品プレビュー"
-          description="選択中の画像と登録内容を確認できます。"
+          description="登録前に画像と景品名を確認できます。"
           contentClassName="space-y-5"
         >
           <div className="flex flex-col items-center gap-4">
             {previewUrl ? (
-              <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl bg-[var(--admin-surface-soft)]">
+              <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl bg-zinc-800/70">
                 <Image
                   src={previewUrl}
                   alt="preview"
@@ -170,7 +156,7 @@ export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
                 />
               </div>
             ) : (
-              <div className="grid aspect-square w-full max-w-sm place-items-center rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--admin-border)_70%,transparent)] text-sm text-[var(--admin-muted-text)] sm:text-base">
+              <div className="grid aspect-square w-full max-w-sm place-items-center rounded-2xl border border-dashed border-zinc-600 text-sm text-zinc-400 sm:text-base">
                 画像を選択してください
               </div>
             )}
@@ -179,7 +165,7 @@ export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
               className="h-12 w-full max-w-sm"
               onPress={() => void submit()}
             >
-              {isSubmitting ? "登録中..." : "送信"}
+              {isSubmitting ? "登録中..." : "景品を登録"}
             </Button>
           </div>
         </AdminPanel>

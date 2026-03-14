@@ -34,6 +34,34 @@ function createDataClient() {
   );
 }
 
+function isDirectImagePath(imagePath: string): boolean {
+  if (imagePath.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    void new URL(imagePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function resolvePrizeImageUrl(
+  supabase: ReturnType<typeof createDataClient>,
+  imagePath: string | null,
+): string | null {
+  if (!imagePath) {
+    return null;
+  }
+
+  if (isDirectImagePath(imagePath)) {
+    return imagePath;
+  }
+
+  return supabase.storage.from(PRIZE_IMAGES_BUCKET).getPublicUrl(imagePath).data.publicUrl;
+}
+
 export async function getNumbers(): Promise<NumberRow[]> {
   "use cache";
   cacheTag(BINGO_CACHE_TAGS.numbers);
@@ -77,9 +105,7 @@ export async function getPrizes(): Promise<PrizeWithImageUrl[]> {
 
   return data.map<PrizeWithImageUrl>((prize) => ({
     ...prize,
-    image_url: prize.image_path
-      ? supabase.storage.from(PRIZE_IMAGES_BUCKET).getPublicUrl(prize.image_path).data.publicUrl
-      : null,
+    image_url: resolvePrizeImageUrl(supabase, prize.image_path),
   }));
 }
 

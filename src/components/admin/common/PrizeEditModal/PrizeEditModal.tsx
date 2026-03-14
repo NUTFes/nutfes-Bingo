@@ -6,10 +6,11 @@ import { isFileDropItem, type DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
 import { IoCloudUploadOutline } from "react-icons/io5";
 
-import { AdminModalShell } from "@/components/admin/ui/modal-shell";
 import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
 import { DropZone } from "@/components/ui/DropZone";
 import { Form } from "@/components/ui/Form";
+import { Modal } from "@/components/ui/Modal";
 import { Separator } from "@/components/ui/Separator";
 import { TextField } from "@/components/ui/TextField";
 
@@ -87,73 +88,84 @@ const PrizeEditModal = ({
   };
 
   return (
-    <AdminModalShell
+    <Modal
       isOpen={isOpened}
-      onClose={close}
-      canCloseByClickingBackground={canCloseByClickingBackground}
-      title="景品を編集"
-      panelClassName="max-w-2xl"
-      footer={
-        <>
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          close();
+        }
+      }}
+      isDismissable={canCloseByClickingBackground}
+    >
+      <Dialog>
+        <h3 className="text-xl font-semibold leading-tight text-zinc-100 sm:text-2xl">
+          景品を編集
+        </h3>
+        <Separator className="my-4 opacity-75" />
+        <Form
+          className="space-y-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSubmit();
+          }}
+        >
+          <div className="flex flex-col gap-4">
+            <TextField label="景品名（日本語）" value={nameJp} onChange={setNameJp} />
+            <TextField label="景品名（英語）" value={nameEn} onChange={setNameEn} />
+          </div>
+
+          <div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-zinc-100">画像</p>
+              {previewUrl ? (
+                <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900/80 p-2">
+                  <Image
+                    className="bg-white"
+                    src={previewUrl}
+                    alt="preview"
+                    fill
+                    sizes="(max-width: 768px) 72vw, 360px"
+                    style={{ objectFit: "contain" }}
+                  />
+                </div>
+              ) : (
+                <div className="grid min-h-24 place-items-center rounded-2xl border border-dashed border-zinc-600 bg-zinc-800/60 text-base text-zinc-400">
+                  (画像なし)
+                </div>
+              )}
+
+              <DropZone onDrop={handleDrop} className="w-full rounded-2xl">
+                <div className="flex flex-col items-center gap-2">
+                  <IoCloudUploadOutline size="3rem" />
+                  ここに画像をドラッグ&ドロップ
+                </div>
+              </DropZone>
+
+              <FileTrigger
+                acceptedFileTypes={["image/*"]}
+                onSelect={(files) => {
+                  const file = files ? Array.from(files)[0] : null;
+                  handleFileSelected(file ?? null);
+                }}
+              >
+                <Button variant="secondary">画像ファイルを選択</Button>
+              </FileTrigger>
+              <p className="text-xs text-zinc-400">
+                ファイルを選択しない場合は現在の画像を維持します。
+              </p>
+            </div>
+          </div>
+        </Form>
+        <div className="flex flex-wrap justify-end gap-2.5 sm:gap-3 mt-5">
           <Button variant="secondary" onPress={close}>
             キャンセル
           </Button>
           <Button variant="primary" onPress={handleSubmit}>
             保存
           </Button>
-        </>
-      }
-    >
-      <Form
-        className="space-y-5"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void handleSubmit();
-        }}
-      >
-        <TextField label="日本語名" value={nameJp} onChange={setNameJp} />
-        <TextField label="英語名" value={nameEn} onChange={setNameEn} />
-
-        <Separator />
-
-        <div className="space-y-2">
-          <p className="m-0 text-sm font-medium text-[var(--admin-text)]">画像</p>
-          {previewUrl ? (
-            <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface-strong)_86%,transparent)] p-2">
-              <Image
-                className="rounded-lg"
-                src={previewUrl}
-                alt="preview"
-                fill
-                sizes="(max-width: 768px) 72vw, 360px"
-                style={{ objectFit: "contain" }}
-              />
-            </div>
-          ) : (
-            <div className="grid min-h-24 place-items-center rounded-2xl border border-dashed border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface-soft)_72%,transparent)] text-base text-[var(--admin-muted-text)]">
-              (画像なし)
-            </div>
-          )}
-
-          <DropZone onDrop={handleDrop} className="w-full">
-            <div className="flex flex-col items-center gap-2">
-              <IoCloudUploadOutline size="3rem" />
-              ここに画像をドラッグ&ドロップ
-            </div>
-          </DropZone>
-
-          <FileTrigger
-            acceptedFileTypes={["image/*"]}
-            onSelect={(files) => {
-              const file = files ? Array.from(files)[0] : null;
-              handleFileSelected(file ?? null);
-            }}
-          >
-            <Button variant="secondary">ファイルを選択</Button>
-          </FileTrigger>
         </div>
-      </Form>
-    </AdminModalShell>
+      </Dialog>
+    </Modal>
   );
 };
 

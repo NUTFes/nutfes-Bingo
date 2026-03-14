@@ -2,19 +2,20 @@ import { Link } from "@/components/ui/Link";
 
 export default function Page() {
   return (
-    <main className="min-h-svh bg-[radial-gradient(120%_120%_at_50%_0%,color-mix(in_srgb,var(--main-color)_12%,transparent),transparent_52%)] px-4 py-10 sm:px-6 md:py-14">
+    <main className="flex min-h-svh items-center bg-zinc-950 px-4 py-6 text-zinc-100 sm:px-6">
       <section className="mx-auto w-full max-w-2xl">
-        <div className="rounded-2xl border border-border/80 bg-card/95 p-6 shadow-xl backdrop-blur sm:p-8">
+        <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl sm:p-8">
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Account Setup
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+              NUTFES BINGO ADMIN
             </p>
-            <h1 className="text-3xl font-semibold tracking-tight">Thank you for signing up!</h1>
-            <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-              You&apos;ve successfully signed up. Please check your email to confirm your account
-              before signing in.
+            <h1 className="text-3xl font-semibold tracking-tight">
+              アカウント登録を受け付けました
+            </h1>
+            <p className="text-sm leading-relaxed text-zinc-300 sm:text-base">
+              登録したメールアドレス宛に確認メールを送信しました。メール確認後にログインしてください。
             </p>
-            <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+            <p className="text-sm leading-relaxed text-zinc-300 sm:text-base">
               管理権限はアプリ管理者が Supabase
               上で手動付与します。必要な場合は運用担当へ連絡してください。
             </p>

@@ -12,7 +12,7 @@ export const AdminPageShell = ({
   return (
     <div
       className={cn(
-        "admin-theme min-h-screen bg-[radial-gradient(120%_120%_at_50%_0%,color-mix(in_srgb,var(--main-color)_8%,transparent),transparent_42%),#111111] pb-10 text-[var(--admin-text)] sm:pb-12",
+        "min-h-screen bg-gradient-to-b from-zinc-900 via-zinc-950 to-black pb-8 text-zinc-100 sm:pb-10",
         className,
       )}
     >

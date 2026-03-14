@@ -1,15 +1,15 @@
 const Loading = () => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color-mix(in_srgb,var(--admin-overlay)_84%,transparent)] p-6 backdrop-blur-sm">
-      <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-3xl border border-[var(--admin-border-subtle)] bg-[color-mix(in_srgb,var(--admin-surface)_94%,transparent)] p-7 text-[var(--admin-text)] shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 p-6 backdrop-blur-md">
+      <div className="flex w-full max-w-sm flex-col items-center gap-3.5 rounded-2xl border border-zinc-700 bg-zinc-900 p-6 text-zinc-100 shadow-2xl sm:p-7">
         <p
-          className="text-2xl tracking-wider text-[var(--main-color)]"
+          className="text-xl tracking-[0.08em] text-zinc-100 sm:text-2xl"
           style={{ fontFamily: 'var(--font-silom), "Noto Sans JP", sans-serif' }}
         >
           Admin Console
         </p>
         <svg
-          className="size-12 fill-[var(--main-color)]"
+          className="size-11 fill-zinc-100 sm:size-12"
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
@@ -29,7 +29,7 @@ const Loading = () => {
             />
           </path>
         </svg>
-        <p className="text-base sm:text-lg">管理画面を読み込み中...</p>
+        <p className="text-sm text-zinc-400 sm:text-base">管理画面を読み込み中...</p>
       </div>
     </div>
   );

@@ -13,14 +13,31 @@ import type {
 } from "@/lib/bingo/types";
 import { createClient } from "@/lib/supabase/client";
 
+function isDirectImagePath(imagePath: string): boolean {
+  if (imagePath.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    void new URL(imagePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function toPrizeWithImageUrl(prize: PrizeRow): PrizeWithImageUrl {
   const supabase = createClient();
+  const imageUrl =
+    prize.image_path && isDirectImagePath(prize.image_path)
+      ? prize.image_path
+      : prize.image_path
+        ? supabase.storage.from(PRIZE_IMAGES_BUCKET).getPublicUrl(prize.image_path).data.publicUrl
+        : null;
 
   return {
     ...prize,
-    image_url: prize.image_path
-      ? supabase.storage.from(PRIZE_IMAGES_BUCKET).getPublicUrl(prize.image_path).data.publicUrl
-      : null,
+    image_url: imageUrl,
   };
 }
 

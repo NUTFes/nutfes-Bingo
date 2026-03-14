@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import {
@@ -18,7 +17,6 @@ import JudgementModal from "@/components/admin/common/JudgementModal/JudgementMo
 import UpdateNumberModal from "@/components/admin/common/UpdateNumberModal/UpdateNumberModal";
 import { AdminPageContent, AdminPageShell } from "@/components/admin/ui/layout";
 import { AdminPanel } from "@/components/admin/ui/panel";
-import { Breadcrumb, Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Button } from "@/components/ui/Button";
 import { ComboBox, ComboBoxItem } from "@/components/ui/ComboBox";
 import { FieldGroup, Input } from "@/components/ui/Field";
@@ -56,7 +54,6 @@ const showToast = (content: { title: string; description?: string }) => {
 };
 
 export function DashboardPage({ initialNumbers, initialAppState }: DashboardPageProps) {
-  const router = useRouter();
   const bingoNumbers = useNumbers(initialNumbers);
   const [isOpened, setIsOpened] = useState(false);
   const [isOpenUpdateNumberModal, setIsOpenUpdateNumberModal] = useState(false);
@@ -159,20 +156,15 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
         }}
       />
       <Header user="Admin">
-        <Button onPress={() => router.push("/admin/prizes/new")}>景品追加</Button>
-        <Button onPress={() => router.push("/admin/prizes")}>景品管理</Button>
-        <Button onPress={() => setIsOpened(true)}>正誤判定</Button>
-        <Button onPress={handleLogout} variant="secondary">
-          ログアウト
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button onPress={() => setIsOpened(true)}>正誤判定</Button>
+          <Button onPress={handleLogout} variant="secondary">
+            ログアウト
+          </Button>
+        </div>
       </Header>
 
       <AdminPageContent className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <div className="lg:col-span-2">
-          <Breadcrumbs>
-            <Breadcrumb href="/admin">Dashboard</Breadcrumb>
-          </Breadcrumbs>
-        </div>
         <AdminPanel
           title="抽選した番号を入力"
           description="1〜99の番号を入力して抽選結果に追加します。"
@@ -185,13 +177,14 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
               void handleCreate();
             }}
           >
-            <div className="flex flex-wrap items-end gap-3 max-sm:flex-col max-sm:items-stretch">
+            <div className="space-y-2">
+              <p className="text-sm text-zinc-400">登録する番号</p>
               <NumberField
                 key={submitNumberFieldKey}
                 minValue={1}
                 maxValue={99}
                 placeholder="番号を入力"
-                className="w-full max-w-md"
+                className="w-full"
                 onInput={(event) => {
                   setSubmitNumberInput(event.currentTarget.value);
                 }}
@@ -199,14 +192,14 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
                   setSubmitNumberInput(Number.isFinite(value) ? String(value) : "");
                 }}
               />
-              <Button
-                type="submit"
-                isDisabled={parsedSubmitNumber === undefined}
-                className="min-w-36"
-              >
-                送信
-              </Button>
             </div>
+            <Button
+              type="submit"
+              isDisabled={parsedSubmitNumber === undefined}
+              className="w-full sm:w-auto sm:min-w-36"
+            >
+              番号を追加
+            </Button>
           </Form>
         </AdminPanel>
 
@@ -222,13 +215,14 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
               void handleDelete();
             }}
           >
-            <div className="flex flex-wrap items-end gap-3 max-sm:flex-col max-sm:items-stretch">
+            <div className="space-y-2">
+              <p className="text-sm text-zinc-400">削除する番号</p>
               <ComboBox
                 allowsCustomValue
                 selectedKey={selectedDeleteNumber}
                 inputValue={deleteInput}
                 placeholder="抽選済み番号から選択"
-                className="w-full max-w-md"
+                className="w-full"
                 items={deleteNumberOptions}
                 onInputChange={(value) => {
                   setDeleteInput(value);
@@ -242,10 +236,14 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
               >
                 {(item) => <ComboBoxItem id={item.id}>{item.label}</ComboBoxItem>}
               </ComboBox>
-              <Button type="submit" isDisabled={!deleteInput.trim()} className="min-w-36">
-                送信
-              </Button>
             </div>
+            <Button
+              type="submit"
+              isDisabled={!deleteInput.trim()}
+              className="w-full sm:w-auto sm:min-w-36"
+            >
+              番号を削除
+            </Button>
           </Form>
         </AdminPanel>
 
@@ -254,9 +252,9 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
           title="リーチ数の制御"
           description="現在のリーチ数を1ずつ増減します。"
         >
-          <div className="flex flex-wrap gap-3 max-sm:flex-col">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Button
-              className="max-sm:w-full"
+              className="w-full"
               onPress={async () => {
                 try {
                   await incrementReachAction();
@@ -267,10 +265,10 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
                 }
               }}
             >
-              リーチ数を 1 増加する
+              リーチ数を +1
             </Button>
             <Button
-              className="max-sm:w-full"
+              className="w-full"
               onPress={async () => {
                 try {
                   await decrementReachAction();
@@ -281,7 +279,7 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
                 }
               }}
             >
-              リーチ数を 1 減少する
+              リーチ数を -1
             </Button>
           </div>
         </AdminPanel>
@@ -300,11 +298,11 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
               onChange={(event) => setSurveyUrl(event.target.value)}
             />
           </FieldGroup>
-          <div className="flex flex-wrap gap-3 max-sm:flex-col">
-            <Button className="max-sm:w-full" onPress={() => void handleSurvey(true)}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Button className="w-full" onPress={() => void handleSurvey(true)}>
               配信する
             </Button>
-            <Button className="max-sm:w-full" onPress={() => void handleSurvey(false)}>
+            <Button className="w-full" variant="secondary" onPress={() => void handleSurvey(false)}>
               配信を停止する
             </Button>
           </div>

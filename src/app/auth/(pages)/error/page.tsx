@@ -6,24 +6,24 @@ async function ErrorContent({ searchParams }: { searchParams: Promise<{ error: s
   const params = await searchParams;
 
   return params?.error ? (
-    <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-      Code error: {params.error}
+    <p className="rounded-md border border-rose-500/40 bg-rose-500/15 px-3 py-2 text-sm text-rose-200">
+      エラーコード: {params.error}
     </p>
   ) : (
-    <p className="text-sm text-muted-foreground">An unspecified error occurred.</p>
+    <p className="text-sm text-zinc-300">不明な認証エラーが発生しました。</p>
   );
 }
 
 export default function Page({ searchParams }: { searchParams: Promise<{ error: string }> }) {
   return (
-    <main className="min-h-svh bg-[radial-gradient(120%_120%_at_50%_0%,color-mix(in_srgb,var(--main-color)_12%,transparent),transparent_52%)] px-4 py-10 sm:px-6 md:py-14">
+    <main className="flex min-h-svh items-center bg-zinc-950 px-4 py-6 text-zinc-100 sm:px-6">
       <section className="mx-auto w-full max-w-2xl">
-        <div className="rounded-2xl border border-border/80 bg-card/95 p-6 shadow-xl backdrop-blur sm:p-8">
+        <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl sm:p-8">
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Auth Error
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+              NUTFES BINGO ADMIN
             </p>
-            <h1 className="text-3xl font-semibold tracking-tight">Sorry, something went wrong.</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">認証エラーが発生しました</h1>
             <Suspense>
               <ErrorContent searchParams={searchParams} />
             </Suspense>
