@@ -1,43 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useActionState } from "react";
 
+import { INITIAL_FORGOT_PASSWORD_ACTION_STATE } from "@/app/auth/action-state";
+import { forgotPassword } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 
 export function ForgotPasswordForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleForgotPassword = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const supabase = createClient();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
-      });
-      if (error) throw error;
-      setSuccess(true);
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "再設定メールの送信に失敗しました");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [state, formAction, isPending] = useActionState(
+    forgotPassword,
+    INITIAL_FORGOT_PASSWORD_ACTION_STATE,
+  );
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      {success ? (
+      {state.success ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">メールを確認してください</CardTitle>
@@ -58,22 +40,21 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleForgotPassword}>
+            <form action={formAction}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="email">メールアドレス</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="admin@example.com"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "送信中..." : "再設定メールを送信"}
+                {state.error && <p className="text-sm text-red-500">{state.error}</p>}
+                <Button type="submit" className="w-full" disabled={isPending}>
+                  {isPending ? "送信中..." : "再設定メールを送信"}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">

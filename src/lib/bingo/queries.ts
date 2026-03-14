@@ -1,8 +1,9 @@
-import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 import { PRIZE_IMAGES_BUCKET } from "@/lib/bingo/constants";
 import type { AppStateRow, NumberRow, PrizeWithImageUrl, ReachLogRow } from "@/lib/bingo/types";
-import { createDataClient } from "@/lib/supabase/data";
+import type { Database } from "@/lib/database.types";
 import { hasEnvVars } from "@/lib/utils";
 
 const emptyAppState: AppStateRow = {
@@ -12,7 +13,32 @@ const emptyAppState: AppStateRow = {
   updated_at: "",
 };
 
-export const getNumbers = cache(async (): Promise<NumberRow[]> => {
+export const BINGO_CACHE_TAGS = {
+  numbers: "bingo:numbers",
+  prizes: "bingo:prizes",
+  appState: "bingo:app-state",
+  reachLogs: "bingo:reach-logs",
+} as const;
+
+function createDataClient() {
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        persistSession: false,
+      },
+    },
+  );
+}
+
+export async function getNumbers(): Promise<NumberRow[]> {
+  "use cache";
+  cacheTag(BINGO_CACHE_TAGS.numbers);
+  cacheLife({ stale: 5, revalidate: 30, expire: 300 });
+
   if (!hasEnvVars) {
     return [];
   }
@@ -28,9 +54,13 @@ export const getNumbers = cache(async (): Promise<NumberRow[]> => {
   }
 
   return data;
-});
+}
 
-export const getPrizes = cache(async (): Promise<PrizeWithImageUrl[]> => {
+export async function getPrizes(): Promise<PrizeWithImageUrl[]> {
+  "use cache";
+  cacheTag(BINGO_CACHE_TAGS.prizes);
+  cacheLife({ stale: 30, revalidate: 120, expire: 600 });
+
   if (!hasEnvVars) {
     return [];
   }
@@ -51,9 +81,13 @@ export const getPrizes = cache(async (): Promise<PrizeWithImageUrl[]> => {
       ? supabase.storage.from(PRIZE_IMAGES_BUCKET).getPublicUrl(prize.image_path).data.publicUrl
       : null,
   }));
-});
+}
 
-export const getAppState = cache(async (): Promise<AppStateRow> => {
+export async function getAppState(): Promise<AppStateRow> {
+  "use cache";
+  cacheTag(BINGO_CACHE_TAGS.appState);
+  cacheLife({ stale: 5, revalidate: 15, expire: 120 });
+
   if (!hasEnvVars) {
     return emptyAppState;
   }
@@ -66,9 +100,13 @@ export const getAppState = cache(async (): Promise<AppStateRow> => {
   }
 
   return data;
-});
+}
 
-export const getLatestReachLog = cache(async (): Promise<ReachLogRow | null> => {
+export async function getLatestReachLog(): Promise<ReachLogRow | null> {
+  "use cache";
+  cacheTag(BINGO_CACHE_TAGS.reachLogs);
+  cacheLife({ stale: 5, revalidate: 15, expire: 120 });
+
   if (!hasEnvVars) {
     return null;
   }
@@ -87,9 +125,16 @@ export const getLatestReachLog = cache(async (): Promise<ReachLogRow | null> => 
   }
 
   return data;
-});
+}
 
-export const getBingoBootstrap = cache(async () => {
+export async function getBingoBootstrap() {
+  "use cache";
+  cacheTag(BINGO_CACHE_TAGS.numbers);
+  cacheTag(BINGO_CACHE_TAGS.prizes);
+  cacheTag(BINGO_CACHE_TAGS.appState);
+  cacheTag(BINGO_CACHE_TAGS.reachLogs);
+  cacheLife({ stale: 5, revalidate: 30, expire: 300 });
+
   const [numbers, prizes, appState, latestReachLog] = await Promise.all([
     getNumbers(),
     getPrizes(),
@@ -103,4 +148,4 @@ export const getBingoBootstrap = cache(async () => {
     appState,
     latestReachLog,
   };
-});
+}

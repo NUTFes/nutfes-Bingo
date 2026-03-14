@@ -1,39 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useActionState } from "react";
 
+import { INITIAL_AUTH_ACTION_STATE } from "@/app/auth/action-state";
+import { login } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 
-export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+type LoginFormProps = React.ComponentPropsWithoutRef<"div"> & {
+  redirectTo?: string;
+};
 
-  const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const supabase = createClient();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      router.push("/admin");
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "ログインに失敗しました");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+export function LoginForm({ className, redirectTo, ...props }: LoginFormProps) {
+  const [state, formAction, isPending] = useActionState(login, INITIAL_AUTH_ACTION_STATE);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -45,17 +28,16 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin}>
+          <form action={formAction}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="email">メールアドレス</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="admin@example.com"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -68,17 +50,12 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     パスワードを忘れた場合
                   </Link>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <Input id="password" name="password" type="password" required />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "ログイン中..." : "ログイン"}
+              {redirectTo ? <input type="hidden" name="redirectTo" value={redirectTo} /> : null}
+              {state.error && <p className="text-sm text-red-500">{state.error}</p>}
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? "ログイン中..." : "ログイン"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">

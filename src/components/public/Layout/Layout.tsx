@@ -20,7 +20,8 @@ import {
   ToggleButton,
 } from "@/components/public/common";
 import { REACTION_IMAGES } from "@/lib/bingo/constants";
-import { recordPublicReach, sendReactionStamp, useAppState } from "@/lib/bingo/client";
+import { recordPublicReach, sendReactionStamp } from "@/app/actions/bingo-public";
+import { useAppState } from "@/lib/bingo/client";
 import type { AppStateRow } from "@/lib/bingo/types";
 import { BingoLanguageProvider, useBingoLanguage } from "@/lib/i18n/provider";
 

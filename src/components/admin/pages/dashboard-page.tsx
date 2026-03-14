@@ -6,16 +6,16 @@ import { CgLogOut } from "react-icons/cg";
 import { ToastContainer, toast } from "react-toastify";
 
 import {
-  createNumber,
-  decrementReach,
-  deleteNumber,
-  saveSurveyState,
-  updateNumber,
-  useNumbers,
-  incrementReach,
-} from "@/lib/bingo/client";
+  createNumber as createNumberAction,
+  decrementReach as decrementReachAction,
+  deleteNumber as deleteNumberAction,
+  incrementReach as incrementReachAction,
+  saveSurveyState as saveSurveyStateAction,
+  updateNumber as updateNumberAction,
+} from "@/app/admin/actions";
+import { logout as logoutAction } from "@/app/auth/actions";
+import { useNumbers } from "@/lib/bingo/client";
 import type { AppStateRow, NumberRow } from "@/lib/bingo/types";
-import { createClient } from "@/lib/supabase/client";
 import {
   BingoResult,
   Button,
@@ -56,7 +56,7 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
     }
 
     try {
-      await createNumber(nextNumber);
+      await createNumberAction(nextNumber);
       setSubmitNumber("");
     } catch (error) {
       const message = error instanceof Error ? error.message : "番号の登録に失敗しました";
@@ -75,7 +75,7 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
     }
 
     try {
-      await deleteNumber(target);
+      await deleteNumberAction(target);
       setDeleteInput("");
       setSelectedDeleteNumber("");
     } catch (error) {
@@ -85,15 +85,12 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
   };
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+    await logoutAction();
   };
 
   const handleSurvey = async (isSurveyActive: boolean) => {
     try {
-      await saveSurveyState({ surveyUrl, isSurveyActive });
+      await saveSurveyStateAction({ surveyUrl, isSurveyActive });
       toast.success(isSurveyActive ? "アンケートを送信しました。" : "アンケートを停止しました。");
     } catch (error) {
       console.error(error);
@@ -111,7 +108,7 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
         id={selectedId}
         initialNumber={selectedNumber}
         onSubmit={async ({ id, number }) => {
-          await updateNumber(id, number);
+          await updateNumberAction(id, number);
           toast.success("番号を更新しました。");
         }}
       />
@@ -199,10 +196,32 @@ export function DashboardPage({ initialNumbers, initialAppState }: DashboardPage
         </div>
         <div className={styles.frame}>
           <div className={styles.item}>
-            <button type="button" className={styles.Button} onClick={() => void incrementReach()}>
+            <button
+              type="button"
+              className={styles.Button}
+              onClick={async () => {
+                try {
+                  await incrementReachAction();
+                } catch (error) {
+                  console.error(error);
+                  toast.error("リーチ数の増加に失敗しました。");
+                }
+              }}
+            >
               リーチ数を 1 増加する
             </button>
-            <button type="button" className={styles.Button} onClick={() => void decrementReach()}>
+            <button
+              type="button"
+              className={styles.Button}
+              onClick={async () => {
+                try {
+                  await decrementReachAction();
+                } catch (error) {
+                  console.error(error);
+                  toast.error("リーチ数の減少に失敗しました。");
+                }
+              }}
+            >
               リーチ数を 1 減少する
             </button>
           </div>

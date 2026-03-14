@@ -4,13 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ToastContainer } from "react-toastify";
 
-import {
-  deletePrize,
-  deletePrizeImage,
-  togglePrizeWon,
-  updatePrize,
-  uploadPrizeImage,
-} from "@/lib/bingo/client";
+import { deletePrize, togglePrizeWon, updatePrize } from "@/app/admin/actions";
 import type { PrizeWithImageUrl } from "@/lib/bingo/types";
 import { Button, Header, PrizeResult } from "@/components/admin/common";
 import styles from "@/styles/admin/prizes.module.css";
@@ -73,22 +67,21 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
         setBingoPrize={setBingoPrize}
         showOverlay={true}
         showToggle={true}
-        onToggle={(id, isWon) => togglePrizeWon(id, isWon)}
+        onToggle={async (id, isWon) => {
+          return togglePrizeWon(id, isWon);
+        }}
         onDelete={async (prize) => {
           await deletePrize(prize.id);
-          await deletePrizeImage(prize.image_path);
         }}
         onUpdate={async ({ id, nameJp, nameEn, file }) => {
-          const currentPrize = bingoPrize.find((prize) => prize.id === id);
-          let imagePath = currentPrize?.image_path;
+          const formData = new FormData();
+          formData.set("id", String(id));
+          formData.set("nameJp", nameJp);
+          formData.set("nameEn", nameEn);
           if (file) {
-            const uploadedPath = await uploadPrizeImage(file);
-            imagePath = uploadedPath;
-            if (currentPrize?.image_path) {
-              await deletePrizeImage(currentPrize.image_path);
-            }
+            formData.set("file", file);
           }
-          return updatePrize({ id, nameJp, nameEn, imagePath });
+          return updatePrize(formData);
         }}
       />
     </div>

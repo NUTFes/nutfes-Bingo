@@ -5,6 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export type Profile = Tables<"profiles">;
 
+function isMissingSessionError(errorMessage: string) {
+  return errorMessage.toLowerCase().includes("auth session missing");
+}
+
 export async function getCurrentUser() {
   const supabase = await createClient();
   const {
@@ -13,6 +17,10 @@ export async function getCurrentUser() {
   } = await supabase.auth.getUser();
 
   if (error) {
+    if (isMissingSessionError(error.message)) {
+      return null;
+    }
+
     throw new Error(`認証情報の取得に失敗しました: ${error.message}`);
   }
 

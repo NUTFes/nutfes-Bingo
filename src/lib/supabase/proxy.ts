@@ -1,8 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { hasEnvVars } from "@/lib/utils";
 import type { Database } from "@/lib/database.types";
+import { hasEnvVars } from "@/lib/utils";
 
 function isProtectedPath(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
@@ -43,20 +43,6 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/auth/login";
     url.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(url);
-  }
-
-  if (isProtectedPath(request.nextUrl.pathname) && user) {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (error || profile?.role !== "admin") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/auth/error";
-      return NextResponse.redirect(url);
-    }
   }
 
   return supabaseResponse;
