@@ -5,10 +5,10 @@ import { useActionState } from "react";
 
 import { INITIAL_AUTH_ACTION_STATE } from "@/app/auth/action-state";
 import { signUp } from "@/app/auth/actions";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/shadcn/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/shadcn/card";
+import { Input } from "@/components/shadcn/input";
+import { Label } from "@/components/shadcn/label";
 import { cn } from "@/lib/utils";
 
 export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
