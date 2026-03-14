@@ -68,7 +68,12 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
                       </span>
                     </>
                   )}
-                  <Image src={image.src} alt={image.alt} fill sizes="(max-width: 768px) 18vw, 88px" />
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    sizes="(max-width: 768px) 18vw, 88px"
+                  />
                 </button>
               );
             })}
