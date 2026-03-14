@@ -11,7 +11,11 @@ interface PrizesPageProps {
   initialPreferences: PublicPreferences;
 }
 
-export function PrizesPage({ initialPrizes, initialAppState, initialPreferences }: PrizesPageProps) {
+export function PrizesPage({
+  initialPrizes,
+  initialAppState,
+  initialPreferences,
+}: PrizesPageProps) {
   const [prizes] = usePrizes(initialPrizes);
 
   return (
