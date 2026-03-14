@@ -1,14 +1,13 @@
 .wrapper {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   z-index: 999;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  background: rgba(51, 51, 51, 0.7);
+  background: var(--admin-overlay);
   padding: 0.5rem;
   box-sizing: border-box;
   overflow: hidden;
@@ -20,7 +19,8 @@
   box-sizing: border-box;
   border-radius: 1.2rem;
   padding: 16px;
-  background: var(--main-color);
+  background: var(--admin-surface);
+  border: 2px solid var(--admin-border);
   animation: zoomIn 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   will-change: transform, opacity;
   width: 95%;
@@ -28,8 +28,8 @@
   max-height: 98vh;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  scrollbar-color: color-mix(in srgb, var(--admin-muted-text) 65%, transparent) transparent;
+  box-shadow: 0 10px 30px var(--admin-shadow);
 }
 
 @keyframes zoomIn {
@@ -48,7 +48,7 @@
 }
 
 .frame::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: color-mix(in srgb, var(--admin-muted-text) 70%, transparent);
   border-radius: 3px;
 }
 
@@ -65,9 +65,9 @@
   flex-direction: column;
   align-items: center;
   padding: 16px;
-  background-color: #fff;
+  background-color: var(--admin-bg);
+  border: 1px solid color-mix(in srgb, var(--admin-border) 45%, transparent);
   border-radius: 1rem;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
 }
 
 @media (min-width: 768px) {
@@ -94,16 +94,16 @@
 }
 
 .button {
-  background-color: #fff;
-  color: #333;
+  background-color: var(--admin-card-bg);
+  color: var(--admin-card-text);
   font-size: 1.25rem;
   font-weight: 600;
   padding: 12px 8px;
-  border: 1px solid #ddd;
+  border: 1px solid color-mix(in srgb, var(--admin-border) 35%, transparent);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--admin-shadow) 55%, transparent);
   min-height: 54px;
   display: flex;
   align-items: center;
@@ -112,18 +112,24 @@
 }
 
 .button:hover {
-  background-color: #f8f9fa;
+  border-color: var(--admin-border);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px color-mix(in srgb, var(--admin-shadow) 70%, transparent);
 }
 
 .button:active {
   transform: translateY(1px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 4px 8px color-mix(in srgb, var(--admin-shadow) 70%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--main-color) 35%, transparent);
 }
 
 .functionButton {
-  background-color: #f8f9fa;
+  background-color: color-mix(in srgb, var(--admin-surface) 92%, var(--admin-card-bg));
   font-weight: 700;
   color: var(--main-color);
 }
@@ -139,30 +145,55 @@
 .submitButton {
   width: 100%;
   background-color: var(--main-color);
-  color: #fff;
+  color: var(--admin-button-text);
   font-size: 1.1rem;
   font-weight: 700;
   padding: 14px;
-  border: none;
+  border: 2px solid var(--admin-border);
   border-radius: 10px;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 54px;
-  box-shadow: 0 4px 10px rgba(155, 104, 159, 0.3);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--admin-shadow) 70%, transparent);
   transition: all 0.2s ease;
 }
 
 .submitButton:hover {
-  background-color: #8a5b8e;
-  box-shadow: 0 5px 12px rgba(155, 104, 159, 0.4);
+  filter: brightness(1.04);
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--admin-shadow) 85%, transparent);
   transform: translateY(-1px);
 }
 
 .submitButton:active {
   transform: translateY(1px);
-  box-shadow: 0 2px 5px rgba(155, 104, 159, 0.3);
+}
+
+.resetButton {
+  width: 100%;
+  background-color: transparent;
+  color: var(--main-color);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px;
+  border: 2px solid var(--main-color);
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50px;
+  transition: all 0.2s ease;
+}
+
+.resetButton:hover {
+  background-color: color-mix(in srgb, var(--main-color) 16%, transparent);
+}
+
+.resetButton:active {
+  transform: translateY(1px);
 }
 
 @media (min-width: 768px) {
@@ -171,33 +202,12 @@
     padding: 16px;
     max-width: 360px;
   }
-}
 
-.resetButton {
-  width: 100%;
-  background-color: #fff;
-  color: var(--main-color);
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 12px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  margin-top: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: inset 0 0 0 2px var(--main-color);
-  min-height: 50px;
-  transition: all 0.2s ease;
-}
-
-.resetButton:hover {
-  background-color: rgba(155, 104, 159, 0.05);
-}
-
-.resetButton:active {
-  transform: translateY(1px);
+  .resetButton {
+    font-size: 1.1rem;
+    padding: 14px;
+    max-width: 360px;
+  }
 }
 
 .largeButton {
@@ -207,12 +217,6 @@
 }
 
 @media (min-width: 768px) {
-  .resetButton {
-    font-size: 1.1rem;
-    padding: 14px;
-    max-width: 360px;
-  }
-
   .largeButton {
     font-size: 1.2rem;
     min-height: 60px;
@@ -224,8 +228,8 @@
   top: 10px;
   right: 10px;
   font-size: 1.8rem;
-  color: #fff;
-  background: none;
+  color: var(--admin-text);
+  background: transparent;
   border: none;
   cursor: pointer;
   padding: 8px;
@@ -239,11 +243,16 @@
 }
 
 .btnClose:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: color-mix(in srgb, var(--main-color) 22%, transparent);
 }
 
 .btnClose:active {
   transform: scale(0.95);
+}
+
+.btnClose:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--main-color) 35%, transparent);
 }
 
 @media (min-width: 768px) {
@@ -255,7 +264,7 @@
 }
 
 .title {
-  color: #fff;
+  color: var(--main-color);
   font-size: 1.6rem;
   font-weight: 700;
   text-align: center;
@@ -271,7 +280,7 @@
 }
 
 .icon {
-  color: #fff;
+  color: inherit;
 }
 
 .contents {
@@ -339,8 +348,8 @@
 .bingoCell {
   width: 100%;
   aspect-ratio: 1;
-  background-color: #fff;
-  border: 2px solid #e0e0e0;
+  background-color: var(--admin-card-bg);
+  border: 2px solid color-mix(in srgb, var(--admin-border) 30%, transparent);
   border-radius: 8px;
   display: flex;
   justify-content: center;
@@ -349,11 +358,18 @@
   font-weight: bold;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  color: #333;
+  box-shadow: 0 2px 4px color-mix(in srgb, var(--admin-shadow) 45%, transparent);
+  color: var(--admin-card-text);
   min-width: 40px;
   min-height: 40px;
   -webkit-tap-highlight-color: transparent;
+}
+
+.bingoCell:focus-visible {
+  outline: none;
+  box-shadow:
+    0 2px 4px color-mix(in srgb, var(--admin-shadow) 45%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--main-color) 38%, transparent);
 }
 
 @media (min-width: 768px) {
@@ -367,13 +383,12 @@
 .bingoCell:hover {
   border-color: var(--main-color);
   transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .bingoCell.activeCell {
   border-color: var(--main-color);
-  background-color: rgba(155, 104, 159, 0.1);
-  box-shadow: 0 0 8px rgba(155, 104, 159, 0.3);
+  background-color: color-mix(in srgb, var(--main-color) 18%, var(--admin-card-bg));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 44%, transparent);
   position: relative;
 }
 
@@ -400,7 +415,7 @@
 }
 
 .bingoCell.typingCell {
-  background-color: rgba(155, 104, 159, 0.15);
+  background-color: color-mix(in srgb, var(--main-color) 20%, var(--admin-card-bg));
   border-color: var(--main-color);
   color: var(--main-color);
   font-weight: bold;
@@ -436,7 +451,7 @@
 
 .freeCell {
   background-color: var(--main-color);
-  color: white;
+  color: var(--admin-button-text);
   cursor: default;
   font-weight: bold;
   border-color: var(--main-color);
@@ -444,7 +459,6 @@
 
 .freeCell:hover {
   transform: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .bingoHighlight {
@@ -481,7 +495,7 @@
   width: 100%;
   font-size: 1.6rem;
   font-weight: 800;
-  color: #2e7d32;
+  color: #1f6d24;
   background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
   padding: 20px 16px;
   border-radius: 16px;
@@ -493,7 +507,6 @@
   gap: 0.8rem;
   box-shadow:
     0 8px 25px rgba(76, 175, 80, 0.3),
-    0 0 0 1px rgba(76, 175, 80, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   animation:
     resultAppear 0.6s ease-out forwards,
@@ -503,21 +516,11 @@
   user-select: none;
 }
 
-.bingoResult::before {
-  content: "";
-  position: absolute;
-  inset: -4px;
-  border-radius: inherit;
-  z-index: -1;
-  opacity: 0.6;
-  animation: borderGlow 3s ease-in-out infinite;
-}
-
 .noWinResult {
   width: 100%;
   font-size: 1.4rem;
   font-weight: 700;
-  color: #c62828;
+  color: #a32626;
   background: linear-gradient(135deg, #ffeaea 0%, #ffcdd2 100%);
   padding: 18px 16px;
   border-radius: 16px;
@@ -529,7 +532,6 @@
   gap: 0.8rem;
   box-shadow:
     0 6px 20px rgba(244, 67, 54, 0.25),
-    0 0 0 1px rgba(244, 67, 54, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
   animation: resultAppear 0.6s ease-out forwards;
   position: relative;
@@ -553,6 +555,16 @@
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes successPulse {
+  0%,
+  100% {
+    filter: saturate(1);
+  }
+  50% {
+    filter: saturate(1.06);
   }
 }
 
@@ -592,7 +604,7 @@
 
 .currentInputDisplay {
   width: 100%;
-  padding: 0px 16px;
+  padding: 0 16px;
   border-radius: 12px;
   text-align: center;
   font-size: 1.1rem;
@@ -615,12 +627,9 @@
 }
 
 .currentInputDisplay.empty {
-  border-color: #ddd;
-  color: #999;
+  color: var(--admin-muted-text);
   font-style: italic;
-  background: #f8f9fa;
-  box-shadow: none;
-  opacity: 0.7;
+  opacity: 0.85;
 }
 
 .controlsContainer {

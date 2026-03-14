@@ -17,6 +17,13 @@
   z-index: 100;
 }
 
+.effectFrame {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
 /* 吹き出しの三角（アウトライン） */
 .bubble:before {
   content: "";
@@ -25,9 +32,9 @@
   z-index: 0;
   border-style: solid;
   border-color: var(--main-color) transparent;
-  border-width: 7.9296875vw 3.828125vw 0;
+  border-width: 8.203125vw 4.1015625vw 0;
   bottom: -8.75vw;
-  margin-left: -3.828125vw;
+  margin-left: -4.1015625vw;
   display: block;
   filter: drop-shadow(0.546875vw 1.09375vw var(--main-color));
 }
@@ -40,10 +47,10 @@
   width: 0;
   z-index: 1;
   border-style: solid;
-  border-color: var(--main-color) transparent;
-  border-width: 6.2890625vw 2.1875vw 0;
-  bottom: -6.015625vw;
-  margin-left: -2.1875vw;
+  border-color: var(--background-color) transparent;
+  border-width: 6.2890625vw 2.4609375vw 0;
+  bottom: -5.7421875vw;
+  margin-left: -2.4609375vw;
 }
 
 /* 三角の左右位置をCSS変数で調整 */
@@ -114,7 +121,8 @@
 /* 押した画像が放射状に飛ぶ層のラッパー */
 .particles {
   position: absolute;
-  inset: 0;
+  inset: -1.8vw;
+  overflow: hidden;
   pointer-events: none;
 }
 
@@ -123,10 +131,10 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 6.4vw;
-  height: 6.4vw;
+  width: 4.8vw;
+  height: 4.8vw;
   transform: translate(-50%, -50%);
-  animation: burst 0.8s ease-out forwards;
+  animation: burst 0.65s ease-out forwards;
 }
 
 /* パーティクル内の画像（塗り潰し） */
@@ -135,46 +143,30 @@
   inset: 0;
 }
 
-/* 10方向に飛ばすベクトルをnth-childで割り当て */
+/* 6方向に飛ばすベクトルをnth-childで割り当て */
 .particle:nth-child(1) {
   --tx: 0;
-  --ty: -18vw;
+  --ty: -9vw;
 }
 .particle:nth-child(2) {
-  --tx: 12vw;
-  --ty: -12vw;
+  --tx: 7.2vw;
+  --ty: -5.4vw;
 }
 .particle:nth-child(3) {
-  --tx: 18vw;
-  --ty: 0;
+  --tx: 7.2vw;
+  --ty: 5.4vw;
 }
 .particle:nth-child(4) {
-  --tx: 12vw;
-  --ty: 12vw;
+  --tx: 0;
+  --ty: 9vw;
 }
 .particle:nth-child(5) {
-  --tx: 0;
-  --ty: 18vw;
+  --tx: -7.2vw;
+  --ty: 5.4vw;
 }
 .particle:nth-child(6) {
-  --tx: -12vw;
-  --ty: 12vw;
-}
-.particle:nth-child(7) {
-  --tx: -18vw;
-  --ty: 0;
-}
-.particle:nth-child(8) {
-  --tx: -12vw;
-  --ty: -12vw;
-}
-.particle:nth-child(9) {
-  --tx: 8vw;
-  --ty: -16vw;
-}
-.particle:nth-child(10) {
-  --tx: -8vw;
-  --ty: 16vw;
+  --tx: -7.2vw;
+  --ty: -5.4vw;
 }
 
 /* 柔らかいバウンスのアニメーション */

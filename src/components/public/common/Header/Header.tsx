@@ -1,108 +1,141 @@
 "use client";
 
-import Image from "next/image";
+import { driver, type DriveStep, type Driver } from "driver.js";
 import { usePathname, useRouter } from "next/navigation";
 import { IoHelpCircleOutline } from "react-icons/io5";
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { useBingoLanguage } from "@/lib/i18n/provider";
 import styles from "./Header.module.css";
 
-const HELP_SHOWN_KEY = "isStartIntrojs";
+const HELP_SHOWN_KEY = "isHelpTourShown";
+const LEGACY_HELP_SHOWN_KEY = "isStartIntrojs";
 
 const Header = () => {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/";
   const { t } = useBingoLanguage();
+  const driverRef = useRef<Driver | null>(null);
 
-  const startTour = async () => {
-    const { default: introJs } = await import("intro.js");
-    const intro = introJs();
+  const buildSteps = useCallback((): DriveStep[] => {
     const isPrizePage = pathname === "/prizes";
 
-    intro.onbeforechange(() => {
-      document.body.style.overflow = "hidden";
-      return true;
-    });
-
-    intro.oncomplete(() => {
-      document.body.style.overflow = "";
-    });
-
-    intro.onexit(() => {
-      document.body.style.overflow = "";
-    });
-
-    intro.setOptions({
-      steps: [
-        {
+    const steps: DriveStep[] = [
+      {
+        popover: {
           title: t.helpDescription.page1_title,
-          intro: t.helpDescription.page1_txt,
-          position: "floating",
+          description: t.helpDescription.page1_txt,
+          side: "over",
+          align: "center",
         },
-        {
+      },
+      {
+        element: isPrizePage ? "#BackIcon" : "#PrizesIcon",
+        popover: {
           title: isPrizePage ? t.helpDescription.page2_title_back : t.helpDescription.page2_title,
-          intro: isPrizePage ? t.helpDescription.page2_txt_back : t.helpDescription.page2_txt,
-          element: isPrizePage ? "#BackIcon" : "#PrizesIcon",
-          position: "bottom-middle-aligned",
+          description: isPrizePage ? t.helpDescription.page2_txt_back : t.helpDescription.page2_txt,
+          side: "top",
+          align: "center",
         },
-        {
+      },
+      {
+        element: "#ReactionsIcon",
+        popover: {
           title: t.helpDescription.page3_title,
-          intro: t.helpDescription.page3_txt,
-          element: "#ReactionsIcon",
-          position: "bottom-middle-aligned",
+          description: t.helpDescription.page3_txt,
+          side: "top",
+          align: "center",
         },
-        {
+      },
+      {
+        element: "#ReachIcon",
+        popover: {
           title: t.helpDescription.page4_title,
-          intro: t.helpDescription.page4_txt,
-          element: "#ReachIcon",
-          position: "bottom-middle-aligned",
+          description: t.helpDescription.page4_txt,
+          side: "top",
+          align: "center",
         },
-        {
+      },
+      {
+        element: "#SettingsIcon",
+        popover: {
           title: t.helpDescription.page5_title,
-          intro: t.helpDescription.page5_txt,
-          element: "#SettingsIcon",
-          position: "bottom-middle-aligned",
+          description: t.helpDescription.page5_txt,
+          side: "top",
+          align: "center",
         },
-      ],
-      tooltipClass: styles.customTooltip,
-      scrollToElement: false,
-      hidePrev: true,
-      showBullets: true,
-      nextLabel: t.helpDescription.next,
-      prevLabel: t.helpDescription.back,
-      doneLabel: t.helpDescription.close,
+      },
+    ];
+
+    return steps.filter((step) => {
+      if (!step.element) return true;
+      if (typeof step.element === "string") return document.querySelector(step.element) !== null;
+      if (typeof step.element === "function") return Boolean(step.element());
+      return Boolean(step.element);
+    });
+  }, [pathname, t]);
+
+  const startTour = useCallback(() => {
+    const steps = buildSteps();
+    if (steps.length === 0) return;
+
+    driverRef.current?.destroy();
+    const instance = driver({
+      steps,
+      showProgress: true,
+      progressText: t.helpCarousel.progress,
+      showButtons: ["previous", "next"],
+      nextBtnText: t.helpCarousel.next,
+      prevBtnText: t.helpCarousel.back,
+      doneBtnText: t.helpCarousel.close,
+      popoverClass: "help-tour-popover",
+      overlayColor: "#000",
+      overlayOpacity: 0.6,
+      stagePadding: 10,
+      stageRadius: 12,
+      allowClose: true,
+      overlayClickBehavior: "close",
+      smoothScroll: false,
+      disableActiveInteraction: true,
     });
 
-    intro.start();
-  };
+    driverRef.current = instance;
+    instance.drive();
+  }, [buildSteps, t]);
 
   useEffect(() => {
-    const isHelpShown = window.localStorage.getItem(HELP_SHOWN_KEY);
+    const isHelpShown =
+      window.localStorage.getItem(HELP_SHOWN_KEY) ??
+      window.localStorage.getItem(LEGACY_HELP_SHOWN_KEY);
     if (isHelpShown === null) {
       window.localStorage.setItem(HELP_SHOWN_KEY, JSON.stringify(true));
-      void startTour();
+      startTour();
     }
   }, [startTour]);
+
+  useEffect(() => {
+    return () => {
+      driverRef.current?.destroy();
+    };
+  }, []);
 
   return (
     <div className={styles.container}>
       <div className={styles.main}>
-        <button type="button" className={styles.logoButton} onClick={() => router.push("/")}>
-          <Image
-            src="/logo_bingo.svg"
-            alt="NUTFes Bingo"
-            width={180}
-            height={80}
-            className={styles.logo}
-            priority
-          />
+        <button
+          type="button"
+          className={styles.title}
+          onClick={() => router.push("/")}
+          aria-label="nutfes-Bingo"
+        >
+          nutfes-Bingo
         </button>
         <button
           type="button"
           className={styles.icon}
-          onClick={() => void startTour()}
-          aria-label="help"
+          onClick={startTour}
+          aria-label={t.helpCarousel.open}
+          title={t.helpCarousel.open}
         >
           <IoHelpCircleOutline />
         </button>

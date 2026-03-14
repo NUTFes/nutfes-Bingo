@@ -10,9 +10,11 @@ body::-webkit-scrollbar {
 }
 
 :root {
-  --main-color: #20a0d8;
-  --sub-color: #c4deed;
-  --background-color: #fff;
+  --main-color: #ffd607;
+  --sub-color: #fff8dc;
+  --background-color: #2c252f;
   --number-accent-color: var(--sub-color);
-  --footer-border-color: #000000;
+  --footer-border-color: var(--main-color);
+  --nav-top-shadow-color: var(--main-color);
+  --help-bg-color: var(--background-color);
 }

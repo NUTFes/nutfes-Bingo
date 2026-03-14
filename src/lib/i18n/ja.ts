@@ -18,9 +18,11 @@ export const ja = {
     dark: "ダーク",
   },
   helpCarousel: {
+    open: "ヘルプ",
     close: "閉じる",
     back: "戻る",
     next: "次へ",
+    progress: "{{current}} / {{total}}",
   },
   helpDescription: {
     page1_title: "ようこそ！！",

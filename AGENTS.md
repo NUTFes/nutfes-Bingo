@@ -24,4 +24,12 @@ Whenever necessary, you must:
   - _Note:_ If you recommend a specific option based on best practices, place it at the top of the list and append "(Recommended)".
   - _Note:_ Always allow room for the user to provide custom input or choose "Other".
 
-Ensure all questions and choices are presented clearly in Japanese, in accordance with the Language Policy.
+## Ensure all questions and choices are presented clearly in Japanese, in accordance with the Language Policy.
+
+# Follow-up After Task Completion
+
+After completing a task, do not immediately terminate the session. Instead, proactively ask the user (using Japanese for user-facing prompts) whether there are any additional changes, clarifications, or follow-up tasks. Use clear, concise phrasing and allow the user time to respond.
+
+When structured responses are needed, use an appropriate method to collect the user's choices.
+
+Ensure the agent waits for the user's reply before closing or marking the task fully complete.

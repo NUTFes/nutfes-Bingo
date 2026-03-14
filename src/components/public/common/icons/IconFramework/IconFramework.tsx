@@ -12,16 +12,32 @@ interface IconFrameworkProps {
   inversion?: boolean;
   id?: string;
   onClick?: () => void;
+  size?: "normal" | "wide";
+  className?: string;
 }
 
-const IconFramework = ({ icon, text, outline, inversion, id, onClick }: IconFrameworkProps) => {
+const IconFramework = ({
+  icon,
+  text,
+  outline,
+  inversion,
+  id,
+  onClick,
+  size = "normal",
+  className,
+}: IconFrameworkProps) => {
   return (
     <button
       type="button"
-      className={classNames(styles.iconContainer, {
-        [styles.outline]: outline,
-        [styles.color_inversion]: inversion,
-      })}
+      className={classNames(
+        styles.iconContainer,
+        {
+          [styles.outline]: outline,
+          [styles.color_inversion]: inversion,
+          [styles.wide]: size === "wide",
+        },
+        className,
+      )}
       onClick={onClick}
       id={id}
     >

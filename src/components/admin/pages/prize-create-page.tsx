@@ -143,7 +143,13 @@ export function PrizeCreatePage({ initialPrizes }: PrizeCreatePageProps) {
             <h2>景品プレビュー</h2>
             {previewUrl ? (
               <div className={styles.previewImageWrap}>
-                <Image src={previewUrl} alt="preview" fill style={{ objectFit: "contain" }} />
+                <Image
+                  src={previewUrl}
+                  alt="preview"
+                  fill
+                  sizes="(max-width: 768px) 72vw, 360px"
+                  style={{ objectFit: "contain" }}
+                />
               </div>
             ) : (
               <div className={styles.previewPlaceholder}>画像を選択してください</div>

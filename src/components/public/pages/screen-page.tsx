@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Matter from "matter-js";
 import { useEffect, useMemo, useRef } from "react";
 
@@ -143,14 +142,6 @@ export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps)
     <>
       <div ref={scene} className={styles.scene} />
       <div className={styles.overlay}>
-        <Image
-          src="/logo_bingo.svg"
-          alt="NUTFes Bingo"
-          width={400}
-          height={160}
-          className={styles.logo}
-          priority
-        />
         <div className={styles.flex}>
           <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
           <div className={styles.column}>

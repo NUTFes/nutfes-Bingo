@@ -1,101 +1,150 @@
 .wrapper {
-  padding: 2rem;
+  padding: clamp(0.8rem, 2vw, 2rem);
 }
 
 .container {
-  border-radius: 1rem;
-  padding: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  background-color: #ffffff80;
-  border: solid 1vw var(--main-color);
+  gap: clamp(0.9rem, 2vw, 1.6rem);
+  padding: clamp(0.9rem, 2.3vw, 2rem);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--admin-surface) 88%, transparent);
+  border: 2px solid var(--admin-border);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--admin-shadow) 88%, transparent);
 }
 
 .title {
-  font-size: clamp(12px, calc(100vw / 18), 24px);
-  font-weight: bold;
-  color: #333;
-  padding-left: 10px;
+  margin: 0;
+  padding-left: 0.25rem;
+  font-size: clamp(1rem, calc(100vw / 20), 1.45rem);
+  font-weight: 700;
+  color: var(--main-color);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(30%, 300px), 2fr));
-  gap: 10px;
-  margin-bottom: 0.4rem;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(160px, 24vw, 220px), 1fr));
+  gap: clamp(0.75rem, 1.8vw, 1.2rem);
+  margin: 0;
 }
 
 .card {
-  aspect-ratio: 1 / 1;
   position: relative;
   display: flex;
   flex-direction: column;
-  border: 1.25vw solid var(--main-color);
-  border-radius: 3.125vw;
-  box-sizing: border-box;
-  box-shadow: 0.9375vw 0.9375vw 0px var(--main-color);
+  gap: 0.6rem;
+  padding: 0.55rem;
+  border: 2px solid var(--admin-card-border);
+  border-radius: 1rem;
+  background: var(--admin-card-bg);
+  color: var(--admin-card-text);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--admin-shadow) 70%, transparent);
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.card:hover {
+  transform: translateY(-1px);
+  border-color: var(--admin-border);
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--admin-shadow) 88%, transparent);
 }
 
 .cardActions {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 0.6rem;
+  right: 0.6rem;
   display: flex;
-  gap: 8px;
+  gap: 0.45rem;
   z-index: 10;
 }
 
 .iconBtn {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid var(--main-color);
-  color: var(--main-color);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  background: color-mix(in srgb, var(--admin-card-bg) 90%, transparent);
+  color: var(--main-color);
   cursor: pointer;
+  transition:
+    transform 0.14s ease,
+    filter 0.14s ease,
+    box-shadow 0.14s ease;
 }
 
 .iconBtn:hover {
-  filter: brightness(0.95);
+  filter: brightness(0.97);
+  transform: translateY(-1px);
 }
 
-.cardContent {
-  font-size: 5vw;
-  color: #333;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 0.3rem;
+.iconBtn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--main-color) 42%, transparent);
+  outline-offset: 1px;
+}
+
+.image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--admin-surface-soft) 72%, var(--admin-card-bg));
+}
+
+.image img {
+  object-fit: cover;
 }
 
 .overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 1.9vw 1.9vw 0 0;
-  background-color: rgba(0, 0, 0, 0.4);
+  inset: 0;
+  background-color: var(--admin-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .overlayText {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 1.8;
-  width: 100%;
-  height: 35%;
-  font-size: 5vw;
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  min-width: 78%;
+  border-radius: 999px;
+  font-size: clamp(0.95rem, 2.2vw, 1.25rem);
   font-weight: 700;
-  color: #fff;
+  color: var(--admin-button-text);
+  background-color: var(--main-color);
+}
+
+.cardContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: clamp(2rem, 6vw, 2.6rem);
+  padding-inline: 0.45rem;
+  text-align: center;
+  color: var(--admin-card-text);
+}
+
+.cardContent p {
+  margin: 0;
+  line-height: 1.4;
+  font-size: clamp(0.95rem, 2.1vw, 1.08rem);
+  font-weight: 700;
+}
+
+.toggleContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: auto;
+  padding-bottom: 0.1rem;
 }
 
 .toggleInput {
@@ -112,8 +161,8 @@
 .toggleLabel {
   width: 85px;
   height: 42px;
-  background: #fff;
-  border: 3px solid #eee;
+  background: color-mix(in srgb, var(--admin-text) 80%, transparent);
+  border: 3px solid color-mix(in srgb, var(--admin-muted-text) 80%, transparent);
   position: relative;
   display: inline-block;
   border-radius: 40px;
@@ -130,12 +179,12 @@
   left: 2px;
   top: 2px;
   z-index: 2;
-  background: #eee;
+  background: color-mix(in srgb, var(--admin-muted-text) 80%, transparent);
   transition: 0.4s;
 }
 
 .toggleInput:checked + .toggleLabel {
-  border: 3px solid var(--main-color);
+  border: 3px solid var(--admin-border);
 }
 
 .toggleInput:checked + .toggleLabel:after {
@@ -143,9 +192,11 @@
   background: var(--main-color);
 }
 
-.toggleContainer {
-  display: flex;
-  justify-content: center;
+.toggleButton {
+  position: relative;
+  width: 85px;
+  height: 42px;
+  margin: auto;
 }
 
 .loading {
@@ -352,35 +403,42 @@
   display: none;
 }
 
-.image {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.image img {
-  border-radius: 1.9vw 1.9vw 0 0;
-}
-
 @media (max-width: 767px) {
   .wrapper {
-    padding: 0.5rem;
+    padding: 0.7rem;
   }
+
   .container {
-    padding: 0.5rem;
-    gap: 0.5rem;
-  }
-  .cardContent {
-    font-weight: normal;
-  }
-}
-
-@media (min-width: 768px) {
-  .cardContent {
-    font-size: 2vw;
+    gap: 0.75rem;
+    padding: 0.75rem;
   }
 
-  .overlayText {
-    font-size: 4vw;
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(46vw, 180px), 1fr));
+    gap: 0.7rem;
+  }
+
+  .card {
+    border-radius: 0.85rem;
+    padding: 0.45rem;
+  }
+
+  .toggleLabel {
+    width: 76px;
+    height: 38px;
+  }
+
+  .toggleLabel:after {
+    width: 28px;
+    height: 28px;
+  }
+
+  .toggleInput:checked + .toggleLabel:after {
+    left: 38px;
+  }
+
+  .toggleButton {
+    width: 76px;
+    height: 38px;
   }
 }

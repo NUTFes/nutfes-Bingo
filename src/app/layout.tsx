@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Noto_Sans_JP } from "next/font/google";
+import Script from "next/script";
 import { ThemeProvider } from "next-themes";
+
+import {
+  DEFAULT_PUBLIC_PREFERENCES,
+  publicThemeBootstrapScript,
+} from "@/lib/bingo/public-preferences";
 
 import "./globals.css";
 
@@ -35,6 +41,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ja" suppressHydrationWarning>
       <body className={`${notoSansJp.variable} ${silom.variable} font-sans antialiased`}>
+        <Script id="public-theme-bootstrap" strategy="beforeInteractive">
+          {publicThemeBootstrapScript(DEFAULT_PUBLIC_PREFERENCES.isDarkMode)}
+        </Script>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}
         </ThemeProvider>

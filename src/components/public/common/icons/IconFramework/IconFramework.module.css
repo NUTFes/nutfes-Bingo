@@ -13,6 +13,13 @@
   font-size: 16.875vw;
   border: none;
   outline: none;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .icon {
@@ -28,7 +35,24 @@
   /* 54pxを基準にした場合の9px */
   font-size: 0.1666666666666667em;
   font-weight: 400;
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
   color: var(--main-color);
+}
+
+.iconContainer:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.iconContainer:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 3px;
+}
+
+.wide {
+  width: 33.75vw;
+  height: 18vw;
+  font-size: 18vw;
+  padding: 2.5vw;
 }
 
 .outline {

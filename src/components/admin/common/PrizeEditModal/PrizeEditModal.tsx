@@ -122,6 +122,7 @@ const PrizeEditModal = ({
                   src={previewUrl}
                   alt="preview"
                   fill
+                  sizes="(max-width: 768px) 72vw, 360px"
                   style={{ objectFit: "contain" }}
                 />
               </div>

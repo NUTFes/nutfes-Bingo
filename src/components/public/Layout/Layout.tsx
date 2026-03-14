@@ -1,7 +1,5 @@
 "use client";
 
-import "intro.js/minified/introjs.min.css";
-
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -22,26 +20,37 @@ import {
 import { REACTION_IMAGES } from "@/lib/bingo/constants";
 import { recordPublicReach, sendReactionStamp } from "@/app/actions/bingo-public";
 import { useAppState } from "@/lib/bingo/client";
+import {
+  applyPublicTheme,
+  DEFAULT_PUBLIC_PREFERENCES,
+  preferenceCookie,
+  PUBLIC_PREFERENCE_KEYS,
+  type PublicPreferences,
+  parseBooleanPreference,
+  resolveDarkModePreference,
+} from "@/lib/bingo/public-preferences";
 import type { AppStateRow } from "@/lib/bingo/types";
 import { BingoLanguageProvider, useBingoLanguage } from "@/lib/i18n/provider";
 
 import styles from "./Layout.module.css";
 
-const COLOR_PRESETS = {
-  DEFAULT_MAIN_COLOR: "#FFD607",
-  DEFAULT_SUB_COLOR: "#FFF8DC",
-} as const;
-
 interface InnerLayoutProps {
   children: React.ReactNode;
   initialAppState: AppStateRow;
+  initialPreferences?: PublicPreferences;
   isSortedAscending?: boolean;
   setIsSortedAscending?: (value: boolean) => void;
 }
 
+const persistBooleanPreference = (key: string, value: boolean) => {
+  window.localStorage.setItem(key, value.toString());
+  document.cookie = preferenceCookie(key, value);
+};
+
 function InnerLayout({
   children,
   initialAppState,
+  initialPreferences = DEFAULT_PUBLIC_PREFERENCES,
   isSortedAscending,
   setIsSortedAscending,
 }: InnerLayoutProps) {
@@ -52,9 +61,11 @@ function InnerLayout({
   const [isReactionModalOpen, setIsReactionModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isReachModalOpen, setIsReachModalOpen] = useState(false);
-  const [isReachIconVisible, setReachIconVisible] = useState(true);
-  const [isSortOrderActive, setIsSortOrderActive] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isReachIconVisible, setReachIconVisible] = useState(initialPreferences.isReachIconVisible);
+  const [isSortOrderActive, setIsSortOrderActive] = useState(initialPreferences.isSortedAscending);
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    resolveDarkModePreference(initialPreferences.isDarkMode),
+  );
   const [isSurveyModalOpen, setIsSurveyModalOpen] = useState(false);
   const [hasShownSurvey, setHasShownSurvey] = useState(false);
   const [navBarHeight, setNavBarHeight] = useState<string>();
@@ -70,49 +81,34 @@ function InnerLayout({
     }
   }, []);
 
+  useLayoutEffect(() => {
+    const nextReachVisibility = parseBooleanPreference(
+      window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.reachIconVisible) ?? undefined,
+      initialPreferences.isReachIconVisible,
+    );
+    setReachIconVisible(nextReachVisibility);
+    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, nextReachVisibility);
+
+    const nextSortOrder = parseBooleanPreference(
+      window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.sortedAscending) ?? undefined,
+      initialPreferences.isSortedAscending,
+    );
+    setIsSortOrderActive(nextSortOrder);
+    setIsSortedAscending?.(nextSortOrder);
+    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.sortedAscending, nextSortOrder);
+
+    const nextDarkMode = resolveDarkModePreference(initialPreferences.isDarkMode);
+    setIsDarkMode(nextDarkMode);
+    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.darkMode, nextDarkMode);
+  }, [initialPreferences, setIsSortedAscending]);
+
+  useLayoutEffect(() => {
+    applyPublicTheme(isDarkMode);
+  }, [isDarkMode]);
+
   useEffect(() => {
-    const storedVisibility = window.localStorage.getItem("isReachIconVisible");
-    if (storedVisibility !== null) {
-      setReachIconVisible(storedVisibility === "true");
-    }
-
-    const storedSortOrder = window.localStorage.getItem("isSortedAscending");
-    if (storedSortOrder !== null) {
-      const next = storedSortOrder === "true";
-      setIsSortedAscending?.(next);
-      setIsSortOrderActive(next);
-    } else {
-      window.localStorage.setItem("isSortedAscending", "false");
-    }
-
-    const storedDarkMode = window.localStorage.getItem("isDarkMode");
-    if (storedDarkMode !== null) {
-      setIsDarkMode(storedDarkMode === "true");
-    } else {
-      window.localStorage.setItem("isDarkMode", "true");
-      setIsDarkMode(true);
-    }
-  }, [setIsSortedAscending]);
-
-  useEffect(() => {
-    document.documentElement.style.setProperty("--main-color", COLOR_PRESETS.DEFAULT_MAIN_COLOR);
-    document.documentElement.style.setProperty("--sub-color", COLOR_PRESETS.DEFAULT_SUB_COLOR);
     setIsSortedAscending?.(isSortOrderActive);
   }, [isSortOrderActive, setIsSortedAscending]);
-
-  useEffect(() => {
-    const backgroundColor = isDarkMode ? "#2C252F" : "#FFFFFF";
-    const numberAccentColor = isDarkMode ? "#1a171e" : "var(--sub-color)";
-    const footerBorderColor = isDarkMode ? "var(--main-color)" : "#000000";
-    const navTopShadowColor = isDarkMode ? "var(--main-color)" : "transparent";
-    const helpBgColor = isDarkMode ? backgroundColor : "var(--sub-color)";
-
-    document.documentElement.style.setProperty("--background-color", backgroundColor);
-    document.documentElement.style.setProperty("--number-accent-color", numberAccentColor);
-    document.documentElement.style.setProperty("--footer-border-color", footerBorderColor);
-    document.documentElement.style.setProperty("--nav-top-shadow-color", navTopShadowColor);
-    document.documentElement.style.setProperty("--help-bg-color", helpBgColor);
-  }, [isDarkMode]);
 
   useEffect(() => {
     if (!appState.is_survey_active && hasShownSurvey) {
@@ -146,7 +142,7 @@ function InnerLayout({
   const handleConfirmReach = async () => {
     await recordPublicReach();
     setReachIconVisible(false);
-    window.localStorage.setItem("isReachIconVisible", "false");
+    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, false);
     setIsReachModalOpen(false);
   };
 
@@ -156,7 +152,7 @@ function InnerLayout({
     }
 
     const next = !isSortedAscending;
-    window.localStorage.setItem("isSortedAscending", next.toString());
+    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.sortedAscending, next);
     setIsSortedAscending(next);
     setIsSortOrderActive(next);
   };
@@ -168,7 +164,7 @@ function InnerLayout({
   const toggleDarkMode = () => {
     const next = !isDarkMode;
     setIsDarkMode(next);
-    window.localStorage.setItem("isDarkMode", next.toString());
+    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.darkMode, next);
   };
 
   const handleAnswerSurvey = () => {

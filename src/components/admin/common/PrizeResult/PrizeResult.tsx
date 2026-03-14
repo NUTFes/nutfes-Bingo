@@ -126,6 +126,7 @@ export const PrizeResult = ({
                     src={prize.image_url}
                     alt={prize.name_jp}
                     fill
+                    sizes="(max-width: 768px) 42vw, 220px"
                     onLoad={() => setIsImageVisible(false)}
                   />
                 ) : null}

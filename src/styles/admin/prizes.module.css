@@ -1,14 +1,18 @@
 .container {
-  height: 100vh;
-  width: 100vw;
+  min-height: 100vh;
+  width: 100%;
   overflow: auto;
-  background: white;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  padding-bottom: clamp(1rem, 3vw, 2rem);
 }
 
 .main {
   display: flex;
   align-items: center;
-  margin-bottom: 0.5rem;
+  justify-content: center;
+  margin-block: clamp(0.5rem, 1.6vw, 1rem);
+  padding-inline: clamp(0.75rem, 2vw, 1.5rem);
 }
 
 .buttonContents {
@@ -16,132 +20,124 @@
   align-items: center;
   justify-content: center;
   gap: 0.3rem;
-  color: #333;
+  color: var(--admin-button-text);
   font-weight: 700;
-}
-
-.buttonContents img {
-  color: #fff;
 }
 
 .title {
   display: flex;
-
-  color: #fff;
-  gap: 0.3rem;
-  margin-top: 0.8rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  padding: 1vw 5vw;
+  justify-content: center;
+  padding: 1rem;
 }
 
 .title_button {
+  width: min(920px, 100%);
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  flex-direction: row;
+  justify-content: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, var(--admin-surface) 88%, transparent);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--admin-shadow) 75%, transparent);
 }
 
-/* 10000円以上の景品 */
-.grid_01 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-gap: 10px;
-  margin: 1rem 1rem 1rem 1rem;
-}
-
-.item_01 {
-  display: grid;
-  place-content: center;
-  place-items: center;
-  width: 22vw;
-  height: 22vw;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 0.625rem;
-  position: relative;
-}
-
-.item_01 img {
-  margin-bottom: 5px;
-}
-
-.item_01 p {
-  font-size: 1.5vw;
+.search_box {
+  flex: 1 1 360px;
+  border: 2px solid var(--admin-border);
+  background-color: var(--admin-surface-strong);
+  color: var(--admin-text);
   font-weight: 700;
+  border-radius: 0.65rem;
+  padding: 0.75rem 0.9rem;
+  min-height: 2.85rem;
+  min-width: min(100%, 260px);
 }
 
-/* 10000円以下の景品 */
+.search_box::placeholder {
+  color: var(--admin-muted-text);
+}
+
+.search_box:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--main-color) 28%, transparent);
+}
+
+.search_button {
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 0.65rem;
+  border: 2px solid var(--admin-border);
+  background: var(--main-color);
+  color: var(--admin-button-text);
+  padding: 0.74rem 1.2rem;
+  min-height: 2.85rem;
+  min-width: clamp(88px, 14vw, 116px);
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.search_button:hover {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+}
+
+.search_button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--main-color) 32%, transparent);
+}
+
+.grid_01,
 .grid_02 {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-gap: 10px;
-  margin: 1rem 1rem 1rem 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 1rem;
 }
 
+.item_01,
 .item_02 {
   display: grid;
   place-content: center;
   place-items: center;
-  width: 22vw;
-  height: 22vw;
-  background: rgba(255, 255, 255, 0.5);
+  aspect-ratio: 1 / 1;
+  background: var(--admin-surface-soft);
   border-radius: 0.625rem;
   position: relative;
 }
 
-.item_02 img {
-  margin-bottom: 5px;
-}
-
+.item_01 p,
 .item_02 p {
-  font-size: 1.5vw;
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
   font-weight: 700;
+  color: var(--admin-text);
 }
 
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 0.625rem;
-  background-color: rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.overlay p {
-  text-align: center;
-  line-height: 1.7;
-  width: 100%;
-  height: 35%;
-  font-size: 2rem;
-  color: var(--main-color);
-  background-color: #333;
-}
-
+.overlay,
 .overlay_small {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   border-radius: 0.625rem;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: var(--admin-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.overlay p,
 .overlay_small p {
   text-align: center;
   line-height: 1.6;
   width: 100%;
-  height: 35%;
-  font-size: 1.4rem;
-  color: var(--main-color);
-  background-color: #333;
+  min-height: 35%;
+  font-size: clamp(1.1rem, 3vw, 2rem);
+  color: var(--admin-button-text);
+  background-color: var(--main-color);
+  font-weight: 700;
 }
 
 .toggle_input {
@@ -158,8 +154,8 @@
 .toggle_label {
   width: 85px;
   height: 42px;
-  background: #fff;
-  border: 3px solid #eee;
+  background: color-mix(in srgb, var(--admin-text) 80%, transparent);
+  border: 3px solid color-mix(in srgb, var(--admin-muted-text) 80%, transparent);
   position: relative;
   display: inline-block;
   border-radius: 40px;
@@ -176,15 +172,17 @@
   left: 2px;
   top: 2px;
   z-index: 2;
-  background: #eee;
+  background: color-mix(in srgb, var(--admin-muted-text) 80%, transparent);
   transition: 0.4s;
 }
 
-.toggle_input:checked + .toggle_label {
-  border: 3px solid var(--main-color);
+.toggle_input:checked + .toggle_label,
+.selected .toggle_label {
+  border: 3px solid var(--admin-border);
 }
 
-.toggle_input:checked + .toggle_label:after {
+.toggle_input:checked + .toggle_label:after,
+.selected .toggle_label:after {
   left: 42px;
   background: var(--main-color);
 }
@@ -196,39 +194,17 @@
   margin: auto;
 }
 
-.selected .toggle_label {
-  border: 3px solid var(--main-color);
-}
+@media (max-width: 640px) {
+  .title_button {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.65rem;
+  }
 
-.selected .toggle_label:after {
-  left: 42px;
-  background: var(--main-color);
-}
-
-.search_box {
-  border: 1px solid #333;
-  background-color: #ffffff;
-  color: #333;
-  font-weight: 700;
-  padding: 3px 10px;
-  width: 65vw;
-  max-width: 16rem;
-  height: 2.8rem;
-  overflow: hidden;
-  margin-right: 0;
-}
-
-.search_button {
-  cursor: pointer;
-  font-family: FontAwesome;
-  font-size: 1em;
-  background: var(--main-color);
-  color: #fff;
-  outline: none;
-  width: 25vw;
-  max-width: 3.5em;
-  height: 3rem;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 2rem;
+  .search_button,
+  .search_box {
+    width: 100%;
+    min-width: 0;
+  }
 }

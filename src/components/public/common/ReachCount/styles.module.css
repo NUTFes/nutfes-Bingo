@@ -1,41 +1,56 @@
 .reachCountContainer {
-  width: 35vw;
-  height: 14.75vw;
+  width: 100%;
+  min-height: clamp(70px, 14.75vw, 210px);
   background-color: var(--main-color);
-  border-radius: 2.85vw;
+  border-radius: clamp(22px, 2.85vw, 40px);
   display: flex;
-  position: relative;
-  font-family: "Noto Sans JP";
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(8px, 1.8vw, 24px);
+  padding: clamp(8px, 2.4vw, 28px) clamp(14px, 3vw, 36px);
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
 }
 
 .reachIcon {
-  width: 9vw;
-  height: 9vw;
-  position: absolute;
-  top: 3%;
-  left: 14%;
+  width: clamp(32px, 9vw, 120px);
+  height: clamp(32px, 9vw, 120px);
+  background-color: var(--background-color);
+  mask: url("/icon_reach.svg") no-repeat center / contain;
+  -webkit-mask: url("/icon_reach.svg") no-repeat center / contain;
+  flex-shrink: 0;
 }
 
 .reachText {
-  position: absolute;
-  bottom: 4%;
-  left: 7.5%;
   color: var(--background-color);
-  font-size: 3.5vw;
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-size: clamp(14px, 3.5vw, 52px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
 }
 
 .count {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 15.5vw;
-  height: 10vw;
-  border-radius: 5.5vw;
-  position: absolute;
-  top: 17%;
-  left: 46%;
+  min-width: clamp(74px, 15.5vw, 220px);
+  min-height: clamp(48px, 10vw, 142px);
+  border-radius: 9999px;
   color: var(--main-color);
   background-color: var(--background-color);
-  font-size: 6.7vw;
-  line-height: 102%;
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-size: clamp(28px, 6.7vw, 96px);
+  line-height: 1;
+  padding: 0 clamp(8px, 1.5vw, 18px);
+}
+
+@media (max-width: 640px) {
+  .reachCountContainer {
+    padding-inline: clamp(10px, 4vw, 18px);
+    gap: clamp(6px, 3vw, 12px);
+  }
+
+  .reachText {
+    letter-spacing: 0.02em;
+  }
 }

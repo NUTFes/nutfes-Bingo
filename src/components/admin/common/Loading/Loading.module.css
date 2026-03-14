@@ -1,0 +1,47 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--admin-overlay) 84%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 3vw, 16px);
+  width: min(86vw, 360px);
+  border-radius: clamp(16px, 4vw, 22px);
+  border: 2px solid var(--admin-border);
+  background: color-mix(in srgb, var(--admin-surface) 94%, transparent);
+  color: var(--admin-text);
+  padding: clamp(20px, 5vw, 28px);
+  box-shadow:
+    0 10px 26px color-mix(in srgb, var(--admin-shadow) 92%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--main-color) 12%, transparent) inset;
+}
+
+.brand {
+  font-size: clamp(20px, 5.5vw, 30px);
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  letter-spacing: 0.05em;
+  color: var(--main-color);
+}
+
+.spinner {
+  width: clamp(40px, 10vw, 52px);
+  height: clamp(40px, 10vw, 52px);
+  fill: var(--main-color);
+}
+
+.message {
+  margin: 0;
+  font-size: clamp(14px, 3.8vw, 17px);
+  color: var(--admin-text);
+}

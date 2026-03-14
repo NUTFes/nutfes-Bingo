@@ -1,5 +1,6 @@
 @import "../styles/public/reset.css";
 @import "../styles/public/globals.css";
+@import "driver.js/dist/driver.css";
 
 @tailwind base;
 @tailwind components;
@@ -7,6 +8,7 @@
 
 @layer base {
   :root {
+    --background-color: #2c252f;
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -59,13 +61,142 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+
+  :root[data-theme="light"] {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+  }
+
+  :root[data-theme="dark"] {
+    --background: 267 12% 17%;
+    --foreground: 0 0% 98%;
+  }
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+  html,
   body {
     @apply bg-background text-foreground;
+    background-color: var(--background-color);
   }
+
+  html,
+  body {
+    min-height: 100%;
+  }
+}
+
+:root {
+  --help-bg-color: var(--sub-color);
+}
+
+:root[data-theme="dark"] {
+  --help-bg-color: var(--background-color);
+}
+
+.admin-theme {
+  --admin-bg: var(--background-color);
+  --admin-surface: #3a3140;
+  --admin-surface-strong: #241f28;
+  --admin-surface-soft: rgba(255, 255, 255, 0.08);
+  --admin-text: #f8f5ff;
+  --admin-muted-text: #d4cee0;
+  --admin-border: var(--main-color);
+  --admin-overlay: rgba(0, 0, 0, 0.46);
+  --admin-button-text: #2c252f;
+  --admin-card-bg: #fff;
+  --admin-card-text: #2c252f;
+  --admin-card-border: rgba(255, 214, 7, 0.55);
+  --admin-shadow: rgba(0, 0, 0, 0.24);
+}
+
+:root[data-theme="light"] .admin-theme {
+  --admin-bg: var(--background-color);
+  --admin-surface: #ffffff;
+  --admin-surface-strong: #f8f3df;
+  --admin-surface-soft: rgba(32, 32, 32, 0.05);
+  --admin-text: #2c252f;
+  --admin-muted-text: #5a4f61;
+  --admin-border: var(--main-color);
+  --admin-overlay: rgba(33, 30, 34, 0.42);
+  --admin-button-text: #2c252f;
+  --admin-card-bg: #ffffff;
+  --admin-card-text: #2c252f;
+  --admin-card-border: rgba(255, 214, 7, 0.35);
+  --admin-shadow: rgba(0, 0, 0, 0.14);
+}
+
+.driver-popover.help-tour-popover {
+  background-color: var(--help-bg-color, var(--sub-color));
+  color: var(--main-color);
+  border: 2px solid var(--main-color);
+  border-radius: clamp(12px, 3vw, 18px);
+  min-width: min(70vw, 340px);
+  max-width: min(92vw, 460px);
+  padding: clamp(12px, 3vw, 20px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.driver-popover.help-tour-popover .driver-popover-title {
+  font-size: clamp(16px, 4.5vw, 22px);
+  font-weight: 700;
+  color: var(--main-color);
+  margin-bottom: 6px;
+}
+
+.driver-popover.help-tour-popover .driver-popover-description {
+  font-size: clamp(13px, 3.8vw, 18px);
+  line-height: 1.6;
+  color: var(--main-color);
+}
+
+.driver-popover.help-tour-popover .driver-popover-progress-text {
+  font-size: clamp(11px, 3vw, 14px);
+  color: var(--main-color);
+  opacity: 0.7;
+}
+
+.driver-popover.help-tour-popover .driver-popover-footer {
+  margin-top: clamp(10px, 2.5vw, 16px);
+}
+
+.driver-popover.help-tour-popover .driver-popover-footer button {
+  background-color: var(--main-color);
+  color: var(--background-color);
+  border-color: var(--main-color);
+  border-radius: 999px;
+  padding: clamp(6px, 1.6vw, 10px) clamp(12px, 3vw, 18px);
+  font-size: clamp(12px, 3.4vw, 16px);
+  text-shadow: none;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.driver-popover.help-tour-popover .driver-popover-footer button:hover,
+.driver-popover.help-tour-popover .driver-popover-footer button:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.driver-popover.help-tour-popover .driver-popover-close-btn {
+  color: var(--main-color);
+}
+
+.driver-popover.help-tour-popover .driver-popover-close-btn:hover,
+.driver-popover.help-tour-popover .driver-popover-close-btn:focus {
+  color: var(--main-color);
+  opacity: 0.8;
+}
+
+.driver-popover.help-tour-popover .driver-popover-navigation-btns {
+  gap: clamp(6px, 1.8vw, 10px);
+}
+
+/* driver.js のポップオーバー矢印を非表示にする（help-tour 用） */
+.driver-popover.help-tour-popover .driver-popover-arrow {
+  display: none !important;
 }

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import styles from "./styles.module.css";
 
 interface ReachCountProps {
@@ -8,9 +7,7 @@ interface ReachCountProps {
 function ReachCount({ count }: ReachCountProps) {
   return (
     <div className={styles.reachCountContainer}>
-      <div className={styles.reachIcon}>
-        <Image src={"/icon_reach.svg"} alt="Reach Icon" fill />
-      </div>
+      <span className={styles.reachIcon} aria-hidden="true" />
       <div className={styles.reachText}>REACH</div>
       <div className={styles.count}>{count}</div>
     </div>

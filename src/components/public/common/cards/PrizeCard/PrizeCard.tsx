@@ -20,7 +20,11 @@ const PrizeCard = ({ BingoPrize }: PrizeCardProps) => {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.image}>
-          <div className={styles.imageWrapper}>
+          <div
+            className={classNames(styles.imageWrapper, {
+              [styles.wonImage]: BingoPrize.is_won,
+            })}
+          >
             {BingoPrize.image_url && (
               <Image
                 src={BingoPrize.image_url}
@@ -32,8 +36,8 @@ const PrizeCard = ({ BingoPrize }: PrizeCardProps) => {
           </div>
         </div>
         {BingoPrize.is_won && (
-          <div className={classNames(styles.overlay, styles.center)}>
-            <p className={styles.center}>当選済み</p>
+          <div className={styles.overlay}>
+            <span className={styles.wonBadge}>当選済み</span>
           </div>
         )}
       </div>

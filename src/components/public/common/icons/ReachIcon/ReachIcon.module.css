@@ -1,57 +1,53 @@
-.reachIcon {
-  background-color: var(--main-color);
-  color: var(--background-color);
-  padding: 1vw;
-  width: 34.810625vw;
-  height: 18.565625vw;
-  border: none;
-  border-radius: 12.5vw;
-  cursor: pointer;
-  display: flex;
+.reachButton {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  position: relative;
+  gap: clamp(4px, 1.6vw, 10px);
+  width: clamp(180px, 34vw, 320px);
+  height: clamp(70px, 15vw, 120px);
+  padding: clamp(10px, 3vw, 18px) clamp(14px, 3.6vw, 22px);
+  border: 2px solid var(--main-color);
+  border-radius: 999px;
+  background-color: var(--main-color);
+  color: var(--background-color);
+  cursor: pointer;
+  box-shadow: 0 1.2vw 0 0 rgba(0, 0, 0, 0.12);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.icon {
-  width: 12vw;
-  height: 12vw;
-  position: absolute;
-  top: 11%;
-  left: 10%;
+.reachButton:active {
+  filter: brightness(0.98);
 }
 
-.icon path,
-.icon circle,
-.icon rect,
-.icon polygon {
-  fill: var(--background-color) !important;
+.reachButton:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 4px;
 }
 
-/* ダーク/ライトで内側塗りを切替（SVGに背景色が使われる前提） */
-.reachIcon {
-  --reach-icon-fill: var(--background-color);
-}
-
-.inverted path,
-.inverted circle,
-.inverted rect,
-.inverted polygon {
-  fill: var(--main-color) !important;
+.inverted {
+  background-color: var(--background-color);
+  color: var(--main-color);
+  box-shadow: 0 1.2vw 0 0 rgba(0, 0, 0, 0.08);
 }
 
 .text {
-  font-size: 4.375vw;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 100%;
-  font-family: "Noto Sans Jp";
-  margin-left: 13.5vw;
-  margin-right: 2vw;
-  color: var(--background-color);
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-size: clamp(22px, 5vw, 36px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
 }
 
-.color_inversion {
-  background-color: var(--background-color);
-  color: var(--main-color);
+.icon {
+  width: clamp(32px, 9vw, 56px);
+  height: clamp(32px, 9vw, 56px);
+  display: block;
+  background-color: currentColor;
+  mask: url("/icon_reach.svg") no-repeat center / contain;
+  -webkit-mask: url("/icon_reach.svg") no-repeat center / contain;
+  transform: translateY(-12%);
 }
