@@ -335,7 +335,11 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
               <Button className="w-full" onPress={() => void handleSurvey(true)}>
                 配信する
               </Button>
-              <Button className="w-full" variant="secondary" onPress={() => void handleSurvey(false)}>
+              <Button
+                className="w-full"
+                variant="secondary"
+                onPress={() => void handleSurvey(false)}
+              >
                 配信を停止する
               </Button>
             </div>

@@ -107,7 +107,9 @@ export const PrizeResult = ({
       <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6">
         <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
           <div className="max-w-3xl space-y-2">
-            <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">景品一覧</h2>
+            <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">
+              景品一覧
+            </h2>
             <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
               {sortedPrizes.length}件の景品を表示しています。カード右上から編集・削除できます。
             </p>
