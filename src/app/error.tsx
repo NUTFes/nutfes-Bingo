@@ -14,12 +14,39 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="p-6 text-center">
-      <p className="mb-4 text-sm text-muted-foreground">エラーが発生しました。</p>
+    <div
+      style={{
+        textAlign: "center",
+        backgroundColor: "#121212",
+        color: "#e0e0e0",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <p
+        style={{
+          marginBottom: "1rem",
+          fontSize: "0.875rem",
+          color: "#a0a0a0",
+        }}
+      >
+        エラーが発生しました。
+      </p>
       <button
         type="button"
         onClick={() => reset()}
-        className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground"
+        style={{
+          borderRadius: "0.25rem",
+          backgroundColor: "#2563eb",
+          padding: "0.5rem 1rem",
+          fontSize: "0.875rem",
+          color: "#ffffff",
+          border: "none",
+          cursor: "pointer",
+        }}
       >
         再試行
       </button>
