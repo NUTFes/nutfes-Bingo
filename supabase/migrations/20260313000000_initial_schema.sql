@@ -3,6 +3,8 @@ begin;
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+security definer
+set search_path = public
 as $$
 begin
   new.updated_at = timezone('utc', now());
@@ -225,7 +227,7 @@ create policy "profiles_select_own"
 on public.profiles
 for select
 to authenticated
-using (auth.uid() = id);
+using ((select auth.uid()) = id);
 
 drop policy if exists "numbers_read_all" on public.numbers;
 create policy "numbers_read_all"
@@ -239,22 +241,22 @@ create policy "numbers_admin_insert"
 on public.numbers
 for insert
 to authenticated
-with check (public.is_admin());
+with check ((select public.is_admin()));
 
 drop policy if exists "numbers_admin_update" on public.numbers;
 create policy "numbers_admin_update"
 on public.numbers
 for update
 to authenticated
-using (public.is_admin())
-with check (public.is_admin());
+using ((select public.is_admin()))
+with check ((select public.is_admin()));
 
 drop policy if exists "numbers_admin_delete" on public.numbers;
 create policy "numbers_admin_delete"
 on public.numbers
 for delete
 to authenticated
-using (public.is_admin());
+using ((select public.is_admin()));
 
 drop policy if exists "prizes_read_all" on public.prizes;
 create policy "prizes_read_all"
@@ -268,22 +270,22 @@ create policy "prizes_admin_insert"
 on public.prizes
 for insert
 to authenticated
-with check (public.is_admin());
+with check ((select public.is_admin()));
 
 drop policy if exists "prizes_admin_update" on public.prizes;
 create policy "prizes_admin_update"
 on public.prizes
 for update
 to authenticated
-using (public.is_admin())
-with check (public.is_admin());
+using ((select public.is_admin()))
+with check ((select public.is_admin()));
 
 drop policy if exists "prizes_admin_delete" on public.prizes;
 create policy "prizes_admin_delete"
 on public.prizes
 for delete
 to authenticated
-using (public.is_admin());
+using ((select public.is_admin()));
 
 drop policy if exists "app_state_read_all" on public.app_state;
 create policy "app_state_read_all"
@@ -297,8 +299,8 @@ create policy "app_state_admin_update"
 on public.app_state
 for update
 to authenticated
-using (public.is_admin())
-with check (public.is_admin());
+using ((select public.is_admin()))
+with check ((select public.is_admin()));
 
 drop policy if exists "reach_logs_read_all" on public.reach_logs;
 create policy "reach_logs_read_all"
@@ -319,7 +321,7 @@ create policy "stamp_triggers_insert_all"
 on public.stamp_triggers
 for insert
 to anon, authenticated
-with check (true);
+with check (name is not null);
 
 insert into storage.buckets (id, name, public)
 values ('prize-images', 'prize-images', true)
@@ -337,22 +339,22 @@ create policy "prize_images_admin_insert"
 on storage.objects
 for insert
 to authenticated
-with check (bucket_id = 'prize-images' and public.is_admin());
+with check (bucket_id = 'prize-images' and (select public.is_admin()));
 
 drop policy if exists "prize_images_admin_update" on storage.objects;
 create policy "prize_images_admin_update"
 on storage.objects
 for update
 to authenticated
-using (bucket_id = 'prize-images' and public.is_admin())
-with check (bucket_id = 'prize-images' and public.is_admin());
+using (bucket_id = 'prize-images' and (select public.is_admin()))
+with check (bucket_id = 'prize-images' and (select public.is_admin()));
 
 drop policy if exists "prize_images_admin_delete" on storage.objects;
 create policy "prize_images_admin_delete"
 on storage.objects
 for delete
 to authenticated
-using (bucket_id = 'prize-images' and public.is_admin());
+using (bucket_id = 'prize-images' and (select public.is_admin()));
 
 do $$
 begin
