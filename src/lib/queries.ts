@@ -23,8 +23,9 @@ export const BINGO_CACHE_TAGS = {
 } as const;
 
 function createDataClient() {
+  const supabaseUrl = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
   return createSupabaseClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseUrl,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       auth: {
@@ -49,10 +50,7 @@ function isDirectImagePath(imagePath: string): boolean {
   }
 }
 
-function resolvePrizeImageUrl(
-  supabase: ReturnType<typeof createDataClient>,
-  imagePath: string | null,
-): string | null {
+function resolvePrizeImageUrl(imagePath: string | null): string | null {
   if (!imagePath) {
     return null;
   }
@@ -61,7 +59,7 @@ function resolvePrizeImageUrl(
     return imagePath;
   }
 
-  return supabase.storage.from(PRIZE_IMAGES_BUCKET).getPublicUrl(imagePath).data.publicUrl;
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${PRIZE_IMAGES_BUCKET}/${imagePath}`;
 }
 
 export async function getNumbers(): Promise<NumberRow[]> {
@@ -107,7 +105,7 @@ export async function getPrizes(): Promise<PrizeWithImageUrl[]> {
 
   return data.map<PrizeWithImageUrl>((prize) => ({
     ...prize,
-    image_url: resolvePrizeImageUrl(supabase, prize.image_path),
+    image_url: resolvePrizeImageUrl(prize.image_path),
   }));
 }
 

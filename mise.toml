@@ -67,4 +67,4 @@ run = "npx supabase db reset"
 
 [tasks."supabase:typegen"]
 description = "Generate DB types from local Supabase schema"
-run = "npx supabase gen types typescript --local > src/shared/data/database.types.ts"
+run = "npx supabase gen types typescript --local > src/types/database.types.ts"
