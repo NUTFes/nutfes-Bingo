@@ -2,6 +2,9 @@
 
 import { useEffect } from "react";
 
+import { Button } from "@/components/ui/Button";
+import { Link } from "@/components/ui/Link";
+
 export default function Error({
   error,
   reset,
@@ -14,9 +17,9 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="flex min-h-svh items-center bg-zinc-950 px-4 py-6 text-zinc-100 sm:px-6">
-      <section className="mx-auto w-full max-w-2xl">
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6 text-center shadow-xl sm:p-8">
+    <main className="flex min-h-svh items-center bg-zinc-950 px-4 py-6 text-zinc-100 sm:px-6 sm:py-10">
+      <section className="mx-auto w-full max-w-xl">
+        <div className="rounded-3xl border border-zinc-800/90 bg-zinc-900/95 p-6 text-center shadow-xl shadow-zinc-950/40 sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
             NUTFES BINGO ADMIN
           </p>
@@ -26,13 +29,15 @@ export default function Error({
           <p className="mt-3 text-sm leading-relaxed text-zinc-300">
             通信状況を確認してから、もう一度お試しください。
           </p>
-          <button
-            type="button"
-            onClick={() => reset()}
-            className="mt-6 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground"
-          >
+          <Button type="button" onPress={() => reset()} className="mt-7 min-h-10 px-5">
             再試行
-          </button>
+          </Button>
+          <p className="mt-4 text-sm text-zinc-300">
+            もしくは{" "}
+            <Link href="/auth/login" variant="secondary" className="underline-offset-4">
+              ログイン画面に戻る
+            </Link>
+          </p>
         </div>
       </section>
     </main>
