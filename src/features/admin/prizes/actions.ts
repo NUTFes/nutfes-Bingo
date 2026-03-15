@@ -1,6 +1,7 @@
 "use server";
 
 import { PRIZE_IMAGES_BUCKET } from "@/types/bingo/constants";
+
 import { BINGO_CACHE_TAGS } from "@/lib/queries";
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import type { TablesUpdate } from "@/types/database.types";
@@ -9,28 +10,24 @@ import {
   invalidateTag,
   type AdminSupabaseClient,
 } from "@/components/admin/server-actions";
+import { resolvePrizeImageUrl } from "@/utils/image";
 
 function sanitizeFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "-");
 }
 
-function toPrizeWithImageUrl(
-  supabase: AdminSupabaseClient,
-  prize: {
-    id: number;
-    name_jp: string;
-    name_en: string | null;
-    image_path: string | null;
-    is_won: boolean;
-    created_at: string;
-    updated_at: string;
-  },
-): PrizeWithImageUrl {
+function toPrizeWithImageUrl(prize: {
+  id: number;
+  name_jp: string;
+  name_en: string | null;
+  image_path: string | null;
+  is_won: boolean;
+  created_at: string;
+  updated_at: string;
+}): PrizeWithImageUrl {
   return {
     ...prize,
-    image_url: prize.image_path
-      ? supabase.storage.from(PRIZE_IMAGES_BUCKET).getPublicUrl(prize.image_path).data.publicUrl
-      : null,
+    image_url: resolvePrizeImageUrl(prize.image_path),
   };
 }
 
@@ -95,7 +92,7 @@ export async function createPrize(formData: FormData) {
   }
 
   invalidateTag(BINGO_CACHE_TAGS.prizes);
-  return toPrizeWithImageUrl(supabase, data);
+  return toPrizeWithImageUrl(data);
 }
 
 export async function updatePrize(formData: FormData) {
@@ -154,7 +151,7 @@ export async function updatePrize(formData: FormData) {
   }
 
   invalidateTag(BINGO_CACHE_TAGS.prizes);
-  return toPrizeWithImageUrl(supabase, data);
+  return toPrizeWithImageUrl(data);
 }
 
 export async function togglePrizeWon(id: number, isWon: boolean) {
@@ -171,7 +168,7 @@ export async function togglePrizeWon(id: number, isWon: boolean) {
   }
 
   invalidateTag(BINGO_CACHE_TAGS.prizes);
-  return toPrizeWithImageUrl(supabase, data);
+  return toPrizeWithImageUrl(data);
 }
 
 export async function deletePrize(id: number) {

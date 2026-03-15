@@ -19,10 +19,7 @@ export default function Error({
       <div className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900/90 p-6 text-center text-zinc-100 shadow-2xl sm:p-7">
         <p className="mb-2 text-base font-semibold sm:text-lg">管理画面でエラーが発生しました。</p>
         <p className="mb-5 text-sm text-zinc-400">お手数ですが、再試行してください。</p>
-        <Button
-          onClick={() => reset()}>
-          再試行
-        </Button>
+        <Button onClick={() => reset()}>再試行</Button>
       </div>
     </div>
   );

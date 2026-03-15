@@ -3,10 +3,10 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-import { PRIZE_IMAGES_BUCKET } from "@/types/bingo/constants";
 import type { AppStateRow, NumberRow, PrizeWithImageUrl, ReachLogRow } from "@/types/bingo/types";
 import type { Database } from "@/types/database.types";
 import { hasEnvVars } from "@/utils/utils";
+import { resolvePrizeImageUrl } from "@/utils/image";
 
 const emptyAppState: AppStateRow = {
   id: 1,
@@ -35,39 +35,6 @@ function createDataClient() {
       },
     },
   );
-}
-
-function isDirectImagePath(imagePath: string): boolean {
-  if (imagePath.startsWith("/")) {
-    return true;
-  }
-
-  try {
-    void new URL(imagePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function resolvePrizeImageUrl(imagePath: string | null): string | null {
-  if (!imagePath) {
-    return null;
-  }
-
-  if (isDirectImagePath(imagePath)) {
-    return imagePath;
-  }
-
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const isServer = typeof window === "undefined";
-  let resolvedBaseUrl = baseUrl;
-
-  if (isServer && resolvedBaseUrl) {
-    resolvedBaseUrl = resolvedBaseUrl.replace(/127\.0\.0\.1|localhost/, "host.docker.internal");
-  }
-
-  return `${resolvedBaseUrl}/storage/v1/object/public/${PRIZE_IMAGES_BUCKET}/${imagePath}`;
 }
 
 export async function getNumbers(): Promise<NumberRow[]> {

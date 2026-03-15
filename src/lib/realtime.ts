@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { PRIZE_IMAGES_BUCKET } from "@/types/bingo/constants";
 import type {
   AppStateRow,
   NumberRow,
@@ -12,32 +11,12 @@ import type {
   StampName,
 } from "@/types/bingo/types";
 import { createClient } from "@/lib/supabase/client";
-
-function isDirectImagePath(imagePath: string): boolean {
-  if (imagePath.startsWith("/")) {
-    return true;
-  }
-
-  try {
-    void new URL(imagePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { resolvePrizeImageUrl } from "@/utils/image";
 
 function toPrizeWithImageUrl(prize: PrizeRow): PrizeWithImageUrl {
-  const supabase = createClient();
-  const imageUrl =
-    prize.image_path && isDirectImagePath(prize.image_path)
-      ? prize.image_path
-      : prize.image_path
-        ? supabase.storage.from(PRIZE_IMAGES_BUCKET).getPublicUrl(prize.image_path).data.publicUrl
-        : null;
-
   return {
     ...prize,
-    image_url: imageUrl,
+    image_url: resolvePrizeImageUrl(prize.image_path),
   };
 }
 

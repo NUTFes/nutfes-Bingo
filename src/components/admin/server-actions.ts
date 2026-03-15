@@ -12,7 +12,6 @@ export async function createAdminClient(): Promise<AdminSupabaseClient> {
   return createClient();
 }
 
-
 export function invalidateTag(tag: string) {
   revalidateTag(tag, "page");
 }
