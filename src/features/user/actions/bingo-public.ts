@@ -7,7 +7,7 @@ import type { StampName } from "@/types/bingo/types";
 import { createClient } from "@/lib/supabase/server";
 
 function invalidateTag(tag: string) {
-  revalidateTag(tag, "page");
+  revalidateTag(tag, "max");
 }
 
 export async function sendReactionStamp(name: StampName) {
