@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { BiGift } from "react-icons/bi";
 
-import IconFramework from "@/features/user/_shared/icons/IconFramework/IconFramework";
+import IconFramework from "@/components/user/icons/IconFramework/IconFramework";
 
 interface PrizesIconProps {
   id?: string;

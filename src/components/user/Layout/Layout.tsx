@@ -16,7 +16,7 @@ import {
   SettingsIcon,
   SurveyPromptModal,
   ToggleButton,
-} from "@/features/user/_shared/common";
+} from "@/components/user/common";
 import { REACTION_IMAGES } from "@/types/bingo/constants";
 import { useAppState } from "@/lib/realtime";
 import {

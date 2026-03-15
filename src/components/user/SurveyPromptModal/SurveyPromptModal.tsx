@@ -1,5 +1,5 @@
-import Button from "@/features/user/_shared/buttons/Button/Button";
-import Modal from "@/features/user/_shared/Modal/Modal";
+import Button from "@/components/user/buttons/Button/Button";
+import Modal from "@/components/user/Modal/Modal";
 
 import styles from "./SurveyPromptModal.module.css";
 

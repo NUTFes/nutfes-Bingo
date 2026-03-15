@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminHeader, BingoResult } from "@/features/admin/_shared";
+import { AdminHeader, BingoResult } from "@/components/admin";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion, queue } from "@/components/ui/Toast";
 import { useNumbers } from "@/lib/realtime";

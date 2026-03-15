@@ -1,7 +1,7 @@
 "use server";
 
 import { BINGO_CACHE_TAGS } from "@/lib/queries";
-import { createAdminClient, invalidateTag } from "@/features/admin/_shared/server-actions";
+import { createAdminClient, invalidateTag } from "@/components/admin/server-actions";
 
 export async function createNumber(number: number) {
   const supabase = await createAdminClient();

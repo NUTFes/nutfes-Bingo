@@ -6,7 +6,7 @@ import { isFileDropItem, type DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
 import { IoCloudUploadOutline } from "react-icons/io5";
 
-import { AdminHeader } from "@/features/admin/_shared";
+import { AdminHeader } from "@/components/admin";
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { usePrizes } from "@/lib/realtime";
 import { Button } from "@/components/ui/Button";

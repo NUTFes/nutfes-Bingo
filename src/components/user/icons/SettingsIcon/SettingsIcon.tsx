@@ -2,7 +2,7 @@
 
 import { IoIosSettings } from "react-icons/io";
 
-import IconFramework from "@/features/user/_shared/icons/IconFramework/IconFramework";
+import IconFramework from "@/components/user/icons/IconFramework/IconFramework";
 
 interface SettingsIconProps {
   isOpen: boolean;

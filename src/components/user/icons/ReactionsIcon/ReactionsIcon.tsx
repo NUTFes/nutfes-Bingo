@@ -2,7 +2,7 @@
 
 import { FaRegFaceSmile } from "react-icons/fa6";
 
-import IconFramework from "@/features/user/_shared/icons/IconFramework/IconFramework";
+import IconFramework from "@/components/user/icons/IconFramework/IconFramework";
 
 interface ReactionsIconProps {
   isOpen: boolean;

@@ -1,6 +1,6 @@
 "use client";
 
-import { Layout, PrizeCardList } from "@/features/user/_shared";
+import { Layout, PrizeCardList } from "@/components/user";
 import { usePrizes } from "@/lib/realtime";
 import type { PublicPreferences } from "@/types/bingo/public-preferences";
 import type { AppStateRow, PrizeWithImageUrl } from "@/types/bingo/types";

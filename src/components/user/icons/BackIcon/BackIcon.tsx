@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { TiArrowBack } from "react-icons/ti";
 
-import IconFramework from "@/features/user/_shared/icons/IconFramework/IconFramework";
+import IconFramework from "@/components/user/icons/IconFramework/IconFramework";
 
 interface BackIconProps {
   id?: string;

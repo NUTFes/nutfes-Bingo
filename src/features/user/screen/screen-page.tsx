@@ -4,7 +4,7 @@ import Matter from "matter-js";
 import { useEffect, useMemo, useRef } from "react";
 
 import { getScreenDisplayBingoNumbers } from "./view-model";
-import { NumberCardLarge, NumberCardList, ReachCount } from "@/features/user/_shared";
+import { NumberCardLarge, NumberCardList, ReachCount } from "@/components/user";
 import { subscribeStampTriggers, useLatestReachLog, useNumbers } from "@/lib/realtime";
 import type { NumberRow, ReachLogRow } from "@/types/bingo/types";
 import styles from "@/styles/user/screen.module.css";

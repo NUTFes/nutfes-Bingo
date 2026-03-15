@@ -8,7 +8,7 @@ import {
   createAdminClient,
   invalidateTag,
   type AdminSupabaseClient,
-} from "@/features/admin/_shared/server-actions";
+} from "@/components/admin/server-actions";
 
 function sanitizeFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "-");

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { AdminHeader } from "@/features/admin/_shared";
+import { AdminHeader } from "@/components/admin";
 import { usePrizes } from "@/lib/realtime";
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { SearchField } from "@/components/ui/SearchField";

@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { getHomeDisplayBingoNumbers } from "./view-model";
-import { Layout, NumberCardLarge, NumberCardList } from "@/features/user/_shared";
+import { Layout, NumberCardLarge, NumberCardList } from "@/components/user";
 import { useNumbers } from "@/lib/realtime";
 import type { PublicPreferences } from "@/types/bingo/public-preferences";
 import type { AppStateRow, NumberRow } from "@/types/bingo/types";
