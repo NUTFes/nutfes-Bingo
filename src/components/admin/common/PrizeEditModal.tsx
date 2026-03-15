@@ -134,7 +134,15 @@ const PrizeEditModal = ({
                 </div>
               )}
 
-              <DropZone onDrop={handleDrop} className="w-full rounded-2xl">
+              <DropZone
+                onDrop={handleDrop}
+                getDropOperation={(types) =>
+                  types.has("image/jpeg") || types.has("image/png") || types.has("image/webp")
+                    ? "copy"
+                    : "cancel"
+                }
+                className="w-full rounded-2xl"
+              >
                 <div className="flex flex-col items-center gap-2">
                   <IoCloudUploadOutline size="3rem" />
                   ここに画像をドラッグ&ドロップ

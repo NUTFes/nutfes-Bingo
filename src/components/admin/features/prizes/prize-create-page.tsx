@@ -105,7 +105,15 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
           </header>
           <Separator className="mb-4 opacity-70" />
           <div className="space-y-5">
-            <DropZone onDrop={handleDrop} className="w-full rounded-2xl py-10">
+            <DropZone
+              onDrop={handleDrop}
+              getDropOperation={(types) =>
+                types.has("image/jpeg") || types.has("image/png") || types.has("image/webp")
+                  ? "copy"
+                  : "cancel"
+              }
+              className="w-full rounded-2xl"
+            >
               <div className="flex flex-col items-center gap-2">
                 <IoCloudUploadOutline size="4rem" />
                 <p>ここに画像をドラッグ&ドロップ</p>
