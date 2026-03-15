@@ -2,13 +2,52 @@
 node = "24"
 pnpm = "10"
 
+[tasks.install]
+description = "Install dependencies"
+run = "pnpm install"
+
 [tasks.dev]
 description = "Start Next.js dev server"
 run = "pnpm dev"
 
+[tasks.lint]
+description = "Run oxlint"
+run = "pnpm lint"
+
 [tasks.build]
 description = "Run production build"
 run = "pnpm build"
+
+[tasks."add"]
+description = "Add dependency with pnpm (use -D for devDependency)"
+usage = '''
+arg "<package>" help="Package name to add"
+flag "-D --dev" help="Add as devDependency"
+'''
+run = '''
+if [ "${usage_dev:-false}" = "true" ]; then
+  pnpm add -D "${usage_package?}"
+else
+  pnpm add "${usage_package?}"
+fi
+'''
+
+[tasks."remove"]
+description = "Remove dependency with pnpm"
+usage = 'arg "<package>" help="Package name to remove"'
+run = 'pnpm remove "${usage_package?}"'
+
+[tasks."docker:up"]
+description = "Start development container"
+run = "docker compose -f compose.dev.yml up --build"
+
+[tasks."docker:down"]
+description = "Stop development container"
+run = "docker compose -f compose.dev.yml down"
+
+[tasks."sync"]
+description = "Sync dependencies inside running dev container"
+run = "docker compose -f compose.dev.yml exec app pnpm install"
 
 [tasks."supabase:start"]
 description = "Start local Supabase stack"
