@@ -1,60 +1,70 @@
 # NUTFes Bingo
 
-技大祭向けビンゴアプリ（公開画面・スクリーン表示・運営管理）です。  
-Phase 5 時点で **Next.js App Router + Server Actions 中心** の構成に移行済みです。
+技大祭向けビンゴアプリです。  
+公開向け（User）と運営向け（Admin）を分離した Next.js App Router 構成で運用しています。
 
-## アーキテクチャ概要
+## 現在のアーキテクチャ
 
-- **Next.js App Router**（`src/app`）
-  - 公開: `/`, `/prizes`, `/screen`
-  - 管理: `/admin`, `/admin/prizes`
-  - 認証: `/auth/*`
-- **Server Components で初期データ取得**
-  - `src/lib/bingo/queries.ts`（`"use cache"` + `cacheTag`）
-- **Client Components は表示とリアルタイム同期に専念**
-  - `src/lib/bingo/client.ts` の hooks で Realtime 購読
+- **Route Groups（App Router）**
+  - 公開: `/`, `/prizes`, `/screen`（`src/app/(user)`）
+  - 管理: `/admin`, `/admin/prizes`, `/admin/prizes/new`（`src/app/(admin)/admin`）
+  - 認証: `/auth/*`（`src/app/(admin)/auth`）
+- **UI スタック**
+  - User: CSS Modules（`src/features/user/_shared` + `src/styles/user`）
+  - Admin: Tailwind CSS + React Aria Components（`src/components/ui` + `src/features/admin`）
+- **共通基盤**
+  - `src/shared/data`: Supabase client / queries / realtime
+  - `src/shared/domain`: ドメイン型・定数・純ロジック
+  - `src/shared/auth`: 認証・権限チェック
+  - `src/shared/utils`: i18n / utility
 
-## Server Actions-first 設計
+## 主要ディレクトリ
 
-更新系は基本的に Server Actions に集約:
+- `src/app/(user)/` : 公開ページとレイアウト
+- `src/app/(admin)/admin/` : 管理ページとレイアウト
+- `src/app/(admin)/auth/` : 認証ページ・confirm route
+- `src/features/user/` : 公開機能（home/prizes/screen/actions）
+- `src/features/admin/` : 管理機能（dashboard/prizes/auth）
+- `src/components/ui/` : RAC ベースの UI プリミティブ（Admin 側中心）
+- `src/shared/` : データアクセス、ドメイン、認証、共通ユーティリティ
+- `src/styles/user/`, `src/styles/admin/` : グローバルスタイル
+- `supabase/` : マイグレーション・DB 関連ファイル
+- `proxy.ts` : セッション更新・保護ルートの入口
 
-- 管理操作: `src/app/admin/actions.ts`
-  - 番号・景品CRUD、リーチ増減、アンケート状態更新
-- 公開画面操作: `src/app/actions/bingo-public.ts`
-  - リーチ記録、リアクションスタンプ送信
-- 認証操作: `src/app/auth/actions.ts`
-  - ログイン/サインアップ/パスワード再設定/ログアウト
+## Server Actions
 
-Server Actions 実行後は `updateTag` / `revalidateTag` で一覧キャッシュを更新します。
+- `src/features/admin/dashboard/actions.ts`  
+  番号操作、リーチ増減、アンケート状態更新
+- `src/features/admin/prizes/actions.ts`  
+  景品 CRUD と画像アップロード/削除
+- `src/features/admin/auth/actions.ts`  
+  ログイン、サインアップ、パスワード更新
+- `src/features/user/actions/bingo-public.ts`  
+  公開側リアクション送信、リーチ記録
 
 ## Supabase 連携の境界
 
-- **Server Actions / 認証判定（サーバー）**
-  - `src/lib/supabase/server.ts`, `src/lib/supabase/proxy.ts`
-- **初期データのサーバー読み取り**
-  - `src/lib/bingo/queries.ts`（Supabase JS で read 専用利用）
-- **クライアント側の Realtime 購読**
-  - `src/lib/supabase/client.ts`
-  - `src/lib/bingo/client.ts`（`numbers`, `prizes`, `app_state`, `reach_logs`, `stamp_triggers`）
+- **Server 側クライアント**
+  - `src/shared/data/supabase/server.ts`
+  - `src/shared/data/supabase/proxy.ts`
+- **Client 側クライアント**
+  - `src/shared/data/supabase/client.ts`
+- **初期データ取得**
+  - `src/shared/data/queries.ts`（`"use cache"` + `cacheTag`）
+- **Realtime 購読**
+  - `src/shared/data/realtime.ts`
+- **DB 型**
+  - `src/shared/data/database.types.ts`
 
 ## 認証フロー（要約）
 
-1. `/admin` 配下は `proxy.ts` + `src/lib/supabase/proxy.ts` で未ログインを `/auth/login` へリダイレクト
-2. `src/app/auth/actions.ts` がログイン/登録/再設定を処理
-3. メールリンク確認は `src/app/auth/confirm/route.ts`
-4. 管理ページは `src/app/admin/layout.tsx` の `requireAdmin()` で権限チェック
+1. `proxy.ts` + `src/shared/data/supabase/proxy.ts` が `/admin` 系を保護
+2. 未ログインは `/auth/login` にリダイレクト
+3. `src/features/admin/auth/actions.ts` が認証操作を処理
+4. `src/app/(admin)/auth/confirm/route.ts` がメールリンク確認
+5. `src/app/(admin)/admin/layout.tsx` で `requireAdmin()` を実施
 
-> メール認証をスキップする運用のため、Supabase Auth 設定の **Confirm email は無効化** してください（autoconfirm 前提）。
-
-## 主要ディレクトリ/ファイル
-
-- `src/app/` : ルーティング、ページ、Server Actions
-- `src/components/` : 画面コンポーネント（admin/public/ui）
-- `src/lib/bingo/` : ドメインロジック（queries, realtime hooks, types）
-- `src/lib/supabase/` : Supabase クライアント生成（server/client/proxy）
-- `src/lib/auth.ts` : 現在ユーザー取得・管理者ガード
-- `supabase/` : SQL / マイグレーション関連
-- `proxy.ts` : セッション更新・保護ルートのエントリ
+> 運用方針として、Supabase Auth の **Confirm email は無効化**（autoconfirm 前提）してください。
 
 ## セットアップ
 
@@ -63,24 +73,45 @@ pnpm install
 cp .env.example .env.local
 ```
 
-`.env.local` に設定（必須）:
+`.env.local`（必須）:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 ```
 
-推奨（メールリンクのリダイレクトURLを安定化）:
+推奨:
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-## 実行コマンド
+## mise での環境構築・タスク実行（推奨）
+
+このリポジトリには `mise.toml` を用意しており、`node` / `pnpm` のバージョン管理と
+Supabase ローカル運用タスクをまとめて実行できます。
 
 ```bash
-pnpm dev      # 開発サーバー
-pnpm lint     # 静的解析
-pnpm build    # 本番ビルド
-pnpm start    # ビルド済みアプリ起動
+mise install
+mise run install
+mise run dev
+```
+
+Supabase タスク:
+
+```bash
+mise run supabase:start
+mise run supabase:status
+mise run supabase:db-reset
+mise run supabase:typegen
+mise run supabase:stop
+```
+
+## pnpm コマンド
+
+```bash
+pnpm dev
+pnpm lint
+pnpm build
+pnpm start
 ```

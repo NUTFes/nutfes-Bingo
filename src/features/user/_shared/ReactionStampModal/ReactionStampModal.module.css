@@ -9,6 +9,8 @@
   width: 87.5vw;
   height: 50.9vw;
   position: fixed;
+  box-sizing: border-box;
+  max-width: 87.5vw;
   background: var(--background-color);
   box-shadow: 1.09375vw 1.09375vw 0px 0px var(--main-color);
   border-radius: 5.46875vw;

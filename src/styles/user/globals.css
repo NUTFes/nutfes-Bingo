@@ -1,10 +1,19 @@
 @import "driver.js/dist/driver.css";
 
+html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 body {
+  margin: 0;
+  padding: 0;
   font-family: "Noto Sans JP", sans-serif;
   background-color: var(--background-color);
   -ms-overflow-style: none;
   scrollbar-width: none;
+  overflow-x: hidden;
 }
 
 body::-webkit-scrollbar {

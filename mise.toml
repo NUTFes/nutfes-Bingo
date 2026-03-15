@@ -1,0 +1,31 @@
+[tools]
+node = "24"
+pnpm = "10"
+
+[tasks.dev]
+description = "Start Next.js dev server"
+run = "pnpm dev"
+
+[tasks.build]
+description = "Run production build"
+run = "pnpm build"
+
+[tasks."supabase:start"]
+description = "Start local Supabase stack"
+run = "npx supabase start"
+
+[tasks."supabase:stop"]
+description = "Stop local Supabase stack"
+run = "npx supabase stop"
+
+[tasks."supabase:status"]
+description = "Show local Supabase status"
+run = "npx supabase status"
+
+[tasks."supabase:db-reset"]
+description = "Reset local Supabase database"
+run = "npx supabase db reset"
+
+[tasks."supabase:typegen"]
+description = "Generate DB types from local Supabase schema"
+run = "npx supabase gen types typescript --local > src/shared/data/database.types.ts"

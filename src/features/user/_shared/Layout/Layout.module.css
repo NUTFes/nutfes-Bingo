@@ -1,5 +1,6 @@
 .content {
   overflow-y: auto;
+  overflow-x: hidden;
   padding: clamp(14px, 7vw, 26px) 0 calc(12vw + env(safe-area-inset-bottom));
   min-height: 100vh;
 }

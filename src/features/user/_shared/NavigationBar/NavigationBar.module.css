@@ -2,9 +2,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
   width: 100%;
+  box-sizing: border-box;
   padding: 3.125vw 1.5vw;
   background-color: var(--background-color);
   box-shadow:
