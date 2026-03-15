@@ -1,8 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import type { Database } from "@/shared/data/database.types";
-import { hasEnvVars } from "@/shared/utils/utils";
+import type { Database } from "@/types/database.types";
+import { hasEnvVars } from "@/utils/utils";
 
 function isProtectedPath(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");

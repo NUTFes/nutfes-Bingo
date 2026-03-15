@@ -1,9 +1,9 @@
 "use client";
 
 import { Layout, PrizeCardList } from "@/features/user/_shared";
-import { usePrizes } from "@/shared/data/realtime";
-import type { PublicPreferences } from "@/shared/domain/bingo/public-preferences";
-import type { AppStateRow, PrizeWithImageUrl } from "@/shared/domain/bingo/types";
+import { usePrizes } from "@/lib/realtime";
+import type { PublicPreferences } from "@/types/bingo/public-preferences";
+import type { AppStateRow, PrizeWithImageUrl } from "@/types/bingo/types";
 
 interface PrizesPageProps {
   initialPrizes: PrizeWithImageUrl[];

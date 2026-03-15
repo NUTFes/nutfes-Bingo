@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 import { AdminHeader } from "@/features/admin/_shared";
-import { usePrizes } from "@/shared/data/realtime";
-import type { PrizeWithImageUrl } from "@/shared/domain/bingo/types";
+import { usePrizes } from "@/lib/realtime";
+import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { SearchField } from "@/components/ui/SearchField";
 import { Separator } from "@/components/ui/Separator";
 import { MyToastRegion } from "@/components/ui/Toast";

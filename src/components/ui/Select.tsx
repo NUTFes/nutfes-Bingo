@@ -14,7 +14,7 @@ import { tv } from "tailwind-variants";
 import { Description, FieldError, Label } from "@/components/ui/Field";
 import { DropdownItem, DropdownSection, DropdownSectionProps } from "@/components/ui/ListBox";
 import { Popover } from "@/components/ui/Popover";
-import { composeTailwindRenderProps, focusRing } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps, focusRing } from "@/utils/react-aria-utils";
 
 const styles = tv({
   extend: focusRing,

@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { type AuthActionState, type ForgotPasswordActionState } from "./types";
-import { createClient } from "@/shared/data/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 function toStringValue(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";

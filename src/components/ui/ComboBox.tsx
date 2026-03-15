@@ -12,7 +12,7 @@ import {
 import { Description, FieldError, FieldGroup, Input, Label } from "@/components/ui/Field";
 import { DropdownItem, DropdownSection, DropdownSectionProps } from "@/components/ui/ListBox";
 import { Popover } from "@/components/ui/Popover";
-import { composeTailwindRenderProps } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps } from "@/utils/react-aria-utils";
 import { FieldButton } from "@/components/ui/FieldButton";
 
 export interface ComboBoxProps<T extends object, M extends "single" | "multiple"> extends Omit<

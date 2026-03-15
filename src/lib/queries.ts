@@ -3,15 +3,10 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-import { PRIZE_IMAGES_BUCKET } from "@/shared/domain/bingo/constants";
-import type {
-  AppStateRow,
-  NumberRow,
-  PrizeWithImageUrl,
-  ReachLogRow,
-} from "@/shared/domain/bingo/types";
-import type { Database } from "@/shared/data/database.types";
-import { hasEnvVars } from "@/shared/utils/utils";
+import { PRIZE_IMAGES_BUCKET } from "@/types/bingo/constants";
+import type { AppStateRow, NumberRow, PrizeWithImageUrl, ReachLogRow } from "@/types/bingo/types";
+import type { Database } from "@/types/database.types";
+import { hasEnvVars } from "@/utils/utils";
 
 const emptyAppState: AppStateRow = {
   id: 1,

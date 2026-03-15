@@ -3,7 +3,7 @@ import { AlertTriangle } from "lucide-react";
 import React from "react";
 import { Meter as AriaMeter, MeterProps as AriaMeterProps } from "react-aria-components";
 import { Label } from "@/components/ui/Field";
-import { composeTailwindRenderProps } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps } from "@/utils/react-aria-utils";
 
 export interface MeterProps extends AriaMeterProps {
   label?: string;

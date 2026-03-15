@@ -1,4 +1,4 @@
-import type { Tables } from "@/shared/data/database.types";
+import type { Tables } from "@/types/database.types";
 
 export const STAMP_NAMES = [
   "angry",

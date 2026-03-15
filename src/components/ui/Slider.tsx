@@ -9,7 +9,7 @@ import {
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { Label } from "@/components/ui/Field";
-import { composeTailwindRenderProps, focusRing } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps, focusRing } from "@/utils/react-aria-utils";
 
 const trackStyles = tv({
   base: "rounded-full",

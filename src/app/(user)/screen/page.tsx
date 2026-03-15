@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { ScreenPage } from "@/features/user";
-import { getLatestReachLog, getNumbers } from "@/shared/data/queries";
+import { getLatestReachLog, getNumbers } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "スクリーン",

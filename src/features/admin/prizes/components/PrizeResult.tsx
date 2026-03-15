@@ -5,7 +5,7 @@ import React, { useMemo, useState } from "react";
 import { GridLayout, GridList, GridListItem, Virtualizer } from "react-aria-components";
 import { IoClose, IoCreateOutline } from "react-icons/io5";
 
-import type { PrizeWithImageUrl } from "@/shared/domain/bingo/types";
+import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { Button } from "@/components/ui/Button";
 import { Separator } from "@/components/ui/Separator";
 import { Switch } from "@/components/ui/Switch";

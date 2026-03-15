@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { PRIZE_IMAGES_BUCKET } from "@/shared/domain/bingo/constants";
+import { PRIZE_IMAGES_BUCKET } from "@/types/bingo/constants";
 import type {
   AppStateRow,
   NumberRow,
@@ -10,8 +10,8 @@ import type {
   PrizeWithImageUrl,
   ReachLogRow,
   StampName,
-} from "@/shared/domain/bingo/types";
-import { createClient } from "@/shared/data/supabase/client";
+} from "@/types/bingo/types";
+import { createClient } from "@/lib/supabase/client";
 
 function isDirectImagePath(imagePath: string): boolean {
   if (imagePath.startsWith("/")) {

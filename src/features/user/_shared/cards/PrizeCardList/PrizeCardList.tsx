@@ -1,4 +1,4 @@
-import type { PrizeWithImageUrl } from "@/shared/domain/bingo/types";
+import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import styles from "./PrizeCardList.module.css";
 import PrizeCard from "../PrizeCard";
 

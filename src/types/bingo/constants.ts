@@ -1,4 +1,4 @@
-import type { StampName } from "@/shared/domain/bingo/types";
+import type { StampName } from "@/types/bingo/types";
 
 export const PRIZE_IMAGES_BUCKET = "prize-images";
 

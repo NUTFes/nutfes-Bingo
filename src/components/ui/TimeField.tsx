@@ -8,7 +8,7 @@ import {
 } from "react-aria-components";
 import { DateInput } from "@/components/ui/DateField";
 import { Description, FieldError, Label } from "@/components/ui/Field";
-import { composeTailwindRenderProps } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps } from "@/utils/react-aria-utils";
 
 export interface TimeFieldProps<T extends TimeValue> extends AriaTimeFieldProps<T> {
   label?: string;

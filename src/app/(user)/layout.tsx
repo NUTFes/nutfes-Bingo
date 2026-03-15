@@ -4,7 +4,7 @@ import { ThemeProvider } from "next-themes";
 import {
   DEFAULT_PUBLIC_PREFERENCES,
   publicThemeBootstrapScript,
-} from "@/shared/domain/bingo/public-preferences";
+} from "@/types/bingo/public-preferences";
 
 import "@/styles/user/globals.css";
 

@@ -22,9 +22,9 @@ import {
   getDiagMainLineId,
   getRowLineId,
   isCenter,
-} from "@/shared/domain/bingo/judgement";
-import type { NumberRow } from "@/shared/domain/bingo/types";
-import { cn } from "@/shared/utils/utils";
+} from "@/types/bingo/judgement";
+import type { NumberRow } from "@/types/bingo/types";
+import { cn } from "@/utils/utils";
 
 const MAX_DIGIT_LENGTH = 2;
 const COL_HEADERS = ["B", "I", "N", "G", "O"] as const;

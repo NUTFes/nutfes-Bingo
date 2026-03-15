@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/shared/auth/auth";
+import { requireAdmin } from "@/lib/auth/auth";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();

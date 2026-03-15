@@ -7,8 +7,8 @@ import { FileTrigger } from "react-aria-components";
 import { IoCloudUploadOutline } from "react-icons/io5";
 
 import { AdminHeader } from "@/features/admin/_shared";
-import type { PrizeWithImageUrl } from "@/shared/domain/bingo/types";
-import { usePrizes } from "@/shared/data/realtime";
+import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import { usePrizes } from "@/lib/realtime";
 import { Button } from "@/components/ui/Button";
 import { DropZone } from "@/components/ui/DropZone";
 import { Form } from "@/components/ui/Form";

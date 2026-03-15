@@ -1,4 +1,4 @@
-import type { NumberRow } from "@/shared/domain/bingo/types";
+import type { NumberRow } from "@/types/bingo/types";
 
 function sortById(bingoNumbers: NumberRow[]) {
   return [...bingoNumbers].sort((a, b) => a.id - b.id);

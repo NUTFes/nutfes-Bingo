@@ -7,7 +7,7 @@ import {
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { Description, FieldError, Input, Label, fieldBorderStyles } from "@/components/ui/Field";
-import { composeTailwindRenderProps, focusRing } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps, focusRing } from "@/utils/react-aria-utils";
 
 const inputStyles = tv({
   extend: focusRing,

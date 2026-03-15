@@ -2,9 +2,9 @@
 
 import { revalidateTag, updateTag } from "next/cache";
 
-import { BINGO_CACHE_TAGS } from "@/shared/data/queries";
-import type { StampName } from "@/shared/domain/bingo/types";
-import { createClient } from "@/shared/data/supabase/server";
+import { BINGO_CACHE_TAGS } from "@/lib/queries";
+import type { StampName } from "@/types/bingo/types";
+import { createClient } from "@/lib/supabase/server";
 
 function invalidateTag(tag: string) {
   updateTag(tag);

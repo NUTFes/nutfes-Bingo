@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { tv } from "tailwind-variants";
 import { ChevronRight } from "lucide-react";
-import { composeTailwindRenderProps } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps } from "@/utils/react-aria-utils";
 
 const disclosure = tv({
   base: "group min-w-50 font-sans rounded-lg text-neutral-900 dark:text-neutral-200",

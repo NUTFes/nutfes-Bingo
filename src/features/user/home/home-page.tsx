@@ -4,9 +4,9 @@ import { useState } from "react";
 
 import { getHomeDisplayBingoNumbers } from "./view-model";
 import { Layout, NumberCardLarge, NumberCardList } from "@/features/user/_shared";
-import { useNumbers } from "@/shared/data/realtime";
-import type { PublicPreferences } from "@/shared/domain/bingo/public-preferences";
-import type { AppStateRow, NumberRow } from "@/shared/domain/bingo/types";
+import { useNumbers } from "@/lib/realtime";
+import type { PublicPreferences } from "@/types/bingo/public-preferences";
+import type { AppStateRow, NumberRow } from "@/types/bingo/types";
 import styles from "@/styles/user/home.module.css";
 
 interface HomePageProps {

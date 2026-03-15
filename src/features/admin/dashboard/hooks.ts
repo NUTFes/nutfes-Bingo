@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { NumberRow } from "@/shared/domain/bingo/types";
+import type { NumberRow } from "@/types/bingo/types";
 
 interface UseDashboardStateOptions {
   initialSurveyUrl: string;

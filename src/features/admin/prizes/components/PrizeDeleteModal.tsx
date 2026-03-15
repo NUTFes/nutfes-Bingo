@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Modal } from "@/components/ui/Modal";
 import { Separator } from "@/components/ui/Separator";
-import { cn } from "@/shared/utils/utils";
+import { cn } from "@/utils/utils";
 
 interface Props {
   isOpened: boolean;

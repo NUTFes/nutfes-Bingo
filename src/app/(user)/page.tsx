@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 import { HomePage } from "@/features/user";
-import { DEFAULT_PUBLIC_PREFERENCES } from "@/shared/domain/bingo/public-preferences";
-import { getAppState, getNumbers } from "@/shared/data/queries";
+import { DEFAULT_PUBLIC_PREFERENCES } from "@/types/bingo/public-preferences";
+import { getAppState, getNumbers } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "ホーム",

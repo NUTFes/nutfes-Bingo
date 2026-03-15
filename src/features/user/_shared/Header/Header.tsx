@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { IoHelpCircleOutline } from "react-icons/io5";
 import { useCallback, useEffect, useRef } from "react";
 
-import { useBingoLanguage } from "@/shared/utils/i18n/provider";
+import { useBingoLanguage } from "@/utils/i18n/provider";
 import styles from "./Header.module.css";
 
 const HELP_SHOWN_KEY = "isHelpTourShown";

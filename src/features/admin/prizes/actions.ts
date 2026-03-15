@@ -1,9 +1,9 @@
 "use server";
 
-import { PRIZE_IMAGES_BUCKET } from "@/shared/domain/bingo/constants";
-import { BINGO_CACHE_TAGS } from "@/shared/data/queries";
-import type { PrizeWithImageUrl } from "@/shared/domain/bingo/types";
-import type { TablesUpdate } from "@/shared/data/database.types";
+import { PRIZE_IMAGES_BUCKET } from "@/types/bingo/constants";
+import { BINGO_CACHE_TAGS } from "@/lib/queries";
+import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import type { TablesUpdate } from "@/types/database.types";
 import {
   createAdminClient,
   invalidateTag,

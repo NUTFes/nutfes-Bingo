@@ -2,8 +2,8 @@ import "server-only";
 
 import { revalidateTag, updateTag } from "next/cache";
 
-import { requireAdmin } from "@/shared/auth/auth";
-import { createClient } from "@/shared/data/supabase/server";
+import { requireAdmin } from "@/lib/auth/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export type AdminSupabaseClient = Awaited<ReturnType<typeof createClient>>;
 

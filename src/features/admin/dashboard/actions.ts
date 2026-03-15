@@ -1,6 +1,6 @@
 "use server";
 
-import { BINGO_CACHE_TAGS } from "@/shared/data/queries";
+import { BINGO_CACHE_TAGS } from "@/lib/queries";
 import { createAdminClient, invalidateTag } from "@/features/admin/_shared/server-actions";
 
 export async function createNumber(number: number) {

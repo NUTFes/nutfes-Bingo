@@ -1,4 +1,4 @@
-import type { NumberRow } from "@/shared/domain/bingo/types";
+import type { NumberRow } from "@/types/bingo/types";
 import styles from "./NumberCardList.module.css";
 import NumberCardSmall from "../NumberCardSmall";
 

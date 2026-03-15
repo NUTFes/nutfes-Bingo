@@ -6,7 +6,7 @@ import {
   composeRenderProps,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
-import { focusRing } from "@/shared/utils/react-aria-utils";
+import { focusRing } from "@/utils/react-aria-utils";
 
 interface LinkProps extends AriaLinkProps {
   variant?: "primary" | "secondary";

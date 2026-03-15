@@ -10,7 +10,7 @@ import {
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
 import { Link } from "@/components/ui/Link";
-import { composeTailwindRenderProps } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps } from "@/utils/react-aria-utils";
 
 export function Breadcrumbs<T extends object>(props: BreadcrumbsProps<T>) {
   return <AriaBreadcrumbs {...props} className={twMerge("flex gap-1", props.className)} />;

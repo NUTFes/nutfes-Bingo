@@ -3,8 +3,8 @@
 import Image from "next/image";
 import classNames from "classnames";
 
-import type { PrizeWithImageUrl } from "@/shared/domain/bingo/types";
-import { useBingoLanguage } from "@/shared/utils/i18n/provider";
+import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import { useBingoLanguage } from "@/utils/i18n/provider";
 import styles from "./PrizeCard.module.css";
 
 interface PrizeCardProps {

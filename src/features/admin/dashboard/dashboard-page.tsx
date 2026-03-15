@@ -3,8 +3,8 @@
 import { AdminHeader, BingoResult } from "@/features/admin/_shared";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion, queue } from "@/components/ui/Toast";
-import { useNumbers } from "@/shared/data/realtime";
-import type { AppStateRow, NumberRow } from "@/shared/domain/bingo/types";
+import { useNumbers } from "@/lib/realtime";
+import type { AppStateRow, NumberRow } from "@/types/bingo/types";
 import JudgementModal from "./components/JudgementModal";
 import UpdateNumberModal from "./components/UpdateNumberModal";
 import { dashboardActions } from "./actions-client";

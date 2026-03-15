@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { en } from "@/shared/utils/i18n/en";
-import { ja } from "@/shared/utils/i18n/ja";
+import { en } from "@/utils/i18n/en";
+import { ja } from "@/utils/i18n/ja";
 
 export type SupportedLanguage = "ja" | "en";
 export type Translations = typeof ja;

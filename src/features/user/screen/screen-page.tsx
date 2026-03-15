@@ -5,8 +5,8 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { getScreenDisplayBingoNumbers } from "./view-model";
 import { NumberCardLarge, NumberCardList, ReachCount } from "@/features/user/_shared";
-import { subscribeStampTriggers, useLatestReachLog, useNumbers } from "@/shared/data/realtime";
-import type { NumberRow, ReachLogRow } from "@/shared/domain/bingo/types";
+import { subscribeStampTriggers, useLatestReachLog, useNumbers } from "@/lib/realtime";
+import type { NumberRow, ReachLogRow } from "@/types/bingo/types";
 import styles from "@/styles/user/screen.module.css";
 
 interface ScreenPageProps {

@@ -11,7 +11,7 @@ import {
 import { ChevronRight } from "lucide-react";
 import { tv } from "tailwind-variants";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { composeTailwindRenderProps, focusRing } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps, focusRing } from "@/utils/react-aria-utils";
 
 const itemStyles = tv({
   extend: focusRing,

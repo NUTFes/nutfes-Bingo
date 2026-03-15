@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 import { PrizesPage } from "@/features/user";
-import { DEFAULT_PUBLIC_PREFERENCES } from "@/shared/domain/bingo/public-preferences";
-import { getAppState, getPrizes } from "@/shared/data/queries";
+import { getAppState, getPrizes } from "@/lib/queries";
+import { DEFAULT_PUBLIC_PREFERENCES } from "@/types/bingo/public-preferences";
 
 export const metadata: Metadata = {
   title: "景品一覧",

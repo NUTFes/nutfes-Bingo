@@ -11,7 +11,7 @@ import {
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { CalendarGridHeader, CalendarHeader } from "@/components/ui/Calendar";
-import { composeTailwindRenderProps, focusRing } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps, focusRing } from "@/utils/react-aria-utils";
 
 export interface RangeCalendarProps<T extends DateValue> extends Omit<
   AriaRangeCalendarProps<T>,

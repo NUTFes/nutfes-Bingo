@@ -7,7 +7,7 @@ import {
   updateNumber,
 } from "./actions";
 import { logout } from "@/features/admin/auth/actions";
-import { toActionResult } from "@/shared/domain/action-result";
+import { toActionResult } from "@/types/action-result";
 
 export const dashboardActions = {
   createNumber: (number: number) => toActionResult(async () => createNumber(number)),

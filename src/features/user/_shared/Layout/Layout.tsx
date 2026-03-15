@@ -17,8 +17,8 @@ import {
   SurveyPromptModal,
   ToggleButton,
 } from "@/features/user/_shared/common";
-import { REACTION_IMAGES } from "@/shared/domain/bingo/constants";
-import { useAppState } from "@/shared/data/realtime";
+import { REACTION_IMAGES } from "@/types/bingo/constants";
+import { useAppState } from "@/lib/realtime";
 import {
   applyPublicTheme,
   DEFAULT_PUBLIC_PREFERENCES,
@@ -27,9 +27,9 @@ import {
   type PublicPreferences,
   parseBooleanPreference,
   resolveDarkModePreference,
-} from "@/shared/domain/bingo/public-preferences";
-import type { AppStateRow } from "@/shared/domain/bingo/types";
-import { BingoLanguageProvider, useBingoLanguage } from "@/shared/utils/i18n/provider";
+} from "@/types/bingo/public-preferences";
+import type { AppStateRow } from "@/types/bingo/types";
+import { BingoLanguageProvider, useBingoLanguage } from "@/utils/i18n/provider";
 import { recordPublicReach, sendReactionStamp } from "@/features/user/actions/bingo-public";
 
 import styles from "./Layout.module.css";

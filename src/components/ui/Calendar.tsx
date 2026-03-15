@@ -16,7 +16,7 @@ import {
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { Button } from "@/components/ui/Button";
-import { composeTailwindRenderProps, focusRing } from "@/shared/utils/react-aria-utils";
+import { composeTailwindRenderProps, focusRing } from "@/utils/react-aria-utils";
 
 const cellStyles = tv({
   extend: focusRing,

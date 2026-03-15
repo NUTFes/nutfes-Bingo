@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { GridLayout, GridList, GridListItem, Size, Virtualizer } from "react-aria-components";
 
-import type { NumberRow } from "@/shared/domain/bingo/types";
+import type { NumberRow } from "@/types/bingo/types";
 import { Separator } from "@/components/ui/Separator";
 
 interface BingoResultProps {

@@ -15,7 +15,7 @@ import {
   composeRenderProps,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
-import { focusRing } from "@/shared/utils/react-aria-utils";
+import { focusRing } from "@/utils/react-aria-utils";
 import { twMerge } from "tailwind-merge";
 
 const tabsStyles = tv({

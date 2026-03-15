@@ -2,8 +2,8 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 
-import type { Tables } from "@/shared/data/database.types";
-import { createClient } from "@/shared/data/supabase/server";
+import type { Tables } from "@/types/database.types";
+import { createClient } from "@/lib/supabase/server";
 
 export type Profile = Tables<"profiles">;
 
