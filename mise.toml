@@ -10,9 +10,9 @@ run = "pnpm install"
 description = "Start Next.js dev server"
 run = "pnpm dev"
 
-[tasks.lint]
-description = "Run oxlint"
-run = "pnpm lint"
+[tasks.check]
+description = "Run oxc"
+run = "pnpm fmt && pnpm lint"
 
 [tasks.build]
 description = "Run production build"
