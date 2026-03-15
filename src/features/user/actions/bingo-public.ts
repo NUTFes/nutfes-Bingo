@@ -1,14 +1,13 @@
 "use server";
 
-import { revalidateTag, updateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 
 import { BINGO_CACHE_TAGS } from "@/lib/queries";
 import type { StampName } from "@/types/bingo/types";
 import { createClient } from "@/lib/supabase/server";
 
 function invalidateTag(tag: string) {
-  updateTag(tag);
-  revalidateTag(tag, "max");
+  revalidateTag(tag, "page");
 }
 
 export async function sendReactionStamp(name: StampName) {

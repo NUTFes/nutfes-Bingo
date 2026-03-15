@@ -95,11 +95,10 @@ export function usePrizes(initialPrizes: PrizeWithImageUrl[]) {
           }
 
           if (payload.eventType === "UPDATE") {
+            const newData = payload.new as PrizeRow;
             return prev
               .map((prize) =>
-                prize.id === (payload.new as PrizeRow).id
-                  ? toPrizeWithImageUrl(payload.new as PrizeRow)
-                  : prize,
+                prize.id === newData.id ? toPrizeWithImageUrl({ ...prize, ...newData }) : prize,
               )
               .sort((a, b) => a.id - b.id);
           }

@@ -59,7 +59,15 @@ function resolvePrizeImageUrl(imagePath: string | null): string | null {
     return imagePath;
   }
 
-  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${PRIZE_IMAGES_BUCKET}/${imagePath}`;
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const isServer = typeof window === "undefined";
+  let resolvedBaseUrl = baseUrl;
+
+  if (isServer && resolvedBaseUrl) {
+    resolvedBaseUrl = resolvedBaseUrl.replace(/127\.0\.0\.1|localhost/, "host.docker.internal");
+  }
+
+  return `${resolvedBaseUrl}/storage/v1/object/public/${PRIZE_IMAGES_BUCKET}/${imagePath}`;
 }
 
 export async function getNumbers(): Promise<NumberRow[]> {

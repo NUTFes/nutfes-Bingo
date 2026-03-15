@@ -95,7 +95,6 @@ export const PrizeResult = ({
     } catch (error) {
       console.error(error);
       showToast({ title: "更新失敗", description: "景品の更新に失敗しました。" });
-      throw error;
     } finally {
       setSelected(null);
       setIsEditOpen(false);
