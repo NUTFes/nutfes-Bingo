@@ -8,7 +8,7 @@ import {
   composeRenderProps,
 } from "react-aria-components";
 import { ColorSwatch } from "@/components/ui/ColorSwatch";
-import { focusRing } from "@/lib/react-aria-utils";
+import { focusRing } from "@/shared/utils/react-aria-utils";
 import { tv } from "tailwind-variants";
 
 const pickerStyles = tv({

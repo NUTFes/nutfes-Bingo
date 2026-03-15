@@ -3,7 +3,7 @@ import { Check, Minus } from "lucide-react";
 import React from "react";
 import { Checkbox as AriaCheckbox, CheckboxProps, composeRenderProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
-import { focusRing } from "@/lib/react-aria-utils";
+import { focusRing } from "@/shared/utils/react-aria-utils";
 
 const checkboxStyles = tv({
   base: "flex gap-2 items-center group font-sans text-sm transition relative [-webkit-tap-highlight-color:transparent]",

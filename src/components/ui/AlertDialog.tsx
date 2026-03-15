@@ -43,7 +43,6 @@ export function AlertDialog({
             </Button>
             <Button
               variant={variant === "destructive" ? "destructive" : "primary"}
-              autoFocus
               onPress={chain(onAction, close)}
             >
               {actionLabel}

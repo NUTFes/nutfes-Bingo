@@ -41,12 +41,7 @@ export function CommandPalette<T extends object>(props: CommandPaletteProps<T>) 
     <Modal isDismissable isOpen={isOpen} onOpenChange={onOpenChange}>
       <Dialog className="flex flex-col max-h-[inherit]">
         <AriaAutocomplete filter={contains} {...props}>
-          <SearchField
-            autoFocus
-            aria-label="Search commands"
-            placeholder="Search commands"
-            className="m-2"
-          />
+          <SearchField aria-label="Search commands" placeholder="Search commands" className="m-2" />
           <Menu
             {...props}
             className="flex-1 min-h-0"

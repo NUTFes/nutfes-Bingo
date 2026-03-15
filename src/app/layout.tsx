@@ -1,15 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Noto_Sans_JP } from "next/font/google";
-import Script from "next/script";
-import { ThemeProvider } from "next-themes";
-
-import {
-  DEFAULT_PUBLIC_PREFERENCES,
-  publicThemeBootstrapScript,
-} from "@/lib/bingo/public-preferences";
-
-import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -40,14 +31,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className={`${notoSansJp.variable} ${silom.variable} font-sans antialiased`}>
-        <Script id="public-theme-bootstrap" strategy="beforeInteractive">
-          {publicThemeBootstrapScript(DEFAULT_PUBLIC_PREFERENCES.isDarkMode)}
-        </Script>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          {children}
-        </ThemeProvider>
-      </body>
+      <body className={`${notoSansJp.variable} ${silom.variable}`}>{children}</body>
     </html>
   );
 }

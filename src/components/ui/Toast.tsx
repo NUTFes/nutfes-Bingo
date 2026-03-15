@@ -10,7 +10,7 @@ import {
   Text,
 } from "react-aria-components";
 import { XIcon } from "lucide-react";
-import { composeTailwindRenderProps } from "@/lib/react-aria-utils";
+import { composeTailwindRenderProps } from "@/shared/utils/react-aria-utils";
 import { flushSync } from "react-dom";
 
 // Define the type for your toast content. This interface defines the properties of your toast content, affecting what you

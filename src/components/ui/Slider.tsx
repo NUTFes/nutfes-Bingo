@@ -9,7 +9,7 @@ import {
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { Label } from "@/components/ui/Field";
-import { composeTailwindRenderProps, focusRing } from "@/lib/react-aria-utils";
+import { composeTailwindRenderProps, focusRing } from "@/shared/utils/react-aria-utils";
 
 const trackStyles = tv({
   base: "rounded-full",
@@ -98,7 +98,10 @@ export function Slider<T extends number | number[]>({
             ) : null}
             {state.values.map((_, i) => (
               <SliderThumb
-                key={i}
+                key={
+                  thumbLabels?.[i] ??
+                  (i === 0 ? "thumb-start" : i === 1 ? "thumb-end" : `thumb-${i + 1}`)
+                }
                 index={i}
                 aria-label={thumbLabels?.[i]}
                 className={thumbStyles}

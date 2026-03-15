@@ -15,7 +15,7 @@ import {
 import { twMerge } from "tailwind-merge";
 import { tv } from "tailwind-variants";
 import { Description, Label } from "@/components/ui/Field";
-import { focusRing } from "@/lib/react-aria-utils";
+import { focusRing } from "@/shared/utils/react-aria-utils";
 
 const colors = {
   gray: "bg-white text-neutral-600 border-neutral-200 hover:border-neutral-300 dark:bg-neutral-900 dark:text-neutral-300 dark:border-neutral-600 dark:hover:border-neutral-500",

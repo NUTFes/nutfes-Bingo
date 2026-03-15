@@ -8,7 +8,7 @@ import {
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { Label } from "@/components/ui/Field";
-import { composeTailwindRenderProps } from "@/lib/react-aria-utils";
+import { composeTailwindRenderProps } from "@/shared/utils/react-aria-utils";
 import { ColorThumb } from "@/components/ui/ColorThumb";
 
 const trackStyles = tv({

@@ -1,0 +1,20 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { TiArrowBack } from "react-icons/ti";
+
+import IconFramework from "@/features/user/_shared/icons/IconFramework/IconFramework";
+
+interface BackIconProps {
+  id?: string;
+}
+
+const BackIcon = ({ id }: BackIconProps) => {
+  const router = useRouter();
+
+  return (
+    <IconFramework icon={<TiArrowBack />} text="Back" onClick={() => router.push("/")} id={id} />
+  );
+};
+
+export default BackIcon;

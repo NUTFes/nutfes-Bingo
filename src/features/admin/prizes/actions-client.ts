@@ -1,0 +1,10 @@
+import { createPrize, deletePrize, togglePrizeWon, updatePrize } from "./actions";
+import { toActionResult } from "@/shared/domain/action-result";
+
+export const prizeActions = {
+  createPrize: (formData: FormData) => toActionResult(async () => createPrize(formData)),
+  updatePrize: (formData: FormData) => toActionResult(async () => updatePrize(formData)),
+  togglePrizeWon: (id: number, isWon: boolean) =>
+    toActionResult(async () => togglePrizeWon(id, isWon)),
+  deletePrize: (id: number) => toActionResult(async () => deletePrize(id)),
+};
