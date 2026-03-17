@@ -8,7 +8,12 @@ import { createClient } from "@/lib/supabase/server";
 export type Profile = Tables<"profiles">;
 
 function isMissingSessionError(errorMessage: string) {
-  return errorMessage.toLowerCase().includes("auth session missing");
+  const msg = errorMessage.toLowerCase();
+  return (
+    msg.includes("auth session missing") ||
+    msg.includes("user from sub claim in jwt does not exist") ||
+    msg.includes("invalid refresh token")
+  );
 }
 
 export async function getCurrentUser() {

@@ -20,6 +20,9 @@ export async function updateSession(request: NextRequest) {
     supabaseUrl,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      auth: {
+        storageKey: "nutfes-bingo-auth-token",
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -35,11 +38,15 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
+  if (!isProtectedPath(request.nextUrl.pathname)) {
+    return supabaseResponse;
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (isProtectedPath(request.nextUrl.pathname) && !user) {
+  if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     url.searchParams.set("redirectTo", request.nextUrl.pathname);

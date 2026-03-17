@@ -11,6 +11,9 @@ export async function createClient() {
     supabaseUrl,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      auth: {
+        storageKey: "nutfes-bingo-auth-token",
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();

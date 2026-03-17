@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
 
-RUN npm install -g pnpm && pnpm i --frozen-lockfile --ignore-scripts --prefer-offline
+RUN corepack enable pnpm && pnpm i --frozen-lockfile --ignore-scripts --prefer-offline
 
 COPY . .
 
