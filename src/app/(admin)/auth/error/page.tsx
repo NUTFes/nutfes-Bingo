@@ -2,16 +2,19 @@ import { Suspense } from "react";
 
 import { Link } from "@/components/ui/Link";
 
-async function ErrorContent({ searchParams }: { searchParams: Promise<{ error: string }> }) {
-  const params = await searchParams;
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  admin_role_required:
+    "このアカウントには管理者権限がありません。Supabase 上での権限付与を運用担当へ依頼してください。",
+};
 
-  return params?.error ? (
-    <p
-      role="alert"
-      aria-live="polite"
-      className="rounded-md border border-rose-500/40 bg-rose-500/15 px-3 py-2 text-sm text-rose-200"
-    >
-      エラーコード: {params.error}
+async function ErrorContent({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const params = await searchParams;
+  const errorCode = params?.error;
+  const message = errorCode ? AUTH_ERROR_MESSAGES[errorCode] : undefined;
+
+  return errorCode ? (
+    <p role="alert" aria-live="polite" className="text-sm text-zinc-300">
+      {message ?? `エラーコード: ${errorCode}`}
     </p>
   ) : (
     <p role="alert" aria-live="polite" className="text-sm text-zinc-300">
@@ -20,7 +23,7 @@ async function ErrorContent({ searchParams }: { searchParams: Promise<{ error: s
   );
 }
 
-export default function Page({ searchParams }: { searchParams: Promise<{ error: string }> }) {
+export default function Page({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   return (
     <main className="flex min-h-svh items-center bg-zinc-950 px-4 py-6 text-zinc-100 sm:px-6 sm:py-10">
       <section className="mx-auto w-full max-w-xl">

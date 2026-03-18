@@ -11,7 +11,7 @@ export default function Page() {
             </p>
             <p className="text-2xl font-bold tracking-tight">アカウント登録を受け付けました</p>
             <p className="text-sm leading-relaxed text-zinc-300">
-              管理権限はアプリ管理者が Supabase
+              メール確認とパスワードリセットは運用しません。管理権限はアプリ管理者が Supabase
               上で手動付与します。必要な場合は運用担当へ連絡してください。
             </p>
           </div>

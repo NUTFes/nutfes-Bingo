@@ -64,6 +64,11 @@ sudo cp ./caddy-local-root.crt /usr/local/share/ca-certificates/caddy-local-root
 sudo update-ca-certificates
 ```
 
+## Admin 認証の運用方針
+
+- メールサーバーは使用しないため、確認メール経由の運用やパスワードリセット/更新機能は提供しません。
+- 管理者権限への昇格は Supabase 側（`profiles.role = 'admin'`）で手動付与します。
+
 ## pnpm コマンド
 
 ```bash

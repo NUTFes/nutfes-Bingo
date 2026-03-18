@@ -65,7 +65,7 @@ export async function requireAdmin() {
   const profile = await getCurrentProfile();
 
   if (!profile || profile.role !== "admin") {
-    redirect("/auth/error");
+    redirect("/auth/error?error=admin_role_required");
   }
 
   return {

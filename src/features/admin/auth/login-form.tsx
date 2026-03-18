@@ -19,36 +19,39 @@ function sanitizeRedirectTo(redirectTo: string | undefined, fallback = "/admin")
 
 export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsPending(true);
-    setErrorMessage(null);
-
-    const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "").trim();
-    const password = String(formData.get("password") ?? "").trim();
     const safeRedirectTo = sanitizeRedirectTo(redirectTo);
+    const normalizedEmail = email.trim();
 
-    if (!email || !password) {
+    if (!normalizedEmail || !password) {
       setErrorMessage("ログインに失敗しました");
-      setIsPending(false);
       return;
     }
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setIsPending(true);
+    setErrorMessage(null);
 
-    if (error) {
-      setErrorMessage(error.message);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+      if (error) {
+        throw error;
+      }
+      router.push(safeRedirectTo);
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : "ログインに失敗しました");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    router.push(safeRedirectTo);
-    router.refresh();
   }
 
   return (
@@ -73,6 +76,8 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
               label="メールアドレス"
               placeholder="admin@example.com"
               autoComplete="email"
+              value={email}
+              onChange={setEmail}
               isRequired
             />
             <TextField
@@ -80,9 +85,10 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
               type="password"
               label="パスワード"
               autoComplete="current-password"
+              value={password}
+              onChange={setPassword}
               isRequired
             />
-            <input type="hidden" name="redirectTo" value={redirectTo ?? ""} />
             <p
               role="alert"
               aria-live="polite"

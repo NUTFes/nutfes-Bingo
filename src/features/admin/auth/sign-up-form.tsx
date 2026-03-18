@@ -11,43 +11,41 @@ import { createClient } from "@/lib/supabase/client";
 
 export function SignUpForm() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [repeatPassword, setRepeatPassword] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsPending(true);
-    setErrorMessage(null);
-
-    const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "").trim();
-    const password = String(formData.get("password") ?? "").trim();
-    const repeatPassword = String(formData.get("repeatPassword") ?? "").trim();
+    const normalizedEmail = email.trim();
 
     if (password !== repeatPassword) {
       setErrorMessage("パスワードが一致しません");
-      setIsPending(false);
+      return;
+    }
+
+    if (!normalizedEmail || !password) {
+      setErrorMessage("アカウント登録に失敗しました");
       return;
     }
 
     const supabase = createClient();
-    const origin = window.location.origin;
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent("/auth/login")}`,
-      },
-    });
+    setIsPending(true);
+    setErrorMessage(null);
 
-    if (error) {
-      setErrorMessage(error.message);
+    try {
+      const { error } = await supabase.auth.signUp({ email: normalizedEmail, password });
+      if (error) {
+        throw error;
+      }
+      router.push("/auth/sign-up-success");
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : "アカウント登録に失敗しました");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    router.push("/auth/sign-up-success");
-    router.refresh();
   }
 
   return (
@@ -61,7 +59,7 @@ export function SignUpForm() {
             管理者アカウント登録
           </h2>
           <p className="text-sm leading-relaxed text-zinc-300">
-            管理者アカウント作成後、確認メールから認証を完了してください。
+            メール確認は運用しません。アカウント作成後、運用担当がSupabaseで管理者権限を手動付与します。
           </p>
         </div>
         <div className="p-6 sm:p-7">
@@ -72,6 +70,8 @@ export function SignUpForm() {
               label="メールアドレス"
               placeholder="admin@example.com"
               autoComplete="email"
+              value={email}
+              onChange={setEmail}
               isRequired
             />
             <TextField
@@ -79,6 +79,8 @@ export function SignUpForm() {
               type="password"
               label="パスワード"
               autoComplete="new-password"
+              value={password}
+              onChange={setPassword}
               isRequired
             />
             <TextField
@@ -86,6 +88,8 @@ export function SignUpForm() {
               type="password"
               label="パスワード（確認）"
               autoComplete="new-password"
+              value={repeatPassword}
+              onChange={setRepeatPassword}
               isRequired
             />
             <p
