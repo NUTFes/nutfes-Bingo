@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import { SyntheticEvent, useReducer } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/Button";
@@ -17,40 +17,75 @@ function sanitizeRedirectTo(redirectTo: string | undefined, fallback = "/admin")
   return redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : fallback;
 }
 
+type State = {
+  email: string;
+  password: string;
+  isPending: boolean;
+  errorMessage: string | null;
+};
+
+type Action =
+  | { type: "SET_EMAIL"; payload: string }
+  | { type: "SET_PASSWORD"; payload: string }
+  | { type: "SET_PENDING"; payload: boolean }
+  | { type: "SET_ERROR"; payload: string | null };
+
+const initialState: State = {
+  email: "",
+  password: "",
+  isPending: false,
+  errorMessage: null,
+};
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "SET_EMAIL":
+      return { ...state, email: action.payload };
+    case "SET_PASSWORD":
+      return { ...state, password: action.payload };
+    case "SET_PENDING":
+      return { ...state, isPending: action.payload };
+    case "SET_ERROR":
+      return { ...state, errorMessage: action.payload };
+    default:
+      return state;
+  }
+}
+
 export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isPending, setIsPending] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     const safeRedirectTo = sanitizeRedirectTo(redirectTo);
-    const normalizedEmail = email.trim();
+    const normalizedEmail = state.email.trim();
 
-    if (!normalizedEmail || !password) {
-      setErrorMessage("ログインに失敗しました");
+    if (!normalizedEmail || !state.password) {
+      dispatch({ type: "SET_ERROR", payload: "ログインに失敗しました" });
       return;
     }
 
     const supabase = createClient();
-    setIsPending(true);
-    setErrorMessage(null);
+    dispatch({ type: "SET_PENDING", payload: true });
+    dispatch({ type: "SET_ERROR", payload: null });
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
-        password,
+        password: state.password,
       });
       if (error) {
         throw error;
       }
       router.push(safeRedirectTo);
     } catch (error: unknown) {
-      setErrorMessage(error instanceof Error ? error.message : "ログインに失敗しました");
+      dispatch({
+        type: "SET_ERROR",
+        payload: error instanceof Error ? error.message : "ログインに失敗しました",
+      });
     } finally {
-      setIsPending(false);
+      dispatch({ type: "SET_PENDING", payload: false });
     }
   }
 
@@ -76,8 +111,8 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
               label="メールアドレス"
               placeholder="admin@example.com"
               autoComplete="email"
-              value={email}
-              onChange={setEmail}
+              value={state.email}
+              onChange={(value) => dispatch({ type: "SET_EMAIL", payload: value })}
               isRequired
             />
             <TextField
@@ -85,22 +120,22 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
               type="password"
               label="パスワード"
               autoComplete="current-password"
-              value={password}
-              onChange={setPassword}
+              value={state.password}
+              onChange={(value) => dispatch({ type: "SET_PASSWORD", payload: value })}
               isRequired
             />
             <p
               role="alert"
               aria-live="polite"
               className={
-                errorMessage
+                state.errorMessage
                   ? "rounded-md border border-red-500/40 bg-red-500/15 px-3 py-2 text-sm text-red-200"
                   : "min-h-6 text-sm leading-6 text-transparent"
               }
             >
-              {errorMessage ?? "\u00a0"}
+              {state.errorMessage ?? "\u00a0"}
             </p>
-            <Button type="submit" className="h-11 w-full font-medium" isPending={isPending}>
+            <Button type="submit" className="h-11 w-full font-medium" isPending={state.isPending}>
               ログイン
             </Button>
             <p className="text-center text-sm leading-relaxed text-zinc-300">
