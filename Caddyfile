@@ -1,0 +1,11 @@
+nutfes-bingo.localhost {
+	tls internal
+
+	handle_path /supabase/* {
+		reverse_proxy supabase_kong_nutfes-bingo:8000
+	}
+
+	handle {
+		reverse_proxy app:3000
+	}
+}

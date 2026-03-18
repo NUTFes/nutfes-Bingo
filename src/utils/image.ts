@@ -22,19 +22,7 @@ export function resolvePrizeImageUrl(imagePath: string | null): string | null {
     return imagePath;
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const internalUrl = process.env.SUPABASE_INTERNAL_URL;
-  const isServer = typeof window === "undefined";
-
-  let resolvedBaseUrl = internalUrl || baseUrl;
-
-  if (
-    isServer &&
-    resolvedBaseUrl &&
-    (resolvedBaseUrl.includes("127.0.0.1") || resolvedBaseUrl.includes("localhost"))
-  ) {
-    resolvedBaseUrl = resolvedBaseUrl.replace(/127\.0\.0\.1|localhost/, "host.docker.internal");
-  }
+  const resolvedBaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
 
   const encodedPath = imagePath
     .split("/")

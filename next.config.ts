@@ -1,48 +1,23 @@
 import type { NextConfig } from "next";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const parsedSupabaseUrl = supabaseUrl && URL.canParse(supabaseUrl) ? new URL(supabaseUrl) : null;
+const supabaseBasePath = parsedSupabaseUrl?.pathname.replace(/\/$/, "") ?? "";
 
 const nextConfig: NextConfig = {
   output: "standalone",
   cacheComponents: true,
   images: {
-    remotePatterns: [
-      {
-        protocol: "http",
-        hostname: "supabase_kong_nutfes-bingo",
-        port: "8000",
-        pathname: "/storage/v1/object/public/**",
-      },
-      {
-        protocol: "http",
-        hostname: "host.docker.internal",
-        port: "54321",
-        pathname: "/storage/v1/object/public/**",
-      },
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
-        port: "54321",
-        pathname: "/storage/v1/object/public/**",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "54321",
-        pathname: "/storage/v1/object/public/**",
-      },
-      ...(supabaseUrl && URL.canParse(supabaseUrl)
-        ? [
-            {
-              protocol: new URL(supabaseUrl).protocol.replace(":", "") as "http" | "https",
-              hostname: new URL(supabaseUrl).hostname,
-              port: new URL(supabaseUrl).port,
-              pathname: "/storage/v1/object/public/**",
-            },
-          ]
-        : []),
-    ],
-    dangerouslyAllowLocalIP: true,
+    remotePatterns: parsedSupabaseUrl
+      ? [
+          {
+            protocol: parsedSupabaseUrl.protocol.replace(":", "") as "http" | "https",
+            hostname: parsedSupabaseUrl.hostname,
+            port: parsedSupabaseUrl.port,
+            pathname: `${supabaseBasePath}/storage/v1/object/public/**`,
+          },
+        ]
+      : [],
   },
 };
 

@@ -23,7 +23,7 @@ export const BINGO_CACHE_TAGS = {
 } as const;
 
 function createDataClient() {
-  const supabaseUrl = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   return createSupabaseClient<Database>(
     supabaseUrl,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
