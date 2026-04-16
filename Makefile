@@ -6,18 +6,20 @@ run:
 down:
 	docker compose down
 
+# Apply database migrations first, then metadata to avoid temporary inconsistencies
 db-apply:
-	docker compose exec api hasura metadata apply
 	docker compose exec api hasura migrate apply --database-name default
+	docker compose exec api hasura metadata apply
 	docker compose exec api hasura metadata reload
 
 db-export:
 	docker compose exec api hasura metadata export
 	docker compose exec api hasura migrate create "auto" --from-server --database-name default
 
+# Production apply order aligned with best practice (migrations first)
 db-apply-prod:
-	docker compose -f docker-compose.prod.yml exec api hasura metadata apply
 	docker compose -f docker-compose.prod.yml exec api hasura migrate apply --database-name default
+	docker compose -f docker-compose.prod.yml exec api hasura metadata apply
 	docker compose -f docker-compose.prod.yml exec api hasura metadata reload
 
 run-prod:
