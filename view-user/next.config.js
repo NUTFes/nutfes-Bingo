@@ -26,19 +26,29 @@ const nextConfig = {
     ],
     disableStaticImages: true,
   },
-  webpack: (config) => {
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: [
-        {
-          loader: "@svgr/webpack",
-          options: {
-            svgo: false,
-          },
+  experimental: {
+    turbo: {
+      rules: {
+        "*.svg": {
+          loaders: ["@svgr/webpack"],
+          as: "*.js",
         },
+      },
+      resolveAlias: {
+        underscore: "lodash",
+        mocha: { browser: "mocha/browser-entry.js" },
+      },
+      resolveExtensions: [
+        ".mdx",
+        ".tsx",
+        ".ts",
+        ".jsx",
+        ".js",
+        ".mjs",
+        ".json",
       ],
-    });
-    return config;
+      moduleIdStrategy: "deterministic",
+    },
   },
 };
 
