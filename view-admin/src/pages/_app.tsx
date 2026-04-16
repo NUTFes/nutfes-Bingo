@@ -80,7 +80,7 @@ export default function App({
   router,
 }: AppProps) {
   useEffect(() => {
-    if (!session) {
+    if (!session && router.pathname !== "/") {
       router.push("/");
     }
   }, [router, session]);
