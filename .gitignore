@@ -5,3 +5,6 @@ settings/
 .env
 
 tmp/*
+
+/loadtest/results/*
+/loadtest/node_modules
