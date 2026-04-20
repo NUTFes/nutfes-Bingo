@@ -32,29 +32,43 @@ jobs:
             infra:
               - 'docker-compose.*'
               - '**/*Dockerfile'
-
-      # ブランチ名からラベル名を取得
-      - uses: actions/github-script@v6
-        id: label_name
-        with:
-          github-token: ${{ env.GH_TOKEN }}
-          script: |
-            const env = process.env;
-            const branchType = env.PR_BRANCH.split('/')[0]
-            const branchTypeToLabel = {
-                feature: 'enhancement',
-                fix: 'bug',
-                hotfix: 'bug',
-              };
-            core.setOutput('label_name', branchTypeToLabel[branchType] || '')
+            src:
+              - 'src/components/common/**'
+              - 'src/gql/**'
+              - 'src/pages/**'
+              - 'src/styles/**'
+              - 'src/type/**'
 
       # PRにラベルを付与
       - name: Auto frontend labeling
         if: steps.changes.outputs.frontend == 'true'
-        run: gh pr edit ${{ env.PR_NUMBER }} --add-label frontend
+        run: |
+          if [[ "${{ steps.changes.outputs.frontend }}" == *"view-user/"* ]]; then
+            gh pr edit ${{ env.PR_NUMBER }} --add-label "frontend-user"
+          elif [[ "${{ steps.changes.outputs.frontend }}" == *"view-admin/"* ]]; then
+            gh pr edit ${{ env.PR_NUMBER }} --add-label "frontend-admin"
+          fi
       - name: Auto backend labeling
         if: steps.changes.outputs.backend == 'true'
-        run: gh pr edit ${{ env.PR_NUMBER }} --add-label backend
+        run: |
+          if [[ "${{ steps.changes.outputs.backend }}" == *"hasura/"* ]]; then
+            gh pr edit ${{ env.PR_NUMBER }} --add-label "backend-hasura"
+          fi
+      - name: Auto src component common labeling
+        if: steps.changes.outputs.src == 'true' && "${{ steps.changes.outputs.src }}" == *"src/components/"*
+        run: gh pr edit ${{ env.PR_NUMBER }} --add-label "component"
+      - name: Auto src gql labeling
+        if: steps.changes.outputs.src == 'true' && "${{ steps.changes.outputs.src }}" == *"src/gql/"*
+        run: gh pr edit ${{ env.PR_NUMBER }} --add-label "gql"
+      - name: Auto src pages labeling
+        if: steps.changes.outputs.src == 'true' && "${{ steps.changes.outputs.src }}" == *"src/pages/"*
+        run: gh pr edit ${{ env.PR_NUMBER }} --add-label "pages"
+      - name: Auto src styles labeling
+        if: steps.changes.outputs.src == 'true' && "${{ steps.changes.outputs.src }}" == *"src/styles/"*
+        run: gh pr edit ${{ env.PR_NUMBER }} --add-label "styles"
+      - name: Auto src type labeling
+        if: steps.changes.outputs.src == 'true' && ("${{ steps.changes.outputs.src }}" == *"src/type/" || "${{ steps.changes.outputs.src }}" == *"src/types/" ) && "${{ steps.changes.outputs.src }}" != *"view-user/"*
+        run: gh pr edit ${{ env.PR_NUMBER }} --add-label "type"
       - name: Auto infra labeling
         if: steps.changes.outputs.infra == 'true'
         run: gh pr edit ${{ env.PR_NUMBER }} --add-label infra
