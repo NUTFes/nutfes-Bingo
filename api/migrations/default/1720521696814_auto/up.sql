@@ -1,4 +1,40 @@
 SET check_function_bodies = false;
+CREATE TABLE public.prizes (
+    id integer NOT NULL,
+    is_won boolean DEFAULT false NOT NULL,
+    image_id integer DEFAULT '-1'::integer NOT NULL,
+    name_jp text DEFAULT '""'::text NOT NULL,
+    name_en text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+COMMENT ON TABLE public.prizes IS 'ビンゴの景品データを格納';
+COMMENT ON COLUMN public.prizes.is_won IS '当選した景品はTrueになる';
+COMMENT ON COLUMN public.prizes.image_id IS 'imagesのidが入る';
+COMMENT ON COLUMN public.prizes.name_jp IS '景品の日本語名';
+COMMENT ON COLUMN public.prizes.name_en IS '景品の英語名';
+CREATE FUNCTION public.create_prize_with_image(p_is_won boolean, p_name_jp text, p_name_en text, p_bucket_name text, p_file_name text, p_file_type text) RETURNS SETOF public.prizes
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  new_image_id int;
+  new_prize_id int;
+BEGIN
+  -- images テーブルにレコードを挿入し、挿入したレコードのIDを取得
+  INSERT INTO public.images(bucket_name, file_name, file_type, created_at, updated_at)
+  VALUES(p_bucket_name, p_file_name, p_file_type, now(), now())
+  RETURNING id INTO new_image_id;
+  -- prizes テーブルにレコードを挿入し、挿入したレコードのIDを取得
+  INSERT INTO public.prizes(is_won, image_id, name_jp, name_en, created_at, updated_at)
+  VALUES(p_is_won, new_image_id, p_name_jp, p_name_en, now(), now())
+  RETURNING id INTO new_prize_id;
+  -- public.prizes テーブルから、挿入したレコードを返す
+  RETURN QUERY
+    SELECT *
+    FROM public.prizes
+    WHERE id = new_prize_id;
+END;
+$$;
 CREATE TABLE public.reach_logs (
     id integer NOT NULL,
     status boolean DEFAULT false NOT NULL,
@@ -58,6 +94,28 @@ BEGIN
   WHERE id = (SELECT id FROM reach_logs ORDER BY created_at DESC LIMIT 1);
 END;
 $$;
+CREATE FUNCTION public.insert_prize_with_image(p_is_won boolean, p_name_jp text, p_name_en text, p_bucket_name text, p_file_name text, p_file_type text) RETURNS SETOF public.prizes
+    LANGUAGE plpgsql STABLE
+    AS $$
+DECLARE
+  new_image_id int;
+  new_prize_id int;
+BEGIN
+  -- images テーブルにレコードを挿入し、挿入したレコードのIDを取得
+  INSERT INTO public.images(bucket_name, file_name, file_type, created_at, updated_at)
+  VALUES(p_bucket_name, p_file_name, p_file_type, now(), now())
+  RETURNING id INTO new_image_id;
+  -- prizes テーブルにレコードを挿入し、挿入したレコードのIDを取得
+  INSERT INTO public.prizes(is_won, image_id, name_jp, name_en, created_at, updated_at)
+  VALUES(p_is_won, new_image_id, p_name_jp, p_name_en, now(), now())
+  RETURNING id INTO new_prize_id;
+  -- public.prizes テーブルから、挿入したレコードを返す
+  RETURN QUERY
+    SELECT *
+    FROM public.prizes
+    WHERE id = new_prize_id;
+END;
+$$;
 CREATE FUNCTION public.set_current_timestamp_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -114,20 +172,6 @@ CREATE SEQUENCE public.numbers_id_seq
     NO MAXVALUE
     CACHE 1;
 ALTER SEQUENCE public.numbers_id_seq OWNED BY public.numbers.id;
-CREATE TABLE public.prizes (
-    id integer NOT NULL,
-    is_won boolean DEFAULT false NOT NULL,
-    image_id integer DEFAULT '-1'::integer NOT NULL,
-    name_jp text DEFAULT '""'::text NOT NULL,
-    name_en text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
-);
-COMMENT ON TABLE public.prizes IS 'ビンゴの景品データを格納';
-COMMENT ON COLUMN public.prizes.is_won IS '当選した景品はTrueになる';
-COMMENT ON COLUMN public.prizes.image_id IS 'imagesのidが入る';
-COMMENT ON COLUMN public.prizes.name_jp IS '景品の日本語名';
-COMMENT ON COLUMN public.prizes.name_en IS '景品の英語名';
 CREATE SEQUENCE public.prizes_id_seq
     AS integer
     START WITH 1

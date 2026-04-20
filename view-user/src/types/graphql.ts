@@ -595,6 +595,8 @@ export type NumbersBoolExp = {
 
 /** unique or primary key constraints on table "numbers" */
 export enum NumbersConstraint {
+  /** unique or primary key constraint on columns "number" */
+  numbersNumberKey = "numbers_number_key",
   /** unique or primary key constraint on columns "id" */
   numbersPkey = "numbers_pkey",
 }
@@ -1547,9 +1549,20 @@ export type TimestamptzComparisonExp = {
   _nin?: InputMaybe<Array<Scalars["timestamptz"]["input"]>>;
 };
 
+export type CreatePrizeWithImageArgs = {
+  p_bucket_name?: InputMaybe<Scalars["String"]["input"]>;
+  p_file_name?: InputMaybe<Scalars["String"]["input"]>;
+  p_file_type?: InputMaybe<Scalars["String"]["input"]>;
+  p_is_won?: InputMaybe<Scalars["Boolean"]["input"]>;
+  p_name_en?: InputMaybe<Scalars["String"]["input"]>;
+  p_name_jp?: InputMaybe<Scalars["String"]["input"]>;
+};
+
 /** mutation root */
 export type MutationRoot = {
   __typename?: "mutation_root";
+  /** execute VOLATILE function "create_prize_with_image" which returns "prizes" */
+  createPrizeWithImage: Array<Prizes>;
   /** execute VOLATILE function "decrement_latest_reach_log" which returns "reach_logs" */
   decrementLatestReachLog: Array<ReachLogs>;
   /** delete data from the table: "events" */
@@ -1634,6 +1647,16 @@ export type MutationRoot = {
   updateStampTriggers?: Maybe<StampTriggersMutationResponse>;
   /** update multiples rows of table: "stamp_triggers" */
   updateStampTriggersMany?: Maybe<Array<Maybe<StampTriggersMutationResponse>>>;
+};
+
+/** mutation root */
+export type MutationRootCreatePrizeWithImageArgs = {
+  args: CreatePrizeWithImageArgs;
+  distinctOn?: InputMaybe<Array<PrizesSelectColumn>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  orderBy?: InputMaybe<Array<PrizesOrderBy>>;
+  where?: InputMaybe<PrizesBoolExp>;
 };
 
 /** mutation root */

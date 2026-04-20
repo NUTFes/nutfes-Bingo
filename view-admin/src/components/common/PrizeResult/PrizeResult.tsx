@@ -29,7 +29,7 @@ import PrizeEditModal from "@/components/common/PrizeEditModal/PrizeEditModal";
 
 interface PrizeResultProps {
   prizeResult: GetListPrizesQuery["prizes"];
-  setBingoPrize: React.Dispatch<
+  setBingoPrize?: React.Dispatch<
     React.SetStateAction<GetListPrizesQuery["prizes"]>
   >;
   showOverlay: boolean;
@@ -76,11 +76,13 @@ export const PrizeResult = (props: PrizeResultProps) => {
 
   const handleToggleChange = (id: number, isWon: boolean) => {
     updatePrize({ variables: { id: id, isWon: isWon } });
-    props.setBingoPrize((prev) =>
-      prev.map((prize) =>
-        prize.id === id ? { ...prize, isWon: isWon } : prize,
-      ),
-    );
+    if (props.setBingoPrize) {
+      props.setBingoPrize((prev) =>
+        prev.map((prize) =>
+          prize.id === id ? { ...prize, isWon: isWon } : prize,
+        ),
+      );
+    }
   };
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
