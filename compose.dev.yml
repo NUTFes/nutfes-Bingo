@@ -20,7 +20,7 @@ services:
       default:
         aliases:
           - nutfes-bingo.localhost
-      supabase_network_nutfes-bingo:
+      supabase_network_nutfes-Bingo:
 
   app:
     container_name: nutfes-bingo-dev
@@ -52,5 +52,5 @@ volumes:
   caddy_config:
 
 networks:
-  supabase_network_nutfes-bingo:
+  supabase_network_nutfes-Bingo:
     external: true
