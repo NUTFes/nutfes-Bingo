@@ -7,6 +7,7 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
+    "load:polling": "node scripts/poll-load-test.mjs",
     "fmt:check": "oxfmt --check"
   },
   "dependencies": {

@@ -1,22 +1,28 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 
 import { BINGO_CACHE_TAGS } from "@/lib/queries";
 import type { StampName } from "@/types/bingo/types";
 import { createClient } from "@/lib/supabase/server";
 
 function invalidateTag(tag: string) {
-  revalidateTag(tag, "max");
+  updateTag(tag);
 }
 
 export async function sendReactionStamp(name: StampName) {
   const supabase = await createClient();
-  const { error } = await supabase.from("stamp_triggers").insert({ name });
+  const { data, error } = await supabase
+    .from("stamp_triggers")
+    .insert({ name })
+    .select("*")
+    .single();
 
   if (error) {
     throw new Error(`リアクション送信に失敗しました: ${error.message}`);
   }
+
+  return data;
 }
 
 export async function recordPublicReach() {

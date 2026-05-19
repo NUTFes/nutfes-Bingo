@@ -1,17 +1,18 @@
 "use client";
 
 import Matter from "matter-js";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { getScreenDisplayBingoNumbers } from "./view-model";
 import { NumberCardLarge, NumberCardList, ReachCount } from "@/components/user";
-import { subscribeStampTriggers, useLatestReachLog, useNumbers } from "@/lib/realtime";
-import type { NumberRow, ReachLogRow } from "@/types/bingo/types";
+import { useScreenPollingState, useStampTriggerPolling } from "@/lib/polling";
+import type { NumberRow, ReachLogRow, StampName } from "@/types/bingo/types";
 import styles from "@/styles/user/screen.module.css";
 
 interface ScreenPageProps {
   initialNumbers: NumberRow[];
   initialReachLog: ReachLogRow | null;
+  initialStampCursor: number;
 }
 
 const IMAGES: Record<string, string> = {
@@ -25,18 +26,50 @@ const IMAGES: Record<string, string> = {
   skull: "/ReactionIcon/skull.png",
   smile: "/ReactionIcon/smile.png",
   surprise: "/ReactionIcon/surprise.png",
-};
+} satisfies Record<StampName, string>;
 
-export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps) {
+export function ScreenPage({
+  initialNumbers,
+  initialReachLog,
+  initialStampCursor,
+}: ScreenPageProps) {
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
-  const bingoNumbers = useNumbers(initialNumbers);
-  const latestReachLog = useLatestReachLog(initialReachLog);
+  const { numbers: bingoNumbers, latestReachLog } = useScreenPollingState(
+    initialNumbers,
+    initialReachLog,
+  );
   const displayBingoNumbers = useMemo(
     () => getScreenDisplayBingoNumbers(bingoNumbers),
     [bingoNumbers],
   );
+  const handleStampInsert = useCallback((stamp: { name: StampName; id: number }) => {
+    const texture = IMAGES[stamp.name];
+    if (!texture || !engine.current) {
+      return;
+    }
+
+    const x = Math.random() * window.innerWidth;
+    const circle = Matter.Bodies.circle(x, 0, 35, {
+      restitution: 0.8,
+      render: {
+        sprite: {
+          texture,
+          xScale: 0.1,
+          yScale: 0.1,
+        },
+      },
+    });
+
+    Matter.Composite.add(engine.current.world, circle);
+
+    window.setTimeout(() => {
+      if (engine.current) {
+        Matter.Composite.remove(engine.current.world, circle);
+      }
+    }, 5000);
+  }, []);
 
   useEffect(() => {
     if (!scene.current) {
@@ -92,36 +125,7 @@ export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps)
     };
   }, []);
 
-  useEffect(() => {
-    const teardown = subscribeStampTriggers((stamp) => {
-      const texture = IMAGES[stamp.name];
-      if (!texture || !engine.current) {
-        return;
-      }
-
-      const x = Math.random() * window.innerWidth;
-      const circle = Matter.Bodies.circle(x, 0, 35, {
-        restitution: 0.8,
-        render: {
-          sprite: {
-            texture,
-            xScale: 0.1,
-            yScale: 0.1,
-          },
-        },
-      });
-
-      Matter.Composite.add(engine.current.world, circle);
-
-      window.setTimeout(() => {
-        if (engine.current) {
-          Matter.Composite.remove(engine.current.world, circle);
-        }
-      }, 5000);
-    });
-
-    return teardown;
-  }, []);
+  useStampTriggerPolling(initialStampCursor, handleStampInsert);
 
   return (
     <>

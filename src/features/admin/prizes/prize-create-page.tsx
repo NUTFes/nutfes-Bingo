@@ -8,7 +8,7 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 
 import { AdminHeader } from "@/components/admin";
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
-import { usePrizes } from "@/lib/realtime";
+import { usePrizesPolling } from "@/lib/polling";
 import { Button } from "@/components/ui/Button";
 import { DropZone } from "@/components/ui/DropZone";
 import { Form } from "@/components/ui/Form";
@@ -29,7 +29,7 @@ const showToast = (content: { title: string; description?: string }) => {
 };
 
 export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProps) {
-  const [bingoPrize, setBingoPrize] = usePrizes(initialPrizes);
+  const [bingoPrize, setBingoPrize] = usePrizesPolling(initialPrizes);
   const [formState, setFormState] = useState({
     prizeNameJp: "",
     prizeNameEn: "",

@@ -3,7 +3,7 @@
 import { AdminHeader, BingoResult } from "@/components/admin";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion, queue } from "@/components/ui/Toast";
-import { useNumbers } from "@/lib/realtime";
+import { useNumbersPolling } from "@/lib/polling";
 import type { AppStateRow, NumberRow } from "@/types/bingo/types";
 import JudgementModal from "./components/JudgementModal";
 import UpdateNumberModal from "./components/UpdateNumberModal";
@@ -29,7 +29,7 @@ const showToast = (content: { title: string; description?: string }) => {
 };
 
 export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
-  const bingoNumbers = useNumbers(initialNumbers);
+  const [bingoNumbers, setBingoNumbers] = useNumbersPolling(initialNumbers);
   const dashboardState = useDashboardState({
     initialSurveyUrl: initialAppState.survey_url,
     bingoNumbers,
@@ -53,6 +53,11 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       return;
     }
 
+    setBingoNumbers((prev) =>
+      [...prev.filter((bingoNumber) => bingoNumber.id !== result.data.id), result.data].sort(
+        (a, b) => a.id - b.id,
+      ),
+    );
     dashboardState.resetSubmitNumberInput();
     showToast({ title: "登録完了", description: `${nextNumber} を追加しました。` });
   };
@@ -71,6 +76,7 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       return;
     }
 
+    setBingoNumbers((prev) => prev.filter((bingoNumber) => bingoNumber.id !== result.data.id));
     dashboardState.resetDeleteInput();
     showToast({ title: "削除完了", description: `${target} を削除しました。` });
   };
@@ -144,6 +150,11 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
             throw new Error(result.error);
           }
 
+          setBingoNumbers((prev) =>
+            prev
+              .map((bingoNumber) => (bingoNumber.id === result.data.id ? result.data : bingoNumber))
+              .sort((a, b) => a.id - b.id),
+          );
           showToast({ title: "更新完了", description: "番号を更新しました。" });
         }}
       />

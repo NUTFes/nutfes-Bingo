@@ -18,7 +18,6 @@ import {
   ToggleButton,
 } from "@/components/user/common";
 import { REACTION_IMAGES } from "@/types/bingo/constants";
-import { useAppState } from "@/lib/realtime";
 import {
   applyPublicTheme,
   DEFAULT_PUBLIC_PREFERENCES,
@@ -36,7 +35,7 @@ import styles from "./Layout.module.css";
 
 interface InnerLayoutProps {
   children: React.ReactNode;
-  initialAppState: AppStateRow;
+  appState: AppStateRow;
   initialPreferences?: PublicPreferences;
   isSortedAscending?: boolean;
   setIsSortedAscending?: (value: boolean) => void;
@@ -59,14 +58,13 @@ const persistBooleanPreference = (key: string, value: boolean) => {
 
 function InnerLayout({
   children,
-  initialAppState,
+  appState,
   initialPreferences = DEFAULT_PUBLIC_PREFERENCES,
   isSortedAscending,
   setIsSortedAscending,
 }: InnerLayoutProps) {
   const pathname = usePathname();
   const { language, setLanguage, t } = useBingoLanguage();
-  const [appState] = useAppState(initialAppState);
 
   const [modalState, setModalState] = useState<ModalState>({
     isReactionModalOpen: false,

@@ -5,35 +5,48 @@ import { createAdminClient, invalidateTag } from "@/components/admin/server-acti
 
 export async function createNumber(number: number) {
   const supabase = await createAdminClient();
-  const { error } = await supabase.from("numbers").insert({ number });
+  const { data, error } = await supabase.from("numbers").insert({ number }).select("*").single();
 
   if (error) {
     throw new Error(error.message);
   }
 
   invalidateTag(BINGO_CACHE_TAGS.numbers);
+  return data;
 }
 
 export async function deleteNumber(number: number) {
   const supabase = await createAdminClient();
-  const { error } = await supabase.from("numbers").delete().eq("number", number);
+  const { data, error } = await supabase
+    .from("numbers")
+    .delete()
+    .eq("number", number)
+    .select("*")
+    .single();
 
   if (error) {
     throw new Error(error.message);
   }
 
   invalidateTag(BINGO_CACHE_TAGS.numbers);
+  return data;
 }
 
 export async function updateNumber(id: number, number: number) {
   const supabase = await createAdminClient();
-  const { error } = await supabase.from("numbers").update({ number }).eq("id", id);
+  const { data, error } = await supabase
+    .from("numbers")
+    .update({ number })
+    .eq("id", id)
+    .select("*")
+    .single();
 
   if (error) {
     throw new Error(error.message);
   }
 
   invalidateTag(BINGO_CACHE_TAGS.numbers);
+  return data;
 }
 
 export async function incrementReach() {
@@ -62,14 +75,17 @@ export async function decrementReach() {
 
 export async function saveSurveyState(input: { surveyUrl: string; isSurveyActive: boolean }) {
   const supabase = await createAdminClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("app_state")
     .update({ survey_url: input.surveyUrl, is_survey_active: input.isSurveyActive })
-    .eq("id", 1);
+    .eq("id", 1)
+    .select("*")
+    .single();
 
   if (error) {
     throw new Error(`アンケート設定の保存に失敗しました: ${error.message}`);
   }
 
   invalidateTag(BINGO_CACHE_TAGS.appState);
+  return data;
 }

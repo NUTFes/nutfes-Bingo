@@ -3,7 +3,13 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-import type { AppStateRow, NumberRow, PrizeWithImageUrl, ReachLogRow } from "@/types/bingo/types";
+import type {
+  AppStateRow,
+  NumberRow,
+  PrizeWithImageUrl,
+  ReachLogRow,
+  StampTriggerRow,
+} from "@/types/bingo/types";
 import type { Database } from "@/types/database.types";
 import { hasEnvVars } from "@/utils/utils";
 import { resolvePrizeImageUrl } from "@/utils/image";
@@ -20,6 +26,7 @@ export const BINGO_CACHE_TAGS = {
   prizes: "bingo:prizes",
   appState: "bingo:app-state",
   reachLogs: "bingo:reach-logs",
+  stampTriggers: "bingo:stamp-triggers",
 } as const;
 
 function createDataClient() {
@@ -40,7 +47,7 @@ function createDataClient() {
 export async function getNumbers(): Promise<NumberRow[]> {
   "use cache";
   cacheTag(BINGO_CACHE_TAGS.numbers);
-  cacheLife({ stale: 5, revalidate: 30, expire: 300 });
+  cacheLife({ stale: 1, revalidate: 2, expire: 30 });
 
   if (!hasEnvVars) {
     return [];
@@ -62,7 +69,7 @@ export async function getNumbers(): Promise<NumberRow[]> {
 export async function getPrizes(): Promise<PrizeWithImageUrl[]> {
   "use cache";
   cacheTag(BINGO_CACHE_TAGS.prizes);
-  cacheLife({ stale: 30, revalidate: 120, expire: 600 });
+  cacheLife({ stale: 5, revalidate: 30, expire: 120 });
 
   if (!hasEnvVars) {
     return [];
@@ -87,7 +94,7 @@ export async function getPrizes(): Promise<PrizeWithImageUrl[]> {
 export async function getAppState(): Promise<AppStateRow> {
   "use cache";
   cacheTag(BINGO_CACHE_TAGS.appState);
-  cacheLife({ stale: 5, revalidate: 15, expire: 120 });
+  cacheLife({ stale: 1, revalidate: 2, expire: 30 });
 
   if (!hasEnvVars) {
     return emptyAppState;
@@ -106,7 +113,7 @@ export async function getAppState(): Promise<AppStateRow> {
 export async function getLatestReachLog(): Promise<ReachLogRow | null> {
   "use cache";
   cacheTag(BINGO_CACHE_TAGS.reachLogs);
-  cacheLife({ stale: 5, revalidate: 15, expire: 120 });
+  cacheLife({ stale: 1, revalidate: 2, expire: 30 });
 
   if (!hasEnvVars) {
     return null;
@@ -126,6 +133,51 @@ export async function getLatestReachLog(): Promise<ReachLogRow | null> {
   }
 
   return data;
+}
+
+export async function getStampTriggersAfter(
+  afterId: number,
+  limit = 50,
+): Promise<StampTriggerRow[]> {
+  if (!hasEnvVars) {
+    return [];
+  }
+
+  const safeAfterId = Number.isFinite(afterId) ? Math.max(0, Math.floor(afterId)) : 0;
+  const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? Math.floor(limit) : 50, 1), 100);
+  const supabase = createDataClient();
+  const { data, error } = await supabase
+    .from("stamp_triggers")
+    .select("*")
+    .gt("id", safeAfterId)
+    .order("id", { ascending: true })
+    .limit(safeLimit);
+
+  if (error) {
+    throw new Error(`リアクションスタンプの取得に失敗しました: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function getLatestStampTriggerId(): Promise<number> {
+  if (!hasEnvVars) {
+    return 0;
+  }
+
+  const supabase = createDataClient();
+  const { data, error } = await supabase
+    .from("stamp_triggers")
+    .select("id")
+    .order("id", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`最新リアクションスタンプIDの取得に失敗しました: ${error.message}`);
+  }
+
+  return data?.id ?? 0;
 }
 
 export async function getBingoBootstrap() {

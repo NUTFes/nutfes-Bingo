@@ -1,7 +1,7 @@
 "use client";
 
 import { Layout, PrizeCardList } from "@/components/user";
-import { usePrizes } from "@/lib/realtime";
+import { usePrizesPollingState } from "@/lib/polling";
 import type { PublicPreferences } from "@/types/bingo/public-preferences";
 import type { AppStateRow, PrizeWithImageUrl } from "@/types/bingo/types";
 
@@ -16,10 +16,10 @@ export function PrizesPage({
   initialAppState,
   initialPreferences,
 }: PrizesPageProps) {
-  const [prizes] = usePrizes(initialPrizes);
+  const { prizes, appState } = usePrizesPollingState(initialPrizes, initialAppState);
 
   return (
-    <Layout initialAppState={initialAppState} initialPreferences={initialPreferences}>
+    <Layout appState={appState} initialPreferences={initialPreferences}>
       <PrizeCardList BingoPrize={prizes} />
     </Layout>
   );

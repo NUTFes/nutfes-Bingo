@@ -1,6 +1,6 @@
 import "server-only";
 
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -13,5 +13,5 @@ export async function createAdminClient(): Promise<AdminSupabaseClient> {
 }
 
 export function invalidateTag(tag: string) {
-  revalidateTag(tag, "max");
+  updateTag(tag);
 }
