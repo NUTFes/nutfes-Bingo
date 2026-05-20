@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 
 import { ScreenPage } from "@/features/user";
 import { getLatestReachLog, getLatestStampTriggerId, getNumbers } from "@/lib/queries";
@@ -9,6 +10,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  await connection();
+
   const [numbers, latestReachLog, latestStampTriggerId] = await Promise.all([
     getNumbers(),
     getLatestReachLog(),

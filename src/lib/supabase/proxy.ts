@@ -1,4 +1,5 @@
 import { hasEnvVars } from "@/utils/utils";
+import { getSupabaseServerUrl, hasSupabaseServerEnvVars } from "@/lib/supabase/config";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -6,21 +7,27 @@ function isProtectedPath(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
+function shouldRefreshSession(pathname: string) {
+  return isProtectedPath(pathname) || pathname === "/auth/confirm";
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
 
-  // If the env vars are not set, skip proxy check. You can remove this
-  // once you setup the project.
-  if (!hasEnvVars) {
+  if (
+    !hasEnvVars ||
+    !hasSupabaseServerEnvVars() ||
+    !shouldRefreshSession(request.nextUrl.pathname)
+  ) {
     return supabaseResponse;
   }
 
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    getSupabaseServerUrl(),
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {

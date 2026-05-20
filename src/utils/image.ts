@@ -1,5 +1,3 @@
-import { PRIZE_IMAGES_BUCKET } from "@/types/bingo/constants";
-
 function isDirectImagePath(imagePath: string): boolean {
   if (imagePath.startsWith("/")) {
     return true;
@@ -22,12 +20,10 @@ export function resolvePrizeImageUrl(imagePath: string | null): string | null {
     return imagePath;
   }
 
-  const resolvedBaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
-
   const encodedPath = imagePath
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  return `${resolvedBaseUrl}/storage/v1/object/public/${PRIZE_IMAGES_BUCKET}/${encodedPath}`;
+  return `/api/prize-images/${encodedPath}`;
 }

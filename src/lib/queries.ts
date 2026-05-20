@@ -13,6 +13,11 @@ import type {
 import type { Database } from "@/types/database.types";
 import { hasEnvVars } from "@/utils/utils";
 import { resolvePrizeImageUrl } from "@/utils/image";
+import {
+  getSupabaseServerUrl,
+  hasSupabaseServerEnvVars,
+  shouldSkipSupabaseFetch,
+} from "@/lib/supabase/config";
 
 const emptyAppState: AppStateRow = {
   id: 1,
@@ -30,7 +35,7 @@ export const BINGO_CACHE_TAGS = {
 } as const;
 
 function createDataClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseUrl = getSupabaseServerUrl();
   return createSupabaseClient<Database>(
     supabaseUrl,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
@@ -44,12 +49,16 @@ function createDataClient() {
   );
 }
 
+function canFetchSupabaseData() {
+  return hasEnvVars && hasSupabaseServerEnvVars() && !shouldSkipSupabaseFetch();
+}
+
 export async function getNumbers(): Promise<NumberRow[]> {
   "use cache";
   cacheTag(BINGO_CACHE_TAGS.numbers);
   cacheLife({ stale: 1, revalidate: 2, expire: 30 });
 
-  if (!hasEnvVars) {
+  if (!canFetchSupabaseData()) {
     return [];
   }
 
@@ -71,7 +80,7 @@ export async function getPrizes(): Promise<PrizeWithImageUrl[]> {
   cacheTag(BINGO_CACHE_TAGS.prizes);
   cacheLife({ stale: 5, revalidate: 30, expire: 120 });
 
-  if (!hasEnvVars) {
+  if (!canFetchSupabaseData()) {
     return [];
   }
 
@@ -96,7 +105,7 @@ export async function getAppState(): Promise<AppStateRow> {
   cacheTag(BINGO_CACHE_TAGS.appState);
   cacheLife({ stale: 1, revalidate: 2, expire: 30 });
 
-  if (!hasEnvVars) {
+  if (!canFetchSupabaseData()) {
     return emptyAppState;
   }
 
@@ -115,7 +124,7 @@ export async function getLatestReachLog(): Promise<ReachLogRow | null> {
   cacheTag(BINGO_CACHE_TAGS.reachLogs);
   cacheLife({ stale: 1, revalidate: 2, expire: 30 });
 
-  if (!hasEnvVars) {
+  if (!canFetchSupabaseData()) {
     return null;
   }
 
@@ -139,7 +148,7 @@ export async function getStampTriggersAfter(
   afterId: number,
   limit = 50,
 ): Promise<StampTriggerRow[]> {
-  if (!hasEnvVars) {
+  if (!canFetchSupabaseData()) {
     return [];
   }
 
@@ -161,7 +170,7 @@ export async function getStampTriggersAfter(
 }
 
 export async function getLatestStampTriggerId(): Promise<number> {
-  if (!hasEnvVars) {
+  if (!canFetchSupabaseData()) {
     return 0;
   }
 

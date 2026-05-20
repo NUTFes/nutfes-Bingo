@@ -1,0 +1,15 @@
+:8080 {
+	encode zstd gzip
+
+	header {
+		-Server
+	}
+
+	handle_path /supabase/* {
+		reverse_proxy {$SUPABASE_KONG_HOST:kong}:{$SUPABASE_KONG_PORT:8000}
+	}
+
+	handle {
+		reverse_proxy app:3000
+	}
+}
