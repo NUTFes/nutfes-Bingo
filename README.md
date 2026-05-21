@@ -14,6 +14,7 @@ cp .env.example .env
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://nutfes-bingo.localhost/supabase
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
 ```
 
 ## mise での環境構築・タスク実行（推奨）
@@ -102,14 +103,21 @@ NEXT_PUBLIC_SITE_URL=https://bingo.example.com
 NEXT_PUBLIC_SUPABASE_URL=https://bingo.example.com/supabase
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 SUPABASE_SERVER_URL=http://caddy:8080/supabase
+SUPABASE_SERVICE_ROLE_KEY=...
+NUTFES_PUBLIC_ACTION_HASH_SALT=...
+NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP=0
 SUPABASE_DOCKER_NETWORK=supabase_default
 SUPABASE_KONG_HOST=kong
 CLOUDFLARE_TUNNEL_TOKEN=...
+APP_IMAGE_TAG=2026-05-21
+CLOUDFLARED_IMAGE=cloudflare/cloudflared:2026.5.0
 ```
 
 `NEXT_PUBLIC_SUPABASE_URL` はブラウザ用の公開URLです。`SUPABASE_SERVER_URL` は
 Next.js コンテナから使う内部URLです。本番では Cloudflare を往復しないよう、
 `http://caddy:8080/supabase` を使います。
+`SUPABASE_SERVICE_ROLE_KEY` は公開リーチ送信とリアクション送信を Server Action 経由に閉じるための
+サーバー専用キーです。ブラウザへ露出させないでください。
 
 4. 起動します。
 
@@ -122,16 +130,30 @@ docker compose -f compose.prod.yml --env-file .env.production up -d --build
 ```bash
 docker compose -f compose.prod.yml --env-file .env.production ps
 curl -I https://bingo.example.com/api/health
+curl -I https://bingo.example.com/api/ready
 curl -I https://bingo.example.com/supabase/rest/v1/
 ```
 
-`/api/health` が HTTP 200 を返し、`/supabase/rest/v1/` が Supabase Kong から応答すれば、
-Cloudflare Tunnel、Caddy、Next.js、Supabase Kong の経路は成立しています。
+`/api/health` は Next.js process の軽量な生存確認です。`/api/ready` は Next.js から
+Supabase への接続確認です。`/api/health` と `/api/ready` が HTTP 200 を返し、
+`/supabase/rest/v1/` が Supabase Kong から応答すれば、Cloudflare Tunnel、Caddy、
+Next.js、Supabase Kong の経路は成立しています。
+
+本番監視では、Uptime Kuma などで少なくとも次を監視し、Discord などへ通知してください。
+
+- `https://bingo.example.com/api/health`
+- `https://bingo.example.com/api/ready`
+- `https://bingo.example.com/supabase/rest/v1/`
+
+Caddy は本番で access log を stdout に出します。障害時は `docker compose logs app caddy cloudflared`
+と self-hosted Supabase 側の Kong/Postgres/Storage ログを合わせて確認します。
 
 ## Admin 認証の運用方針
 
 - メールサーバーは使用しないため、確認メール経由の運用やパスワードリセット/更新機能は提供しません。
 - 管理者権限への昇格は Supabase 側（`profiles.role = 'admin'`）で手動付与します。
+- 本番では管理者サインアップ画面はデフォルト無効です。事前セットアップ時だけ
+  `NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP=1` を設定し、アカウント作成後は `0` に戻してください。
 
 ## pnpm コマンド
 

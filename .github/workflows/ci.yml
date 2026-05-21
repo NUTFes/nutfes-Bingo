@@ -17,14 +17,10 @@ jobs:
     name: Quality Check
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          persist-credentials: true
 
       - name: Setup pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -44,13 +40,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: Oxfmt Format
-        run: pnpm run fmt
-
-      - name: Commit formatted changes
-        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
-        with:
-          commit_message: "style: auto format by oxfmt"
+      - name: Oxfmt Check
+        run: pnpm run fmt:check
 
       - name: Oxlint Check
         run: pnpm run lint

@@ -1,5 +1,6 @@
 import Button from "@/components/user/buttons/Button/Button";
 import Modal from "@/components/user/Modal/Modal";
+import { openHttpsUrl } from "@/utils/url";
 
 import styles from "./SurveyPromptModal.module.css";
 
@@ -12,7 +13,7 @@ interface SurveyPromptModalProps {
 const SurveyPromptModal = ({ isOpened, setIsOpened, surveyUrl }: SurveyPromptModalProps) => {
   const openSurvey = () => {
     if (surveyUrl) {
-      window.open(surveyUrl, "_blank", "noopener,noreferrer");
+      openHttpsUrl(surveyUrl);
     }
     setIsOpened(false);
   };

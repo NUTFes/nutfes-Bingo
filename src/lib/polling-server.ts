@@ -45,3 +45,15 @@ export async function jsonWithEtag<T>(
     headers,
   });
 }
+
+export function jsonError(error: string, status = 503) {
+  return Response.json(
+    { error },
+    {
+      status,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
+}

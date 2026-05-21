@@ -7,6 +7,10 @@ import { getLatestReachLog, getLatestStampTriggerId, getNumbers } from "@/lib/qu
 export const metadata: Metadata = {
   title: "スクリーン",
   description: "NUTFes Bingo の会場向けスクリーン表示ページです。",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default async function Page() {

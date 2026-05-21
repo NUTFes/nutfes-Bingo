@@ -32,18 +32,21 @@ export type Database = {
         Row: {
           id: number;
           is_survey_active: boolean;
+          reach_count: number;
           survey_url: string;
           updated_at: string;
         };
         Insert: {
           id?: number;
           is_survey_active?: boolean;
+          reach_count?: number;
           survey_url?: string;
           updated_at?: string;
         };
         Update: {
           id?: number;
           is_survey_active?: boolean;
+          reach_count?: number;
           survey_url?: string;
           updated_at?: string;
         };
@@ -124,6 +127,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      public_action_limits: {
+        Row: {
+          action: string;
+          client_hash: string;
+          last_sent_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          action: string;
+          client_hash: string;
+          last_sent_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          action?: string;
+          client_hash?: string;
+          last_sent_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       reach_logs: {
         Row: {
           created_at: string;
@@ -145,6 +169,21 @@ export type Database = {
           id?: number;
           reach_num?: number;
           source?: string;
+        };
+        Relationships: [];
+      };
+      reach_submissions: {
+        Row: {
+          client_hash: string;
+          created_at: string;
+        };
+        Insert: {
+          client_hash: string;
+          created_at?: string;
+        };
+        Update: {
+          client_hash?: string;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -171,10 +210,18 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      claim_public_action: {
+        Args: { p_action: string; p_client_hash: string; p_min_interval: string };
+        Returns: undefined;
+      };
       decrement_reach: { Args: never; Returns: number };
       increment_reach: { Args: never; Returns: number };
       is_admin: { Args: { target_user?: string }; Returns: boolean };
-      record_reach: { Args: never; Returns: number };
+      record_reach: { Args: { client_hash: string }; Returns: number };
+      record_reaction_stamp: {
+        Args: { stamp_name: string; client_hash: string };
+        Returns: Database["public"]["Tables"]["stamp_triggers"]["Row"];
+      };
     };
     Enums: {
       [_ in never]: never;

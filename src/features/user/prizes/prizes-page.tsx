@@ -20,7 +20,7 @@ export function PrizesPage({
 
   return (
     <Layout appState={appState} initialPreferences={initialPreferences}>
-      <PrizeCardList BingoPrize={prizes} />
+      <PrizeCardList prizes={prizes} />
     </Layout>
   );
 }

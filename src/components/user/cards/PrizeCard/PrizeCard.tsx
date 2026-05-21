@@ -8,13 +8,12 @@ import { useBingoLanguage } from "@/utils/i18n/provider";
 import styles from "./PrizeCard.module.css";
 
 interface PrizeCardProps {
-  BingoPrize: PrizeWithImageUrl;
+  prize: PrizeWithImageUrl;
 }
 
-const PrizeCard = ({ BingoPrize }: PrizeCardProps) => {
+const PrizeCard = ({ prize }: PrizeCardProps) => {
   const { language } = useBingoLanguage();
-  const prizeName =
-    language === "en" ? BingoPrize.name_en || BingoPrize.name_jp : BingoPrize.name_jp;
+  const prizeName = language === "en" ? prize.name_en || prize.name_jp : prize.name_jp;
 
   return (
     <div className={styles.container}>
@@ -22,13 +21,13 @@ const PrizeCard = ({ BingoPrize }: PrizeCardProps) => {
         <div className={styles.image}>
           <div
             className={classNames(styles.imageWrapper, {
-              [styles.wonImage]: BingoPrize.is_won,
+              [styles.wonImage]: prize.is_won,
             })}
           >
-            {BingoPrize.image_url && (
+            {prize.image_url && (
               <Image
-                src={BingoPrize.image_url}
-                alt={BingoPrize.name_jp}
+                src={prize.image_url}
+                alt={prize.name_jp}
                 fill
                 className={styles.prizeImage}
                 sizes="(max-width: 768px) 50vw, 20vw"
@@ -36,7 +35,7 @@ const PrizeCard = ({ BingoPrize }: PrizeCardProps) => {
             )}
           </div>
         </div>
-        {BingoPrize.is_won && (
+        {prize.is_won && (
           <div className={styles.overlay}>
             <span className={styles.wonBadge}>当選済み</span>
           </div>

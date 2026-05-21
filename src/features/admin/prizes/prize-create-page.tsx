@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { isFileDropItem, type DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
 import { IoCloudUploadOutline } from "react-icons/io5";
@@ -19,6 +19,7 @@ import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
 
 interface AdminPrizeCreatePageProps {
+  adminUserLabel: string;
   initialPrizes: PrizeWithImageUrl[];
 }
 
@@ -28,7 +29,7 @@ const showToast = (content: { title: string; description?: string }) => {
   queue.add(content, { timeout: TOAST_TIMEOUT });
 };
 
-export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProps) {
+export function AdminPrizeCreatePage({ adminUserLabel, initialPrizes }: AdminPrizeCreatePageProps) {
   const [bingoPrize, setBingoPrize] = usePrizesPolling(initialPrizes);
   const [formState, setFormState] = useState({
     prizeNameJp: "",
@@ -39,6 +40,14 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { prizeNameJp, prizeNameEn, imageFile, previewUrl } = formState;
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   const handleFileSelected = useCallback((targetFile: File | null) => {
     if (!targetFile) {
       setFormState((prev) => ({
@@ -48,10 +57,11 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
       }));
       return;
     }
+    const nextPreviewUrl = URL.createObjectURL(targetFile);
     setFormState((prev) => ({
       ...prev,
       imageFile: targetFile,
-      previewUrl: URL.createObjectURL(targetFile),
+      previewUrl: nextPreviewUrl,
     }));
   }, []);
 
@@ -104,7 +114,7 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
   return (
     <div className="min-h-screen bg-linear-to-b from-zinc-900 via-zinc-950 to-black pb-8 text-zinc-100 sm:pb-10">
       <MyToastRegion />
-      <AdminHeader user="Admin" />
+      <AdminHeader user={adminUserLabel} />
 
       <div className="mx-auto mt-6 grid w-full max-w-7xl grid-cols-1 gap-5 px-4 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6">

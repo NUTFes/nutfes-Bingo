@@ -11,5 +11,6 @@ RUN corepack enable pnpm && pnpm i --frozen-lockfile --ignore-scripts --prefer-o
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV CI=true
 
 CMD ["pnpm", "dev", "-H", "0.0.0.0"]

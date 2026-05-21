@@ -3,15 +3,15 @@ import styles from "./PrizeCardList.module.css";
 import PrizeCard from "../PrizeCard";
 
 interface PrizeCardListProps {
-  BingoPrize: PrizeWithImageUrl[];
+  prizes: PrizeWithImageUrl[];
 }
 
-const PrizeCardList = ({ BingoPrize }: PrizeCardListProps) => {
+const PrizeCardList = ({ prizes }: PrizeCardListProps) => {
   return (
     <div className={styles.container}>
       <div className={styles.frame}>
-        {BingoPrize.map((prize) => (
-          <PrizeCard key={prize.id} BingoPrize={prize} />
+        {prizes.map((prize) => (
+          <PrizeCard key={prize.id} prize={prize} />
         ))}
       </div>
     </div>

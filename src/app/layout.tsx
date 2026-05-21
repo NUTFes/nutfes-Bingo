@@ -26,6 +26,19 @@ export const metadata: Metadata = {
     template: "%s | NUTFes Bingo",
   },
   description: "技大祭ビンゴ大会の番号表示・景品確認・運営管理を行うアプリケーション",
+  openGraph: {
+    title: "NUTFes Bingo",
+    description: "技大祭ビンゴ大会の番号表示・景品確認を行うアプリケーション",
+    url: defaultUrl,
+    siteName: "NUTFes Bingo",
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "NUTFes Bingo",
+    description: "技大祭ビンゴ大会の番号表示・景品確認を行うアプリケーション",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

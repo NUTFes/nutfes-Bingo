@@ -12,10 +12,11 @@ import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
 
 interface AdminPrizesPageProps {
+  adminUserLabel: string;
   initialPrizes: PrizeWithImageUrl[];
 }
 
-export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
+export function AdminPrizesPage({ adminUserLabel, initialPrizes }: AdminPrizesPageProps) {
   const [bingoPrize, setBingoPrize] = usePrizesPolling(initialPrizes);
   const [searchText, setSearchText] = useState("");
 
@@ -26,7 +27,7 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
   return (
     <div className="min-h-screen bg-linear-to-b from-zinc-900 via-zinc-950 to-black pb-8 text-zinc-100 sm:pb-10">
       <MyToastRegion />
-      <AdminHeader user="Admin" />
+      <AdminHeader user={adminUserLabel} />
 
       <div className="mx-auto mt-6 w-full max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
         <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6">

@@ -52,7 +52,13 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-export function LoginForm({ redirectTo }: { redirectTo?: string }) {
+export function LoginForm({
+  redirectTo,
+  canSignUp = false,
+}: {
+  redirectTo?: string;
+  canSignUp?: boolean;
+}) {
   const router = useRouter();
   const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -138,12 +144,14 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
             <Button type="submit" className="h-11 w-full font-medium" isPending={state.isPending}>
               ログイン
             </Button>
-            <p className="text-center text-sm leading-relaxed text-zinc-300">
-              アカウントをお持ちでない場合は{" "}
-              <Link href="/auth/sign-up" variant="secondary" className="underline-offset-4">
-                新規登録
-              </Link>
-            </p>
+            {canSignUp && (
+              <p className="text-center text-sm leading-relaxed text-zinc-300">
+                アカウントをお持ちでない場合は{" "}
+                <Link href="/auth/sign-up" variant="secondary" className="underline-offset-4">
+                  新規登録
+                </Link>
+              </p>
+            )}
           </Form>
         </div>
       </div>

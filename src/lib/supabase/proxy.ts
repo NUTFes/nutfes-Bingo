@@ -1,5 +1,10 @@
 import { hasEnvVars } from "@/utils/utils";
 import { getSupabaseServerUrl, hasSupabaseServerEnvVars } from "@/lib/supabase/config";
+import {
+  createPublicClientId,
+  PUBLIC_CLIENT_ID_COOKIE,
+  PUBLIC_CLIENT_ID_MAX_AGE,
+} from "@/lib/public-client";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -9,6 +14,30 @@ function isProtectedPath(pathname: string) {
 
 function shouldRefreshSession(pathname: string) {
   return isProtectedPath(pathname) || pathname === "/auth/confirm";
+}
+
+function shouldIssuePublicClientId(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  return (
+    request.method === "GET" && !pathname.startsWith("/api/") && !pathname.startsWith("/auth/")
+  );
+}
+
+function withPublicClientCookie(request: NextRequest, response: NextResponse) {
+  if (!shouldIssuePublicClientId(request) || request.cookies.has(PUBLIC_CLIENT_ID_COOKIE)) {
+    return response;
+  }
+
+  response.cookies.set(PUBLIC_CLIENT_ID_COOKIE, createPublicClientId(), {
+    httpOnly: true,
+    maxAge: PUBLIC_CLIENT_ID_MAX_AGE,
+    path: "/",
+    sameSite: "lax",
+    secure: request.nextUrl.protocol === "https:",
+  });
+
+  return response;
 }
 
 export async function updateSession(request: NextRequest) {
@@ -21,7 +50,7 @@ export async function updateSession(request: NextRequest) {
     !hasSupabaseServerEnvVars() ||
     !shouldRefreshSession(request.nextUrl.pathname)
   ) {
-    return supabaseResponse;
+    return withPublicClientCookie(request, supabaseResponse);
   }
 
   // With Fluid compute, don't put this client in a global environment
@@ -78,5 +107,5 @@ export async function updateSession(request: NextRequest) {
   // If this is not done, you may be causing the browser and server to go out
   // of sync and terminate the user's session prematurely!
 
-  return supabaseResponse;
+  return withPublicClientCookie(request, supabaseResponse);
 }

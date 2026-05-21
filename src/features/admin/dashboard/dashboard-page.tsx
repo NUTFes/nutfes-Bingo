@@ -18,6 +18,7 @@ import { useDashboardState } from "./hooks";
 import { parseBingoNumber } from "./utils";
 
 interface AdminDashboardPageProps {
+  adminUserLabel: string;
   initialNumbers: NumberRow[];
   initialAppState: AppStateRow;
 }
@@ -28,7 +29,11 @@ const showToast = (content: { title: string; description?: string }) => {
   queue.add(content, { timeout: TOAST_TIMEOUT });
 };
 
-export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
+export function AdminDashboardPage({
+  adminUserLabel,
+  initialNumbers,
+  initialAppState,
+}: AdminDashboardPageProps) {
   const [bingoNumbers, setBingoNumbers] = useNumbersPolling(initialNumbers);
   const dashboardState = useDashboardState({
     initialSurveyUrl: initialAppState.survey_url,
@@ -158,7 +163,7 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
           showToast({ title: "更新完了", description: "番号を更新しました。" });
         }}
       />
-      <AdminHeader user="Admin">
+      <AdminHeader user={adminUserLabel}>
         <div className="flex items-center gap-1.5">
           <Button onPress={() => dashboardState.setIsJudgementModalOpen(true)}>正誤判定</Button>
           <Button onPress={handleLogout} variant="secondary">

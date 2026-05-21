@@ -2,7 +2,7 @@ name: nutfes-bingo-prod
 
 services:
   app:
-    image: nutfes-bingo:${APP_IMAGE_TAG:-latest}
+    image: nutfes-bingo:${APP_IMAGE_TAG:?APP_IMAGE_TAG is required}
     build:
       context: .
       dockerfile: Dockerfile
@@ -19,6 +19,9 @@ services:
       NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is required}
       SUPABASE_SERVER_URL: ${SUPABASE_SERVER_URL:-http://caddy:8080/supabase}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY is required}
+      NUTFES_PUBLIC_ACTION_HASH_SALT: ${NUTFES_PUBLIC_ACTION_HASH_SALT:?NUTFES_PUBLIC_ACTION_HASH_SALT is required}
+      NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP: ${NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP:-0}
     expose:
       - "3000"
     healthcheck:
@@ -60,7 +63,7 @@ services:
       - supabase
 
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:2026.5.0}
     command: tunnel --no-autoupdate run
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN is required}

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_rethrow } from "next/navigation";
 
 import { getStampTriggersAfter } from "@/lib/queries";
+import { jsonError } from "@/lib/polling-server";
 import type { StampEventsResponse } from "@/types/bingo/polling";
 
 function readPositiveInteger(value: string | null, fallback: number) {
@@ -17,19 +19,25 @@ function readPositiveInteger(value: string | null, fallback: number) {
 }
 
 export async function GET(request: NextRequest) {
-  const after = readPositiveInteger(request.nextUrl.searchParams.get("after"), 0);
-  const limit = readPositiveInteger(request.nextUrl.searchParams.get("limit"), 50);
-  const stamps = await getStampTriggersAfter(after, limit);
-  const nextCursor = stamps.at(-1)?.id ?? after;
-  const body: StampEventsResponse = {
-    stamps,
-    nextCursor,
-    serverTime: new Date().toISOString(),
-  };
+  try {
+    const after = readPositiveInteger(request.nextUrl.searchParams.get("after"), 0);
+    const limit = readPositiveInteger(request.nextUrl.searchParams.get("limit"), 50);
+    const stamps = await getStampTriggersAfter(after, limit);
+    const nextCursor = stamps.at(-1)?.id ?? after;
+    const body: StampEventsResponse = {
+      stamps,
+      nextCursor,
+      serverTime: new Date().toISOString(),
+    };
 
-  return NextResponse.json(body, {
-    headers: {
-      "Cache-Control": "no-store",
-    },
-  });
+    return NextResponse.json(body, {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error(error);
+    return jsonError("BINGO_STAMPS_FETCH_FAILED");
+  }
 }

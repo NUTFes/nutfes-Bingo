@@ -85,6 +85,11 @@ function usePollingJson<T>({
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
+      let didTimeout = false;
+      const fetchTimeout = window.setTimeout(() => {
+        didTimeout = true;
+        controller.abort();
+      }, 5000);
 
       try {
         const headers = new Headers();
@@ -114,12 +119,13 @@ function usePollingJson<T>({
         }
         failuresRef.current = 0;
       } catch (error) {
-        if (!isAbortError(error)) {
+        if (!isAbortError(error) || didTimeout) {
           failuresRef.current += 1;
           console.error(error);
         }
       } finally {
-        if (isActive && !controller.signal.aborted) {
+        window.clearTimeout(fetchTimeout);
+        if (isActive && (!controller.signal.aborted || didTimeout)) {
           schedule(
             Math.min(nextDelay(intervalMs, hiddenIntervalMs, failuresRef.current), maxBackoffMs),
           );
@@ -241,6 +247,7 @@ export function useNumbersPolling(initialNumbers: NumberRow[]) {
         id: 1,
         survey_url: "",
         is_survey_active: false,
+        reach_count: 0,
         updated_at: "",
       },
       serverTime: new Date().toISOString(),
@@ -271,6 +278,7 @@ export function usePrizesPolling(initialPrizes: PrizeWithImageUrl[]) {
         id: 1,
         survey_url: "",
         is_survey_active: false,
+        reach_count: 0,
         updated_at: "",
       },
       serverTime: new Date().toISOString(),
@@ -327,6 +335,11 @@ export function useStampTriggerPolling(
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
+      let didTimeout = false;
+      const fetchTimeout = window.setTimeout(() => {
+        didTimeout = true;
+        controller.abort();
+      }, 5000);
 
       try {
         const response = await fetch(`/api/bingo/stamps?after=${cursorRef.current}`, {
@@ -348,12 +361,13 @@ export function useStampTriggerPolling(
         cursorRef.current = data.nextCursor;
         failuresRef.current = 0;
       } catch (error) {
-        if (!isAbortError(error)) {
+        if (!isAbortError(error) || didTimeout) {
           failuresRef.current += 1;
           console.error(error);
         }
       } finally {
-        if (isActive && !controller.signal.aborted) {
+        window.clearTimeout(fetchTimeout);
+        if (isActive && (!controller.signal.aborted || didTimeout)) {
           schedule(Math.min(nextDelay(500, 1500, failuresRef.current), 30000));
         }
       }

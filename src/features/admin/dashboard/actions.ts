@@ -2,6 +2,7 @@
 
 import { BINGO_CACHE_TAGS } from "@/lib/queries";
 import { createAdminClient, invalidateTag } from "@/components/admin/server-actions";
+import { normalizeHttpsUrl } from "@/utils/url";
 
 export async function createNumber(number: number) {
   const supabase = await createAdminClient();
@@ -58,6 +59,7 @@ export async function incrementReach() {
   }
 
   invalidateTag(BINGO_CACHE_TAGS.reachLogs);
+  invalidateTag(BINGO_CACHE_TAGS.appState);
   return data;
 }
 
@@ -70,14 +72,21 @@ export async function decrementReach() {
   }
 
   invalidateTag(BINGO_CACHE_TAGS.reachLogs);
+  invalidateTag(BINGO_CACHE_TAGS.appState);
   return data;
 }
 
 export async function saveSurveyState(input: { surveyUrl: string; isSurveyActive: boolean }) {
   const supabase = await createAdminClient();
+  const surveyUrl = normalizeHttpsUrl(input.surveyUrl, "アンケートURLの形式が不正です。");
+
+  if (input.isSurveyActive && surveyUrl === "") {
+    throw new Error("アンケートを公開する場合はURLを入力してください。");
+  }
+
   const { data, error } = await supabase
     .from("app_state")
-    .update({ survey_url: input.surveyUrl, is_survey_active: input.isSurveyActive })
+    .update({ survey_url: surveyUrl, is_survey_active: input.isSurveyActive })
     .eq("id", 1)
     .select("*")
     .single();

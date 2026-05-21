@@ -23,6 +23,7 @@ const emptyAppState: AppStateRow = {
   id: 1,
   survey_url: "",
   is_survey_active: false,
+  reach_count: 0,
   updated_at: "",
 };
 

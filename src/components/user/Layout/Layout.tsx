@@ -30,6 +30,7 @@ import {
 import type { AppStateRow } from "@/types/bingo/types";
 import { BingoLanguageProvider, useBingoLanguage } from "@/utils/i18n/provider";
 import { recordPublicReach, sendReactionStamp } from "@/features/user/actions/bingo-public";
+import { openHttpsUrl } from "@/utils/url";
 
 import styles from "./Layout.module.css";
 
@@ -208,7 +209,7 @@ function InnerLayout({
 
   const handleAnswerSurvey = () => {
     if (appState.survey_url) {
-      window.open(appState.survey_url, "_blank", "noopener,noreferrer");
+      openHttpsUrl(appState.survey_url);
     }
   };
 

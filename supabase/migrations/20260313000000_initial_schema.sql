@@ -194,7 +194,7 @@ begin
 end;
 $$;
 
-grant execute on function public.record_reach() to anon, authenticated;
+revoke execute on function public.record_reach() from public, anon, authenticated;
 grant execute on function public.increment_reach() to authenticated;
 grant execute on function public.decrement_reach() to authenticated;
 grant execute on function public.is_admin(uuid) to authenticated;
@@ -317,11 +317,6 @@ to anon, authenticated
 using (true);
 
 drop policy if exists "stamp_triggers_insert_all" on public.stamp_triggers;
-create policy "stamp_triggers_insert_all"
-on public.stamp_triggers
-for insert
-to anon, authenticated
-with check (name is not null);
 
 insert into storage.buckets (id, name, public)
 values ('prize-images', 'prize-images', true)
