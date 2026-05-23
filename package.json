@@ -8,7 +8,8 @@
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "load:polling": "node scripts/poll-load-test.mjs",
-    "fmt:check": "oxfmt --check"
+    "fmt:check": "oxfmt --check",
+    "knip": "knip"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.1",
@@ -40,14 +41,15 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1",
     "@types/matter-js": "^0.20.2",
-    "@types/node": "^20",
+    "@types/node": "^20.19.37",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "knip": "^6.14.2",
     "oxfmt": "^0.40.0",
     "oxlint": "^1.55.0",
     "postcss": "^8",
     "tailwindcss": "^4.2.1",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   }
 }
