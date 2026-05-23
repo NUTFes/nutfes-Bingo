@@ -19,7 +19,7 @@ export function normalizeHttpsUrl(input: string, message = "URLの形式が不�
   return url.toString();
 }
 
-export function isSafeHttpsUrl(input: string) {
+function isSafeHttpsUrl(input: string) {
   try {
     return normalizeHttpsUrl(input) !== "";
   } catch {

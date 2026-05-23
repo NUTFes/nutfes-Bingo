@@ -1,11 +1,11 @@
 export type BingoCard = string[][];
 export type CellPos = { row: number; col: number };
 export type LineId = `row-${number}` | `col-${number}` | "diag-main" | "diag-anti";
-export type Line = { id: LineId; cells: CellPos[] };
+type Line = { id: LineId; cells: CellPos[] };
 
 export const BOARD_SIZE = 5;
-export const CENTER: CellPos = { row: 2, col: 2 };
-export const FREE = "FREE";
+const CENTER: CellPos = { row: 2, col: 2 };
+const FREE = "FREE";
 export const MAX_BINGO_NUMBER = 99;
 
 export const createEmptyBingoCard = (): BingoCard => {
@@ -18,7 +18,7 @@ export const createEmptyBingoCard = (): BingoCard => {
 
 export const isCenter = (row: number, col: number) => row === CENTER.row && col === CENTER.col;
 
-export const isCellSatisfied = (cell: string, drawnNumbers: number[]) => {
+const isCellSatisfied = (cell: string, drawnNumbers: number[]) => {
   if (cell === FREE) return true;
   if (cell === "") return false;
   const num = Number.parseInt(cell, 10);
@@ -30,7 +30,7 @@ export const getColLineId = (col: number): LineId => `col-${col}`;
 export const getDiagMainLineId = (): LineId => "diag-main";
 export const getDiagAntiLineId = (): LineId => "diag-anti";
 
-export const generateAllLines = (size = BOARD_SIZE): Line[] => {
+const generateAllLines = (size = BOARD_SIZE): Line[] => {
   const lines: Line[] = [];
   for (let r = 0; r < size; r++) {
     lines.push({

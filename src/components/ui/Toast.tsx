@@ -66,7 +66,7 @@ export function MyToastRegion() {
   );
 }
 
-export function MyToast(props: ToastProps<MyToastContent>) {
+function MyToast(props: ToastProps<MyToastContent>) {
   return (
     <Toast
       {...props}

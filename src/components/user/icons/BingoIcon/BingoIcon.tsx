@@ -68,4 +68,3 @@ const BingoIcon: FC<SVGProps<SVGSVGElement>> = (props) => {
   );
 };
 
-export default BingoIcon;

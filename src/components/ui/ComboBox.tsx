@@ -70,6 +70,6 @@ export function ComboBoxItem(props: ListBoxItemProps) {
   return <DropdownItem {...props} />;
 }
 
-export function ComboBoxSection<T extends object>(props: DropdownSectionProps<T>) {
+function ComboBoxSection<T extends object>(props: DropdownSectionProps<T>) {
   return <DropdownSection {...props} />;
 }

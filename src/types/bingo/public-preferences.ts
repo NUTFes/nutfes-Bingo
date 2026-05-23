@@ -29,7 +29,7 @@ export const parseBooleanPreference = (value: string | undefined, fallback: bool
 export const preferenceCookie = (key: string, value: boolean) =>
   `${key}=${value}; path=/; max-age=31536000; samesite=lax`;
 
-export const PUBLIC_THEME_COLORS = {
+const PUBLIC_THEME_COLORS = {
   main: "#FFD607",
   sub: "#FFF8DC",
   darkBackground: "#2C252F",

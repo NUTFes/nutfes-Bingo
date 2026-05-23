@@ -6,7 +6,7 @@ import { en } from "@/utils/i18n/en";
 import { ja } from "@/utils/i18n/ja";
 
 export type SupportedLanguage = "ja" | "en";
-export type Translations = typeof ja;
+type Translations = typeof ja;
 
 interface BingoLanguageContextValue {
   language: SupportedLanguage;

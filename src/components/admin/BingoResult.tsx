@@ -9,7 +9,7 @@ interface BingoResultProps {
   onClick: (id: number) => void;
 }
 
-export const BingoResult = ({ bingoResultNumber, onClick }: BingoResultProps) => {
+const BingoResult = ({ bingoResultNumber, onClick }: BingoResultProps) => {
   const sortedNumbers = useMemo(
     () => [...bingoResultNumber].sort((a, b) => a.id - b.id),
     [bingoResultNumber],

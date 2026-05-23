@@ -1,1 +1,3 @@
-export { default } from "./DotButton";
+;
+
+export {};

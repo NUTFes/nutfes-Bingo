@@ -190,7 +190,7 @@ export async function getLatestStampTriggerId(): Promise<number> {
   return data?.id ?? 0;
 }
 
-export async function getBingoBootstrap() {
+async function getBingoBootstrap() {
   "use cache";
   cacheTag(BINGO_CACHE_TAGS.numbers);
   cacheTag(BINGO_CACHE_TAGS.prizes);

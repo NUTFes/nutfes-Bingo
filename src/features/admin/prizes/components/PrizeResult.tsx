@@ -34,7 +34,7 @@ const showToast = (content: { title: string; description?: string }) => {
   queue.add(content, { timeout: TOAST_TIMEOUT });
 };
 
-export const PrizeResult = ({
+const PrizeResult = ({
   prizeResult,
   setBingoPrize,
   showOverlay,

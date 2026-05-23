@@ -14,4 +14,3 @@ const DotButton = ({ selected, onClick }: DotButtonProps) => {
   );
 };
 
-export default DotButton;

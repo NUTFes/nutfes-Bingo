@@ -16,9 +16,9 @@ export const STAMP_NAMES = [
 export type StampName = (typeof STAMP_NAMES)[number];
 
 export type NumberRow = Tables<"numbers">;
-export type PrizeRow = Tables<"prizes">;
+type PrizeRow = Tables<"prizes">;
 export type AppStateRow = Tables<"app_state">;
 export type ReachLogRow = Tables<"reach_logs">;
 export type StampTriggerRow = Tables<"stamp_triggers">;
-export type ReactionName = StampName;
+type ReactionName = StampName;
 export type PrizeWithImageUrl = PrizeRow & { image_url: string | null };

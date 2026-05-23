@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import type { Tables } from "@/types/database.types";
 import { createClient } from "@/lib/supabase/server";
 
-export type Profile = Tables<"profiles">;
+type Profile = Tables<"profiles">;
 
 function isMissingSessionError(errorMessage: string) {
   const msg = errorMessage.toLowerCase();
@@ -16,7 +16,7 @@ function isMissingSessionError(errorMessage: string) {
   );
 }
 
-export async function getCurrentUser() {
+async function getCurrentUser() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -34,7 +34,7 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function getCurrentProfile() {
+async function getCurrentProfile() {
   const user = await getCurrentUser();
 
   if (!user) {
