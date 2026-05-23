@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import styles from "./Button.module.css";
-import classNames from "classnames";
+import { cn } from "@/utils/utils";
 
 interface ButtonProps {
   children: ReactNode;
@@ -11,7 +11,7 @@ interface ButtonProps {
 const Button: React.FC<ButtonProps> = (props) => {
   return (
     <button
-      className={classNames(styles.button, {
+      className={cn(styles.button, {
         [styles.inversion]: props.inversion,
       })}
       onClick={props.onClick}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import classNames from "classnames";
+import { cn } from "@/utils/utils";
 
 import styles from "./IconFramework.module.css";
 
@@ -29,7 +29,7 @@ const IconFramework = ({
   return (
     <button
       type="button"
-      className={classNames(
+      className={cn(
         styles.iconContainer,
         {
           [styles.outline]: outline,

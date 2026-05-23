@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import classNames from "classnames";
+import { cn } from "@/utils/utils";
 import styles from "./NavigationBar.module.css";
 
 interface NavigationBarProps {
@@ -12,7 +12,7 @@ const NavigationBar = forwardRef<HTMLDivElement, NavigationBarProps>(
     return (
       <div
         ref={ref}
-        className={classNames(styles.navigationBar, {
+        className={cn(styles.navigationBar, {
           [styles.center]: isCentered,
         })}
       >

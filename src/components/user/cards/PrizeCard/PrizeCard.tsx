@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import classNames from "classnames";
+import { cn } from "@/utils/utils";
 
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { useBingoLanguage } from "@/utils/i18n/provider";
@@ -20,7 +20,7 @@ const PrizeCard = ({ prize }: PrizeCardProps) => {
       <div className={styles.card}>
         <div className={styles.image}>
           <div
-            className={classNames(styles.imageWrapper, {
+            className={cn(styles.imageWrapper, {
               [styles.wonImage]: prize.is_won,
             })}
           >
