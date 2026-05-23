@@ -1,14 +1,15 @@
 # syntax=docker.io/docker/dockerfile:1
 
-FROM node:24-alpine AS base
+FROM node:26.2.0-alpine AS base
 
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
+RUN npm i -g pnpm@11.2.2
 
 FROM base AS deps
 
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile --ignore-scripts
+RUN pnpm i --frozen-lockfile --ignore-scripts
 
 FROM base AS builder
 
@@ -22,7 +23,7 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN corepack enable pnpm && pnpm run build
+RUN pnpm run build
 
 FROM base AS runner
 
