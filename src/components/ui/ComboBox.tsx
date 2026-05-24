@@ -10,7 +10,7 @@ import {
   ValidationResult,
 } from "react-aria-components";
 import { Description, FieldError, FieldGroup, Input, Label } from "@/components/ui/Field";
-import { DropdownItem, DropdownSection, DropdownSectionProps } from "@/components/ui/ListBox";
+import { DropdownItem } from "@/components/ui/ListBox";
 import { Popover } from "@/components/ui/Popover";
 import { composeTailwindRenderProps } from "@/utils/react-aria-utils";
 import { FieldButton } from "@/components/ui/FieldButton";
@@ -68,8 +68,4 @@ export function ComboBox<T extends object, M extends "single" | "multiple" = "si
 
 export function ComboBoxItem(props: ListBoxItemProps) {
   return <DropdownItem {...props} />;
-}
-
-function ComboBoxSection<T extends object>(props: DropdownSectionProps<T>) {
-  return <DropdownSection {...props} />;
 }

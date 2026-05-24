@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, use, useEffect, useMemo, useState } from "react";
+import { createContext, use, useMemo, useState } from "react";
 
 import { en } from "@/utils/i18n/en";
 import { ja } from "@/utils/i18n/ja";

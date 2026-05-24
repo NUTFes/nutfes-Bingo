@@ -135,14 +135,18 @@ function InnerLayout({
   }, [isDarkMode]);
 
   const prevSurveyActiveRef = useRef(appState.is_survey_active);
-  if (appState.is_survey_active !== prevSurveyActiveRef.current) {
+  useEffect(() => {
+    if (appState.is_survey_active === prevSurveyActiveRef.current) {
+      return;
+    }
+
     prevSurveyActiveRef.current = appState.is_survey_active;
     if (appState.is_survey_active && appState.survey_url) {
       setModalState((prev) => ({ ...prev, isSurveyModalOpen: true }));
     } else if (!appState.is_survey_active) {
       setModalState((prev) => ({ ...prev, isSurveyModalOpen: false }));
     }
-  }
+  }, [appState.is_survey_active, appState.survey_url]);
 
   const handleReactionClick = async (name: string) => {
     if (isStampSending) {

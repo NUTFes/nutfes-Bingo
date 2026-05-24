@@ -31,6 +31,15 @@ type PollingOptions<T> = {
   maxBackoffMs?: number;
 };
 
+type PollingLoopOptions = {
+  intervalMs: number;
+  hiddenIntervalMs?: number;
+  maxBackoffMs?: number;
+  timeoutMs?: number;
+  refetchOnVisible?: boolean;
+  onPoll: (signal: AbortSignal) => Promise<void>;
+};
+
 function withJitter(intervalMs: number) {
   const jitter = intervalMs * 0.15;
   return Math.max(250, Math.round(intervalMs - jitter + Math.random() * jitter * 2));
@@ -53,15 +62,14 @@ function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError";
 }
 
-function usePollingJson<T>({
-  url,
-  initialData,
+function usePollingLoop({
   intervalMs,
   hiddenIntervalMs,
   maxBackoffMs = 30000,
-}: PollingOptions<T>): [T, Dispatch<SetStateAction<T>>] {
-  const [data, setData] = useState<T>(initialData);
-  const etagRef = useRef<string | null>(null);
+  timeoutMs = 5000,
+  refetchOnVisible = true,
+  onPoll,
+}: PollingLoopOptions) {
   const timeoutRef = useRef<number | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const failuresRef = useRef(0);
@@ -89,34 +97,10 @@ function usePollingJson<T>({
       const fetchTimeout = window.setTimeout(() => {
         didTimeout = true;
         controller.abort();
-      }, 5000);
+      }, timeoutMs);
 
       try {
-        const headers = new Headers();
-        if (etagRef.current) {
-          headers.set("If-None-Match", etagRef.current);
-        }
-
-        const response = await fetch(url, {
-          cache: "no-store",
-          headers,
-          signal: controller.signal,
-        });
-
-        if (response.status === 304) {
-          failuresRef.current = 0;
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(`Polling failed: ${response.status}`);
-        }
-
-        const nextData = (await response.json()) as T;
-        etagRef.current = response.headers.get("etag");
-        if (isActive) {
-          setData(nextData);
-        }
+        await onPoll(controller.signal);
         failuresRef.current = 0;
       } catch (error) {
         if (!isAbortError(error) || didTimeout) {
@@ -141,16 +125,80 @@ function usePollingJson<T>({
     };
 
     void fetchOnce();
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    if (refetchOnVisible) {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    }
 
     return () => {
       isActive = false;
       clearTimer();
       const currentAbort = abortRef.current;
       currentAbort?.abort();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (refetchOnVisible) {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      }
     };
-  }, [hiddenIntervalMs, intervalMs, maxBackoffMs, url]);
+  }, [hiddenIntervalMs, intervalMs, maxBackoffMs, onPoll, refetchOnVisible, timeoutMs]);
+}
+
+async function fetchPollingJson<T>(
+  url: string,
+  etagRef: { current: string | null },
+  signal: AbortSignal,
+) {
+  const headers = new Headers();
+  if (etagRef.current) {
+    headers.set("If-None-Match", etagRef.current);
+  }
+
+  const response = await fetch(url, {
+    cache: "no-store",
+    headers,
+    signal,
+  });
+
+  if (response.status === 304) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Polling failed: ${response.status}`);
+  }
+
+  const nextData = (await response.json()) as T;
+  etagRef.current = response.headers.get("etag");
+
+  return nextData;
+}
+
+function usePollingJson<T>({
+  url,
+  initialData,
+  intervalMs,
+  hiddenIntervalMs,
+  maxBackoffMs = 30000,
+}: PollingOptions<T>): [T, Dispatch<SetStateAction<T>>] {
+  const [data, setData] = useState<T>(initialData);
+  const etagRef = useRef<string | null>(null);
+
+  const poll = useCallback(
+    async (signal: AbortSignal) => {
+      const nextData = await fetchPollingJson<T>(url, etagRef, signal);
+      if (nextData === null) {
+        return;
+      }
+
+      setData(nextData);
+    },
+    [url],
+  );
+
+  usePollingLoop({
+    intervalMs,
+    hiddenIntervalMs,
+    maxBackoffMs,
+    onPoll: poll,
+  });
 
   return [data, setData];
 }
@@ -305,9 +353,6 @@ export function useStampTriggerPolling(
 ) {
   const cursorRef = useRef(initialCursor);
   const onInsertRef = useRef(onInsert);
-  const timeoutRef = useRef<number | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  const failuresRef = useRef(0);
 
   useEffect(() => {
     onInsertRef.current = onInsert;
@@ -317,70 +362,31 @@ export function useStampTriggerPolling(
     cursorRef.current = initialCursor;
   }, [initialCursor]);
 
-  useEffect(() => {
-    let isActive = true;
+  const poll = useCallback(async (signal: AbortSignal) => {
+    const response = await fetch(`/api/bingo/stamps?after=${cursorRef.current}`, {
+      cache: "no-store",
+      signal,
+    });
 
-    const clearTimer = () => {
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    };
+    if (!response.ok) {
+      throw new Error(`Stamp polling failed: ${response.status}`);
+    }
 
-    const schedule = (delayMs: number) => {
-      clearTimer();
-      timeoutRef.current = window.setTimeout(fetchOnce, withJitter(delayMs));
-    };
-
-    const fetchOnce = async () => {
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-      let didTimeout = false;
-      const fetchTimeout = window.setTimeout(() => {
-        didTimeout = true;
-        controller.abort();
-      }, 5000);
-
-      try {
-        const response = await fetch(`/api/bingo/stamps?after=${cursorRef.current}`, {
-          cache: "no-store",
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Stamp polling failed: ${response.status}`);
-        }
-
-        const data = (await response.json()) as StampEventsResponse;
-        data.stamps.forEach((stamp) => {
-          onInsertRef.current({
-            id: stamp.id,
-            name: stamp.name as StampName,
-          });
-        });
-        cursorRef.current = data.nextCursor;
-        failuresRef.current = 0;
-      } catch (error) {
-        if (!isAbortError(error) || didTimeout) {
-          failuresRef.current += 1;
-          console.error(error);
-        }
-      } finally {
-        window.clearTimeout(fetchTimeout);
-        if (isActive && (!controller.signal.aborted || didTimeout)) {
-          schedule(Math.min(nextDelay(500, 1500, failuresRef.current), 30000));
-        }
-      }
-    };
-
-    void fetchOnce();
-
-    return () => {
-      isActive = false;
-      clearTimer();
-      const currentAbort = abortRef.current;
-      currentAbort?.abort();
-    };
+    const data = (await response.json()) as StampEventsResponse;
+    data.stamps.forEach((stamp) => {
+      onInsertRef.current({
+        id: stamp.id,
+        name: stamp.name as StampName,
+      });
+    });
+    cursorRef.current = data.nextCursor;
   }, []);
+
+  usePollingLoop({
+    intervalMs: 500,
+    hiddenIntervalMs: 1500,
+    maxBackoffMs: 30000,
+    refetchOnVisible: false,
+    onPoll: poll,
+  });
 }

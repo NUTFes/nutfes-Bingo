@@ -189,26 +189,3 @@ export async function getLatestStampTriggerId(): Promise<number> {
 
   return data?.id ?? 0;
 }
-
-async function getBingoBootstrap() {
-  "use cache";
-  cacheTag(BINGO_CACHE_TAGS.numbers);
-  cacheTag(BINGO_CACHE_TAGS.prizes);
-  cacheTag(BINGO_CACHE_TAGS.appState);
-  cacheTag(BINGO_CACHE_TAGS.reachLogs);
-  cacheLife({ stale: 5, revalidate: 30, expire: 300 });
-
-  const [numbers, prizes, appState, latestReachLog] = await Promise.all([
-    getNumbers(),
-    getPrizes(),
-    getAppState(),
-    getLatestReachLog(),
-  ]);
-
-  return {
-    numbers,
-    prizes,
-    appState,
-    latestReachLog,
-  };
-}

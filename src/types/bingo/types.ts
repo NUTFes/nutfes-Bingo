@@ -20,5 +20,4 @@ type PrizeRow = Tables<"prizes">;
 export type AppStateRow = Tables<"app_state">;
 export type ReachLogRow = Tables<"reach_logs">;
 export type StampTriggerRow = Tables<"stamp_triggers">;
-type ReactionName = StampName;
 export type PrizeWithImageUrl = PrizeRow & { image_url: string | null };
