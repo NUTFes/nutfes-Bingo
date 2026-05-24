@@ -1,10 +1,8 @@
-/* モーダル整列用 */
 .horizontalCenter {
   display: flex;
   justify-content: center;
 }
 
-/* 吹き出し本体 */
 .bubble {
   width: 87.5vw;
   height: 50.9vw;
@@ -26,7 +24,6 @@
   border-radius: inherit;
 }
 
-/* 吹き出しの三角（アウトライン） */
 .bubble:before {
   content: "";
   position: absolute;
@@ -41,7 +38,6 @@
   filter: drop-shadow(0.546875vw 1.09375vw var(--main-color));
 }
 
-/* 吹き出しの三角（中身） */
 .bubble:after {
   content: "";
   position: absolute;
@@ -55,13 +51,11 @@
   margin-left: -2.4609375vw;
 }
 
-/* 三角の左右位置をCSS変数で調整 */
 .bubble:before,
 .bubble:after {
   left: var(--bubble-left-position, 50%);
 }
 
-/* アイコンのグリッド配置 */
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -72,7 +66,6 @@
   align-items: center;
 }
 
-/* アイコンボタンのベース */
 .iconButton {
   position: relative;
   border-radius: 50%;
@@ -84,23 +77,19 @@
   aspect-ratio: 1 / 1;
 }
 
-/* 押下中の柔らかいバウンス */
 .iconButton:active {
   animation: softBounce 1.5s infinite;
 }
 
-/* 直近に押されたアイコンに短いバウンス */
 .iconButton.active {
   animation: softBounce 0.8s ease-in-out;
 }
 
-/* クールダウン中は操作無効＆半透明 */
 .iconButton.disabled {
   pointer-events: none;
   opacity: 0.6;
 }
 
-/* リップル（波紋） */
 .iconButton .ripple {
   position: absolute;
   top: 50%;
@@ -115,12 +104,10 @@
   pointer-events: none;
 }
 
-/* リップルの2発目タイミングずらし */
 .iconButton .ripple.delay {
   animation-delay: 0.15s;
 }
 
-/* 押した画像が放射状に飛ぶ層のラッパー */
 .particles {
   position: absolute;
   inset: -1.8vw;
@@ -128,7 +115,6 @@
   pointer-events: none;
 }
 
-/* 放射する1つ1つのパーティクル（中に画像を含む） */
 .particle {
   position: absolute;
   top: 50%;
@@ -139,13 +125,11 @@
   animation: burst 0.65s ease-out forwards;
 }
 
-/* パーティクル内の画像（塗り潰し） */
 .particleImg {
   position: absolute;
   inset: 0;
 }
 
-/* 6方向に飛ばすベクトルをnth-childで割り当て */
 .particle:nth-child(1) {
   --tx: 0;
   --ty: -9vw;
@@ -171,7 +155,6 @@
   --ty: -5.4vw;
 }
 
-/* 柔らかいバウンスのアニメーション */
 @keyframes softBounce {
   0% {
     transform: scale(1, 0.8);
@@ -187,7 +170,6 @@
   }
 }
 
-/* リップル拡大のアニメーション */
 @keyframes rippleExpand {
   0% {
     transform: translate(-50%, -50%) scale(0.5);
@@ -202,7 +184,6 @@
   }
 }
 
-/* パーティクルが放射して消えるアニメーション */
 @keyframes burst {
   0% {
     transform: translate(-50%, -50%) scale(0.8);

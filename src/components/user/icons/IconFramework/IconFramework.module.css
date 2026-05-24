@@ -4,10 +4,8 @@
   align-items: center;
   justify-content: center;
   background-color: var(--background-color);
-  /* 320pxを基準にした場合の10px */
   padding: 3.125vw;
   border-radius: 3.125vw;
-  /* 320pxを基準にした場合の54px */
   width: 16.875vw;
   height: 16.875vw;
   font-size: 16.875vw;
@@ -23,7 +21,6 @@
 }
 
 .icon {
-  /* 54pxを基準にした場合の30px */
   font-size: 0.5555555555555556em;
   display: flex;
   align-items: center;
@@ -32,7 +29,6 @@
 }
 
 .text {
-  /* 54pxを基準にした場合の9px */
   font-size: 0.1666666666666667em;
   font-weight: 400;
   font-family: var(--font-silom), "Noto Sans JP", sans-serif;

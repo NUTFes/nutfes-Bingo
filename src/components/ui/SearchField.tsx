@@ -1,6 +1,5 @@
 "use client";
 import { SearchIcon, XIcon } from "lucide-react";
-import React from "react";
 import {
   SearchField as AriaSearchField,
   SearchFieldProps as AriaSearchFieldProps,
@@ -29,7 +28,7 @@ export function SearchField({
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        "group flex flex-col gap-1 min-w-[40px] font-sans max-w-full",
+        "group flex flex-col gap-1 min-w-10 font-sans max-w-full",
       )}
     >
       {label && <Label>{label}</Label>}

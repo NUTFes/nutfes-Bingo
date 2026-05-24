@@ -5,7 +5,6 @@ import { ComboBox, ComboBoxItem } from "@/components/ui/ComboBox";
 import { FieldGroup, Input } from "@/components/ui/Field";
 import { Form } from "@/components/ui/Form";
 import { NumberField } from "@/components/ui/NumberField";
-import { Separator } from "@/components/ui/Separator";
 
 interface CreateNumberSectionProps {
   submitNumberFieldKey: number;
@@ -24,9 +23,7 @@ export function CreateNumberSection({
     <section className="flex flex-col gap-3 sm:gap-4">
       <header className="max-w-3xl space-y-1">
         <h2 className="text-lg font-semibold text-foreground">番号の追加</h2>
-        <p className="text-sm text-muted-foreground">
-          1〜99の番号を入力して抽選結果に追加します。
-        </p>
+        <p className="text-sm text-muted-foreground">1〜99の番号を入力して抽選結果に追加します。</p>
       </header>
       <div className="space-y-3">
         <Form
@@ -91,9 +88,7 @@ export function DeleteNumberSection({
     <section className="flex flex-col gap-3 sm:gap-4">
       <header className="max-w-3xl space-y-1">
         <h2 className="text-lg font-semibold text-foreground">番号の削除</h2>
-        <p className="text-sm text-muted-foreground">
-          抽選済み番号を取り消します。
-        </p>
+        <p className="text-sm text-muted-foreground">抽選済み番号を取り消します。</p>
       </header>
       <div className="space-y-3">
         <Form
@@ -143,9 +138,7 @@ export function ReachControlSection({ onIncrement, onDecrement }: ReachControlSe
     <section className="flex flex-col gap-3 sm:gap-4">
       <header className="max-w-3xl space-y-1">
         <h2 className="text-lg font-semibold text-foreground">リーチ数</h2>
-        <p className="text-sm text-muted-foreground">
-          現在のリーチ数を1ずつ増減します。
-        </p>
+        <p className="text-sm text-muted-foreground">現在のリーチ数を1ずつ増減します。</p>
       </header>
       <div className="space-y-4 sm:space-y-5">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

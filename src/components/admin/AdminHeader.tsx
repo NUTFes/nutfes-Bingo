@@ -25,9 +25,9 @@ const Header = ({ children }: HeaderProps) => {
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between gap-4">
           <div className="flex items-center gap-6">
-            <Link 
+            <Link
               href="/admin"
-              className="flex-shrink-0 text-base font-semibold text-foreground transition-colors hover:text-foreground/80"
+              className="shrink-0 text-base font-semibold text-foreground transition-colors hover:text-foreground/80"
             >
               NUTFES BINGO
             </Link>
@@ -41,9 +41,9 @@ const Header = ({ children }: HeaderProps) => {
                     href={item.href}
                     className={cn(
                       "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                      isActive 
-                        ? "bg-accent text-accent-foreground" 
-                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                      isActive
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
                     )}
                     aria-current={isActive ? "page" : undefined}
                   >
@@ -53,7 +53,7 @@ const Header = ({ children }: HeaderProps) => {
               })}
             </nav>
           </div>
-          
+
           {children ? <div className="flex shrink-0 items-center gap-2">{children}</div> : null}
         </div>
 
@@ -67,9 +67,9 @@ const Header = ({ children }: HeaderProps) => {
                 href={item.href}
                 className={cn(
                   "whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                  isActive 
-                    ? "bg-accent text-accent-foreground" 
-                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                  isActive
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >

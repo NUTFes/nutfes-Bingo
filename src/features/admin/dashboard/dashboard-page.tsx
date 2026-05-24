@@ -29,10 +29,7 @@ const showToast = (content: { title: string; description?: string }) => {
   queue.add(content, { timeout: TOAST_TIMEOUT });
 };
 
-export function AdminDashboardPage({
-  initialNumbers,
-  initialAppState,
-}: AdminDashboardPageProps) {
+export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
   const [bingoNumbers, setBingoNumbers] = useNumbersPolling(initialNumbers);
   const dashboardState = useDashboardState({
     initialSurveyUrl: initialAppState.survey_url,

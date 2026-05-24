@@ -15,9 +15,7 @@ export default function Error({
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#121212] text-center text-[#e0e0e0]">
-      <p className="mb-4 text-sm text-[#a0a0a0]">
-        エラーが発生しました。
-      </p>
+      <p className="mb-4 text-sm text-[#a0a0a0]">エラーが発生しました。</p>
       <button
         type="button"
         onClick={() => reset()}

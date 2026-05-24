@@ -118,9 +118,7 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
         <section className="rounded-2xl border border-border bg-card/50 p-5 sm:p-6">
           <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
             <div className="max-w-3xl space-y-1">
-              <h2 className="text-lg font-semibold text-foreground">
-                景品情報を入力
-              </h2>
+              <h2 className="text-lg font-semibold text-foreground">景品情報を入力</h2>
               <p className="text-sm text-muted-foreground">
                 画像・景品名を入力して新しい景品を登録します。
               </p>
@@ -140,7 +138,9 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
               <div className="flex flex-col items-center gap-2">
                 <IoCloudUploadOutline size="4rem" />
                 <p>ここに画像をドラッグ&ドロップ</p>
-                <p className="text-sm font-normal text-muted-foreground">または下のボタンから選択</p>
+                <p className="text-sm font-normal text-muted-foreground">
+                  または下のボタンから選択
+                </p>
               </div>
             </DropZone>
             <FileTrigger
@@ -191,12 +191,8 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
         <section className="rounded-2xl border border-border bg-card/50 p-5 sm:p-6">
           <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
             <div className="max-w-3xl space-y-1">
-              <h2 className="text-lg font-semibold text-foreground">
-                景品プレビュー
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                登録前に画像と景品名を確認できます。
-              </p>
+              <h2 className="text-lg font-semibold text-foreground">景品プレビュー</h2>
+              <p className="text-sm text-muted-foreground">登録前に画像と景品名を確認できます。</p>
             </div>
           </header>
           <Separator className="mb-4 opacity-70" />

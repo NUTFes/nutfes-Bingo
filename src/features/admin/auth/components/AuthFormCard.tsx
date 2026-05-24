@@ -17,13 +17,9 @@ export function AuthFormCard({ title, description, children }: AuthFormCardProps
           <h2 className="text-2xl font-semibold leading-tight tracking-tight sm:text-[1.7rem]">
             {title}
           </h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {description}
-          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
         </div>
-        <div className="px-6 py-6 sm:px-10 sm:py-8">
-          {children}
-        </div>
+        <div className="px-6 py-6 sm:px-10 sm:py-8">{children}</div>
       </div>
     </div>
   );

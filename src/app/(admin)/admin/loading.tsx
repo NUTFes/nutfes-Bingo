@@ -2,9 +2,7 @@ const Loading = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-6 backdrop-blur-md">
       <div className="flex w-full max-w-sm flex-col items-center gap-3.5 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-2xl sm:p-7">
-        <p className="text-xl tracking-[0.08em] font-semibold sm:text-2xl">
-          Admin Console
-        </p>
+        <p className="text-xl tracking-[0.08em] font-semibold sm:text-2xl">Admin Console</p>
         <svg
           className="size-11 fill-current sm:size-12"
           viewBox="0 0 24 24"

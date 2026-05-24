@@ -26,7 +26,6 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
     bottom: props.height ? `calc(${props.height}px + (${props.height}px / 7))` : "0px",
   };
 
-  // 押下禁止中は無視、許可時のみ親の送信処理を実行
   const handleClick = (name: string) => {
     if (props.disabled) return;
     props.onClick(name);
@@ -38,7 +37,6 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
         <div className={styles.effectFrame}>
           <div className={styles.grid}>
             {props.images.map((image) => {
-              // 直近に押されたスタンプかどうか（派手エフェクトの対象）
               const isActive = props.activeName === image.name;
               return (
                 <button
@@ -53,10 +51,8 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
                 >
                   {isActive && (
                     <>
-                      {/* リップル（波紋）を2連で表示 */}
                       <span className={styles.ripple} aria-hidden="true" />
                       <span className={`${styles.ripple} ${styles.delay}`} aria-hidden="true" />
-                      {/* 押したスタンプ画像が放射状に飛ぶエフェクト */}
                       <span className={styles.particles} aria-hidden="true">
                         {Array.from({ length: 6 }).map((_, i) => (
                           <span key={i} className={styles.particle}>

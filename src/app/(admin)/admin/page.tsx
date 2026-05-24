@@ -7,16 +7,7 @@ import { getAppState, getNumbers } from "@/lib/queries";
 export default async function Page() {
   await connection();
 
-  const [, numbers, appState] = await Promise.all([
-    requireAdmin(),
-    getNumbers(),
-    getAppState(),
-  ]);
+  const [, numbers, appState] = await Promise.all([requireAdmin(), getNumbers(), getAppState()]);
 
-  return (
-    <AdminDashboardPage
-      initialNumbers={numbers}
-      initialAppState={appState}
-    />
-  );
+  return <AdminDashboardPage initialNumbers={numbers} initialAppState={appState} />;
 }

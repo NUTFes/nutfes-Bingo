@@ -7,7 +7,6 @@ import { IoClose, IoCreateOutline } from "react-icons/io5";
 
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { Button } from "@/components/ui/Button";
-import { Separator } from "@/components/ui/Separator";
 import { Switch } from "@/components/ui/Switch";
 import { queue } from "@/components/ui/toastQueue";
 import PrizeDeleteModal from "./PrizeDeleteModal";

@@ -14,7 +14,6 @@ import { queue, MyToastContent } from "./toastQueue";
 
 export function MyToastRegion() {
   return (
-    // The ToastRegion should be rendered at the root of your app.
     <ToastRegion
       queue={queue}
       className="fixed bottom-4 right-4 flex flex-col-reverse gap-2 rounded-lg outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
@@ -51,7 +50,7 @@ function MyToast(props: ToastProps<MyToastContent>) {
       style={{ viewTransitionName: props.toast.key } as CSSProperties}
       className={composeTailwindRenderProps(
         props.className,
-        "flex items-center gap-4 bg-blue-600 px-4 py-3 rounded-lg outline-none forced-colors:outline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2 [view-transition-class:toast] font-sans min-w-[300px] max-w-sm",
+        "flex items-center gap-4 bg-blue-600 px-4 py-3 rounded-lg outline-none forced-colors:outline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2 [view-transition-class:toast] font-sans min-w-75 max-w-sm",
       )}
     />
   );

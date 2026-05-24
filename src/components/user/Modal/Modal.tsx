@@ -74,12 +74,7 @@ const Modal = ({
     <>
       {isOpened && (
         <div className={styles.wrapper}>
-          <dialog
-            ref={contentRef}
-            className={styles.content}
-            tabIndex={-1}
-            open
-          >
+          <dialog ref={contentRef} className={styles.content} tabIndex={-1} open>
             {children}
           </dialog>
           {canCloseByClickingBackground && (

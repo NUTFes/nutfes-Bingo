@@ -200,7 +200,8 @@ const JudgementModal = ({
                           "relative flex aspect-square min-h-12 min-w-12 items-center justify-center rounded-xl border border-border bg-card text-lg font-semibold text-foreground shadow-sm transition sm:min-h-14 sm:min-w-14 sm:rounded-2xl sm:text-2xl",
                           !isCenter(rowIndex, colIndex) &&
                             "cursor-pointer hover:border-primary hover:bg-accent",
-                          isCenter(rowIndex, colIndex) && "cursor-default bg-primary text-primary-foreground",
+                          isCenter(rowIndex, colIndex) &&
+                            "cursor-default bg-primary text-primary-foreground",
                           !hasJudged &&
                             selectedCell?.row === rowIndex &&
                             selectedCell?.col === colIndex &&

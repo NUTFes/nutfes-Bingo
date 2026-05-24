@@ -6,7 +6,6 @@ import { AdminHeader } from "@/components/admin";
 import { usePrizesPolling } from "@/lib/polling";
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { SearchField } from "@/components/ui/SearchField";
-import { Separator } from "@/components/ui/Separator";
 import { MyToastRegion } from "@/components/ui/Toast";
 import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
@@ -32,14 +31,12 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
         <section className="flex flex-col gap-4 sm:gap-6">
           <header className="flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-3xl space-y-1">
-              <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
-                景品管理
-              </h2>
+              <h2 className="text-xl font-semibold text-foreground sm:text-2xl">景品管理</h2>
               <p className="text-sm text-muted-foreground">
                 景品の追加、編集、当選状況の管理を行います。
               </p>
             </div>
-            
+
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <SearchField
                 className="w-full sm:w-72"
