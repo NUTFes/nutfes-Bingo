@@ -51,7 +51,11 @@ async function uploadPrizeImage(supabase: AdminSupabaseClient, file: File) {
 }
 
 function bytesStartWith(bytes: Uint8Array, signature: number[]) {
-  return signature.every((value, index) => bytes[index] === value);
+  if (bytes.length < signature.length) return false;
+  for (let i = 0; i < signature.length; i++) {
+    if (bytes[i] !== signature[i]) return false;
+  }
+  return true;
 }
 
 function hasValidImageSignature(type: string, bytes: Uint8Array) {

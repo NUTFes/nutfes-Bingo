@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, use, useEffect, useMemo, useState } from "react";
 
 import { en } from "@/utils/i18n/en";
 import { ja } from "@/utils/i18n/ja";
@@ -19,14 +19,13 @@ const STORAGE_KEY = "bingo-language";
 const BingoLanguageContext = createContext<BingoLanguageContextValue | null>(null);
 
 export function BingoLanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<SupportedLanguage>("ja");
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "ja" || stored === "en") {
-      setLanguageState(stored);
+  const [language, setLanguageState] = useState<SupportedLanguage>(() => {
+    if (typeof window !== "undefined") {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored === "ja" || stored === "en") return stored;
     }
-  }, []);
+    return "ja";
+  });
 
   const value = useMemo<BingoLanguageContextValue>(() => {
     const setLanguage = (nextLanguage: SupportedLanguage) => {
@@ -45,7 +44,7 @@ export function BingoLanguageProvider({ children }: { children: React.ReactNode 
 }
 
 export function useBingoLanguage() {
-  const context = useContext(BingoLanguageContext);
+  const context = use(BingoLanguageContext);
 
   if (!context) {
     throw new Error("useBingoLanguage must be used inside BingoLanguageProvider");

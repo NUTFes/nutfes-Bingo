@@ -14,8 +14,8 @@ import {
   FieldGroup,
   Input,
   Label,
-  fieldBorderStyles,
 } from "@/components/ui/Field";
+import { fieldBorderStyles } from "@/components/ui/fieldStyles";
 import { composeTailwindRenderProps } from "@/utils/react-aria-utils";
 
 export interface NumberFieldProps extends AriaNumberFieldProps {
@@ -49,11 +49,11 @@ export function NumberField({
               })}
             >
               <StepperButton slot="increment">
-                <ChevronUp aria-hidden className="w-4 h-4" />
+                <ChevronUp aria-hidden className="size-4" />
               </StepperButton>
               <div className={fieldBorderStyles({ ...renderProps, class: "border-b" })} />
               <StepperButton slot="decrement">
-                <ChevronDown aria-hidden className="w-4 h-4" />
+                <ChevronDown aria-hidden className="size-4" />
               </StepperButton>
             </div>
           </>

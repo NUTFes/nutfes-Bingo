@@ -1,6 +1,6 @@
 import type { NumberRow } from "@/types/bingo/types";
 import styles from "./NumberCardList.module.css";
-import NumberCardSmall from "../NumberCardSmall";
+import NumberCardSmall from "../NumberCardSmall/NumberCardSmall";
 
 interface NumberCardListProps {
   bingoNumber: NumberRow[];

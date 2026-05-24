@@ -47,10 +47,9 @@ type ModalState = {
   isSettingsModalOpen: boolean;
   isReachModalOpen: boolean;
   isSurveyModalOpen: boolean;
-  hasShownSurvey: boolean;
 };
 
-type ModalToggleKey = Exclude<keyof ModalState, "hasShownSurvey">;
+type ModalToggleKey = keyof ModalState;
 
 const persistBooleanPreference = (key: string, value: boolean) => {
   window.localStorage.setItem(key, value.toString());
@@ -72,7 +71,6 @@ function InnerLayout({
     isSettingsModalOpen: false,
     isReachModalOpen: false,
     isSurveyModalOpen: false,
-    hasShownSurvey: false,
   });
   const [preferences, setPreferences] = useState(() => ({
     isReachIconVisible: initialPreferences.isReachIconVisible,
@@ -136,27 +134,15 @@ function InnerLayout({
     applyPublicTheme(isDarkMode);
   }, [isDarkMode]);
 
-  useEffect(() => {
-    setModalState((prev) => {
-      if (!appState.is_survey_active && prev.hasShownSurvey) {
-        return {
-          ...prev,
-          isSurveyModalOpen: false,
-          hasShownSurvey: false,
-        };
-      }
-
-      if (appState.is_survey_active && !prev.hasShownSurvey && appState.survey_url) {
-        return {
-          ...prev,
-          isSurveyModalOpen: true,
-          hasShownSurvey: true,
-        };
-      }
-
-      return prev;
-    });
-  }, [appState.is_survey_active, appState.survey_url]);
+  const prevSurveyActiveRef = useRef(appState.is_survey_active);
+  if (appState.is_survey_active !== prevSurveyActiveRef.current) {
+    prevSurveyActiveRef.current = appState.is_survey_active;
+    if (appState.is_survey_active && appState.survey_url) {
+      setModalState((prev) => ({ ...prev, isSurveyModalOpen: true }));
+    } else if (!appState.is_survey_active) {
+      setModalState((prev) => ({ ...prev, isSurveyModalOpen: false }));
+    }
+  }
 
   const handleReactionClick = async (name: string) => {
     if (isStampSending) {
@@ -242,7 +228,7 @@ function InnerLayout({
   ].filter(Boolean);
 
   return (
-    <div>
+    <div className={styles.layoutWrapper}>
       {isReactionModalOpen && (
         <ReactionStampModal
           position={position}

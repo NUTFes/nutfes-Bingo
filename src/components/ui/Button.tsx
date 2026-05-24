@@ -58,7 +58,7 @@ export function Button(props: ButtonProps) {
           {isPending && (
             <span aria-hidden className="flex absolute inset-0 justify-center items-center">
               <svg
-                className="w-4 h-4 text-white animate-spin"
+                className="size-4 text-white animate-spin"
                 viewBox="0 0 24 24"
                 stroke={
                   props.variant === "secondary" || props.variant === "quiet"

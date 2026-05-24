@@ -191,9 +191,10 @@ const JudgementModal = ({
               </div>
               <div className="grid grid-rows-5 gap-2 sm:gap-2.5">
                 {bingoCard.map((row, rowIndex) => (
-                  <div key={rowIndex} className="grid grid-cols-5 gap-2 sm:gap-2.5">
+                  <div key={`row-${rowIndex}`} className="grid grid-cols-5 gap-2 sm:gap-2.5">
                     {row.map((_, colIndex) => (
-                      <div
+                      <button
+                        type="button"
                         key={`${rowIndex}-${colIndex}`}
                         className={cn(
                           "relative flex aspect-square min-h-12 min-w-12 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-lg font-semibold text-zinc-100 shadow-sm transition sm:min-h-14 sm:min-w-14 sm:rounded-2xl sm:text-2xl",
@@ -213,18 +214,10 @@ const JudgementModal = ({
                             "border-indigo-400 bg-indigo-500/20 text-indigo-100 shadow-lg",
                         )}
                         onClick={() => handleCellClick(rowIndex, colIndex)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            handleCellClick(rowIndex, colIndex);
-                          }
-                        }}
-                        tabIndex={0}
-                        role="button"
                         aria-label={`行${rowIndex + 1} 列${COL_HEADERS[colIndex]} ${getCellText(rowIndex, colIndex) || "空"}`}
                       >
                         {getCellText(rowIndex, colIndex)}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ))}

@@ -1,8 +1,16 @@
+.layoutWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
 .content {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: clamp(14px, 7vw, 26px) 0 calc(12vw + env(safe-area-inset-bottom));
-  min-height: 100vh;
+  padding: clamp(14px, 7vw, 26px) 0 clamp(20px, 10vw, 40px);
 }
 
 .reachModal {

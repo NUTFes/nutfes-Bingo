@@ -43,7 +43,7 @@ export function ComboBox<T extends object, M extends "single" | "multiple" = "si
       <FieldGroup>
         <Input className="ps-3 pe-1" />
         <FieldButton className="w-6 mr-1 outline-offset-0">
-          <ChevronDown aria-hidden className="w-4 h-4" />
+          <ChevronDown aria-hidden className="size-4" />
         </FieldButton>
       </FieldGroup>
       {props.selectionMode === "multiple" && (

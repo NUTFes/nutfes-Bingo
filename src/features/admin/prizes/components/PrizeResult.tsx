@@ -9,7 +9,7 @@ import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { Button } from "@/components/ui/Button";
 import { Separator } from "@/components/ui/Separator";
 import { Switch } from "@/components/ui/Switch";
-import { queue } from "@/components/ui/Toast";
+import { queue } from "@/components/ui/toastQueue";
 import PrizeDeleteModal from "./PrizeDeleteModal";
 import PrizeEditModal from "./PrizeEditModal";
 
@@ -47,7 +47,7 @@ const PrizeResult = ({
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selected, setSelected] = useState<PrizeWithImageUrl | null>(null);
 
-  const sortedPrizes = useMemo(() => [...prizeResult].sort((a, b) => a.id - b.id), [prizeResult]);
+  const sortedPrizes = useMemo(() => prizeResult.toSorted((a, b) => a.id - b.id), [prizeResult]);
 
   const handleToggleChange = async (id: number, isWon: boolean) => {
     try {
@@ -166,7 +166,7 @@ const PrizeResult = ({
                       ) : null}
                       {showOverlay && prize.is_won && (
                         <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/70">
-                          <p className="m-0 inline-flex w-4/5 items-center justify-center rounded-full bg-amber-400 px-3 py-2 text-base font-semibold text-zinc-900">
+                          <p className="m-0 inline-flex w-4/5 items-center justify-center rounded-full bg-amber-400 px-3 py-2 text-base font-semibold text-amber-900">
                             当選済み
                           </p>
                         </div>

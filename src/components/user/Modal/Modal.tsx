@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import styles from "./Modal.module.css";
 
 interface ModalProps {
@@ -16,11 +16,11 @@ const Modal = ({
   canCloseByClickingBackground = true,
   setIsOpened,
 }: ModalProps) => {
-  const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDialogElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
-  const closeModal = useCallback(() => {
-    setIsOpened(false);
-  }, [setIsOpened]);
+
+  const setIsOpenedRef = useRef(setIsOpened);
+  setIsOpenedRef.current = setIsOpened;
 
   useEffect(() => {
     if (!isOpened) {
@@ -33,7 +33,7 @@ const Modal = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && canCloseByClickingBackground) {
         event.preventDefault();
-        closeModal();
+        setIsOpenedRef.current(false);
         return;
       }
 
@@ -68,26 +68,25 @@ const Modal = ({
       document.removeEventListener("keydown", handleKeyDown);
       previousFocusRef.current?.focus();
     };
-  }, [canCloseByClickingBackground, closeModal, isOpened]);
+  }, [canCloseByClickingBackground, isOpened]);
 
   return (
     <>
       {isOpened && (
         <div className={styles.wrapper}>
-          <div
+          <dialog
             ref={contentRef}
             className={styles.content}
-            role="dialog"
-            aria-modal="true"
             tabIndex={-1}
+            open
           >
             {children}
-          </div>
+          </dialog>
           {canCloseByClickingBackground && (
             <button
               type="button"
               className={styles.background}
-              onClick={closeModal}
+              onClick={() => setIsOpened(false)}
               aria-label="モーダルを閉じる"
             />
           )}

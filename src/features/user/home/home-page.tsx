@@ -17,7 +17,7 @@ interface HomePageProps {
 
 export function HomePage({ initialNumbers, initialAppState, initialPreferences }: HomePageProps) {
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(
-    initialPreferences.isSortedAscending,
+    () => initialPreferences.isSortedAscending,
   );
   const { numbers, appState } = useHomePollingState(initialNumbers, initialAppState);
   const displayBingoNumbers = getHomeDisplayBingoNumbers(isSortedAscending, numbers);

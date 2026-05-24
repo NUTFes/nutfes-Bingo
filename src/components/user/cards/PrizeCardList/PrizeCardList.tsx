@@ -1,6 +1,6 @@
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import styles from "./PrizeCardList.module.css";
-import PrizeCard from "../PrizeCard";
+import PrizeCard from "../PrizeCard/PrizeCard";
 
 interface PrizeCardListProps {
   prizes: PrizeWithImageUrl[];

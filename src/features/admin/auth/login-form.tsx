@@ -60,7 +60,7 @@ export function LoginForm({
   redirectTo?: string;
   canSignUp?: boolean;
 }) {
-  const router = useRouter();
+  const { push } = useRouter();
   const [state, dispatch] = useReducer(reducer, initialState);
 
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
@@ -85,7 +85,7 @@ export function LoginForm({
       if (error) {
         throw error;
       }
-      router.push(safeRedirectTo);
+      push(safeRedirectTo);
     } catch (error: unknown) {
       dispatch({
         type: "SET_ERROR",

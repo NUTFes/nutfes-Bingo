@@ -1,8 +1,8 @@
 import type { NumberRow } from "@/types/bingo/types";
 
-const sortById = (bingoNumbers: NumberRow[]) => [...bingoNumbers].sort((a, b) => a.id - b.id);
+const sortById = (bingoNumbers: NumberRow[]) => bingoNumbers.toSorted((a, b) => a.id - b.id);
 const sortByNumber = (bingoNumbers: NumberRow[]) =>
-  [...bingoNumbers].sort((a, b) => a.number - b.number);
+  bingoNumbers.toSorted((a, b) => a.number - b.number);
 
 export function getHomeDisplayBingoNumbers(isSortedAscending: boolean, bingoNumbers: NumberRow[]) {
   if (isSortedAscending) {

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { isFileDropItem, type DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
 import { IoCloudUploadOutline } from "react-icons/io5";
@@ -41,27 +41,24 @@ const PrizeEditModal = ({
   const close = () => setIsOpened(false);
   const [nameJp, setNameJp] = useState(() => initialNameJp || "");
   const [nameEn, setNameEn] = useState(() => initialNameEn || "");
-  const [newFile, setNewFile] = useState<File | null>(null);
+  const newFile = useRef<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(() => initialImageUrl || "");
 
   useEffect(() => {
-    if (!newFile) {
-      return undefined;
-    }
-
-    const url = URL.createObjectURL(newFile);
-    setPreviewUrl(url);
-
     return () => {
-      URL.revokeObjectURL(url);
+      if (previewUrl && previewUrl !== initialImageUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
-  }, [newFile]);
+  }, [previewUrl, initialImageUrl]);
 
   const handleFileSelected = useCallback(
     (file: File | null) => {
-      setNewFile(file);
+      newFile.current = file;
       if (!file) {
         setPreviewUrl(initialImageUrl || "");
+      } else {
+        setPreviewUrl(URL.createObjectURL(file));
       }
     },
     [initialImageUrl],
@@ -69,18 +66,16 @@ const PrizeEditModal = ({
 
   const handleDrop = useCallback(
     async (event: DropEvent) => {
-      for (const item of event.items) {
-        if (isFileDropItem(item)) {
-          handleFileSelected(await item.getFile());
-          return;
-        }
+      const item = event.items.find(isFileDropItem);
+      if (item) {
+        handleFileSelected(await item.getFile());
       }
     },
     [handleFileSelected],
   );
 
   const handleSubmit = async () => {
-    await onSubmit({ nameJp, nameEn, file: newFile });
+    await onSubmit({ nameJp, nameEn, file: newFile.current });
     close();
   };
 

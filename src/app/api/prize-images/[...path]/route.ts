@@ -39,6 +39,7 @@ export async function GET(_request: Request, context: { params: Promise<{ path: 
     headers: {
       apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     },
+    next: { revalidate: 3600 },
   });
 
   if (!upstream.ok || !upstream.body) {

@@ -14,39 +14,14 @@ export default function Error({
   }, [error]);
 
   return (
-    <div
-      style={{
-        textAlign: "center",
-        backgroundColor: "#121212",
-        color: "#e0e0e0",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <p
-        style={{
-          marginBottom: "1rem",
-          fontSize: "0.875rem",
-          color: "#a0a0a0",
-        }}
-      >
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#121212] text-center text-[#e0e0e0]">
+      <p className="mb-4 text-sm text-[#a0a0a0]">
         エラーが発生しました。
       </p>
       <button
         type="button"
         onClick={() => reset()}
-        style={{
-          borderRadius: "0.25rem",
-          backgroundColor: "#2563eb",
-          padding: "0.5rem 1rem",
-          fontSize: "0.875rem",
-          color: "#ffffff",
-          border: "none",
-          cursor: "pointer",
-        }}
+        className="cursor-pointer rounded bg-blue-600 px-4 py-2 text-sm text-white border-none"
       >
         再試行
       </button>

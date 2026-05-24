@@ -11,6 +11,7 @@ interface ButtonProps {
 const Button: React.FC<ButtonProps> = (props) => {
   return (
     <button
+      type="button"
       className={cn(styles.button, {
         [styles.inversion]: props.inversion,
       })}

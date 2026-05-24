@@ -14,7 +14,8 @@ import { DropZone } from "@/components/ui/DropZone";
 import { Form } from "@/components/ui/Form";
 import { Separator } from "@/components/ui/Separator";
 import { TextField } from "@/components/ui/TextField";
-import { MyToastRegion, queue } from "@/components/ui/Toast";
+import { MyToastRegion } from "@/components/ui/Toast";
+import { queue } from "@/components/ui/toastQueue";
 import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
 
@@ -67,11 +68,9 @@ export function AdminPrizeCreatePage({ adminUserLabel, initialPrizes }: AdminPri
 
   const handleDrop = useCallback(
     async (event: DropEvent) => {
-      for (const item of event.items) {
-        if (isFileDropItem(item)) {
-          handleFileSelected(await item.getFile());
-          return;
-        }
+      const item = event.items.find(isFileDropItem);
+      if (item) {
+        handleFileSelected(await item.getFile());
       }
     },
     [handleFileSelected],

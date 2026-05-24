@@ -1,7 +1,7 @@
 import type { NumberRow } from "@/types/bingo/types";
 
 function sortById(bingoNumbers: NumberRow[]) {
-  return [...bingoNumbers].sort((a, b) => a.id - b.id);
+  return bingoNumbers.toSorted((a, b) => a.id - b.id);
 }
 
 export function getScreenDisplayBingoNumbers(bingoNumbers: NumberRow[]) {

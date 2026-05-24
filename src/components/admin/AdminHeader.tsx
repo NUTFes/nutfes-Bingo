@@ -17,7 +17,7 @@ const COMMON_NAV_ITEMS = [
 ] as const;
 
 const Header = ({ children, user }: HeaderProps) => {
-  const router = useRouter();
+  const { push } = useRouter();
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -45,7 +45,7 @@ const Header = ({ children, user }: HeaderProps) => {
           <Button
             variant="quiet"
             className="h-9 px-2 text-left text-base font-semibold leading-tight tracking-[0.01em] text-zinc-100 hover:bg-zinc-800/90 sm:text-lg"
-            onPress={() => router.push("/admin")}
+            onPress={() => push("/admin")}
           >
             NUTFES BINGO {user}
           </Button>
@@ -57,7 +57,7 @@ const Header = ({ children, user }: HeaderProps) => {
               <li key={item.href}>
                 <Button
                   variant={isActive(item.href) ? "primary" : "secondary"}
-                  onPress={() => router.push(item.href)}
+                  onPress={() => push(item.href)}
                 >
                   {item.label}
                 </Button>

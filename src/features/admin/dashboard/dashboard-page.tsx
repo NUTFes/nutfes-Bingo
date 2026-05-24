@@ -2,7 +2,8 @@
 
 import { AdminHeader, BingoResult } from "@/components/admin";
 import { Button } from "@/components/ui/Button";
-import { MyToastRegion, queue } from "@/components/ui/Toast";
+import { MyToastRegion } from "@/components/ui/Toast";
+import { queue } from "@/components/ui/toastQueue";
 import { useNumbersPolling } from "@/lib/polling";
 import type { AppStateRow, NumberRow } from "@/types/bingo/types";
 import JudgementModal from "./components/JudgementModal";

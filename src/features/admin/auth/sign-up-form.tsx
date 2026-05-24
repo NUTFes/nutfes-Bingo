@@ -51,7 +51,7 @@ function reducer(state: State, action: Action): State {
 }
 
 export function SignUpForm() {
-  const router = useRouter();
+  const { push } = useRouter();
   const [state, dispatch] = useReducer(reducer, initialState);
 
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
@@ -80,7 +80,7 @@ export function SignUpForm() {
       if (error) {
         throw error;
       }
-      router.push("/auth/sign-up-success");
+      push("/auth/sign-up-success");
     } catch (error: unknown) {
       dispatch({
         type: "SET_ERROR",

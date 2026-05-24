@@ -1,5 +1,5 @@
 import React from "react";
-import { LazyMotion, domAnimation, m } from "framer-motion";
+import { LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
 import styles from "./ToggleButton.module.css";
 
 interface ToggleButtonProps {
@@ -9,6 +9,8 @@ interface ToggleButtonProps {
 }
 
 const ToggleButton = (props: ToggleButtonProps) => {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <button
       type="button"
@@ -25,6 +27,7 @@ const ToggleButton = (props: ToggleButtonProps) => {
             type: "spring",
             stiffness: 700,
             damping: 30,
+            duration: shouldReduceMotion ? 0 : undefined,
           }}
         />
       </LazyMotion>

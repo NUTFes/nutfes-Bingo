@@ -95,7 +95,7 @@ export function DropdownItem(props: ListBoxItemProps) {
             {children}
           </span>
           <span className="flex items-center w-5">
-            {isSelected && <Check className="w-4 h-4" />}
+            {isSelected && <Check className="size-4" />}
           </span>
         </>
       ))}

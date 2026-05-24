@@ -12,7 +12,7 @@ const HELP_SHOWN_KEY = "isHelpTourShown";
 const LEGACY_HELP_SHOWN_KEY = "isStartIntrojs";
 
 const Header = () => {
-  const router = useRouter();
+  const { push } = useRouter();
   const pathname = usePathname() ?? "/";
   const { t } = useBingoLanguage();
   const driverRef = useRef<Driver | null>(null);
@@ -114,8 +114,9 @@ const Header = () => {
   }, [startTour]);
 
   useEffect(() => {
+    const driver = driverRef.current;
     return () => {
-      driverRef.current?.destroy();
+      driver?.destroy();
     };
   }, []);
 
@@ -125,7 +126,7 @@ const Header = () => {
         <button
           type="button"
           className={styles.title}
-          onClick={() => router.push("/")}
+          onClick={() => push("/")}
           aria-label="nutfes-Bingo"
         >
           nutfes-Bingo

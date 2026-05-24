@@ -146,7 +146,8 @@ function usePollingJson<T>({
     return () => {
       isActive = false;
       clearTimer();
-      abortRef.current?.abort();
+      const currentAbort = abortRef.current;
+      currentAbort?.abort();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [hiddenIntervalMs, intervalMs, maxBackoffMs, url]);
@@ -378,7 +379,8 @@ export function useStampTriggerPolling(
     return () => {
       isActive = false;
       clearTimer();
-      abortRef.current?.abort();
+      const currentAbort = abortRef.current;
+      currentAbort?.abort();
     };
   }, []);
 }
