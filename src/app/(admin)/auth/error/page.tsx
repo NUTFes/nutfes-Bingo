@@ -13,11 +13,11 @@ async function ErrorContent({ searchParams }: { searchParams: Promise<{ error?: 
   const message = errorCode ? AUTH_ERROR_MESSAGES[errorCode] : undefined;
 
   return errorCode ? (
-    <p role="alert" aria-live="polite" className="text-sm text-zinc-300">
+    <p role="alert" aria-live="polite" className="text-sm text-muted-foreground">
       {message ?? `エラーコード: ${errorCode}`}
     </p>
   ) : (
-    <p role="alert" aria-live="polite" className="text-sm text-zinc-300">
+    <p role="alert" aria-live="polite" className="text-sm text-muted-foreground">
       不明な認証エラーが発生しました。
     </p>
   );
@@ -25,11 +25,11 @@ async function ErrorContent({ searchParams }: { searchParams: Promise<{ error?: 
 
 export default function Page({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   return (
-    <main className="flex min-h-svh items-center bg-zinc-950 px-4 py-6 text-zinc-100 sm:px-6 sm:py-10">
+    <main className="flex min-h-svh items-center bg-background px-4 py-6 text-foreground sm:px-6 sm:py-10">
       <section className="mx-auto w-full max-w-xl">
-        <div className="rounded-3xl border border-zinc-800/90 bg-zinc-900/95 p-6 shadow-xl shadow-zinc-950/40 sm:p-8">
+        <div className="rounded-3xl border border-border bg-card/95 p-6 shadow-xl shadow-black/40 sm:p-8">
           <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               NUTFES BINGO ADMIN
             </p>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-[2rem]">

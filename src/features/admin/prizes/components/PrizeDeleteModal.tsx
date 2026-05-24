@@ -38,19 +38,19 @@ const PrizeDeleteModal = ({
     >
       <Dialog
         className={cn(
-          "relative max-h-[90vh] w-full overflow-y-auto rounded-2xl border border-zinc-700 bg-zinc-900 p-4 text-zinc-100 shadow-2xl sm:p-6",
+          "relative max-h-[90vh] w-full overflow-y-auto rounded-2xl border border-border bg-card p-4 text-foreground shadow-2xl sm:p-6",
           "max-w-md",
         )}
       >
-        <h3 className="text-xl font-semibold leading-tight text-zinc-100 sm:text-2xl">
+        <h3 className="text-xl font-semibold leading-tight text-foreground sm:text-2xl">
           景品を削除しますか？
         </h3>
         <Separator className="my-4 opacity-75" />
-        <div className="space-y-3 rounded-xl border border-zinc-700 bg-zinc-800/70 p-4">
-          <p className="text-sm leading-relaxed text-zinc-400">
+        <div className="space-y-3 rounded-xl border border-border bg-muted/70 p-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">
             次の景品を削除します。この操作は取り消せません。
           </p>
-          <p className="text-base font-bold leading-relaxed text-zinc-100">{prizeName}</p>
+          <p className="text-base font-bold leading-relaxed text-foreground">{prizeName}</p>
         </div>
         <Separator className="my-4 opacity-75" />
         <div className="flex flex-wrap justify-end gap-2.5 sm:gap-3">

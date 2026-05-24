@@ -4,9 +4,9 @@
   align-items: center;
   font-weight: 700;
   border-radius: 1vw;
-  border: 1vw solid var(--main-color);
-  color: var(--background-color);
-  background-color: var(--main-color);
+  border: 1vw solid var(--color-button-line);
+  color: var(--color-font-main);
+  background: linear-gradient(135deg, var(--color-button-start), var(--color-button-end));
   width: 25vw;
   height: 5.6vh;
   padding: 1vw;
@@ -14,8 +14,9 @@
 }
 
 .inversion {
-  color: var(--main-color);
-  background-color: var(--background-color);
+  color: var(--color-button-start);
+  background: var(--color-secondary);
+  border-color: var(--color-button-line);
 }
 
 .button:active {

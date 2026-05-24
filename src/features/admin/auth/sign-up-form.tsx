@@ -129,7 +129,7 @@ export function SignUpForm() {
         <Button type="submit" className="h-11 w-full font-medium" isPending={state.isPending}>
           新規登録
         </Button>
-        <p className="text-center text-sm leading-relaxed text-zinc-300">
+        <p className="text-center text-sm leading-relaxed text-muted-foreground">
           すでにアカウントをお持ちの場合は{" "}
           <Link href="/auth/login" variant="secondary" className="underline-offset-4">
             ログイン

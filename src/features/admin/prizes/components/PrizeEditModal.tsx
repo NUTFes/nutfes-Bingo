@@ -90,7 +90,7 @@ const PrizeEditModal = ({
       isDismissable={canCloseByClickingBackground}
     >
       <Dialog>
-        <h3 className="text-xl font-semibold leading-tight text-zinc-100 sm:text-2xl">
+        <h3 className="text-xl font-semibold leading-tight text-foreground sm:text-2xl">
           景品を編集
         </h3>
         <Separator className="my-4 opacity-75" />
@@ -107,9 +107,9 @@ const PrizeEditModal = ({
 
           <div>
             <div className="space-y-2">
-              <p className="text-sm font-medium text-zinc-100">画像</p>
+              <p className="text-sm font-medium text-foreground">画像</p>
               {previewUrl ? (
-                <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900/80 p-2">
+                <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-border bg-card/80 p-2">
                   <Image
                     className="bg-white"
                     src={previewUrl}
@@ -120,7 +120,7 @@ const PrizeEditModal = ({
                   />
                 </div>
               ) : (
-                <div className="grid min-h-24 place-items-center rounded-2xl border border-dashed border-zinc-600 bg-zinc-800/60 text-base text-zinc-400">
+                <div className="grid min-h-24 place-items-center rounded-2xl border border-dashed border-muted-foreground/50 bg-muted/60 text-base text-muted-foreground">
                   (画像なし)
                 </div>
               )}
@@ -149,7 +149,7 @@ const PrizeEditModal = ({
               >
                 <Button variant="secondary">画像ファイルを選択</Button>
               </FileTrigger>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-muted-foreground">
                 ファイルを選択しない場合は現在の画像を維持します。
               </p>
             </div>

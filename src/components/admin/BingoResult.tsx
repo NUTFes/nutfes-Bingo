@@ -16,20 +16,22 @@ const BingoResult = ({ bingoResultNumber, onClick }: BingoResultProps) => {
   );
 
   return (
-    <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6">
-      <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
-        <div className="max-w-3xl space-y-2">
-          <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">
+    <section className="flex flex-col gap-4 sm:gap-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div className="max-w-3xl space-y-1">
+          <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
             抽選済み番号一覧
           </h2>
-          <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
+          <p className="text-sm text-muted-foreground">
             番号を押すと修正できます。
           </p>
         </div>
+        <p className="inline-flex h-9 items-center rounded-full border border-border bg-card/50 px-3 text-sm text-muted-foreground">
+          登録済み: {sortedNumbers.length} 件
+        </p>
       </header>
-      <Separator className="mb-4 opacity-70" />
+      
       <div className="space-y-3 sm:space-y-4">
-        <p className="text-sm text-zinc-400">登録済み: {sortedNumbers.length} 件</p>
         <Virtualizer
           layout={GridLayout}
           layoutOptions={{
@@ -43,7 +45,7 @@ const BingoResult = ({ bingoResultNumber, onClick }: BingoResultProps) => {
                 <button
                   type="button"
                   onClick={() => onClick(num.id)}
-                  className="h-full w-full aspect-square rounded-2xl bg-zinc-50 text-4xl font-extrabold text-zinc-900"
+                  className="h-full w-full aspect-square rounded-2xl bg-primary text-4xl font-extrabold text-primary-foreground transition hover:bg-primary/90 active:scale-95 active:bg-primary/80"
                 >
                   {num.number}
                 </button>

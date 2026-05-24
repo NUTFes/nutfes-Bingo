@@ -12,11 +12,10 @@ import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
 
 interface AdminPrizesPageProps {
-  adminUserLabel: string;
   initialPrizes: PrizeWithImageUrl[];
 }
 
-export function AdminPrizesPage({ adminUserLabel, initialPrizes }: AdminPrizesPageProps) {
+export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
   const [bingoPrize, setBingoPrize] = usePrizesPolling(initialPrizes);
   const [searchText, setSearchText] = useState("");
 
@@ -25,36 +24,34 @@ export function AdminPrizesPage({ adminUserLabel, initialPrizes }: AdminPrizesPa
     : bingoPrize;
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-900 via-zinc-950 to-black pb-8 text-zinc-100 sm:pb-10">
+    <div className="min-h-screen bg-background pb-8 text-foreground sm:pb-10">
       <MyToastRegion />
-      <AdminHeader user={adminUserLabel} />
+      <AdminHeader />
 
       <div className="mx-auto mt-6 w-full max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-        <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6">
-          <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
-            <div className="max-w-3xl space-y-2">
-              <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">
-                景品検索
+        <section className="flex flex-col gap-4 sm:gap-6">
+          <header className="flex flex-wrap items-end justify-between gap-4">
+            <div className="max-w-3xl space-y-1">
+              <h2 className="text-xl font-semibold text-foreground sm:text-2xl">
+                景品管理
               </h2>
-              <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
-                景品名で検索できます。
+              <p className="text-sm text-muted-foreground">
+                景品の追加、編集、当選状況の管理を行います。
               </p>
             </div>
-          </header>
-          <Separator className="mb-4 opacity-70" />
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-end justify-between gap-3 max-sm:flex-col max-sm:items-stretch">
+            
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <SearchField
-                className="w-full max-w-md"
+                className="w-full sm:w-72"
                 placeholder="景品名で検索"
                 value={searchText}
                 onChange={setSearchText}
               />
-              <p className="inline-flex h-10 items-center rounded-full border border-zinc-700 bg-zinc-800/80 px-4 text-sm text-zinc-400">
-                全 {bingoPrize.length} 件 / 表示 {filteredPrizes.length} 件
+              <p className="shrink-0 inline-flex h-10 items-center rounded-full border border-border bg-card/50 px-4 text-sm text-muted-foreground">
+                表示 {filteredPrizes.length} / 全 {bingoPrize.length} 件
               </p>
             </div>
-          </div>
+          </header>
         </section>
 
         <PrizeResult

@@ -103,18 +103,7 @@ const PrizeResult = ({
 
   return (
     <>
-      <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6">
-        <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
-          <div className="max-w-3xl space-y-2">
-            <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">
-              景品一覧
-            </h2>
-            <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
-              {sortedPrizes.length}件の景品を表示しています。カード右上から編集・削除できます。
-            </p>
-          </div>
-        </header>
-        <Separator className="mb-4 opacity-70" />
+      <div className="flex flex-col gap-4">
         <div className="space-y-4 sm:space-y-5">
           <Virtualizer
             layout={GridLayout}
@@ -126,7 +115,7 @@ const PrizeResult = ({
               {(prize) => (
                 <GridListItem id={prize.id} textValue={prize.name_jp}>
                   <div
-                    className="group relative flex h-full flex-col gap-3 rounded-2xl border border-zinc-700 bg-zinc-900 p-3 text-zinc-100 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-400/70 hover:shadow-md sm:p-4"
+                    className="group relative flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-3 text-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-md sm:p-4"
                     id={`prize-${prize.id}`}
                   >
                     <div className="absolute right-2 top-2 z-10 flex gap-2">
@@ -154,7 +143,7 @@ const PrizeResult = ({
                       </Button>
                     </div>
 
-                    <div className="relative aspect-4/3 overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950">
+                    <div className="relative aspect-4/3 overflow-hidden rounded-2xl border border-border bg-background">
                       {prize.image_url ? (
                         <Image
                           src={prize.image_url}
@@ -165,7 +154,7 @@ const PrizeResult = ({
                         />
                       ) : null}
                       {showOverlay && prize.is_won && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/70">
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/70">
                           <p className="m-0 inline-flex w-4/5 items-center justify-center rounded-full bg-amber-400 px-3 py-2 text-base font-semibold text-amber-900">
                             当選済み
                           </p>
@@ -174,7 +163,7 @@ const PrizeResult = ({
                     </div>
 
                     <div className="space-y-1 px-1 text-center">
-                      <p className="font-medium text-zinc-100">{prize.name_jp}</p>
+                      <p className="font-medium text-foreground">{prize.name_jp}</p>
                     </div>
 
                     {showToggle && (
@@ -186,7 +175,7 @@ const PrizeResult = ({
                             isSelected={prize.is_won}
                             onChange={(isSelected) => void handleToggleChange(prize.id, isSelected)}
                           >
-                            <span className="text-xs font-medium text-zinc-100">
+                            <span className="text-xs font-medium text-foreground">
                               {prize.is_won ? "当選済み" : "未当選"}
                             </span>
                           </Switch>
@@ -199,7 +188,7 @@ const PrizeResult = ({
             </GridList>
           </Virtualizer>
         </div>
-      </section>
+      </div>
 
       <PrizeDeleteModal
         isOpened={isDeleteOpen}

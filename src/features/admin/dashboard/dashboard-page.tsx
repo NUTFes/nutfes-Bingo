@@ -19,7 +19,6 @@ import { useDashboardState } from "./hooks";
 import { parseBingoNumber } from "./utils";
 
 interface AdminDashboardPageProps {
-  adminUserLabel: string;
   initialNumbers: NumberRow[];
   initialAppState: AppStateRow;
 }
@@ -31,7 +30,6 @@ const showToast = (content: { title: string; description?: string }) => {
 };
 
 export function AdminDashboardPage({
-  adminUserLabel,
   initialNumbers,
   initialAppState,
 }: AdminDashboardPageProps) {
@@ -136,7 +134,7 @@ export function AdminDashboardPage({
   }));
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-900 via-zinc-950 to-black pb-8 text-zinc-100 sm:pb-10">
+    <div className="min-h-screen bg-background pb-8 text-foreground sm:pb-10">
       <MyToastRegion />
       <JudgementModal
         isOpened={dashboardState.isJudgementModalOpen}
@@ -164,7 +162,7 @@ export function AdminDashboardPage({
           showToast({ title: "更新完了", description: "番号を更新しました。" });
         }}
       />
-      <AdminHeader user={adminUserLabel}>
+      <AdminHeader>
         <div className="flex items-center gap-1.5">
           <Button onPress={() => dashboardState.setIsJudgementModalOpen(true)}>正誤判定</Button>
           <Button onPress={handleLogout} variant="secondary">
@@ -173,41 +171,48 @@ export function AdminDashboardPage({
         </div>
       </AdminHeader>
 
-      <div className="mx-auto mt-6 grid w-full max-w-7xl grid-cols-1 gap-5 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
-        <CreateNumberSection
-          submitNumberFieldKey={dashboardState.submitNumberFieldKey}
-          parsedSubmitNumber={parsedSubmitNumber}
-          onSubmitNumberInputChange={dashboardState.setSubmitNumberInput}
-          onCreate={handleCreate}
-        />
+      <div className="mx-auto mt-8 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12 xl:gap-16">
+          <div className="flex flex-col gap-10 lg:col-span-8 lg:gap-12">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:gap-10">
+              <CreateNumberSection
+                submitNumberFieldKey={dashboardState.submitNumberFieldKey}
+                parsedSubmitNumber={parsedSubmitNumber}
+                onSubmitNumberInputChange={dashboardState.setSubmitNumberInput}
+                onCreate={handleCreate}
+              />
 
-        <DeleteNumberSection
-          deleteInput={dashboardState.deleteInput}
-          selectedDeleteNumber={dashboardState.selectedDeleteNumber}
-          deleteNumberOptions={deleteNumberOptions}
-          onDeleteInputChange={dashboardState.handleDeleteInputChange}
-          onDeleteSelectionChange={dashboardState.handleDeleteSelectionChange}
-          onDelete={handleDelete}
-        />
+              <DeleteNumberSection
+                deleteInput={dashboardState.deleteInput}
+                selectedDeleteNumber={dashboardState.selectedDeleteNumber}
+                deleteNumberOptions={deleteNumberOptions}
+                onDeleteInputChange={dashboardState.handleDeleteInputChange}
+                onDeleteSelectionChange={dashboardState.handleDeleteSelectionChange}
+                onDelete={handleDelete}
+              />
+            </div>
 
-        <ReachControlSection
-          onIncrement={handleIncrementReach}
-          onDecrement={handleDecrementReach}
-        />
+            <BingoResult
+              bingoResultNumber={bingoNumbers}
+              onClick={dashboardState.openUpdateNumberModal}
+            />
+          </div>
 
-        <SurveyControlSection
-          surveyUrl={dashboardState.surveyUrl}
-          onSurveyUrlChange={dashboardState.setSurveyUrl}
-          onActivate={() => handleSurvey(true)}
-          onDeactivate={() => handleSurvey(false)}
-        />
-      </div>
-
-      <div className="mx-auto mt-6 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <BingoResult
-          bingoResultNumber={bingoNumbers}
-          onClick={dashboardState.openUpdateNumberModal}
-        />
+          <div className="flex flex-col gap-8 lg:col-span-4">
+            <div className="rounded-2xl border border-border bg-card/50 p-5 sm:p-6 flex flex-col gap-8">
+              <ReachControlSection
+                onIncrement={handleIncrementReach}
+                onDecrement={handleDecrementReach}
+              />
+              <SurveyControlSection
+                surveyUrl={dashboardState.surveyUrl}
+                onSurveyUrlChange={dashboardState.setSurveyUrl}
+                onActivate={() => handleSurvey(true)}
+                onDeactivate={() => handleSurvey(false)}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

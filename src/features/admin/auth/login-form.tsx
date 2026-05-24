@@ -126,7 +126,7 @@ export function LoginForm({
           ログイン
         </Button>
         {canSignUp && (
-          <p className="text-center text-sm leading-relaxed text-zinc-300">
+          <p className="text-center text-sm leading-relaxed text-muted-foreground">
             アカウントをお持ちでない場合は{" "}
             <Link href="/auth/sign-up" variant="secondary" className="underline-offset-4">
               新規登録
