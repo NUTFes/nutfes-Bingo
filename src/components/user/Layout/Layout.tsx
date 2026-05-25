@@ -56,6 +56,10 @@ const persistBooleanPreference = (key: string, value: boolean) => {
   document.cookie = preferenceCookie(key, value);
 };
 
+function getActionErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 function InnerLayout({
   children,
   appState,
@@ -82,11 +86,16 @@ function InnerLayout({
     isSending: false,
     activeName: null as string | null,
   });
+  const [reachState, setReachState] = useState({
+    isSending: false,
+    error: null as string | null,
+  });
   const navRef = useRef<HTMLDivElement>(null);
   const { isReactionModalOpen, isSettingsModalOpen, isReachModalOpen, isSurveyModalOpen } =
     modalState;
   const { isReachIconVisible, isSortOrderActive, isDarkMode } = preferences;
   const { isSending: isStampSending, activeName: activeStampName } = stampState;
+  const { isSending: isReachSending, error: reachError } = reachState;
   const setModalOpen = (key: ModalToggleKey) => (value: SetStateAction<boolean>) => {
     setModalState((prev) => ({
       ...prev,
@@ -170,10 +179,26 @@ function InnerLayout({
   };
 
   const handleConfirmReach = async () => {
-    await recordPublicReach();
-    setPreferences((prev) => ({ ...prev, isReachIconVisible: false }));
-    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, false);
-    setIsReachModalOpen(false);
+    if (isReachSending) {
+      return;
+    }
+
+    setReachState({ isSending: true, error: null });
+
+    try {
+      await recordPublicReach();
+      setPreferences((prev) => ({ ...prev, isReachIconVisible: false }));
+      persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, false);
+      setIsReachModalOpen(false);
+    } catch (error) {
+      setReachState({
+        isSending: false,
+        error: getActionErrorMessage(error, "リーチ送信に失敗しました。"),
+      });
+      return;
+    }
+
+    setReachState({ isSending: false, error: null });
   };
 
   const toggleSortOrder = () => {
@@ -251,10 +276,17 @@ function InnerLayout({
       <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
         <div className={styles.reachModal}>
           <p>{t.reachModal.title}</p>
-          <Button inversion onClick={handleConfirmReach}>
+          <Button inversion disabled={isReachSending} onClick={handleConfirmReach}>
             {t.reachModal.yes}
           </Button>
-          <Button onClick={() => setIsReachModalOpen(false)}>{t.reachModal.no}</Button>
+          <Button disabled={isReachSending} onClick={() => setIsReachModalOpen(false)}>
+            {t.reachModal.no}
+          </Button>
+          {reachError && (
+            <p className={styles.reachError} role="alert">
+              {reachError}
+            </p>
+          )}
         </div>
       </Modal>
       <Modal isOpened={isSettingsModalOpen} setIsOpened={setIsSettingsModalOpen}>

@@ -1,7 +1,6 @@
 import "server-only";
 
 import { cacheLife, cacheTag } from "next/cache";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 import type {
   AppStateRow,
@@ -10,14 +9,9 @@ import type {
   ReachLogRow,
   StampTriggerRow,
 } from "@/types/bingo/types";
-import type { Database } from "@/types/database.types";
-import { hasEnvVars } from "@/utils/utils";
 import { resolvePrizeImageUrl } from "@/utils/image";
-import {
-  getSupabaseServerUrl,
-  hasSupabaseServerEnvVars,
-  shouldSkipSupabaseFetch,
-} from "@/lib/supabase/config";
+import { hasSupabaseServiceRoleEnvVars, shouldSkipSupabaseFetch } from "@/lib/supabase/config";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 const emptyAppState: AppStateRow = {
   id: 1,
@@ -35,23 +29,8 @@ export const BINGO_CACHE_TAGS = {
   stampTriggers: "bingo:stamp-triggers",
 } as const;
 
-function createDataClient() {
-  const supabaseUrl = getSupabaseServerUrl();
-  return createSupabaseClient<Database>(
-    supabaseUrl,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-        persistSession: false,
-      },
-    },
-  );
-}
-
 function canFetchSupabaseData() {
-  return hasEnvVars && hasSupabaseServerEnvVars() && !shouldSkipSupabaseFetch();
+  return hasSupabaseServiceRoleEnvVars() && !shouldSkipSupabaseFetch();
 }
 
 export async function getNumbers(): Promise<NumberRow[]> {
@@ -63,7 +42,7 @@ export async function getNumbers(): Promise<NumberRow[]> {
     return [];
   }
 
-  const supabase = createDataClient();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("numbers")
     .select("*")
@@ -85,7 +64,7 @@ export async function getPrizes(): Promise<PrizeWithImageUrl[]> {
     return [];
   }
 
-  const supabase = createDataClient();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("prizes")
     .select("*")
@@ -110,7 +89,7 @@ export async function getAppState(): Promise<AppStateRow> {
     return emptyAppState;
   }
 
-  const supabase = createDataClient();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase.from("app_state").select("*").eq("id", 1).single();
 
   if (error) {
@@ -129,7 +108,7 @@ export async function getLatestReachLog(): Promise<ReachLogRow | null> {
     return null;
   }
 
-  const supabase = createDataClient();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("reach_logs")
     .select("*")
@@ -155,7 +134,7 @@ export async function getStampTriggersAfter(
 
   const safeAfterId = Number.isFinite(afterId) ? Math.max(0, Math.floor(afterId)) : 0;
   const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? Math.floor(limit) : 50, 1), 100);
-  const supabase = createDataClient();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("stamp_triggers")
     .select("*")
@@ -175,7 +154,7 @@ export async function getLatestStampTriggerId(): Promise<number> {
     return 0;
   }
 
-  const supabase = createDataClient();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("stamp_triggers")
     .select("id")

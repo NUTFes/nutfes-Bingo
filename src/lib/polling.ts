@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   BingoStateResponse,
@@ -177,7 +170,7 @@ function usePollingJson<T>({
   intervalMs,
   hiddenIntervalMs,
   maxBackoffMs = 30000,
-}: PollingOptions<T>): [T, Dispatch<SetStateAction<T>>] {
+}: PollingOptions<T>) {
   const [data, setData] = useState<T>(initialData);
   const etagRef = useRef<string | null>(null);
 
@@ -200,11 +193,11 @@ function usePollingJson<T>({
     onPoll: poll,
   });
 
-  return [data, setData];
+  return data;
 }
 
 export function useHomePollingState(initialNumbers: NumberRow[], initialAppState: AppStateRow) {
-  const [state, setState] = usePollingJson<BingoStateResponse>({
+  const state = usePollingJson<BingoStateResponse>({
     url: "/api/bingo/state",
     intervalMs: 2000,
     hiddenIntervalMs: 15000,
@@ -215,20 +208,9 @@ export function useHomePollingState(initialNumbers: NumberRow[], initialAppState
     },
   });
 
-  const setNumbers = useCallback<Dispatch<SetStateAction<NumberRow[]>>>(
-    (nextNumbers) => {
-      setState((prev) => ({
-        ...prev,
-        numbers: typeof nextNumbers === "function" ? nextNumbers(prev.numbers) : nextNumbers,
-      }));
-    },
-    [setState],
-  );
-
   return {
     numbers: state.numbers,
     appState: state.appState,
-    setNumbers,
   };
 }
 
@@ -236,7 +218,7 @@ export function usePrizesPollingState(
   initialPrizes: PrizeWithImageUrl[],
   initialAppState: AppStateRow,
 ) {
-  const [state, setState] = usePollingJson<PrizeStateResponse>({
+  const state = usePollingJson<PrizeStateResponse>({
     url: "/api/bingo/prizes",
     intervalMs: 5000,
     hiddenIntervalMs: 15000,
@@ -247,20 +229,9 @@ export function usePrizesPollingState(
     },
   });
 
-  const setPrizes = useCallback<Dispatch<SetStateAction<PrizeWithImageUrl[]>>>(
-    (nextPrizes) => {
-      setState((prev) => ({
-        ...prev,
-        prizes: typeof nextPrizes === "function" ? nextPrizes(prev.prizes) : nextPrizes,
-      }));
-    },
-    [setState],
-  );
-
   return {
     prizes: state.prizes,
     appState: state.appState,
-    setPrizes,
   };
 }
 
@@ -268,7 +239,7 @@ export function useScreenPollingState(
   initialNumbers: NumberRow[],
   initialReachLog: ReachLogRow | null,
 ) {
-  const [state] = usePollingJson<ScreenStateResponse>({
+  const state = usePollingJson<ScreenStateResponse>({
     url: "/api/bingo/screen",
     intervalMs: 1200,
     hiddenIntervalMs: 3000,
@@ -283,68 +254,6 @@ export function useScreenPollingState(
     numbers: state.numbers,
     latestReachLog: state.latestReachLog,
   };
-}
-
-export function useNumbersPolling(initialNumbers: NumberRow[]) {
-  const [state, setState] = usePollingJson<BingoStateResponse>({
-    url: "/api/bingo/state",
-    intervalMs: 2000,
-    hiddenIntervalMs: 15000,
-    initialData: {
-      numbers: initialNumbers,
-      appState: {
-        id: 1,
-        survey_url: "",
-        is_survey_active: false,
-        reach_count: 0,
-        updated_at: "",
-      },
-      serverTime: new Date().toISOString(),
-    },
-  });
-
-  const setNumbers = useCallback<Dispatch<SetStateAction<NumberRow[]>>>(
-    (nextNumbers) => {
-      setState((prev) => ({
-        ...prev,
-        numbers: typeof nextNumbers === "function" ? nextNumbers(prev.numbers) : nextNumbers,
-      }));
-    },
-    [setState],
-  );
-
-  return [state.numbers, setNumbers] as const;
-}
-
-export function usePrizesPolling(initialPrizes: PrizeWithImageUrl[]) {
-  const [state, setState] = usePollingJson<PrizeStateResponse>({
-    url: "/api/bingo/prizes",
-    intervalMs: 5000,
-    hiddenIntervalMs: 15000,
-    initialData: {
-      prizes: initialPrizes,
-      appState: {
-        id: 1,
-        survey_url: "",
-        is_survey_active: false,
-        reach_count: 0,
-        updated_at: "",
-      },
-      serverTime: new Date().toISOString(),
-    },
-  });
-
-  const setPrizes = useCallback<Dispatch<SetStateAction<PrizeWithImageUrl[]>>>(
-    (nextPrizes) => {
-      setState((prev) => ({
-        ...prev,
-        prizes: typeof nextPrizes === "function" ? nextPrizes(prev.prizes) : nextPrizes,
-      }));
-    },
-    [setState],
-  );
-
-  return [state.prizes, setPrizes] as const;
 }
 
 export function useStampTriggerPolling(

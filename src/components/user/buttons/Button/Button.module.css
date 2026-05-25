@@ -25,6 +25,21 @@
   transform: translateY(4px);
 }
 
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.button:disabled:active {
+  background: linear-gradient(135deg, var(--color-button-start), var(--color-button-end));
+  box-shadow: none;
+  transform: none;
+}
+
+.button.inversion:disabled:active {
+  background: var(--color-secondary);
+}
+
 @media screen and (min-width: 1024px) {
   .button {
     border: 0.3vw solid var(--main-color);

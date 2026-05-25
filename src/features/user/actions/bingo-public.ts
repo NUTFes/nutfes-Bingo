@@ -27,6 +27,18 @@ function toPublicActionMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function logUnexpectedPublicActionError(action: string, error: unknown) {
+  if (error instanceof PublicActionError) {
+    return;
+  }
+
+  if (error instanceof Error && error.message.includes("public_action_rate_limited")) {
+    return;
+  }
+
+  console.error(`${action} failed`, error);
+}
+
 export async function sendReactionStamp(name: StampName) {
   if (!isStampName(name)) {
     throw new Error("リアクションの種類が不正です。");
@@ -46,6 +58,7 @@ export async function sendReactionStamp(name: StampName) {
 
     return data;
   } catch (error) {
+    logUnexpectedPublicActionError("sendReactionStamp", error);
     throw new Error(toPublicActionMessage(error, "リアクション送信に失敗しました。"));
   }
 }
@@ -66,6 +79,7 @@ export async function recordPublicReach() {
     invalidateTag(BINGO_CACHE_TAGS.appState);
     return data;
   } catch (error) {
+    logUnexpectedPublicActionError("recordPublicReach", error);
     throw new Error(toPublicActionMessage(error, "リーチ送信に失敗しました。"));
   }
 }

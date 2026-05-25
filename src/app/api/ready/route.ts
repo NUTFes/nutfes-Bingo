@@ -1,12 +1,10 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-
-import { getSupabaseServerUrl, hasSupabaseServerEnvVars } from "@/lib/supabase/config";
-import type { Database } from "@/types/database.types";
+import { hasSupabaseServiceRoleEnvVars } from "@/lib/supabase/config";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 export async function GET(request: Request) {
   const path = new URL(request.url).pathname;
 
-  if (!hasSupabaseServerEnvVars()) {
+  if (!hasSupabaseServiceRoleEnvVars()) {
     return Response.json(
       {
         ok: false,
@@ -25,17 +23,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const supabase = createSupabaseClient<Database>(
-    getSupabaseServerUrl(),
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-        persistSession: false,
-      },
-    },
-  );
+  const supabase = createServiceRoleClient();
   const { error } = await supabase.from("app_state").select("id").eq("id", 1).single();
 
   if (error) {

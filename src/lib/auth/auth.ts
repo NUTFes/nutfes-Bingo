@@ -3,6 +3,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 
 import type { Tables } from "@/types/database.types";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type Profile = Tables<"profiles">;
@@ -41,7 +42,7 @@ async function getCurrentProfile() {
     return null;
   }
 
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("profiles")
     .select("*")

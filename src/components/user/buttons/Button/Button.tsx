@@ -5,6 +5,7 @@ import { cn } from "@/utils/utils";
 interface ButtonProps {
   children: ReactNode;
   inversion?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
 }
 
@@ -15,6 +16,7 @@ const Button: React.FC<ButtonProps> = (props) => {
       className={cn(styles.button, {
         [styles.inversion]: props.inversion,
       })}
+      disabled={props.disabled}
       onClick={props.onClick}
     >
       {props.children}

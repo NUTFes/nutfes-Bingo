@@ -36,6 +36,15 @@
   margin-top: 3vw;
 }
 
+.reachModal .reachError {
+  max-width: min(72vw, 320px);
+  margin: 3vw 0 0;
+  color: #b42318;
+  font-size: clamp(12px, 3.5vw, 16px);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 .settingsModal,
 .settingsModal > div {
   display: flex;

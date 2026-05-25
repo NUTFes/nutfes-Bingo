@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { AdminHeader } from "@/components/admin";
-import { usePrizesPolling } from "@/lib/polling";
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { SearchField } from "@/components/ui/SearchField";
 import { MyToastRegion } from "@/components/ui/Toast";
@@ -15,7 +14,7 @@ interface AdminPrizesPageProps {
 }
 
 export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
-  const [bingoPrize, setBingoPrize] = usePrizesPolling(initialPrizes);
+  const [bingoPrize, setBingoPrize] = useState(initialPrizes);
   const [searchText, setSearchText] = useState("");
 
   const filteredPrizes = searchText

@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
+
 import { AdminHeader, BingoResult } from "@/components/admin";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion } from "@/components/ui/Toast";
 import { queue } from "@/components/ui/toastQueue";
-import { useNumbersPolling } from "@/lib/polling";
 import type { AppStateRow, NumberRow } from "@/types/bingo/types";
 import JudgementModal from "./components/JudgementModal";
 import UpdateNumberModal from "./components/UpdateNumberModal";
@@ -30,7 +31,7 @@ const showToast = (content: { title: string; description?: string }) => {
 };
 
 export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
-  const [bingoNumbers, setBingoNumbers] = useNumbersPolling(initialNumbers);
+  const [bingoNumbers, setBingoNumbers] = useState(initialNumbers);
   const dashboardState = useDashboardState({
     initialSurveyUrl: initialAppState.survey_url,
     bingoNumbers,

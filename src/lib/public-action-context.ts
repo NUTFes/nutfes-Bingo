@@ -2,7 +2,12 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
-import { isValidPublicClientId, PUBLIC_CLIENT_ID_COOKIE } from "@/lib/public-client";
+import {
+  createPublicClientId,
+  isValidPublicClientId,
+  PUBLIC_CLIENT_ID_COOKIE,
+  PUBLIC_CLIENT_ID_MAX_AGE,
+} from "@/lib/public-client";
 
 export class PublicActionError extends Error {
   constructor(
@@ -31,13 +36,17 @@ function getPublicActionSalt() {
 
 export async function getPublicActionClientHash() {
   const cookieStore = await cookies();
-  const clientId = cookieStore.get(PUBLIC_CLIENT_ID_COOKIE)?.value;
+  let clientId = cookieStore.get(PUBLIC_CLIENT_ID_COOKIE)?.value;
 
   if (!isValidPublicClientId(clientId)) {
-    throw new PublicActionError(
-      "ページを再読み込みしてからもう一度お試しください。",
-      "PUBLIC_CLIENT_REQUIRED",
-    );
+    clientId = createPublicClientId();
+    cookieStore.set(PUBLIC_CLIENT_ID_COOKIE, clientId, {
+      httpOnly: true,
+      maxAge: PUBLIC_CLIENT_ID_MAX_AGE,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
   }
 
   return sha256(`public-client:${getPublicActionSalt()}:${clientId}`);

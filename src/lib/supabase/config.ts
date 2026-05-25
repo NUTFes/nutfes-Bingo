@@ -10,6 +10,12 @@ export function hasSupabaseServerEnvVars() {
   );
 }
 
+export function hasSupabaseServiceRoleEnvVars() {
+  const supabaseUrl = getSupabaseServerUrl();
+
+  return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY && supabaseUrl && URL.canParse(supabaseUrl));
+}
+
 export function shouldSkipSupabaseFetch() {
   return process.env.NUTFES_SKIP_SUPABASE_FETCH === "1";
 }

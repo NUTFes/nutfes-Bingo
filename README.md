@@ -116,8 +116,8 @@ CLOUDFLARED_IMAGE=cloudflare/cloudflared:2026.5.0
 `NEXT_PUBLIC_SUPABASE_URL` はブラウザ用の公開URLです。`SUPABASE_SERVER_URL` は
 Next.js コンテナから使う内部URLです。本番では Cloudflare を往復しないよう、
 `http://caddy:8080/supabase` を使います。
-`SUPABASE_SERVICE_ROLE_KEY` は公開リーチ送信とリアクション送信を Server Action 経由に閉じるための
-サーバー専用キーです。ブラウザへ露出させないでください。
+`SUPABASE_SERVICE_ROLE_KEY` は公開APIのDB読み取り、管理者操作、公開リーチ送信、リアクション送信を
+Next.js サーバー経由に閉じるためのサーバー専用キーです。ブラウザへ露出させないでください。
 
 4. 起動します。
 
