@@ -1,0 +1,16 @@
+services:
+  caddy:
+    environment:
+      CADDY_SITE_ADDRESS: :8080
+
+  cloudflared:
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:2026.5.0}
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN is required}
+    depends_on:
+      caddy:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - frontend

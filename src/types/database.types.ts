@@ -1,31 +1,6 @@
-type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   public: {
     Tables: {
       app_state: {
@@ -211,7 +186,11 @@ export type Database = {
     };
     Functions: {
       claim_public_action: {
-        Args: { p_action: string; p_client_hash: string; p_min_interval: string };
+        Args: {
+          p_action: string;
+          p_client_hash: string;
+          p_min_interval: string;
+        };
         Returns: undefined;
       };
       decrement_reach: { Args: never; Returns: number };
@@ -219,8 +198,18 @@ export type Database = {
       is_admin: { Args: { target_user?: string }; Returns: boolean };
       record_reach: { Args: { client_hash: string }; Returns: number };
       record_reaction_stamp: {
-        Args: { stamp_name: string; client_hash: string };
-        Returns: Database["public"]["Tables"]["stamp_triggers"]["Row"];
+        Args: { client_hash: string; stamp_name: string };
+        Returns: {
+          created_at: string;
+          id: number;
+          name: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "stamp_triggers";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
     };
     Enums: {
@@ -263,7 +252,7 @@ export type Tables<
       : never
     : never;
 
-type TablesInsert<
+export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
@@ -313,7 +302,7 @@ export type TablesUpdate<
       : never
     : never;
 
-type Enums<
+export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
@@ -330,7 +319,7 @@ type Enums<
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never;
 
-type CompositeTypes<
+export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
@@ -347,10 +336,7 @@ type CompositeTypes<
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never;
 
-const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
+export const Constants = {
   public: {
     Enums: {},
   },

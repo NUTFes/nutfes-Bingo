@@ -9,8 +9,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "24.13.0"
-  PNPM_VERSION: "10.28.1"
+  NODE_VERSION: "26.2.0"
+  PNPM_VERSION: "11.2.2"
 
 jobs:
   quality:
@@ -49,6 +49,16 @@ jobs:
       - name: TypeScript Check
         run: pnpm exec tsc --noEmit
 
+      - name: Docker Compose Config Check
+        env:
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
+          CLOUDFLARE_TUNNEL_TOKEN: ci-cloudflare-token
+        run: |
+          docker compose -f compose.dev.yml config --quiet
+          docker compose --env-file .env.production.example -f compose.prod.yml -f compose.vps.yml config --quiet
+          docker compose --env-file .env.production.example -f compose.prod.yml -f compose.cloudflare.yml config --quiet
+
   react-doctor:
     name: React Doctor
     runs-on: ubuntu-latest
@@ -73,7 +83,7 @@ jobs:
       - name: Run React Doctor
         id: run_doctor
         run: |
-          OUTPUT=$(npx -y react-doctor@latest . --project 45th-homepage --verbose --fail-on none)
+          OUTPUT=$(npx -y react-doctor@0.5.6 . --project 45th-homepage --verbose --fail-on none)
           echo "$OUTPUT"
           DIAG_PATH=$(echo "$OUTPUT" | grep "Full diagnostics written to" | awk '{print $NF}')
           echo "diag_path=$DIAG_PATH" >> "$GITHUB_OUTPUT"

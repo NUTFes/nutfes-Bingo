@@ -3,8 +3,11 @@ INSERT INTO public.numbers (number)
 SELECT n FROM generate_series(1, 99) n
 ON CONFLICT (number) DO NOTHING;
 
--- Seed prizes
-INSERT INTO public.prizes (name_jp, image_path) VALUES
+-- Seed prizes only for an empty installation. Production seeding is explicit,
+-- and repeated runs must not duplicate the initial prize catalog.
+INSERT INTO public.prizes (name_jp, image_path)
+SELECT seed.name_jp, seed.image_path
+FROM (VALUES
 ('Apple Watch SE', '/PrizeItem/01_Apple Watch SE.jpg'),
 ('黒毛和牛1kg', '/PrizeItem/02_黒毛和牛1kg.jpg'),
 ('選べるペアチケット', '/PrizeItem/03_選べるペアチケット.jpg'),
@@ -35,4 +38,6 @@ INSERT INTO public.prizes (name_jp, image_path) VALUES
 ('ペッパーミル', '/PrizeItem/28_ペッパーミル.jpg'),
 ('ザコシショウ来学記念セット', '/PrizeItem/29_ザコシショウ来学記念セット.jpg'),
 ('巨大クマのぬいぐるみ', '/PrizeItem/30_巨大クマのぬいぐるみ.jpg'),
-('ハーゲンダッツ詰め合わせ', '/PrizeItem/31_ハーゲンダッツ詰め合わせ.jpg');
+('ハーゲンダッツ詰め合わせ', '/PrizeItem/31_ハーゲンダッツ詰め合わせ.jpg')
+) AS seed(name_jp, image_path)
+WHERE NOT EXISTS (SELECT 1 FROM public.prizes);

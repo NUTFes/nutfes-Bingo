@@ -1,5 +1,6 @@
-:8080 {
+{$CADDY_SITE_ADDRESS::8080} {
 	encode zstd gzip
+
 	log {
 		output stdout
 		format console
@@ -12,8 +13,14 @@
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
 	}
 
-	handle_path /supabase/* {
-		reverse_proxy {$SUPABASE_KONG_HOST:kong}:{$SUPABASE_KONG_PORT:8000}
+	@supabase_auth path /supabase/auth/v1/*
+	handle @supabase_auth {
+		uri strip_prefix /supabase
+		reverse_proxy kong:8000
+	}
+
+	handle /supabase/* {
+		respond "Not Found" 404
 	}
 
 	handle {

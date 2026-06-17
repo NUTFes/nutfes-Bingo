@@ -2,13 +2,58 @@
 node = "26.2.0"
 pnpm = "11.2.2"
 
+[env]
+SUPABASE_TELEMETRY_DISABLED = "1"
+
 [tasks.install]
 description = "Install dependencies"
 run = "pnpm install"
 
 [tasks.dev]
-description = "Start Next.js dev server"
-run = "pnpm dev"
+description = "Start Docker development stack with Supabase CLI local services"
+run = '''
+set -eu
+
+mise run supabase:start
+
+status_env=$(mktemp)
+trap 'rm -f "$status_env"' EXIT HUP INT TERM
+
+pnpm exec supabase status -o env >"$status_env"
+set -a
+. "$status_env"
+set +a
+
+export SUPABASE_DOCKER_NETWORK="${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}"
+export NEXT_PUBLIC_SITE_URL="https://nutfes-bingo.localhost"
+export NEXT_PUBLIC_SUPABASE_URL="https://nutfes-bingo.localhost/supabase"
+export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${PUBLISHABLE_KEY:-${ANON_KEY:?ANON_KEY was not returned by supabase status}}"
+export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY was not returned by supabase status}"
+export NUTFES_PUBLIC_ACTION_HASH_SALT="${NUTFES_PUBLIC_ACTION_HASH_SALT:-local-dev-public-action-salt}"
+export NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP="${NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP:-1}"
+
+docker compose -f compose.dev.yml up --build
+'''
+
+[tasks."dev:down"]
+description = "Stop Docker development stack and local Supabase services"
+run = '''
+set -eu
+docker compose -f compose.dev.yml down
+pnpm exec supabase stop
+'''
+
+[tasks."dev:network"]
+description = "Create the shared Docker network for local Supabase and the app"
+run = '''
+set -eu
+network="${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}"
+if ! docker network inspect "$network" >/dev/null 2>&1; then
+  docker network create \
+    -o com.docker.network.bridge.host_binding_ipv4=127.0.0.1 \
+    "$network" >/dev/null
+fi
+'''
 
 [tasks.check]
 description = "Run oxc"
@@ -38,33 +83,78 @@ usage = 'arg "<package>" help="Package name to remove"'
 run = 'pnpm remove "${usage_package?}"'
 
 [tasks."docker:up"]
-description = "Start development container"
-run = "docker compose -f compose.dev.yml up --build"
+description = "Alias for dev"
+run = "mise run dev"
 
 [tasks."docker:down"]
-description = "Stop development container"
-run = "docker compose -f compose.dev.yml down"
+description = "Alias for dev:down"
+run = "mise run dev:down"
 
 [tasks."sync"]
 description = "Sync dependencies inside running dev container"
 run = "docker compose -f compose.dev.yml exec app pnpm install"
 
 [tasks."supabase:start"]
-description = "Start local Supabase stack"
-run = "npx supabase start"
+description = "Start minimal local Supabase stack on the shared Docker network"
+run = '''
+set -eu
+mise run dev:network
+pnpm exec supabase start \
+  --network-id "${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}" \
+  --exclude realtime,studio,mailpit,edge-runtime,logflare,vector,imgproxy,postgres-meta,supavisor
+'''
 
 [tasks."supabase:stop"]
 description = "Stop local Supabase stack"
-run = "npx supabase stop"
+run = "pnpm exec supabase stop"
 
 [tasks."supabase:status"]
 description = "Show local Supabase status"
-run = "npx supabase status"
+run = 'pnpm exec supabase status -o pretty'
 
 [tasks."supabase:db-reset"]
 description = "Reset local Supabase database"
-run = "npx supabase db reset"
+run = "pnpm exec supabase db reset"
 
 [tasks."supabase:typegen"]
 description = "Generate DB types from local Supabase schema"
-run = "npx supabase gen types typescript --local > src/types/database.types.ts"
+run = "pnpm exec supabase gen types typescript --local --schema public > src/types/database.types.ts"
+
+[tasks."prod:env:init"]
+description = "Create .env.production with generated self-hosted Supabase secrets"
+run = "./infra/scripts/init-production-env.sh"
+
+[tasks."prod:up"]
+description = "Build and deploy production stack (DEPLOY_MODE=vps or cloudflare)"
+run = "./infra/scripts/deploy.sh"
+
+[tasks."prod:config"]
+description = "Validate rendered production Compose config"
+run = "./infra/scripts/compose.sh config --quiet"
+
+[tasks."prod:down"]
+description = "Stop production stack without deleting persistent data"
+run = "./infra/scripts/compose.sh down"
+
+[tasks."prod:ps"]
+description = "Show production stack status"
+run = "./infra/scripts/compose.sh ps"
+
+[tasks."prod:logs"]
+description = "Follow production stack logs"
+run = "./infra/scripts/compose.sh logs -f"
+
+[tasks."prod:seed"]
+description = "Apply the explicit idempotent production seed"
+run = "./infra/scripts/compose.sh --profile tools run --rm seed"
+
+[tasks."prod:migrate:dry-run"]
+description = "Preview pending production migrations without applying them"
+run = '''
+./infra/scripts/compose.sh run --rm --entrypoint /bin/sh migrate -ec \
+  'exec /tool/node_modules/.bin/supabase db push --dry-run --db-url "postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/postgres"'
+'''
+
+[tasks."prod:backup"]
+description = "Back up PostgreSQL and Supabase Storage"
+run = "./infra/scripts/backup.sh"
