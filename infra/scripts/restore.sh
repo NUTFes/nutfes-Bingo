@@ -29,7 +29,7 @@ done
 )
 
 compose() {
-  docker compose --env-file "$env_file" -f "$repo_root/compose.prod.yml" "$@"
+  ENV_FILE="$env_file" "$repo_root/infra/scripts/compose.sh" "$@"
 }
 
 acl_list=$(mktemp)
@@ -54,6 +54,7 @@ compose run --rm --no-deps -T --entrypoint sh storage -ec '
   tar -C /var/lib/storage -xzf -
 ' <"$backup_dir/storage.tar.gz"
 
-compose up -d --wait auth rest storage kong migrate app caddy
+compose rm -sf migrate >/dev/null 2>&1 || true
+compose up -d --wait
 
 echo "Restore completed from $backup_dir"

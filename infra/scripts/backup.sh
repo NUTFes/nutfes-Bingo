@@ -10,7 +10,7 @@ timestamp=$(date -u +%Y%m%dT%H%M%SZ)
 backup_dir=$backup_root/$timestamp
 
 compose() {
-  docker compose --env-file "$env_file" -f "$repo_root/compose.prod.yml" "$@"
+  ENV_FILE="$env_file" "$repo_root/infra/scripts/compose.sh" "$@"
 }
 
 mkdir -p "$backup_root"
@@ -22,7 +22,7 @@ fi
 services_stopped=false
 restart_services() {
   if [ "$services_stopped" = true ]; then
-    compose up -d --wait auth rest storage kong app caddy >/dev/null
+    compose up -d --wait >/dev/null
   fi
 }
 trap restart_services EXIT HUP INT TERM

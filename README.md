@@ -134,6 +134,7 @@ mise run prod:env:init
 PUBLIC_DOMAIN=bingo.example.com
 NEXT_PUBLIC_SITE_URL=https://bingo.example.com
 NEXT_PUBLIC_SUPABASE_URL=https://bingo.example.com/supabase
+CADDY_MAX_REQUEST_BODY=8MB
 SUPABASE_DB_DATA_PATH=/srv/nutfes-bingo/postgres
 SUPABASE_STORAGE_DATA_PATH=/srv/nutfes-bingo/storage
 ```

@@ -13,6 +13,15 @@
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
 	}
 
+	request_body {
+		max_size {$CADDY_MAX_REQUEST_BODY:8MB}
+	}
+
+	@supabase_auth_admin path /supabase/auth/v1/admin/*
+	handle @supabase_auth_admin {
+		respond "Not Found" 404
+	}
+
 	@supabase_auth path /supabase/auth/v1/*
 	handle @supabase_auth {
 		uri strip_prefix /supabase

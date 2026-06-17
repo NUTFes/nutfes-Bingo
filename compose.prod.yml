@@ -49,6 +49,7 @@ services:
 
   auth:
     image: supabase/gotrue:v2.189.0
+    command: ["auth", "serve"]
     depends_on:
       db:
         condition: service_healthy
@@ -268,6 +269,7 @@ services:
         condition: service_healthy
     environment:
       CADDY_SITE_ADDRESS: ${CADDY_SITE_ADDRESS:-:8080}
+      CADDY_MAX_REQUEST_BODY: ${CADDY_MAX_REQUEST_BODY:-8MB}
     volumes:
       - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
