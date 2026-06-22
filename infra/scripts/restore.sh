@@ -39,7 +39,7 @@ compose exec -T db pg_restore -l <"$backup_dir/postgres.dump" \
   | awk '/^[0-9]+;.* ACL / && $0 !~ /ACL graphql_public FUNCTION graphql/ { print }' \
   >"$acl_list"
 
-compose stop caddy app kong auth rest storage >/dev/null
+compose stop cloudflared app kong auth rest storage >/dev/null
 compose exec -T db dropdb -U supabase_admin --force postgres
 compose exec -T db createdb -U supabase_admin -O postgres postgres
 compose exec -T db pg_restore -U supabase_admin -d postgres --no-privileges --exit-on-error \

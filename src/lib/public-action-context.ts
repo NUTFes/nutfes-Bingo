@@ -29,6 +29,7 @@ async function sha256(value: string) {
 function getPublicActionSalt() {
   return (
     process.env.NUTFES_PUBLIC_ACTION_HASH_SALT ||
+    process.env.SUPABASE_SECRET_KEY ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     "nutfes-bingo-dev-public-action-salt"
   );

@@ -56,10 +56,10 @@ services:
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: "9999"
-      API_EXTERNAL_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL:?API_EXTERNAL_URL is required}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
-      GOTRUE_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL is required}
+      GOTRUE_SITE_URL: ${SITE_URL:?SITE_URL is required}
       GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-}
       GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-true}
       GOTRUE_JWT_ADMIN_ROLES: service_role
@@ -68,7 +68,7 @@ services:
       GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
       GOTRUE_JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       GOTRUE_JWT_KEYS: ${JWT_KEYS:?JWT_KEYS is required}
-      GOTRUE_JWT_ISSUER: ${NEXT_PUBLIC_SUPABASE_URL}/auth/v1
+      GOTRUE_JWT_ISSUER: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}/auth/v1
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
       GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
@@ -127,7 +127,7 @@ services:
       AUTH_JWT_SECRET: ${JWT_SECRET}
       JWT_JWKS: ${JWT_JWKS}
       DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres
-      STORAGE_PUBLIC_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      STORAGE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}
       REQUEST_ALLOW_X_FORWARDED_PATH: "true"
       FILE_SIZE_LIMIT: ${STORAGE_FILE_SIZE_LIMIT:-5242880}
       STORAGE_BACKEND: file
@@ -188,6 +188,7 @@ services:
     restart: unless-stopped
     logging: *default-logging
     networks:
+      - frontend
       - backend
 
   migrate:
@@ -241,6 +242,7 @@ services:
       NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY}
       SUPABASE_SERVER_URL: http://kong:8000
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:?SUPABASE_SECRET_KEY is required}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SECRET_KEY:?SUPABASE_SECRET_KEY is required}
       NUTFES_PUBLIC_ACTION_HASH_SALT: ${NUTFES_PUBLIC_ACTION_HASH_SALT:?NUTFES_PUBLIC_ACTION_HASH_SALT is required}
       NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP: ${NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP:-0}
@@ -254,31 +256,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    restart: unless-stopped
-    logging: *default-logging
-    networks:
-      - frontend
-      - backend
-
-  caddy:
-    image: caddy:2.11.4-alpine
-    depends_on:
-      app:
-        condition: service_healthy
-      kong:
-        condition: service_healthy
-    environment:
-      CADDY_SITE_ADDRESS: ${CADDY_SITE_ADDRESS:-:8080}
-      CADDY_MAX_REQUEST_BODY: ${CADDY_MAX_REQUEST_BODY:-8MB}
-    volumes:
-      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    healthcheck:
-      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
     restart: unless-stopped
     logging: *default-logging
     networks:
@@ -305,8 +282,6 @@ services:
       - backend
 
 volumes:
-  caddy_data:
-  caddy_config:
   db_config:
 
 networks:

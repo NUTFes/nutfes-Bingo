@@ -25,21 +25,24 @@ set -a
 set +a
 
 export SUPABASE_DOCKER_NETWORK="${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}"
-export NEXT_PUBLIC_SITE_URL="https://nutfes-bingo.localhost"
-export NEXT_PUBLIC_SUPABASE_URL="https://nutfes-bingo.localhost/supabase"
+export NEXT_PUBLIC_SITE_URL="${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
+export NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-${API_URL:-http://localhost:54321}}"
 export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${PUBLISHABLE_KEY:-${ANON_KEY:?ANON_KEY was not returned by supabase status}}"
-export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY was not returned by supabase status}"
+export SUPABASE_SERVER_URL="${SUPABASE_SERVER_URL:-http://supabase_kong_nutfes-Bingo:8000}"
+local_service_role_key="${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY was not returned by supabase status}"
+export SUPABASE_SECRET_KEY="${SUPABASE_SECRET_KEY:-$local_service_role_key}"
+export SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-$local_service_role_key}"
 export NUTFES_PUBLIC_ACTION_HASH_SALT="${NUTFES_PUBLIC_ACTION_HASH_SALT:-local-dev-public-action-salt}"
 export NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP="${NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP:-1}"
 
-docker compose -f compose.dev.yml up --build
+docker compose -f compose.dev.yml up --build --remove-orphans
 '''
 
 [tasks."dev:down"]
 description = "Stop Docker development stack and local Supabase services"
 run = '''
 set -eu
-docker compose -f compose.dev.yml down
+docker compose -f compose.dev.yml down --remove-orphans
 pnpm exec supabase stop
 '''
 
@@ -125,8 +128,20 @@ description = "Create .env.production with generated self-hosted Supabase secret
 run = "./infra/scripts/init-production-env.sh"
 
 [tasks."prod:up"]
-description = "Build and deploy production stack (DEPLOY_MODE=vps or cloudflare)"
-run = "./infra/scripts/deploy.sh"
+description = "Alias for prod:deploy"
+run = "mise run prod:deploy"
+
+[tasks."prod:deploy"]
+description = "Preflight, deploy, and smoke test the Proxmox LXC + Cloudflared production stack"
+run = "./infra/scripts/annual-ops.sh deploy"
+
+[tasks."prod:preflight"]
+description = "Validate Proxmox LXC + Cloudflared production prerequisites"
+run = "./infra/scripts/annual-ops.sh preflight"
+
+[tasks."prod:smoke"]
+description = "Smoke test production using NEXT_PUBLIC_SITE_URL and NEXT_PUBLIC_SUPABASE_URL from .env.production"
+run = "./infra/scripts/annual-ops.sh smoke"
 
 [tasks."prod:config"]
 description = "Validate rendered production Compose config"
@@ -134,7 +149,7 @@ run = "./infra/scripts/compose.sh config --quiet"
 
 [tasks."prod:down"]
 description = "Stop production stack without deleting persistent data"
-run = "./infra/scripts/compose.sh down"
+run = "./infra/scripts/compose.sh down --remove-orphans"
 
 [tasks."prod:ps"]
 description = "Show production stack status"
@@ -150,11 +165,24 @@ run = "./infra/scripts/compose.sh --profile tools run --rm seed"
 
 [tasks."prod:migrate:dry-run"]
 description = "Preview pending production migrations without applying them"
-run = '''
-./infra/scripts/compose.sh run --rm --entrypoint /bin/sh migrate -ec \
-  'exec /tool/node_modules/.bin/supabase db push --dry-run --db-url "postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/postgres"'
-'''
+run = "./infra/scripts/annual-ops.sh migrate:dry-run"
 
 [tasks."prod:backup"]
 description = "Back up PostgreSQL and Supabase Storage"
-run = "./infra/scripts/backup.sh"
+run = "./infra/scripts/annual-ops.sh backup"
+
+[tasks."prod:admin:bootstrap"]
+description = "Create or update the initial production admin account"
+run = "./infra/scripts/admin.sh bootstrap"
+
+[tasks."prod:admin:reset-password"]
+description = "Reset an existing production admin password"
+run = "./infra/scripts/admin.sh reset-password"
+
+[tasks."prod:admin:list"]
+description = "List production admin accounts"
+run = "./infra/scripts/admin.sh list"
+
+[tasks."prod:admin:verify"]
+description = "Verify that at least one production admin account exists"
+run = "./infra/scripts/admin.sh verify"

@@ -30,4 +30,4 @@ mkdir -p "$(dirname -- "$target")"
 cp "$tmpdir/.env" "$target"
 chmod 600 "$target"
 
-echo "Created $target with mode 0600. Set URLs and persistent data paths before deployment."
+echo "Created $target with mode 0600. Set app/Supabase URLs, Cloudflare Tunnel token, and persistent data paths before deployment."

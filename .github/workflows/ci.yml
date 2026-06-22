@@ -52,12 +52,39 @@ jobs:
       - name: Docker Compose Config Check
         env:
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-anon-key
+          SUPABASE_SECRET_KEY: ci-secret-key
           SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
           CLOUDFLARE_TUNNEL_TOKEN: ci-cloudflare-token
         run: |
           docker compose -f compose.dev.yml config --quiet
-          docker compose --env-file .env.production.example -f compose.prod.yml -f compose.vps.yml config --quiet
           docker compose --env-file .env.production.example -f compose.prod.yml -f compose.cloudflare.yml config --quiet
+
+      - name: Shell Script Syntax Check
+        run: sh -n infra/scripts/*.sh
+
+      - name: Production Preflight Check
+        env:
+          NUTFES_ALLOW_NON_LXC: "1"
+        run: |
+          tmpdir=$(mktemp -d)
+          trap 'rm -rf "$tmpdir"' EXIT
+
+          ./infra/scripts/init-production-env.sh "$tmpdir/.env.production"
+          mkdir -p "$tmpdir/postgres" "$tmpdir/storage"
+          sed -i \
+            -e "s|^NEXT_PUBLIC_SITE_URL=.*|NEXT_PUBLIC_SITE_URL=https://app.example.test|" \
+            -e "s|^NEXT_PUBLIC_SUPABASE_URL=.*|NEXT_PUBLIC_SUPABASE_URL=https://supabase.example.test|" \
+            -e "s|^SITE_URL=.*|SITE_URL=https://app.example.test|" \
+            -e "s|^SUPABASE_PUBLIC_URL=.*|SUPABASE_PUBLIC_URL=https://supabase.example.test|" \
+            -e "s|^API_EXTERNAL_URL=.*|API_EXTERNAL_URL=https://supabase.example.test|" \
+            -e "s|^ADDITIONAL_REDIRECT_URLS=.*|ADDITIONAL_REDIRECT_URLS=https://app.example.test/**|" \
+            -e "s|^CLOUDFLARE_TUNNEL_TOKEN=.*|CLOUDFLARE_TUNNEL_TOKEN=ci-cloudflare-token|" \
+            -e "s|^SUPABASE_DB_DATA_PATH=.*|SUPABASE_DB_DATA_PATH=$tmpdir/postgres|" \
+            -e "s|^SUPABASE_STORAGE_DATA_PATH=.*|SUPABASE_STORAGE_DATA_PATH=$tmpdir/storage|" \
+            "$tmpdir/.env.production"
+          chmod 600 "$tmpdir/.env.production"
+
+          ENV_FILE="$tmpdir/.env.production" ./infra/scripts/preflight.sh
 
   react-doctor:
     name: React Doctor

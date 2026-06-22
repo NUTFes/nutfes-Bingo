@@ -2,12 +2,16 @@ import "server-only";
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-import { getSupabaseServerUrl, hasSupabaseServiceRoleEnvVars } from "@/lib/supabase/config";
+import {
+  getSupabaseSecretKey,
+  getSupabaseServerUrl,
+  hasSupabaseServiceRoleEnvVars,
+} from "@/lib/supabase/config";
 import type { Database } from "@/types/database.types";
 
 export function createServiceRoleClient() {
   const supabaseUrl = getSupabaseServerUrl();
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = getSupabaseSecretKey();
 
   if (!hasSupabaseServiceRoleEnvVars() || !serviceRoleKey) {
     throw new Error("Supabase service role environment variables are not configured.");

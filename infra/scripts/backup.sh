@@ -27,7 +27,7 @@ restart_services() {
 }
 trap restart_services EXIT HUP INT TERM
 
-compose stop caddy app kong auth rest storage >/dev/null
+compose stop cloudflared app kong auth rest storage >/dev/null
 services_stopped=true
 
 compose exec -T db pg_dump -U postgres -d postgres -Fc >"$backup_dir/postgres.dump"
