@@ -410,4 +410,9 @@ begin
 end
 $$;
 
+-- Grant access to anon and authenticated roles
+grant usage on schema public to anon, authenticated;
+grant all privileges on all tables in schema public to anon, authenticated;
+grant all privileges on all sequences in schema public to anon, authenticated;
+
 commit;
