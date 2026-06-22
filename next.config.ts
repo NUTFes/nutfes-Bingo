@@ -7,6 +7,14 @@ const scriptSrc =
   process.env.NODE_ENV === "development"
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
     : "script-src 'self' 'unsafe-inline'";
+const imgSrc =
+  process.env.NODE_ENV === "development"
+    ? "img-src 'self' data: blob: http: https:"
+    : "img-src 'self' data: blob: https:";
+const connectSrc =
+  process.env.NODE_ENV === "development"
+    ? "connect-src 'self' http: https: ws: wss:"
+    : "connect-src 'self' https: wss:";
 
 const securityHeaders = [
   {
@@ -29,11 +37,11 @@ const securityHeaders = [
       "object-src 'none'",
       "frame-ancestors 'none'",
       "form-action 'self'",
-      "img-src 'self' data: blob: https:",
+      imgSrc,
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
       scriptSrc,
-      "connect-src 'self' https: ws: wss:",
+      connectSrc,
     ].join("; "),
   },
 ] as const;

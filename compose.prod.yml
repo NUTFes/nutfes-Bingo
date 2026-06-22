@@ -1,6 +1,224 @@
 name: nutfes-bingo-prod
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
 services:
+  db:
+    image: supabase/postgres:15.8.1.085
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: "5432"
+      POSTGRES_PORT: "5432"
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXP: ${JWT_EXPIRY:-3600}
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=warning
+    volumes:
+      - ./infra/supabase/volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+      - ./infra/supabase/volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./infra/supabase/volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - ./infra/supabase/volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro
+      - ${SUPABASE_DB_DATA_PATH:-./.data/supabase/db}:/var/lib/postgresql/data
+      - db_config:/etc/postgresql-custom
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'pg_isready -U postgres -h 127.0.0.1 -p 5432 && psql -U postgres -d postgres -Atqc "select coalesce((select rolpassword is not null from pg_authid where rolname = ''supabase_storage_admin''), false) and coalesce((select pg_get_userbyid(proowner) = ''supabase_auth_admin'' from pg_proc where oid = ''auth.uid()''::regprocedure), false)" | grep -qx t',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+    stop_grace_period: 60s
+    logging: *default-logging
+    networks:
+      - backend
+
+  auth:
+    image: supabase/gotrue:v2.189.0
+    command: ["auth", "serve"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: "9999"
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL:?API_EXTERNAL_URL is required}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      GOTRUE_SITE_URL: ${SITE_URL:?SITE_URL is required}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-}
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-true}
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      GOTRUE_JWT_KEYS: ${JWT_KEYS:?JWT_KEYS is required}
+      GOTRUE_JWT_ISSUER: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}/auth/v1
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+      GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM:-true}
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-admin@example.invalid}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-localhost}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-2500}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-unused}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-unused}
+      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-nutfes-bingo}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:9999/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - backend
+
+  rest:
+    image: postgrest/postgrest:v14.12
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,storage}
+      PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
+      PGRST_DB_EXTRA_SEARCH_PATH: public,extensions
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_JWKS:?JWT_JWKS is required}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY:-3600}
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - backend
+
+  storage:
+    image: supabase/storage-api:v1.60.4
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    environment:
+      ANON_KEY: ${ANON_KEY:?ANON_KEY is required}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY is required}
+      POSTGREST_URL: http://rest:3000
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      JWT_JWKS: ${JWT_JWKS}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      STORAGE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}
+      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      FILE_SIZE_LIMIT: ${STORAGE_FILE_SIZE_LIMIT:-5242880}
+      STORAGE_BACKEND: file
+      GLOBAL_S3_BUCKET: ${GLOBAL_S3_BUCKET:-stub}
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: ${STORAGE_TENANT_ID:-nutfes-bingo}
+      REGION: ${REGION:-local}
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+      S3_PROTOCOL_ACCESS_KEY_ID: ${S3_PROTOCOL_ACCESS_KEY_ID:?S3_PROTOCOL_ACCESS_KEY_ID is required}
+      S3_PROTOCOL_ACCESS_KEY_SECRET: ${S3_PROTOCOL_ACCESS_KEY_SECRET:?S3_PROTOCOL_ACCESS_KEY_SECRET is required}
+    volumes:
+      - ${SUPABASE_STORAGE_DATA_PATH:-./.data/supabase/storage}:/var/lib/storage
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5000/status"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - backend
+
+  kong:
+    image: kong/kong:3.9.1
+    depends_on:
+      auth:
+        condition: service_healthy
+      rest:
+        condition: service_started
+      storage:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_DNS_NOT_FOUND_TTL: "1"
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,post-function
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      KONG_NGINX_WORKER_PROCESSES: ${KONG_NGINX_WORKER_PROCESSES:-1}
+      KONG_PROXY_ACCESS_LOG: /dev/stdout combined
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY}
+      ANON_KEY_ASYMMETRIC: ${ANON_KEY_ASYMMETRIC}
+      SERVICE_ROLE_KEY_ASYMMETRIC: ${SERVICE_ROLE_KEY_ASYMMETRIC}
+    entrypoint: /home/kong/kong-entrypoint.sh
+    volumes:
+      - ./infra/supabase/volumes/api/kong.yml:/home/kong/temp.yml:ro
+      - ./infra/supabase/volumes/api/kong-entrypoint.sh:/home/kong/kong-entrypoint.sh:ro
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - frontend
+      - backend
+
+  migrate:
+    build:
+      context: .
+      dockerfile: infra/supabase/Dockerfile.migrate
+    depends_on:
+      auth:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+    environment:
+      PGSSLMODE: disable
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SUPABASE_TELEMETRY_DISABLED: "1"
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - >-
+        exec /tool/node_modules/.bin/supabase db push
+        --yes
+        --db-url "postgresql://postgres:$${POSTGRES_PASSWORD}@db:5432/postgres"
+    volumes:
+      - ./supabase:/workspace/supabase:ro
+    tmpfs:
+      - /workspace/supabase/.temp:mode=0700
+    restart: "no"
+    logging: *default-logging
+    networks:
+      - backend
+
   app:
     image: nutfes-bingo:${APP_IMAGE_TAG:?APP_IMAGE_TAG is required}
     build:
@@ -8,78 +226,65 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}
-        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is required}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:?SUPABASE_PUBLISHABLE_KEY is required}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL is required}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      kong:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
       PORT: "3000"
       HOSTNAME: 0.0.0.0
-      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
-      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is required}
-      SUPABASE_SERVER_URL: ${SUPABASE_SERVER_URL:-http://caddy:8080/supabase}
-      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY is required}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY}
+      SUPABASE_SERVER_URL: http://kong:8000
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:?SUPABASE_SECRET_KEY is required}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SECRET_KEY:?SUPABASE_SECRET_KEY is required}
       NUTFES_PUBLIC_ACTION_HASH_SALT: ${NUTFES_PUBLIC_ACTION_HASH_SALT:?NUTFES_PUBLIC_ACTION_HASH_SALT is required}
       NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP: ${NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP:-0}
-    expose:
-      - "3000"
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          'node -e "fetch(''http://127.0.0.1:3000/api/health'').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"',
+          'node -e "fetch(''http://127.0.0.1:3000/api/ready'').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"',
         ]
       interval: 30s
       timeout: 5s
       retries: 5
       start_period: 30s
     restart: unless-stopped
+    logging: *default-logging
     networks:
-      - app
+      - frontend
+      - backend
 
-  caddy:
-    image: caddy:2-alpine
+  seed:
+    profiles: ["tools"]
+    image: supabase/postgres:15.8.1.085
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     environment:
-      SUPABASE_KONG_HOST: ${SUPABASE_KONG_HOST:-kong}
-      SUPABASE_KONG_PORT: ${SUPABASE_KONG_PORT:-8000}
+      PGSSLMODE: disable
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    entrypoint: ["psql"]
+    command:
+      ["-h", "db", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-f", "/seed.sql"]
     volumes:
-      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    expose:
-      - "8080"
-    depends_on:
-      app:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    restart: unless-stopped
+      - ./supabase/seed.sql:/seed.sql:ro
+    restart: "no"
+    logging: *default-logging
     networks:
-      - app
-      - supabase
-
-  cloudflared:
-    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:2026.5.0}
-    command: tunnel --no-autoupdate run
-    environment:
-      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN is required}
-    depends_on:
-      caddy:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - app
+      - backend
 
 volumes:
-  caddy_data:
-  caddy_config:
+  db_config:
 
 networks:
-  app:
-  supabase:
-    external: true
-    name: ${SUPABASE_DOCKER_NETWORK:-supabase_default}
+  frontend:
+  backend:
+    internal: true

@@ -42,6 +42,7 @@
     "oxlint": "^1.55.0",
     "postcss": "^8",
     "postcss-load-config": "^6.0.1",
+    "supabase": "2.105.0",
     "tailwindcss": "^4.2.1",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.3"

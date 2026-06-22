@@ -2,13 +2,61 @@
 node = "26.2.0"
 pnpm = "11.2.2"
 
+[env]
+SUPABASE_TELEMETRY_DISABLED = "1"
+
 [tasks.install]
 description = "Install dependencies"
 run = "pnpm install"
 
 [tasks.dev]
-description = "Start Next.js dev server"
-run = "pnpm dev"
+description = "Start Docker development stack with Supabase CLI local services"
+run = '''
+set -eu
+
+mise run supabase:start
+
+status_env=$(mktemp)
+trap 'rm -f "$status_env"' EXIT HUP INT TERM
+
+pnpm exec supabase status -o env >"$status_env"
+set -a
+. "$status_env"
+set +a
+
+export SUPABASE_DOCKER_NETWORK="${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}"
+export NEXT_PUBLIC_SITE_URL="${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
+export NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-${API_URL:-http://localhost:54321}}"
+export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${PUBLISHABLE_KEY:-${ANON_KEY:?ANON_KEY was not returned by supabase status}}"
+export SUPABASE_SERVER_URL="${SUPABASE_SERVER_URL:-http://supabase_kong_nutfes-Bingo:8000}"
+local_service_role_key="${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY was not returned by supabase status}"
+export SUPABASE_SECRET_KEY="${SUPABASE_SECRET_KEY:-$local_service_role_key}"
+export SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-$local_service_role_key}"
+export NUTFES_PUBLIC_ACTION_HASH_SALT="${NUTFES_PUBLIC_ACTION_HASH_SALT:-local-dev-public-action-salt}"
+export NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP="${NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP:-1}"
+
+docker compose -f compose.dev.yml up --build --remove-orphans
+'''
+
+[tasks."dev:down"]
+description = "Stop Docker development stack and local Supabase services"
+run = '''
+set -eu
+docker compose -f compose.dev.yml down --remove-orphans
+pnpm exec supabase stop
+'''
+
+[tasks."dev:network"]
+description = "Create the shared Docker network for local Supabase and the app"
+run = '''
+set -eu
+network="${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}"
+if ! docker network inspect "$network" >/dev/null 2>&1; then
+  docker network create \
+    -o com.docker.network.bridge.host_binding_ipv4=127.0.0.1 \
+    "$network" >/dev/null
+fi
+'''
 
 [tasks.check]
 description = "Run oxc"
@@ -38,33 +86,103 @@ usage = 'arg "<package>" help="Package name to remove"'
 run = 'pnpm remove "${usage_package?}"'
 
 [tasks."docker:up"]
-description = "Start development container"
-run = "docker compose -f compose.dev.yml up --build"
+description = "Alias for dev"
+run = "mise run dev"
 
 [tasks."docker:down"]
-description = "Stop development container"
-run = "docker compose -f compose.dev.yml down"
+description = "Alias for dev:down"
+run = "mise run dev:down"
 
 [tasks."sync"]
 description = "Sync dependencies inside running dev container"
 run = "docker compose -f compose.dev.yml exec app pnpm install"
 
 [tasks."supabase:start"]
-description = "Start local Supabase stack"
-run = "npx supabase start"
+description = "Start minimal local Supabase stack on the shared Docker network"
+run = '''
+set -eu
+mise run dev:network
+pnpm exec supabase start \
+  --network-id "${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}" \
+  --exclude realtime,studio,mailpit,edge-runtime,logflare,vector,imgproxy,postgres-meta,supavisor
+'''
 
 [tasks."supabase:stop"]
 description = "Stop local Supabase stack"
-run = "npx supabase stop"
+run = "pnpm exec supabase stop"
 
 [tasks."supabase:status"]
 description = "Show local Supabase status"
-run = "npx supabase status"
+run = 'pnpm exec supabase status -o pretty'
 
 [tasks."supabase:db-reset"]
 description = "Reset local Supabase database"
-run = "npx supabase db reset"
+run = "pnpm exec supabase db reset"
 
 [tasks."supabase:typegen"]
 description = "Generate DB types from local Supabase schema"
-run = "npx supabase gen types typescript --local > src/types/database.types.ts"
+run = "pnpm exec supabase gen types typescript --local --schema public > src/types/database.types.ts"
+
+[tasks."prod:env:init"]
+description = "Create .env.production with generated self-hosted Supabase secrets"
+run = "./infra/scripts/init-production-env.sh"
+
+[tasks."prod:up"]
+description = "Alias for prod:deploy"
+run = "mise run prod:deploy"
+
+[tasks."prod:deploy"]
+description = "Preflight, deploy, and smoke test the Proxmox LXC + Cloudflared production stack"
+run = "./infra/scripts/annual-ops.sh deploy"
+
+[tasks."prod:preflight"]
+description = "Validate Proxmox LXC + Cloudflared production prerequisites"
+run = "./infra/scripts/annual-ops.sh preflight"
+
+[tasks."prod:smoke"]
+description = "Smoke test production using NEXT_PUBLIC_SITE_URL and NEXT_PUBLIC_SUPABASE_URL from .env.production"
+run = "./infra/scripts/annual-ops.sh smoke"
+
+[tasks."prod:config"]
+description = "Validate rendered production Compose config"
+run = "./infra/scripts/compose.sh config --quiet"
+
+[tasks."prod:down"]
+description = "Stop production stack without deleting persistent data"
+run = "./infra/scripts/compose.sh down --remove-orphans"
+
+[tasks."prod:ps"]
+description = "Show production stack status"
+run = "./infra/scripts/compose.sh ps"
+
+[tasks."prod:logs"]
+description = "Follow production stack logs"
+run = "./infra/scripts/compose.sh logs -f"
+
+[tasks."prod:seed"]
+description = "Apply the explicit idempotent production seed"
+run = "./infra/scripts/compose.sh --profile tools run --rm seed"
+
+[tasks."prod:migrate:dry-run"]
+description = "Preview pending production migrations without applying them"
+run = "./infra/scripts/annual-ops.sh migrate:dry-run"
+
+[tasks."prod:backup"]
+description = "Back up PostgreSQL and Supabase Storage"
+run = "./infra/scripts/annual-ops.sh backup"
+
+[tasks."prod:admin:bootstrap"]
+description = "Create or update the initial production admin account"
+run = "./infra/scripts/admin.sh bootstrap"
+
+[tasks."prod:admin:reset-password"]
+description = "Reset an existing production admin password"
+run = "./infra/scripts/admin.sh reset-password"
+
+[tasks."prod:admin:list"]
+description = "List production admin accounts"
+run = "./infra/scripts/admin.sh list"
+
+[tasks."prod:admin:verify"]
+description = "Verify that at least one production admin account exists"
+run = "./infra/scripts/admin.sh verify"

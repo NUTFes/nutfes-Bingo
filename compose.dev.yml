@@ -1,57 +1,47 @@
 services:
-  caddy:
-    container_name: nutfes-bingo-caddy
-    image: caddy:2-alpine
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    healthcheck:
-      test: ["CMD-SHELL", "test -f /data/caddy/pki/authorities/local/root.crt"]
-      interval: 2s
-      timeout: 3s
-      retries: 30
-    restart: unless-stopped
-    networks:
-      default:
-        aliases:
-          - nutfes-bingo.localhost
-      supabase_network_nutfes-Bingo:
-
   app:
     container_name: nutfes-bingo-dev
     image: nutfes-bingo-dev
     build:
       context: .
       dockerfile: dev.Dockerfile
-    depends_on:
-      caddy:
-        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
-      NODE_EXTRA_CA_CERTS: /caddy-data/caddy/pki/authorities/local/root.crt
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-http://localhost:54321}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is required}
+      SUPABASE_SERVER_URL: ${SUPABASE_SERVER_URL:-http://supabase_kong_nutfes-Bingo:8000}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:?SUPABASE_SECRET_KEY is required}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-${SUPABASE_SECRET_KEY:?SUPABASE_SECRET_KEY is required}}
+      NUTFES_PUBLIC_ACTION_HASH_SALT: ${NUTFES_PUBLIC_ACTION_HASH_SALT:-local-dev-public-action-salt}
+      NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP: ${NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP:-1}
       CI: "true"
     volumes:
       - ./:/app
       - node_modules:/app/node_modules
       - next_cache:/app/.next
-      - caddy_data:/caddy-data:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "fetch(''http://127.0.0.1:3000/api/health'').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
     restart: unless-stopped
     networks:
       - default
+      - supabase_local
 
 volumes:
   node_modules:
   next_cache:
-  caddy_data:
-  caddy_config:
 
 networks:
-  supabase_network_nutfes-Bingo:
+  supabase_local:
+    name: ${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}
     external: true
