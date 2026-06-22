@@ -82,8 +82,8 @@ load_env_file
 
 for name in \
   NEXT_PUBLIC_SITE_URL \
-  NEXT_PUBLIC_SUPABASE_URL \
   SITE_URL \
+  SUPABASE_SERVER_URL \
   SUPABASE_PUBLIC_URL \
   API_EXTERNAL_URL \
   CLOUDFLARE_TUNNEL_TOKEN \
@@ -121,28 +121,19 @@ require_https_url() {
 }
 
 require_https_url NEXT_PUBLIC_SITE_URL
-require_https_url NEXT_PUBLIC_SUPABASE_URL
 require_https_url SITE_URL
-require_https_url SUPABASE_PUBLIC_URL
-require_https_url API_EXTERNAL_URL
 
 if [ "$SITE_URL" != "$NEXT_PUBLIC_SITE_URL" ]; then
   fail "SITE_URL must match NEXT_PUBLIC_SITE_URL"
 fi
 
-if [ "$SUPABASE_PUBLIC_URL" != "$NEXT_PUBLIC_SUPABASE_URL" ]; then
-  fail "SUPABASE_PUBLIC_URL must match NEXT_PUBLIC_SUPABASE_URL"
-fi
-
-if [ "$API_EXTERNAL_URL" != "$SUPABASE_PUBLIC_URL" ]; then
-  fail "API_EXTERNAL_URL must match SUPABASE_PUBLIC_URL"
-fi
-
-case "$NEXT_PUBLIC_SUPABASE_URL" in
-  "$NEXT_PUBLIC_SITE_URL" | "$NEXT_PUBLIC_SITE_URL"/*)
-    fail "NEXT_PUBLIC_SUPABASE_URL must be a separate hostname, not a path below NEXT_PUBLIC_SITE_URL"
-    ;;
-esac
+for name in SUPABASE_SERVER_URL SUPABASE_PUBLIC_URL API_EXTERNAL_URL; do
+  eval "value=\${$name:-}"
+  case "$value" in
+    http://kong:8000) ;;
+    *) fail "$name must be the Docker-internal Supabase URL http://kong:8000" ;;
+  esac
+done
 
 require_absolute_data_path SUPABASE_DB_DATA_PATH
 require_absolute_data_path SUPABASE_STORAGE_DATA_PATH

@@ -1,5 +1,8 @@
-import { hasEnvVars } from "@/utils/utils";
-import { getSupabaseServerUrl, hasSupabaseServerEnvVars } from "@/lib/supabase/config";
+import {
+  getSupabasePublishableKey,
+  getSupabaseServerUrl,
+  hasSupabaseServerEnvVars,
+} from "@/lib/supabase/config";
 import {
   createPublicClientId,
   PUBLIC_CLIENT_ID_COOKIE,
@@ -45,36 +48,28 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  if (
-    !hasEnvVars ||
-    !hasSupabaseServerEnvVars() ||
-    !shouldRefreshSession(request.nextUrl.pathname)
-  ) {
+  if (!hasSupabaseServerEnvVars() || !shouldRefreshSession(request.nextUrl.pathname)) {
     return withPublicClientCookie(request, supabaseResponse);
   }
 
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
-  const supabase = createServerClient(
-    getSupabaseServerUrl(),
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          );
-        },
+  const supabase = createServerClient(getSupabaseServerUrl(), getSupabasePublishableKey(), {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        supabaseResponse = NextResponse.next({
+          request,
+        });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options),
+        );
       },
     },
-  );
+  });
 
   // Do not run code between createServerClient and
   // supabase.auth.getClaims(). A simple mistake could make it very hard to debug

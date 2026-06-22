@@ -26,14 +26,13 @@ set +a
 
 export SUPABASE_DOCKER_NETWORK="${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}"
 export NEXT_PUBLIC_SITE_URL="${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
-export NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-${API_URL:-http://localhost:54321}}"
-export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="${PUBLISHABLE_KEY:-${ANON_KEY:?ANON_KEY was not returned by supabase status}}"
+export SUPABASE_PUBLISHABLE_KEY="${SUPABASE_PUBLISHABLE_KEY:-${PUBLISHABLE_KEY:-${ANON_KEY:?ANON_KEY was not returned by supabase status}}}"
 export SUPABASE_SERVER_URL="${SUPABASE_SERVER_URL:-http://supabase_kong_nutfes-Bingo:8000}"
 local_service_role_key="${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY was not returned by supabase status}"
 export SUPABASE_SECRET_KEY="${SUPABASE_SECRET_KEY:-$local_service_role_key}"
 export SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-$local_service_role_key}"
 export NUTFES_PUBLIC_ACTION_HASH_SALT="${NUTFES_PUBLIC_ACTION_HASH_SALT:-local-dev-public-action-salt}"
-export NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP="${NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP:-1}"
+export ENABLE_ADMIN_SIGNUP="${ENABLE_ADMIN_SIGNUP:-1}"
 
 docker compose -f compose.dev.yml up --build --remove-orphans
 '''
@@ -140,7 +139,7 @@ description = "Validate Proxmox LXC + Cloudflared production prerequisites"
 run = "./infra/scripts/annual-ops.sh preflight"
 
 [tasks."prod:smoke"]
-description = "Smoke test production using NEXT_PUBLIC_SITE_URL and NEXT_PUBLIC_SUPABASE_URL from .env.production"
+description = "Smoke test production using NEXT_PUBLIC_SITE_URL from .env.production"
 run = "./infra/scripts/annual-ops.sh smoke"
 
 [tasks."prod:config"]

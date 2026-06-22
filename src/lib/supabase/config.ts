@@ -1,5 +1,9 @@
 export function getSupabaseServerUrl() {
-  return process.env.SUPABASE_SERVER_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  return process.env.SUPABASE_SERVER_URL || "";
+}
+
+export function getSupabasePublishableKey() {
+  return process.env.SUPABASE_PUBLISHABLE_KEY || process.env.ANON_KEY || "";
 }
 
 export function getSupabaseSecretKey() {
@@ -8,10 +12,9 @@ export function getSupabaseSecretKey() {
 
 export function hasSupabaseServerEnvVars() {
   const supabaseUrl = getSupabaseServerUrl();
+  const publishableKey = getSupabasePublishableKey();
 
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY && supabaseUrl && URL.canParse(supabaseUrl),
-  );
+  return Boolean(publishableKey && supabaseUrl && URL.canParse(supabaseUrl));
 }
 
 export function hasSupabaseServiceRoleEnvVars() {
@@ -26,11 +29,9 @@ export function shouldSkipSupabaseFetch() {
 }
 
 export function isAdminSignupEnabled() {
-  if (process.env.NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP === "1") {
+  if (process.env.ENABLE_ADMIN_SIGNUP === "1") {
     return true;
   }
 
-  return (
-    process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP !== "0"
-  );
+  return process.env.NODE_ENV !== "production" && process.env.ENABLE_ADMIN_SIGNUP !== "0";
 }

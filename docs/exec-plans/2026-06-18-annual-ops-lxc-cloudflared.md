@@ -23,6 +23,7 @@ This ExecPlan is a living document. The sections `Progress`, `Surprises & Discov
 - [x] (2026-06-18) 初期Admin作成方針をADR-0003に記録し、Auth Admin APIとprivate DB functionを使う運用へ決めた。
 - [x] (2026-06-18) `private.bootstrap_initial_admin(uuid,text)` migrationと `infra/scripts/admin.sh` を追加した。
 - [x] (2026-06-18) Admin bootstrap追加後のmigration dry-run、script構文、format、lint、typecheck、buildを実行して成功を確認した。
+- [x] (2026-06-23) ADR-0004で公開境界をNext.jsだけに変更し、Cloudflaredの公開先を `app:3000` のみに更新した。
 - [ ] Proxmox LXC本番ホスト上で `mise run prod:preflight`、`mise run prod:deploy`、`mise run prod:smoke` を実行して実公開経路を確認する。
 
 ## Surprises & Discoveries
@@ -57,25 +58,29 @@ This ExecPlan is a living document. The sections `Progress`, `Surprises & Discov
   Rationale: Cloudflare Tunnelは複数hostnameを複数origin serviceへ直接転送できる。Supabase self-hosted stackはKongをAPI Gatewayとして標準pathを公開する前提なので、`/supabase` path proxyより別hostnameの方がframework/libraryの考え方に近い。
   Date/Author: 2026-06-18 / Codex
 
+- Decision: ADR-0004により、Supabase Kongの別hostname公開を取り消し、CloudflaredのPublic Hostnameは `app -> http://app:3000` だけにする。
+  Rationale: 今回の公開境界はNext.jsのみであり、Supabase Auth、PostgREST、StorageはDocker内部networkに閉じる必要がある。
+  Date/Author: 2026-06-23 / Codex
+
 - Decision: 本番の初期Adminはサインアップ開放ではなく、Auth Admin APIとprivate DB functionで作成する。
   Rationale: 年1運用で本番サインアップを一時開放すると、戻し忘れや手動SQLの誤りが起こりやすい。Supabase Auth userはAdmin APIで作り、アプリ固有のAdmin判定は既存の `profiles.role = 'admin'` に集約する方が、責務が分かれて再現性も高い。
   Date/Author: 2026-06-18 / Codex
 
 ## Outcomes & Retrospective
 
-コードベース上の固定化は完了した。`DEPLOY_MODE` と `compose.vps.yml` は削除され、Composeは常に `compose.prod.yml` と `compose.cloudflare.yml` を使う。さらにADR-0002でCaddyを廃止し、Cloudflaredから `app:3000` と `kong:8000` へ直接転送する構成へ変更した。`prod:preflight`、`prod:deploy`、`prod:smoke` が年次運用moduleの主要interfaceになった。
+コードベース上の固定化は完了した。`DEPLOY_MODE` と `compose.vps.yml` は削除され、Composeは常に `compose.prod.yml` と `compose.cloudflare.yml` を使う。ADR-0002でCaddyを廃止した後、ADR-0004で公開境界をNext.jsのみに変更し、Cloudflaredから `app:3000` だけへ転送する構成へ変更した。`prod:preflight`、`prod:deploy`、`prod:smoke` が年次運用moduleの主要interfaceになった。
 
 この作業環境では実際のProxmox LXCとCloudflare Tunnelを持たないため、本番ホスト上での `prod:deploy` と公開URLへの `prod:smoke` は未実行である。次の担当者はLXC上でこの2つを実行し、Cloudflare Public Hostnameから到達できることを確認する。
 
 ## Context and Orientation
 
-このリポジトリはNext.js、self-hosted Supabase、CloudflaredをDocker Composeで動かす。Next.jsのアプリ本体は `Dockerfile` でbuildされ、`compose.prod.yml` の `app` として起動する。Supabase相当の最小構成は `db`、`auth`、`rest`、`storage`、`kong` である。CloudflaredはCloudflare Tunnelへ接続し、Cloudflare側のPublic Hostnameから `app:3000` と `kong:8000` へ転送する。
+このリポジトリはNext.js、self-hosted Supabase、CloudflaredをDocker Composeで動かす。Next.jsのアプリ本体は `Dockerfile` でbuildされ、`compose.prod.yml` の `app` として起動する。Supabase相当の最小構成は `db`、`auth`、`rest`、`storage`、`kong` である。CloudflaredはCloudflare Tunnelへ接続し、Cloudflare側のPublic Hostnameから `app:3000` だけへ転送する。Supabase KongはDocker内部networkに閉じる。
 
 Admin accountとは、Supabase Authのuserと、`public.profiles` tableの `role = 'admin'` が揃ったログイン主体のことである。Supabase Auth Admin APIとは、service role secretを持つbackendだけが呼ぶ `/auth/v1/admin/users` APIで、Auth userを作成・更新できる。private DB functionとは、PostgRESTの公開schemaに含めない `private` schemaのPostgreSQL functionである。この計画では `private.bootstrap_initial_admin(uuid,text)` をLXC上の `psql` からだけ実行する。
 
 現在の運用入口は `mise.toml` にあり、`prod:env:init`、`prod:preflight`、`prod:config`、`prod:deploy`、`prod:smoke`、`prod:up`、`prod:ps`、`prod:logs`、`prod:seed`、`prod:migrate:dry-run`、`prod:backup` が定義されている。`prod:up` は後方互換のaliasで、実体は `prod:deploy` である。`prod:preflight`、`prod:deploy`、`prod:smoke` は `infra/scripts/annual-ops.sh` を呼ぶ。
 
-変更前の `compose.sh` は `DEPLOY_MODE` を読み、`compose.vps.yml` または `compose.cloudflare.yml` を選んでいた。変更後の `compose.sh` は常に `compose.prod.yml` と `compose.cloudflare.yml` を使う。`compose.vps.yml` は削除済みである。`compose.cloudflare.yml` はCloudflaredを起動する。Cloudflare Zero Trust側のPublic Hostnameは、アプリ用hostnameを `http://app:3000`、Supabase用hostnameを `http://kong:8000` へ向ける設定である。
+変更前の `compose.sh` は `DEPLOY_MODE` を読み、`compose.vps.yml` または `compose.cloudflare.yml` を選んでいた。変更後の `compose.sh` は常に `compose.prod.yml` と `compose.cloudflare.yml` を使う。`compose.vps.yml` は削除済みである。`compose.cloudflare.yml` はCloudflaredを起動する。Cloudflare Zero Trust側のPublic Hostnameは、アプリ用hostnameを `http://app:3000` へ向ける設定である。
 
 `.env.production` は本番秘密値を含むファイルで、Gitにcommitしない。`infra/scripts/init-production-env.sh` は `.env.production.example` を基に秘密値を生成し、mode 0600で `.env.production` を作る。
 
@@ -83,7 +88,7 @@ Admin accountとは、Supabase Authのuserと、`public.profiles` tableの `role
 
 最初に、ADRとExecPlanを追加して判断の履歴を残す。ADRは `docs/adr/ADR-0001-proxmox-lxc-cloudflared-production.md` とし、VPS直公開を廃止する理由と影響を記述する。ExecPlanはこのファイルであり、今後の作業進捗に応じて更新する。
 
-次に、Composeの本番入口をCloudflared固定にする。`infra/scripts/compose.sh` から `DEPLOY_MODE` の分岐を削除し、常に `compose.prod.yml` と `compose.cloudflare.yml` を使うようにする。`compose.vps.yml` は削除する。本番とローカル開発のCaddy service、Caddyfile、Caddy volumeを削除し、Cloudflaredは `app` と `kong` のhealthcheck完了後に起動する。
+次に、Composeの本番入口をCloudflared固定にする。`infra/scripts/compose.sh` から `DEPLOY_MODE` の分岐を削除し、常に `compose.prod.yml` と `compose.cloudflare.yml` を使うようにする。`compose.vps.yml` は削除する。本番とローカル開発のCaddy service、Caddyfile、Caddy volumeを削除する。ADR-0004以後、Cloudflaredは `app` のhealthcheck完了後に起動し、`kong` は公開networkへ出さない。
 
 次に、年次運用moduleを作る。`infra/scripts/preflight.sh` は、LXCで実行されていること、必要なコマンドがあること、`.env.production` の権限が狭いこと、必須値が空やplaceholderでないこと、永続ディレクトリが存在すること、Cloudflared serviceがCompose configに含まれることを検査する。`infra/scripts/annual-ops.sh` は `preflight`、`deploy`、`smoke`、`backup`、`migrate:dry-run` を一つのinterfaceにまとめる。
 
@@ -144,7 +149,7 @@ preflightは本番秘密値を含む `.env.production` を使うため、CIやlo
 
 受け入れ条件は、手順の分岐が消え、Cloudflared固定の本番運用が一つのinterfaceから検査できることである。
 
-`mise run prod:config` はCloudflaredを含むCompose configを検査し、成功時は何も出力せず終了code 0になる。`mise run prod:preflight` はLXC本番ホストで実行したとき、`.env.production`、永続ディレクトリ、Docker、Cloudflared構成が正しければ `Preflight passed.` と表示する。`mise run prod:deploy` はpreflight後にCompose stackを起動し、最後にsmoke testが `Smoke test passed for https://app.example.com and https://supabase.example.com` の形で表示する。
+`mise run prod:config` はCloudflaredを含むCompose configを検査し、成功時は何も出力せず終了code 0になる。`mise run prod:preflight` はLXC本番ホストで実行したとき、`.env.production`、永続ディレクトリ、Docker、Cloudflared構成が正しければ `Preflight passed.` と表示する。`mise run prod:deploy` はpreflight後にCompose stackを起動し、最後にsmoke testが `Smoke test passed for https://app.example.com` の形で表示する。
 
 Admin bootstrapの受け入れ条件は、`ADMIN_EMAIL`、password file、`CONFIRM_BOOTSTRAP_ADMIN=bootstrap-nutfes-bingo-admin` を指定して `mise run prod:admin:bootstrap` を実行すると、Auth userが作成または更新され、`prod:admin:list` にそのemailが `role = admin` として表示されることである。既に別Adminが存在する場合、bootstrapは失敗する。`mise run prod:admin:verify` は少なくとも1件のAdminがあれば `Admin account check passed: N admin(s)` と表示する。
 
@@ -170,7 +175,7 @@ backupは `infra/scripts/backup.sh` がtimestamp directoryを作り、同じdire
 変更後に通ったコマンドは以下である。
 
     sh -n infra/scripts/compose.sh infra/scripts/preflight.sh infra/scripts/annual-ops.sh infra/scripts/deploy.sh infra/scripts/backup.sh infra/scripts/restore.sh infra/scripts/init-production-env.sh
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=ci-anon-key SUPABASE_SECRET_KEY=ci-secret-key SUPABASE_SERVICE_ROLE_KEY=ci-service-role-key docker compose -f compose.dev.yml config --quiet
+    SUPABASE_PUBLISHABLE_KEY=ci-publishable-key SUPABASE_SECRET_KEY=ci-secret-key SUPABASE_SERVICE_ROLE_KEY=ci-service-role-key docker compose -f compose.dev.yml config --quiet
     CLOUDFLARE_TUNNEL_TOKEN=ci-cloudflare-token docker compose --env-file .env.production.example -f compose.prod.yml -f compose.cloudflare.yml config --quiet
     NUTFES_ALLOW_NON_LXC=1 ENV_FILE=<temporary generated env> ./infra/scripts/preflight.sh
     git diff --check
@@ -208,7 +213,7 @@ preflightの期待出力は以下である。
 
 `infra/scripts/preflight.sh` は引数なしで本番前検査を実行する。環境変数 `ENV_FILE` で `.env.production` 以外のenv fileを指定できる。環境変数 `NUTFES_ALLOW_NON_LXC=1` はlocal/CIでLXC検査だけを無効化する。
 
-`infra/scripts/annual-ops.sh` は第一引数に `preflight`、`deploy`、`smoke`、`backup`、`migrate:dry-run` のいずれかを取る。`deploy` はpreflight、deploy、smokeを順に行う。`smoke` は引数がなければ `.env.production` の `NEXT_PUBLIC_SITE_URL` と `NEXT_PUBLIC_SUPABASE_URL` を使う。
+`infra/scripts/annual-ops.sh` は第一引数に `preflight`、`deploy`、`smoke`、`backup`、`migrate:dry-run` のいずれかを取る。`deploy` はpreflight、deploy、smokeを順に行う。`smoke` は引数がなければ `.env.production` の `NEXT_PUBLIC_SITE_URL` を使う。
 
 `infra/scripts/admin.sh` は第一引数に `bootstrap`、`reset-password`、`list`、`verify` のいずれかを取る。`bootstrap` は `ADMIN_EMAIL`、password fileまたは対話入力、`CONFIRM_BOOTSTRAP_ADMIN` を要求する。`reset-password` は `ADMIN_EMAIL`、password fileまたは対話入力、`CONFIRM_RESET_ADMIN_PASSWORD` を要求する。`list` と `verify` はDBの `profiles` と `auth.users` を読むだけである。
 
@@ -220,8 +225,10 @@ preflightの期待出力は以下である。
 
 2026-06-17: Compose/mise/scripts/README/CIを更新した。VPS直公開のadapterを削除し、Cloudflared adapterだけにした。preflightとannual-opsを追加し、CIで一時envを生成してpreflightを検査するようにした。
 
-2026-06-18: Caddyを本番とローカル開発から削除する方針に更新した。CloudflaredのPublic Hostnameは `app -> http://app:3000` と `supabase -> http://kong:8000` の2本にする。
+2026-06-18: Caddyを本番とローカル開発から削除する方針に更新した。当時のCloudflared Public Hostnameは `app -> http://app:3000` と `supabase -> http://kong:8000` の2本だったが、2026-06-23にADR-0004で `app -> http://app:3000` の1本へ変更した。
 
 2026-06-18: Admin bootstrapの方針を追加した。Supabase Studioやメール認証に依存せず、Auth Admin APIとprivate DB functionで初期Adminを作成する。
 
 2026-06-18: Admin bootstrap実装後の検証結果を追記した。migration dry-run、shell構文、format、lint、typecheck、build、確認ガードの失敗動作を確認した。
+
+2026-06-23: ADR-0004の公開境界変更を反映した。CloudflaredはNext.jsだけを公開し、Supabase KongはDocker内部networkに閉じる。

@@ -51,7 +51,7 @@ jobs:
 
       - name: Docker Compose Config Check
         env:
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-anon-key
+          SUPABASE_PUBLISHABLE_KEY: ci-publishable-key
           SUPABASE_SECRET_KEY: ci-secret-key
           SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
           CLOUDFLARE_TUNNEL_TOKEN: ci-cloudflare-token
@@ -73,10 +73,10 @@ jobs:
           mkdir -p "$tmpdir/postgres" "$tmpdir/storage"
           sed -i \
             -e "s|^NEXT_PUBLIC_SITE_URL=.*|NEXT_PUBLIC_SITE_URL=https://app.example.test|" \
-            -e "s|^NEXT_PUBLIC_SUPABASE_URL=.*|NEXT_PUBLIC_SUPABASE_URL=https://supabase.example.test|" \
             -e "s|^SITE_URL=.*|SITE_URL=https://app.example.test|" \
-            -e "s|^SUPABASE_PUBLIC_URL=.*|SUPABASE_PUBLIC_URL=https://supabase.example.test|" \
-            -e "s|^API_EXTERNAL_URL=.*|API_EXTERNAL_URL=https://supabase.example.test|" \
+            -e "s|^SUPABASE_SERVER_URL=.*|SUPABASE_SERVER_URL=http://kong:8000|" \
+            -e "s|^SUPABASE_PUBLIC_URL=.*|SUPABASE_PUBLIC_URL=http://kong:8000|" \
+            -e "s|^API_EXTERNAL_URL=.*|API_EXTERNAL_URL=http://kong:8000|" \
             -e "s|^ADDITIONAL_REDIRECT_URLS=.*|ADDITIONAL_REDIRECT_URLS=https://app.example.test/**|" \
             -e "s|^CLOUDFLARE_TUNNEL_TOKEN=.*|CLOUDFLARE_TUNNEL_TOKEN=ci-cloudflare-token|" \
             -e "s|^SUPABASE_DB_DATA_PATH=.*|SUPABASE_DB_DATA_PATH=$tmpdir/postgres|" \

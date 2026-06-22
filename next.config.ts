@@ -1,8 +1,5 @@
 import type { NextConfig } from "next";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const parsedSupabaseUrl = supabaseUrl && URL.canParse(supabaseUrl) ? new URL(supabaseUrl) : null;
-const supabaseBasePath = parsedSupabaseUrl?.pathname.replace(/\/$/, "") ?? "";
 const scriptSrc =
   process.env.NODE_ENV === "development"
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
@@ -14,7 +11,7 @@ const imgSrc =
 const connectSrc =
   process.env.NODE_ENV === "development"
     ? "connect-src 'self' http: https: ws: wss:"
-    : "connect-src 'self' https: wss:";
+    : "connect-src 'self'";
 
 const securityHeaders = [
   {
@@ -58,16 +55,7 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
-    remotePatterns: parsedSupabaseUrl
-      ? [
-          {
-            protocol: parsedSupabaseUrl.protocol.replace(":", "") as "http" | "https",
-            hostname: parsedSupabaseUrl.hostname,
-            port: parsedSupabaseUrl.port,
-            pathname: `${supabaseBasePath}/storage/v1/object/public/**`,
-          },
-        ]
-      : [],
+    remotePatterns: [],
   },
 };
 

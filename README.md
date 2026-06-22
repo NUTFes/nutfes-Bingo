@@ -13,9 +13,9 @@ Docker開発だけを使う場合、`.env` のSupabase keyは `mise run dev` が
 ホストで `pnpm dev` などを直接実行する場合だけ、`.env` にローカルSupabaseの値を設定してください。
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+SUPABASE_SERVER_URL=http://localhost:54321
+SUPABASE_PUBLISHABLE_KEY=...
 SUPABASE_SECRET_KEY=...
 ```
 
@@ -37,7 +37,7 @@ mise run dev
 3. ローカルanon/service role keyを `supabase status -o env` から取得する
 4. Next.js dev containerを `compose.dev.yml` で起動する
 
-アプリは `http://localhost:3000` でアクセスします。ブラウザから見るSupabase APIはSupabase CLI local stackの `http://localhost:54321` です。Docker内のNext.js server-side処理は、同じDocker network上のKong `http://supabase_kong_nutfes-Bingo:8000` へ接続します。
+アプリは `http://localhost:3000` でアクセスします。ブラウザはSupabase APIを直接呼ばず、すべてNext.jsの画面、Server Action、`/api/*` routeを経由します。Docker内のNext.js server-side処理は、同じDocker network上のKong `http://supabase_kong_nutfes-Bingo:8000` へ接続します。
 
 開発環境は本番self-hosted stackを使いません。`supabase start` で起動するCLI local stackだけを使います。
 
@@ -75,7 +75,7 @@ mise run dev
 
 ## Docker Compose のローカル開発
 
-このリポジトリのDocker開発環境はCaddyを使いません。Next.jsは `http://localhost:3000` で起動し、Supabase CLI local stackは `http://localhost:54321` で起動します。Next.js containerからSupabaseへは固定Docker network `nutfes-bingo-dev` 上のKongへDocker DNSで到達します。
+このリポジトリのDocker開発環境はCaddyを使いません。Next.jsは `http://localhost:3000` で起動します。Supabase CLI local stackはCLIの標準どおりローカル開発用portを持ちますが、アプリのブラウザ実装はそのURLを使いません。Next.js containerからSupabaseへは固定Docker network `nutfes-bingo-dev` 上のKongへDocker DNSで到達します。
 
 ```bash
 mise run dev
@@ -98,15 +98,15 @@ defaultで起動するSupabase local serviceはAuth、Kong、PostgREST、Storage
 - 残すサービス: PostgreSQL、Auth、PostgREST、Storage、Kong
 - 起動しないサービス: Realtime、Edge Functions、Analytics、Studio、postgres-meta、Supavisor、imgproxy
 - Storageの画像変換は無効です。景品画像のupload/removeと配信にはStorage自体を使用します。
-- ブラウザへ公開するSupabase APIは `https://supabase.example.com` からKongへ転送します。RLSとStorage policyを前提に、Auth、PostgREST、StorageをSupabase標準のpathで公開します。
-- Next.js server-side処理はDocker内部の `http://kong:8000` へ接続します。
+- 公開するHTTP originはNext.jsだけです。ブラウザからSupabase Auth、PostgREST、Storage、S3互換APIを直接叩きません。
+- Next.js server-side処理だけがDocker内部の `http://kong:8000` へ接続します。
 - Supabase Studio、Dozzle、Docker socket mountはdefault stackに含めません。管理UIやDocker socketは公開面と権限が大きいため、通常運用はSSH上のCLI、`psql`、`docker compose logs` を使います。
-- CloudflaredだけがCompose network上の `app:3000` と `kong:8000` へ接続します。LXCホストでアプリ用の80/443を公開しません。
+- CloudflaredだけがCompose network上の `app:3000` へ接続します。Kong、PostgreSQL、StorageはCloudflaredの公開先にしません。LXCホストでアプリ用の80/443を公開しません。
 
 Supabase Docker設定は公式リポジトリのcommitを固定して取り込んでいます。更新基準は
 `infra/supabase/UPSTREAM.md`を確認してください。
 
-この判断は `docs/adr/ADR-0001-proxmox-lxc-cloudflared-production.md` と `docs/adr/ADR-0002-cloudflared-direct-app-supabase-hostnames.md` に記録しています。
+この判断は `docs/adr/ADR-0001-proxmox-lxc-cloudflared-production.md`、`docs/adr/ADR-0002-cloudflared-direct-app-supabase-hostnames.md`、`docs/adr/ADR-0004-nextjs-only-public-boundary.md` に記録しています。
 
 ### LXC前提
 
@@ -114,7 +114,7 @@ Supabase Docker設定は公式リポジトリのcommitを固定して取り込�
 - Docker EngineとDocker Compose
 - `openssl`、`curl`
 - Cloudflare Zero TrustのTunnelとPublic Hostnameを作成できること
-- Public Hostnameを2つ作成し、app側のserviceを `http://app:3000`、Supabase側のserviceを `http://kong:8000` にすること
+- Public Hostnameを1つ作成し、serviceを `http://app:3000` にすること
 - firewallでは原則SSHなどの管理口だけを許可し、アプリ公開用にTCP 80/443やUDP 443を開けないこと
 - PostgreSQL、Kong、Next.jsのportをLXCホストへ公開しないこと
 
@@ -123,9 +123,8 @@ Supabase Docker設定は公式リポジトリのcommitを固定して取り込�
 
 ### 初回構築
 
-1. Cloudflare Zero TrustでTunnelを作成し、Public Hostnameを2つ設定します。
+1. Cloudflare Zero TrustでTunnelを作成し、Public Hostnameを1つ設定します。
    - `app.example.com` -> `http://app:3000`
-   - `supabase.example.com` -> `http://kong:8000`
 
 2. 本番秘密ファイルを生成します。
 
@@ -137,10 +136,10 @@ mise run prod:env:init
 
 ```env
 NEXT_PUBLIC_SITE_URL=https://app.example.com
-NEXT_PUBLIC_SUPABASE_URL=https://supabase.example.com
 SITE_URL=https://app.example.com
-SUPABASE_PUBLIC_URL=https://supabase.example.com
-API_EXTERNAL_URL=https://supabase.example.com
+SUPABASE_SERVER_URL=http://kong:8000
+SUPABASE_PUBLIC_URL=http://kong:8000
+API_EXTERNAL_URL=http://kong:8000
 ADDITIONAL_REDIRECT_URLS=https://app.example.com/**
 CLOUDFLARE_TUNNEL_TOKEN=...
 SUPABASE_DB_DATA_PATH=/srv/nutfes-bingo/postgres
@@ -191,7 +190,7 @@ mise run prod:smoke
 ```
 
 `/api/health`はNext.js process、`/api/ready`はNext.jsからPostgREST/DBまでを確認します。
-smoke testは `NEXT_PUBLIC_SITE_URL` の `/api/health` と `/api/ready`、`NEXT_PUBLIC_SUPABASE_URL` の `/auth/v1/settings`、`/rest/v1/`、`/storage/v1/status` を確認します。
+smoke testは `NEXT_PUBLIC_SITE_URL` の `/api/health`、`/api/ready`、`/api/bingo/state`、`/api/bingo/prizes`、`/api/bingo/screen` を確認します。Supabase疎通はNext.jsの `/api/ready` とBFF API経由で確認します。
 
 ### Migration・typegen
 
@@ -256,7 +255,7 @@ Docker imageは`latest`を使わず、Compose内の固定tagまたはupstream co
 ## Admin 認証の運用方針
 
 - メールサーバーは使用しないため、確認メール経由の運用やパスワードリセット/更新機能は提供しません。
-- 本番ではGoTrueとアプリ画面の両方でサインアップを無効にします。`DISABLE_SIGNUP=true` と `NEXT_PUBLIC_ENABLE_ADMIN_SIGNUP=0` を維持します。
+- 本番ではGoTrueとアプリ画面の両方でサインアップを無効にします。`DISABLE_SIGNUP=true` と `ENABLE_ADMIN_SIGNUP=0` を維持します。
 - 初期AdminはSupabase Auth Admin APIでAuth userを作成し、PostgREST公開対象外の `private.bootstrap_initial_admin` database functionで `profiles.role = 'admin'` にします。
 - `auth.users` へSQLで直接insertしません。Supabase Studioも通常運用では起動しません。
 

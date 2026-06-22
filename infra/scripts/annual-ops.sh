@@ -12,8 +12,7 @@ Usage: annual-ops.sh COMMAND [ARGS...]
 Commands:
   preflight        Validate the Proxmox LXC + Cloudflared production setup
   deploy           Run preflight, deploy the stack, then smoke test it
-  smoke [APP_URL] [SUPABASE_URL]
-                   Smoke test URLs, defaulting to .env.production values
+  smoke [APP_URL]  Smoke test Next.js, defaulting to .env.production
   backup [DIR]     Back up PostgreSQL and Storage
   migrate:dry-run  Preview pending Supabase migrations
 USAGE
@@ -45,10 +44,8 @@ case "$cmd" in
   smoke)
     shift
     load_env
-    export SUPABASE_PUBLISHABLE_KEY
     app_url=${1:-${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL is required}}
-    supabase_url=${2:-${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}}
-    exec "$repo_root/infra/scripts/smoke-test.sh" "$app_url" "$supabase_url"
+    exec "$repo_root/infra/scripts/smoke-test.sh" "$app_url"
     ;;
   backup)
     shift

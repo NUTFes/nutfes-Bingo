@@ -41,3 +41,5 @@ Caddyfile、Caddy container、Caddy volume、ローカルCA証明書手順が不
 ## Supersedes / Amends
 
 Amends ADR-0001. Proxmox LXC + Cloudflared固定は維持し、Caddy経由の単一hostname/path proxyを廃止する。
+
+ADR-0004でsupersedeされた。Caddy廃止は維持するが、Supabase Kongを別hostnameへ直接公開する判断は取り消し、公開境界をNext.jsだけにする。

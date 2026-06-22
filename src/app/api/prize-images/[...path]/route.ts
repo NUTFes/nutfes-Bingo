@@ -1,17 +1,11 @@
-import { getSupabaseServerUrl, hasSupabaseServerEnvVars } from "@/lib/supabase/config";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { hasSupabaseServiceRoleEnvVars } from "@/lib/supabase/config";
 import { PRIZE_IMAGES_BUCKET } from "@/types/bingo/constants";
 
 const CACHE_CONTROL = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800";
 
 function isSafeStoragePath(path: string[]) {
   return path.length > 0 && path.every((segment) => segment && segment !== "." && segment !== "..");
-}
-
-function buildStorageUrl(path: string[]) {
-  const baseUrl = getSupabaseServerUrl().replace(/\/$/, "");
-  const encodedPath = path.map((segment) => encodeURIComponent(segment)).join("/");
-
-  return `${baseUrl}/storage/v1/object/public/${PRIZE_IMAGES_BUCKET}/${encodedPath}`;
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ path: string[] }> }) {
@@ -26,7 +20,7 @@ export async function GET(_request: Request, context: { params: Promise<{ path: 
     });
   }
 
-  if (!hasSupabaseServerEnvVars()) {
+  if (!hasSupabaseServiceRoleEnvVars()) {
     return new Response("Supabase environment variables are not configured", {
       status: 503,
       headers: {
@@ -35,23 +29,20 @@ export async function GET(_request: Request, context: { params: Promise<{ path: 
     });
   }
 
-  const upstream = await fetch(buildStorageUrl(path), {
-    headers: {
-      apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    },
-    next: { revalidate: 3600 },
-  });
+  const storagePath = path.join("/");
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.storage.from(PRIZE_IMAGES_BUCKET).download(storagePath);
 
-  if (!upstream.ok || !upstream.body) {
+  if (error || !data) {
     return new Response("Prize image not found", {
-      status: upstream.status,
+      status: 404,
       headers: {
         "Cache-Control": "no-store",
       },
     });
   }
 
-  const contentType = upstream.headers.get("content-type") || "application/octet-stream";
+  const contentType = data.type || "application/octet-stream";
 
   if (!contentType.startsWith("image/")) {
     return new Response("Unsupported image content type", {
@@ -65,25 +56,10 @@ export async function GET(_request: Request, context: { params: Promise<{ path: 
   const headers = new Headers({
     "Cache-Control": CACHE_CONTROL,
     "Content-Type": contentType,
+    "Content-Length": String(data.size),
   });
 
-  const contentLength = upstream.headers.get("content-length");
-  const etag = upstream.headers.get("etag");
-  const lastModified = upstream.headers.get("last-modified");
-
-  if (contentLength) {
-    headers.set("Content-Length", contentLength);
-  }
-
-  if (etag) {
-    headers.set("ETag", etag);
-  }
-
-  if (lastModified) {
-    headers.set("Last-Modified", lastModified);
-  }
-
-  return new Response(upstream.body, {
+  return new Response(data.stream(), {
     status: 200,
     headers,
   });
