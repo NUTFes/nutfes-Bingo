@@ -174,9 +174,9 @@ const JudgementModal = ({
       isDismissable={canCloseByClickingBackground}
     >
       <Dialog>
-        <h3 className="text-xl font-semibold leading-tight text-zinc-100 sm:text-2xl">
+        <h2 className="text-xl font-semibold leading-tight text-foreground sm:text-2xl">
           ビンゴ正誤判定
-        </h3>
+        </h2>
         <Separator className="my-4 opacity-75" />
         <div className="mx-auto w-full max-w-2xl">
           <div>
@@ -184,47 +184,41 @@ const JudgementModal = ({
               5×5 のカードに数字を入力し、最後に「ビンゴ判定」を押してください。
             </p>
             <div className="mx-auto w-full max-w-lg">
-              <div className="mb-2 grid grid-cols-5 gap-2 text-center text-xl font-semibold text-zinc-100 sm:gap-2.5 sm:text-3xl">
+              <div className="mb-2 grid grid-cols-5 gap-2 text-center text-xl font-semibold text-foreground sm:gap-2.5 sm:text-3xl">
                 {COL_HEADERS.map((header) => (
                   <div key={header}>{header}</div>
                 ))}
               </div>
               <div className="grid grid-rows-5 gap-2 sm:gap-2.5">
                 {bingoCard.map((row, rowIndex) => (
-                  <div key={rowIndex} className="grid grid-cols-5 gap-2 sm:gap-2.5">
+                  <div key={`row-${rowIndex}`} className="grid grid-cols-5 gap-2 sm:gap-2.5">
                     {row.map((_, colIndex) => (
-                      <div
+                      <button
+                        type="button"
                         key={`${rowIndex}-${colIndex}`}
                         className={cn(
-                          "relative flex aspect-square min-h-12 min-w-12 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-lg font-semibold text-zinc-100 shadow-sm transition sm:min-h-14 sm:min-w-14 sm:rounded-2xl sm:text-2xl",
+                          "relative flex aspect-square min-h-12 min-w-12 items-center justify-center rounded-xl border border-border bg-card text-lg font-semibold text-foreground shadow-sm transition sm:min-h-14 sm:min-w-14 sm:rounded-2xl sm:text-2xl",
                           !isCenter(rowIndex, colIndex) &&
-                            "cursor-pointer hover:-translate-y-0.5 hover:border-sky-600",
-                          isCenter(rowIndex, colIndex) && "cursor-default  text-white",
+                            "cursor-pointer hover:border-primary hover:bg-accent",
+                          isCenter(rowIndex, colIndex) &&
+                            "cursor-default bg-primary text-primary-foreground",
                           !hasJudged &&
                             selectedCell?.row === rowIndex &&
                             selectedCell?.col === colIndex &&
-                            "border-sky-600 ring-2 ring-sky-400/40",
+                            "border-primary ring-2 ring-primary/40",
                           !hasJudged &&
                             selectedCell?.row === rowIndex &&
                             selectedCell?.col === colIndex &&
                             inputValue &&
-                            "text-zinc-100",
+                            "text-foreground",
                           shouldHighlight(rowIndex, colIndex) &&
-                            "border-indigo-400 bg-indigo-500/20 text-indigo-100 shadow-lg",
+                            "border-primary bg-primary/20 text-primary shadow-lg",
                         )}
                         onClick={() => handleCellClick(rowIndex, colIndex)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            handleCellClick(rowIndex, colIndex);
-                          }
-                        }}
-                        tabIndex={0}
-                        role="button"
                         aria-label={`行${rowIndex + 1} 列${COL_HEADERS[colIndex]} ${getCellText(rowIndex, colIndex) || "空"}`}
                       >
                         {getCellText(rowIndex, colIndex)}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ))}
@@ -238,7 +232,7 @@ const JudgementModal = ({
                     <Button
                       key={label}
                       type="button"
-                      variant={label === "消去" || label === "確定" ? "secondary" : "primary"}
+                      variant={label === "確定" ? "primary" : "secondary"}
                       className="min-h-14 text-xl sm:min-h-16 sm:text-2xl"
                       onPress={() => {
                         if (label === "消去") handleDelete();
@@ -264,11 +258,11 @@ const JudgementModal = ({
               <div className="mt-5 flex w-full flex-col items-center">
                 <div className="w-full max-w-sm text-center">
                   {completedLines.length > 0 ? (
-                    <div className="flex items-center justify-center gap-3 rounded-3xl border-2 border-emerald-500 bg-emerald-500/20 py-3 text-3xl font-extrabold text-emerald-300 shadow-sm">
+                    <div className="flex items-center justify-center gap-3 rounded-3xl border-2 border-emerald-500 bg-emerald-500/20 py-3 text-3xl font-extrabold text-emerald-600 shadow-sm dark:text-emerald-400">
                       <GiPartyPopper className="text-3xl sm:text-4xl" /> BINGO！
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center gap-3 rounded-3xl border-2 border-rose-500 bg-rose-500/20 py-3 text-2xl font-bold text-rose-300 shadow-sm">
+                    <div className="flex items-center justify-center gap-3 rounded-3xl border-2 border-destructive bg-destructive/10 py-3 text-2xl font-bold text-destructive shadow-sm">
                       <RxCross1 className="text-3xl sm:text-4xl" />
                       ビンゴはありません
                     </div>

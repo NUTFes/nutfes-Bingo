@@ -1,19 +1,22 @@
 import React, { ReactNode } from "react";
 import styles from "./Button.module.css";
-import classNames from "classnames";
+import { cn } from "@/utils/utils";
 
 interface ButtonProps {
   children: ReactNode;
   inversion?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
 }
 
 const Button: React.FC<ButtonProps> = (props) => {
   return (
     <button
-      className={classNames(styles.button, {
+      type="button"
+      className={cn(styles.button, {
         [styles.inversion]: props.inversion,
       })}
+      disabled={props.disabled}
       onClick={props.onClick}
     >
       {props.children}

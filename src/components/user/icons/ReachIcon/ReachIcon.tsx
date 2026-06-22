@@ -1,6 +1,6 @@
 "use client";
 
-import classNames from "classnames";
+import { cn } from "@/utils/utils";
 
 import styles from "./ReachIcon.module.css";
 
@@ -14,7 +14,7 @@ const ReachIcon = ({ isOpen, id, setIsReachModalOpen }: ReachIconProps) => {
   return (
     <button
       type="button"
-      className={classNames(styles.reachButton, {
+      className={cn(styles.reachButton, {
         [styles.inverted]: isOpen,
       })}
       onClick={() => setIsReachModalOpen(!isOpen)}

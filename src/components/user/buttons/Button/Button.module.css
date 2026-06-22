@@ -4,9 +4,9 @@
   align-items: center;
   font-weight: 700;
   border-radius: 1vw;
-  border: 1vw solid var(--main-color);
-  color: var(--background-color);
-  background-color: var(--main-color);
+  border: 1vw solid var(--color-button-line);
+  color: var(--color-font-main);
+  background: linear-gradient(135deg, var(--color-button-start), var(--color-button-end));
   width: 25vw;
   height: 5.6vh;
   padding: 1vw;
@@ -14,14 +14,30 @@
 }
 
 .inversion {
-  color: var(--main-color);
-  background-color: var(--background-color);
+  color: var(--color-button-start);
+  background: var(--color-secondary);
+  border-color: var(--color-button-line);
 }
 
 .button:active {
   background-color: rgba(0, 0, 0, 0.5);
   box-shadow: 0 1vw rgba(102, 102, 102, 0.2);
   transform: translateY(4px);
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.button:disabled:active {
+  background: linear-gradient(135deg, var(--color-button-start), var(--color-button-end));
+  box-shadow: none;
+  transform: none;
+}
+
+.button.inversion:disabled:active {
+  background: var(--color-secondary);
 }
 
 @media screen and (min-width: 1024px) {

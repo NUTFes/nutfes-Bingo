@@ -56,7 +56,7 @@ const UpdateNumberModal = ({
       isDismissable={canCloseByClickingBackground}
     >
       <Dialog>
-        <h3 className="text-xl font-semibold leading-tight text-zinc-100 sm:text-2xl">
+        <h3 className="text-xl font-semibold leading-tight text-foreground sm:text-2xl">
           番号の修正
         </h3>
         <Separator className="my-4" />
@@ -68,8 +68,8 @@ const UpdateNumberModal = ({
           }}
         >
           <div className="space-y-1">
-            <p className="m-0 text-sm text-zinc-400">修正後の番号</p>
-            <p className="m-0 text-xs text-zinc-400">1〜99の範囲で入力してください。</p>
+            <p className="m-0 text-sm text-muted-foreground">修正後の番号</p>
+            <p className="m-0 text-xs text-muted-foreground">1〜99の範囲で入力してください。</p>
           </div>
           <NumberField
             key={`${isOpened}-${initialNumber}`}

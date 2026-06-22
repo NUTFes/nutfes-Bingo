@@ -1,9 +1,9 @@
 export default function Loading() {
   return (
-    <main className="flex min-h-svh items-center bg-zinc-950 px-4 py-6 text-zinc-100 sm:px-6">
+    <main className="flex min-h-svh items-center bg-background px-4 py-6 text-foreground sm:px-6">
       <section className="mx-auto w-full max-w-2xl">
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-xl sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             NUTFES BINGO ADMIN
           </p>
           <div className="mt-4 space-y-3">

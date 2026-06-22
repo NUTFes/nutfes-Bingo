@@ -1,26 +1,23 @@
-import { forwardRef } from "react";
-import classNames from "classnames";
+import { cn } from "@/utils/utils";
 import styles from "./NavigationBar.module.css";
 
 interface NavigationBarProps {
   children: React.ReactNode;
   isCentered: boolean;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
-const NavigationBar = forwardRef<HTMLDivElement, NavigationBarProps>(
-  ({ children, isCentered }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={classNames(styles.navigationBar, {
-          [styles.center]: isCentered,
-        })}
-      >
-        {children}
-      </div>
-    );
-  },
-);
-NavigationBar.displayName = "NavigationBar";
+const NavigationBar = ({ children, isCentered, ref }: NavigationBarProps) => {
+  return (
+    <div
+      ref={ref}
+      className={cn(styles.navigationBar, {
+        [styles.center]: isCentered,
+      })}
+    >
+      {children}
+    </div>
+  );
+};
 
 export default NavigationBar;

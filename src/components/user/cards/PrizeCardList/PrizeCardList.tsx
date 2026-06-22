@@ -1,17 +1,20 @@
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import styles from "./PrizeCardList.module.css";
-import PrizeCard from "../PrizeCard";
+import PrizeCard from "../PrizeCard/PrizeCard";
 
 interface PrizeCardListProps {
-  BingoPrize: PrizeWithImageUrl[];
+  prizes?: PrizeWithImageUrl[];
+  BingoPrize?: PrizeWithImageUrl[];
 }
 
-const PrizeCardList = ({ BingoPrize }: PrizeCardListProps) => {
+const PrizeCardList = ({ prizes, BingoPrize }: PrizeCardListProps) => {
+  const displayPrizes = prizes ?? BingoPrize ?? [];
+
   return (
     <div className={styles.container}>
       <div className={styles.frame}>
-        {BingoPrize.map((prize) => (
-          <PrizeCard key={prize.id} BingoPrize={prize} />
+        {displayPrizes.map((prize) => (
+          <PrizeCard key={prize.id} prize={prize} />
         ))}
       </div>
     </div>

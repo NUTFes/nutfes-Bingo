@@ -1,15 +1,10 @@
 const Loading = () => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 p-6 backdrop-blur-md">
-      <div className="flex w-full max-w-sm flex-col items-center gap-3.5 rounded-2xl border border-zinc-700 bg-zinc-900 p-6 text-zinc-100 shadow-2xl sm:p-7">
-        <p
-          className="text-xl tracking-[0.08em] text-zinc-100 sm:text-2xl"
-          style={{ fontFamily: 'var(--font-silom), "Noto Sans JP", sans-serif' }}
-        >
-          Admin Console
-        </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-6 backdrop-blur-md">
+      <div className="flex w-full max-w-sm flex-col items-center gap-3.5 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-2xl sm:p-7">
+        <p className="text-xl tracking-[0.08em] font-semibold sm:text-2xl">Admin Console</p>
         <svg
-          className="size-11 fill-zinc-100 sm:size-12"
+          className="size-11 fill-current sm:size-12"
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
@@ -29,7 +24,7 @@ const Loading = () => {
             />
           </path>
         </svg>
-        <p className="text-sm text-zinc-400 sm:text-base">管理画面を読み込み中...</p>
+        <p className="text-sm text-muted-foreground sm:text-base">管理画面を読み込み中...</p>
       </div>
     </div>
   );

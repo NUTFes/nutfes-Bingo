@@ -1,8 +1,16 @@
+.layoutWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
 .content {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: clamp(14px, 7vw, 26px) 0 calc(12vw + env(safe-area-inset-bottom));
-  min-height: 100vh;
+  padding: clamp(14px, 7vw, 26px) 0 clamp(20px, 10vw, 40px);
 }
 
 .reachModal {
@@ -26,6 +34,15 @@
 
 .reachModal button {
   margin-top: 3vw;
+}
+
+.reachModal .reachError {
+  max-width: min(72vw, 320px);
+  margin: 3vw 0 0;
+  color: #b42318;
+  font-size: clamp(12px, 3.5vw, 16px);
+  font-weight: 700;
+  line-height: 1.5;
 }
 
 .settingsModal,

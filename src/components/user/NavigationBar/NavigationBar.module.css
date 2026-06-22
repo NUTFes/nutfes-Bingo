@@ -2,18 +2,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   z-index: 500;
   width: 100%;
   box-sizing: border-box;
-  padding: 3.125vw 1.5vw;
+  padding: 3.125vw 1.5vw calc(3.125vw + env(safe-area-inset-bottom));
   background-color: var(--background-color);
   box-shadow:
     0 -0.625vw 3.125vw 0 var(--nav-top-shadow-color, transparent),
     0 -0.625vw 3.125vw rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .center {

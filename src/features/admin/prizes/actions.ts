@@ -12,9 +12,12 @@ import {
 } from "@/components/admin/server-actions";
 import { resolvePrizeImageUrl } from "@/utils/image";
 
-function sanitizeFileName(name: string) {
-  return name.replace(/[^a-zA-Z0-9._-]/g, "-");
-}
+const MAX_PRIZE_IMAGE_SIZE = 2 * 1024 * 1024;
+const ALLOWED_PRIZE_IMAGE_TYPES = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+} as const;
 
 function toPrizeWithImageUrl(prize: {
   id: number;
@@ -32,11 +35,12 @@ function toPrizeWithImageUrl(prize: {
 }
 
 async function uploadPrizeImage(supabase: AdminSupabaseClient, file: File) {
-  const extension = file.name.includes(".") ? file.name.split(".").pop() : "bin";
-  const path = `prizes/${crypto.randomUUID()}.${sanitizeFileName(extension || "bin")}`;
+  const extension = await validatePrizeImage(file);
+  const path = `prizes/${crypto.randomUUID()}.${extension}`;
   const { error } = await supabase.storage.from(PRIZE_IMAGES_BUCKET).upload(path, file, {
     cacheControl: "3600",
     upsert: false,
+    contentType: file.type,
   });
 
   if (error) {
@@ -44,6 +48,49 @@ async function uploadPrizeImage(supabase: AdminSupabaseClient, file: File) {
   }
 
   return path;
+}
+
+function bytesStartWith(bytes: Uint8Array, signature: number[]) {
+  if (bytes.length < signature.length) return false;
+  for (let i = 0; i < signature.length; i++) {
+    if (bytes[i] !== signature[i]) return false;
+  }
+  return true;
+}
+
+function hasValidImageSignature(type: string, bytes: Uint8Array) {
+  switch (type) {
+    case "image/jpeg":
+      return bytesStartWith(bytes, [0xff, 0xd8, 0xff]);
+    case "image/png":
+      return bytesStartWith(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    case "image/webp":
+      return (
+        bytesStartWith(bytes, [0x52, 0x49, 0x46, 0x46]) &&
+        String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
+      );
+    default:
+      return false;
+  }
+}
+
+async function validatePrizeImage(file: File) {
+  const extension = ALLOWED_PRIZE_IMAGE_TYPES[file.type as keyof typeof ALLOWED_PRIZE_IMAGE_TYPES];
+
+  if (!extension) {
+    throw new Error("景品画像は JPEG / PNG / WebP のみ許可します。");
+  }
+
+  if (file.size > MAX_PRIZE_IMAGE_SIZE) {
+    throw new Error("景品画像は2MB以下にしてください。");
+  }
+
+  const bytes = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  if (!hasValidImageSignature(file.type, bytes)) {
+    throw new Error("景品画像のファイル形式が不正です。");
+  }
+
+  return extension;
 }
 
 async function deletePrizeImage(supabase: AdminSupabaseClient, path: string | null) {

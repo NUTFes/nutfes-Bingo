@@ -10,11 +10,9 @@ interface BackIconProps {
 }
 
 const BackIcon = ({ id }: BackIconProps) => {
-  const router = useRouter();
+  const { push } = useRouter();
 
-  return (
-    <IconFramework icon={<TiArrowBack />} text="Back" onClick={() => router.push("/")} id={id} />
-  );
+  return <IconFramework icon={<TiArrowBack />} text="Back" onClick={() => push("/")} id={id} />;
 };
 
 export default BackIcon;

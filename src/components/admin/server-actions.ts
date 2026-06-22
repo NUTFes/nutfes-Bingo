@@ -1,17 +1,17 @@
 import "server-only";
 
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
-export type AdminSupabaseClient = Awaited<ReturnType<typeof createClient>>;
+export type AdminSupabaseClient = ReturnType<typeof createServiceRoleClient>;
 
 export async function createAdminClient(): Promise<AdminSupabaseClient> {
   await requireAdmin();
-  return createClient();
+  return createServiceRoleClient();
 }
 
 export function invalidateTag(tag: string) {
-  revalidateTag(tag, "max");
+  updateTag(tag);
 }

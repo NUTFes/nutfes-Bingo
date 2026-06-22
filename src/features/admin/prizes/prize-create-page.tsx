@@ -1,20 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { isFileDropItem, type DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
 import { IoCloudUploadOutline } from "react-icons/io5";
 
 import { AdminHeader } from "@/components/admin";
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
-import { usePrizes } from "@/lib/realtime";
 import { Button } from "@/components/ui/Button";
 import { DropZone } from "@/components/ui/DropZone";
 import { Form } from "@/components/ui/Form";
 import { Separator } from "@/components/ui/Separator";
 import { TextField } from "@/components/ui/TextField";
-import { MyToastRegion, queue } from "@/components/ui/Toast";
+import { MyToastRegion } from "@/components/ui/Toast";
+import { queue } from "@/components/ui/toastQueue";
 import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
 
@@ -29,7 +29,7 @@ const showToast = (content: { title: string; description?: string }) => {
 };
 
 export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProps) {
-  const [bingoPrize, setBingoPrize] = usePrizes(initialPrizes);
+  const [bingoPrize, setBingoPrize] = useState(initialPrizes);
   const [formState, setFormState] = useState({
     prizeNameJp: "",
     prizeNameEn: "",
@@ -38,6 +38,14 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { prizeNameJp, prizeNameEn, imageFile, previewUrl } = formState;
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleFileSelected = useCallback((targetFile: File | null) => {
     if (!targetFile) {
@@ -48,20 +56,19 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
       }));
       return;
     }
+    const nextPreviewUrl = URL.createObjectURL(targetFile);
     setFormState((prev) => ({
       ...prev,
       imageFile: targetFile,
-      previewUrl: URL.createObjectURL(targetFile),
+      previewUrl: nextPreviewUrl,
     }));
   }, []);
 
   const handleDrop = useCallback(
     async (event: DropEvent) => {
-      for (const item of event.items) {
-        if (isFileDropItem(item)) {
-          handleFileSelected(await item.getFile());
-          return;
-        }
+      const item = event.items.find(isFileDropItem);
+      if (item) {
+        handleFileSelected(await item.getFile());
       }
     },
     [handleFileSelected],
@@ -102,18 +109,16 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-zinc-900 via-zinc-950 to-black pb-8 text-zinc-100 sm:pb-10">
+    <div className="min-h-screen bg-background pb-8 text-foreground sm:pb-10">
       <MyToastRegion />
-      <AdminHeader user="Admin" />
+      <AdminHeader />
 
       <div className="mx-auto mt-6 grid w-full max-w-7xl grid-cols-1 gap-5 px-4 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6">
+        <section className="rounded-2xl border border-border bg-card/50 p-5 sm:p-6">
           <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
-            <div className="max-w-3xl space-y-2">
-              <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">
-                景品情報を入力
-              </h2>
-              <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
+            <div className="max-w-3xl space-y-1">
+              <h2 className="text-lg font-semibold text-foreground">景品情報を入力</h2>
+              <p className="text-sm text-muted-foreground">
                 画像・景品名を入力して新しい景品を登録します。
               </p>
             </div>
@@ -132,7 +137,9 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
               <div className="flex flex-col items-center gap-2">
                 <IoCloudUploadOutline size="4rem" />
                 <p>ここに画像をドラッグ&ドロップ</p>
-                <p className="text-sm font-normal text-zinc-400">または下のボタンから選択</p>
+                <p className="text-sm font-normal text-muted-foreground">
+                  または下のボタンから選択
+                </p>
               </div>
             </DropZone>
             <FileTrigger
@@ -180,22 +187,18 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
           </div>
         </section>
 
-        <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6">
+        <section className="rounded-2xl border border-border bg-card/50 p-5 sm:p-6">
           <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
-            <div className="max-w-3xl space-y-2">
-              <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">
-                景品プレビュー
-              </h2>
-              <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
-                登録前に画像と景品名を確認できます。
-              </p>
+            <div className="max-w-3xl space-y-1">
+              <h2 className="text-lg font-semibold text-foreground">景品プレビュー</h2>
+              <p className="text-sm text-muted-foreground">登録前に画像と景品名を確認できます。</p>
             </div>
           </header>
           <Separator className="mb-4 opacity-70" />
           <div className="space-y-5">
             <div className="flex flex-col items-center gap-4">
               {previewUrl ? (
-                <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl bg-zinc-800/70">
+                <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl bg-muted/70">
                   <Image
                     src={previewUrl}
                     alt="preview"
@@ -205,7 +208,7 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
                   />
                 </div>
               ) : (
-                <div className="grid aspect-square w-full max-w-sm place-items-center rounded-2xl border border-dashed border-zinc-600 text-sm text-zinc-400 sm:text-base">
+                <div className="grid aspect-square w-full max-w-sm place-items-center rounded-2xl border border-dashed border-muted-foreground/50 text-sm text-muted-foreground sm:text-base">
                   画像を選択してください
                 </div>
               )}

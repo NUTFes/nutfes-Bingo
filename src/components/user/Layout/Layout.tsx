@@ -18,7 +18,6 @@ import {
   ToggleButton,
 } from "@/components/user/common";
 import { REACTION_IMAGES } from "@/types/bingo/constants";
-import { useAppState } from "@/lib/realtime";
 import {
   applyPublicTheme,
   DEFAULT_PUBLIC_PREFERENCES,
@@ -31,12 +30,14 @@ import {
 import type { AppStateRow } from "@/types/bingo/types";
 import { BingoLanguageProvider, useBingoLanguage } from "@/utils/i18n/provider";
 import { recordPublicReach, sendReactionStamp } from "@/features/user/actions/bingo-public";
+import { openHttpsUrl } from "@/utils/url";
 
 import styles from "./Layout.module.css";
 
 interface InnerLayoutProps {
   children: React.ReactNode;
-  initialAppState: AppStateRow;
+  appState?: AppStateRow;
+  initialAppState?: AppStateRow;
   initialPreferences?: PublicPreferences;
   isSortedAscending?: boolean;
   setIsSortedAscending?: (value: boolean) => void;
@@ -47,18 +48,22 @@ type ModalState = {
   isSettingsModalOpen: boolean;
   isReachModalOpen: boolean;
   isSurveyModalOpen: boolean;
-  hasShownSurvey: boolean;
 };
 
-type ModalToggleKey = Exclude<keyof ModalState, "hasShownSurvey">;
+type ModalToggleKey = keyof ModalState;
 
 const persistBooleanPreference = (key: string, value: boolean) => {
   window.localStorage.setItem(key, value.toString());
   document.cookie = preferenceCookie(key, value);
 };
 
+function getActionErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 function InnerLayout({
   children,
+  appState: providedAppState,
   initialAppState,
   initialPreferences = DEFAULT_PUBLIC_PREFERENCES,
   isSortedAscending,
@@ -66,14 +71,17 @@ function InnerLayout({
 }: InnerLayoutProps) {
   const pathname = usePathname();
   const { language, setLanguage, t } = useBingoLanguage();
-  const [appState] = useAppState(initialAppState);
+  const appState = providedAppState ?? initialAppState;
+
+  if (!appState) {
+    throw new Error("Layout requires appState or initialAppState.");
+  }
 
   const [modalState, setModalState] = useState<ModalState>({
     isReactionModalOpen: false,
     isSettingsModalOpen: false,
     isReachModalOpen: false,
     isSurveyModalOpen: false,
-    hasShownSurvey: false,
   });
   const [preferences, setPreferences] = useState(() => ({
     isReachIconVisible: initialPreferences.isReachIconVisible,
@@ -85,11 +93,16 @@ function InnerLayout({
     isSending: false,
     activeName: null as string | null,
   });
+  const [reachState, setReachState] = useState({
+    isSending: false,
+    error: null as string | null,
+  });
   const navRef = useRef<HTMLDivElement>(null);
   const { isReactionModalOpen, isSettingsModalOpen, isReachModalOpen, isSurveyModalOpen } =
     modalState;
   const { isReachIconVisible, isSortOrderActive, isDarkMode } = preferences;
   const { isSending: isStampSending, activeName: activeStampName } = stampState;
+  const { isSending: isReachSending, error: reachError } = reachState;
   const setModalOpen = (key: ModalToggleKey) => (value: SetStateAction<boolean>) => {
     setModalState((prev) => ({
       ...prev,
@@ -137,26 +150,18 @@ function InnerLayout({
     applyPublicTheme(isDarkMode);
   }, [isDarkMode]);
 
+  const prevSurveyActiveRef = useRef(appState.is_survey_active);
   useEffect(() => {
-    setModalState((prev) => {
-      if (!appState.is_survey_active && prev.hasShownSurvey) {
-        return {
-          ...prev,
-          isSurveyModalOpen: false,
-          hasShownSurvey: false,
-        };
-      }
+    if (appState.is_survey_active === prevSurveyActiveRef.current) {
+      return;
+    }
 
-      if (appState.is_survey_active && !prev.hasShownSurvey && appState.survey_url) {
-        return {
-          ...prev,
-          isSurveyModalOpen: true,
-          hasShownSurvey: true,
-        };
-      }
-
-      return prev;
-    });
+    prevSurveyActiveRef.current = appState.is_survey_active;
+    if (appState.is_survey_active && appState.survey_url) {
+      setModalState((prev) => ({ ...prev, isSurveyModalOpen: true }));
+    } else if (!appState.is_survey_active) {
+      setModalState((prev) => ({ ...prev, isSurveyModalOpen: false }));
+    }
   }, [appState.is_survey_active, appState.survey_url]);
 
   const handleReactionClick = async (name: string) => {
@@ -181,10 +186,26 @@ function InnerLayout({
   };
 
   const handleConfirmReach = async () => {
-    await recordPublicReach();
-    setPreferences((prev) => ({ ...prev, isReachIconVisible: false }));
-    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, false);
-    setIsReachModalOpen(false);
+    if (isReachSending) {
+      return;
+    }
+
+    setReachState({ isSending: true, error: null });
+
+    try {
+      await recordPublicReach();
+      setPreferences((prev) => ({ ...prev, isReachIconVisible: false }));
+      persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, false);
+      setIsReachModalOpen(false);
+    } catch (error) {
+      setReachState({
+        isSending: false,
+        error: getActionErrorMessage(error, "リーチ送信に失敗しました。"),
+      });
+      return;
+    }
+
+    setReachState({ isSending: false, error: null });
   };
 
   const toggleSortOrder = () => {
@@ -210,7 +231,7 @@ function InnerLayout({
 
   const handleAnswerSurvey = () => {
     if (appState.survey_url) {
-      window.open(appState.survey_url, "_blank", "noopener,noreferrer");
+      openHttpsUrl(appState.survey_url);
     }
   };
 
@@ -243,7 +264,7 @@ function InnerLayout({
   ].filter(Boolean);
 
   return (
-    <div>
+    <div className={styles.layoutWrapper}>
       {isReactionModalOpen && (
         <ReactionStampModal
           position={position}
@@ -262,10 +283,17 @@ function InnerLayout({
       <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
         <div className={styles.reachModal}>
           <p>{t.reachModal.title}</p>
-          <Button inversion onClick={handleConfirmReach}>
+          <Button inversion disabled={isReachSending} onClick={handleConfirmReach}>
             {t.reachModal.yes}
           </Button>
-          <Button onClick={() => setIsReachModalOpen(false)}>{t.reachModal.no}</Button>
+          <Button disabled={isReachSending} onClick={() => setIsReachModalOpen(false)}>
+            {t.reachModal.no}
+          </Button>
+          {reachError && (
+            <p className={styles.reachError} role="alert">
+              {reachError}
+            </p>
+          )}
         </div>
       </Modal>
       <Modal isOpened={isSettingsModalOpen} setIsOpened={setIsSettingsModalOpen}>

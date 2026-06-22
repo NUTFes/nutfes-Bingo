@@ -1,5 +1,5 @@
-export const MIN_BINGO_NUMBER = 1;
-export const MAX_BINGO_NUMBER = 99;
+const MIN_BINGO_NUMBER = 1;
+const MAX_BINGO_NUMBER = 99;
 
 export const parseBingoNumber = (value: string): number | undefined => {
   const trimmed = value.trim();

@@ -10,14 +10,14 @@ interface PrizesIconProps {
 }
 
 const PrizesIcon = ({ id }: PrizesIconProps) => {
-  const router = useRouter();
+  const { push } = useRouter();
 
   return (
     <IconFramework
       icon={<BiGift />}
       text="Prizes"
       outline
-      onClick={() => router.push("/prizes")}
+      onClick={() => push("/prizes")}
       id={id}
     />
   );

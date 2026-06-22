@@ -1,13 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
-import { Button } from "@/components/ui/Button";
+import { cn } from "@/utils/utils";
 
 interface HeaderProps {
   children?: ReactNode;
-  user: string;
 }
 
 const COMMON_NAV_ITEMS = [
@@ -16,54 +16,67 @@ const COMMON_NAV_ITEMS = [
   { href: "/admin/prizes/new", label: "景品追加" },
 ] as const;
 
-const Header = ({ children, user }: HeaderProps) => {
-  const router = useRouter();
+const Header = ({ children }: HeaderProps) => {
   const pathname = usePathname();
-
-  const isActive = (href: string) => {
-    const currentPath = pathname?.replace(/\/$/, "") || "";
-
-    if (href === "/admin") {
-      return currentPath === "/admin";
-    }
-
-    if (href === "/admin/prizes") {
-      return currentPath === "/admin/prizes";
-    }
-
-    if (href === "/admin/prizes/new") {
-      return currentPath === "/admin/prizes/new";
-    }
-
-    return false;
-  };
+  const currentPath = pathname?.replace(/\/$/, "") || "";
 
   return (
-    <header className="sticky top-0 z-20 w-full border-b border-zinc-700/80 bg-zinc-900/85 shadow-md backdrop-blur-md supports-backdrop-filter:bg-zinc-900/75">
-      <div className="mx-auto w-full max-w-7xl px-4 py-2.5 sm:px-6 sm:py-3 lg:px-8">
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="quiet"
-            className="h-9 px-2 text-left text-base font-semibold leading-tight tracking-[0.01em] text-zinc-100 hover:bg-zinc-800/90 sm:text-lg"
-            onPress={() => router.push("/admin")}
-          >
-            NUTFES BINGO {user}
-          </Button>
-          {children ? <div className="ml-auto flex items-center gap-2">{children}</div> : null}
+    <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur-md">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-14 items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            <Link
+              href="/admin"
+              className="shrink-0 text-base font-semibold text-foreground transition-colors hover:text-foreground/80"
+            >
+              NUTFES BINGO
+            </Link>
+
+            <nav className="hidden items-center gap-1 md:flex">
+              {COMMON_NAV_ITEMS.map((item) => {
+                const isActive = currentPath === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                    )}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          {children ? <div className="flex shrink-0 items-center gap-2">{children}</div> : null}
         </div>
-        <nav className="-mx-1 mt-2 overflow-x-auto pb-1">
-          <ul className="flex min-w-max items-center gap-1.5 px-1">
-            {COMMON_NAV_ITEMS.map((item) => (
-              <li key={item.href}>
-                <Button
-                  variant={isActive(item.href) ? "primary" : "secondary"}
-                  onPress={() => router.push(item.href)}
-                >
-                  {item.label}
-                </Button>
-              </li>
-            ))}
-          </ul>
+
+        {/* Mobile Navigation */}
+        <nav className="flex items-center gap-1 overflow-x-auto pb-2 md:hidden">
+          {COMMON_NAV_ITEMS.map((item) => {
+            const isActive = currentPath === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                )}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
       </div>
     </header>

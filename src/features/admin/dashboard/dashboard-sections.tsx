@@ -5,7 +5,6 @@ import { ComboBox, ComboBoxItem } from "@/components/ui/ComboBox";
 import { FieldGroup, Input } from "@/components/ui/Field";
 import { Form } from "@/components/ui/Form";
 import { NumberField } from "@/components/ui/NumberField";
-import { Separator } from "@/components/ui/Separator";
 
 interface CreateNumberSectionProps {
   submitNumberFieldKey: number;
@@ -21,18 +20,11 @@ export function CreateNumberSection({
   onCreate,
 }: CreateNumberSectionProps) {
   return (
-    <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6">
-      <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
-        <div className="max-w-3xl space-y-2">
-          <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">
-            抽選した番号を入力
-          </h2>
-          <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
-            1〜99の番号を入力して抽選結果に追加します。
-          </p>
-        </div>
+    <section className="flex flex-col gap-3 sm:gap-4">
+      <header className="max-w-3xl space-y-1">
+        <h2 className="text-lg font-semibold text-foreground">番号の追加</h2>
+        <p className="text-sm text-muted-foreground">1〜99の番号を入力して抽選結果に追加します。</p>
       </header>
-      <Separator className="mb-4 opacity-70" />
       <div className="space-y-3">
         <Form
           className="gap-3"
@@ -42,7 +34,7 @@ export function CreateNumberSection({
           }}
         >
           <div className="space-y-2">
-            <p className="text-sm text-zinc-400">登録する番号</p>
+            <p className="text-sm text-muted-foreground">登録する番号</p>
             <NumberField
               key={submitNumberFieldKey}
               minValue={1}
@@ -93,18 +85,11 @@ export function DeleteNumberSection({
   onDelete,
 }: DeleteNumberSectionProps) {
   return (
-    <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6">
-      <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
-        <div className="max-w-3xl space-y-2">
-          <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">
-            抽選した番号を削除
-          </h2>
-          <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
-            入力または候補選択で抽選済み番号を取り消します。
-          </p>
-        </div>
+    <section className="flex flex-col gap-3 sm:gap-4">
+      <header className="max-w-3xl space-y-1">
+        <h2 className="text-lg font-semibold text-foreground">番号の削除</h2>
+        <p className="text-sm text-muted-foreground">抽選済み番号を取り消します。</p>
       </header>
-      <Separator className="mb-4 opacity-70" />
       <div className="space-y-3">
         <Form
           className="gap-3"
@@ -114,7 +99,7 @@ export function DeleteNumberSection({
           }}
         >
           <div className="space-y-2">
-            <p className="text-sm text-zinc-400">削除する番号</p>
+            <p className="text-sm text-muted-foreground">削除する番号</p>
             <ComboBox
               allowsCustomValue
               selectedKey={selectedDeleteNumber}
@@ -150,18 +135,11 @@ interface ReachControlSectionProps {
 
 export function ReachControlSection({ onIncrement, onDecrement }: ReachControlSectionProps) {
   return (
-    <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6 lg:col-span-2">
-      <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
-        <div className="max-w-3xl space-y-2">
-          <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">
-            リーチ数の制御
-          </h2>
-          <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
-            現在のリーチ数を1ずつ増減します。
-          </p>
-        </div>
+    <section className="flex flex-col gap-3 sm:gap-4">
+      <header className="max-w-3xl space-y-1">
+        <h2 className="text-lg font-semibold text-foreground">リーチ数</h2>
+        <p className="text-sm text-muted-foreground">現在のリーチ数を1ずつ増減します。</p>
       </header>
-      <Separator className="mb-4 opacity-70" />
       <div className="space-y-4 sm:space-y-5">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Button className="w-full" onPress={() => void onIncrement()}>
@@ -190,18 +168,13 @@ export function SurveyControlSection({
   onDeactivate,
 }: SurveyControlSectionProps) {
   return (
-    <section className="rounded-2xl border border-zinc-700 bg-zinc-900/90 p-4 shadow-lg sm:p-6 lg:col-span-2">
-      <header className="mb-3 flex flex-wrap items-start justify-between gap-3 sm:mb-4 sm:gap-4">
-        <div className="max-w-3xl space-y-2">
-          <h2 className="m-0 text-lg font-semibold leading-tight text-zinc-100 sm:text-xl">
-            アンケートURLと配信制御
-          </h2>
-          <p className="m-0 text-sm leading-relaxed text-zinc-400 sm:text-[0.95rem]">
-            URL設定後に配信開始/停止を選択してください。
-          </p>
-        </div>
+    <section className="flex flex-col gap-3 sm:gap-4">
+      <header className="max-w-3xl space-y-1">
+        <h2 className="text-lg font-semibold text-foreground">アンケート配信</h2>
+        <p className="text-sm text-muted-foreground">
+          URL設定後に配信開始/停止を選択してください。
+        </p>
       </header>
-      <Separator className="mb-4 opacity-70" />
       <div className="space-y-3">
         <FieldGroup>
           <Input
