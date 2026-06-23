@@ -3,7 +3,7 @@ begin;
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 begin
@@ -65,8 +65,8 @@ values (1, '', false)
 on conflict (id) do nothing;
 
 create index if not exists reach_logs_created_at_desc_idx on public.reach_logs (created_at desc);
-create index if not exists stamp_triggers_created_at_desc_idx on public.stamp_triggers (created_at desc);
-create index if not exists prizes_is_won_idx on public.prizes (is_won);
+drop index if exists stamp_triggers_created_at_desc_idx;
+drop index if exists prizes_is_won_idx;
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -108,7 +108,7 @@ $$;
 create or replace function public.record_reach()
 returns integer
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 declare
@@ -135,17 +135,13 @@ $$;
 create or replace function public.increment_reach()
 returns integer
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 declare
   current_num integer;
   new_num integer;
 begin
-  if not public.is_admin() then
-    raise exception 'admin role is required' using errcode = '42501';
-  end if;
-
   select coalesce((
     select reach_num
     from public.reach_logs
@@ -166,17 +162,13 @@ $$;
 create or replace function public.decrement_reach()
 returns integer
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 declare
   current_num integer;
   new_num integer;
 begin
-  if not public.is_admin() then
-    raise exception 'admin role is required' using errcode = '42501';
-  end if;
-
   select coalesce((
     select reach_num
     from public.reach_logs
@@ -194,10 +186,18 @@ begin
 end;
 $$;
 
-grant execute on function public.record_reach() to anon, authenticated;
-grant execute on function public.increment_reach() to authenticated;
-grant execute on function public.decrement_reach() to authenticated;
-grant execute on function public.is_admin(uuid) to authenticated;
+revoke all on function public.set_updated_at() from public, anon, authenticated;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+revoke all on function public.is_admin(uuid) from public, anon, authenticated;
+revoke all on function public.record_reach() from public, anon, authenticated;
+revoke all on function public.increment_reach() from public, anon, authenticated;
+revoke all on function public.decrement_reach() from public, anon, authenticated;
+
+grant execute on function public.handle_new_user() to supabase_auth_admin;
+grant execute on function public.is_admin(uuid) to service_role;
+grant execute on function public.record_reach() to service_role;
+grant execute on function public.increment_reach() to service_role;
+grant execute on function public.decrement_reach() to service_role;
 
 create or replace trigger profiles_set_updated_at
 before update on public.profiles
@@ -328,11 +328,6 @@ values ('prize-images', 'prize-images', true)
 on conflict (id) do update set public = excluded.public;
 
 drop policy if exists "prize_images_public_read" on storage.objects;
-create policy "prize_images_public_read"
-on storage.objects
-for select
-to anon, authenticated
-using (bucket_id = 'prize-images');
 
 drop policy if exists "prize_images_admin_insert" on storage.objects;
 create policy "prize_images_admin_insert"
@@ -410,9 +405,22 @@ begin
 end
 $$;
 
--- Grant access to anon and authenticated roles
-grant usage on schema public to anon, authenticated;
-grant all privileges on all tables in schema public to anon, authenticated;
-grant all privileges on all sequences in schema public to anon, authenticated;
+-- Grant access to API roles.
+grant usage on schema public to anon, authenticated, service_role;
+revoke all privileges on all tables in schema public from anon, authenticated;
+revoke all privileges on all sequences in schema public from anon, authenticated;
+grant select on public.numbers to anon, authenticated;
+grant select on public.prizes to anon, authenticated;
+grant select on public.app_state to anon, authenticated;
+grant select on public.reach_logs to anon, authenticated;
+grant select, insert on public.stamp_triggers to anon, authenticated;
+grant select on public.profiles to authenticated;
+grant usage on sequence public.stamp_triggers_id_seq to anon, authenticated;
+grant all privileges on all tables in schema public to service_role;
+grant all privileges on all sequences in schema public to service_role;
+
+alter default privileges in schema public revoke all on tables from anon, authenticated;
+alter default privileges in schema public revoke all on sequences from anon, authenticated;
+alter default privileges in schema public revoke execute on functions from public, anon, authenticated;
 
 commit;

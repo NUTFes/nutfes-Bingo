@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { sanitizeRedirectTo } from "@/lib/auth/redirect";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminSignupEnabled } from "@/lib/supabase/config";
 
@@ -11,14 +12,6 @@ export type AuthActionState = {
 
 const genericLoginError = "ログインに失敗しました";
 const genericSignUpError = "アカウント登録に失敗しました";
-
-function sanitizeRedirectTo(redirectTo: string | undefined, fallback = "/admin") {
-  if (!redirectTo) {
-    return fallback;
-  }
-
-  return redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : fallback;
-}
 
 function readFormString(formData: FormData, name: string) {
   const value = formData.get(name);

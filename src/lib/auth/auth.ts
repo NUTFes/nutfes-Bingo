@@ -6,6 +6,10 @@ import type { Tables } from "@/types/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 export type Profile = Tables<"profiles">;
+type CurrentUserClaims = {
+  sub?: string;
+  email?: string;
+};
 
 function isMissingSessionError(errorMessage: string) {
   const msg = errorMessage.toLowerCase();
@@ -34,18 +38,27 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function getCurrentProfile() {
-  const user = await getCurrentUser();
+export async function getCurrentClaims() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
 
-  if (!user) {
-    return null;
+  if (error) {
+    if (isMissingSessionError(error.message)) {
+      return null;
+    }
+
+    throw new Error(`認証情報の取得に失敗しました: ${error.message}`);
   }
 
+  return data?.claims ?? null;
+}
+
+async function getProfileByUserId(userId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
 
   if (error) {
@@ -55,24 +68,40 @@ export async function getCurrentProfile() {
   return data;
 }
 
-export async function requireAdmin() {
-  const user = await getCurrentUser();
+export async function getCurrentProfile() {
+  const claims = (await getCurrentClaims()) as CurrentUserClaims | null;
 
-  if (!user) {
+  if (!claims?.sub) {
+    return null;
+  }
+
+  return getProfileByUserId(claims.sub);
+}
+
+export async function requireAdmin() {
+  const claims = (await getCurrentClaims()) as CurrentUserClaims | null;
+
+  if (!claims?.sub) {
     redirect("/auth/login");
   }
 
-  const profile = await getCurrentProfile();
+  const profile = await getProfileByUserId(claims.sub);
 
   if (!profile || profile.role !== "admin") {
     redirect("/auth/error?error=admin_role_required");
   }
 
   return {
-    user,
+    user: {
+      id: claims.sub,
+      email: claims.email,
+    },
     profile,
   } satisfies {
-    user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
+    user: {
+      id: string;
+      email?: string;
+    };
     profile: Profile;
   };
 }

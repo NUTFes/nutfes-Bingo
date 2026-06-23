@@ -13,7 +13,8 @@ cp .env.example .env
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://nutfes-bingo.localhost/supabase
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+SUPABASE_SECRET_KEY=sb_secret_...
 ```
 
 ## mise での環境構築・タスク実行（推奨）
@@ -44,7 +45,7 @@ mise run supabase:stop
 
 ```bash
 cp .env.example .env
-# NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY を設定
+# NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY と SUPABASE_SECRET_KEY を設定
 
 mise run supabase:start
 mise run docker:up

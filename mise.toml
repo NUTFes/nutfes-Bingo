@@ -51,20 +51,20 @@ run = "docker compose -f compose.dev.yml exec app pnpm install"
 
 [tasks."supabase:start"]
 description = "Start local Supabase stack"
-run = "npx supabase start"
+run = "pnpm exec supabase start"
 
 [tasks."supabase:stop"]
 description = "Stop local Supabase stack"
-run = "npx supabase stop"
+run = "pnpm exec supabase stop"
 
 [tasks."supabase:status"]
 description = "Show local Supabase status"
-run = "npx supabase status"
+run = "pnpm exec supabase status"
 
 [tasks."supabase:db-reset"]
 description = "Reset local Supabase database"
-run = "npx supabase db reset"
+run = "pnpm exec supabase db reset"
 
 [tasks."supabase:typegen"]
 description = "Generate DB types from local Supabase schema"
-run = "npx supabase gen types typescript --local > src/types/database.types.ts"
+run = "pnpm exec supabase gen types typescript --local > src/types/database.types.ts"

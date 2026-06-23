@@ -7,6 +7,7 @@ import type { AppStateRow, NumberRow, PrizeWithImageUrl, ReachLogRow } from "@/t
 import type { Database } from "@/types/database.types";
 import { hasEnvVars } from "@/utils/utils";
 import { resolvePrizeImageUrl } from "@/utils/image";
+import { shouldSkipSupabaseFetch } from "@/lib/supabase/config";
 
 const emptyAppState: AppStateRow = {
   id: 1,
@@ -42,7 +43,7 @@ export async function getNumbers(): Promise<NumberRow[]> {
   cacheTag(BINGO_CACHE_TAGS.numbers);
   cacheLife({ stale: 5, revalidate: 30, expire: 300 });
 
-  if (!hasEnvVars) {
+  if (!hasEnvVars || shouldSkipSupabaseFetch()) {
     return [];
   }
 
@@ -64,7 +65,7 @@ export async function getPrizes(): Promise<PrizeWithImageUrl[]> {
   cacheTag(BINGO_CACHE_TAGS.prizes);
   cacheLife({ stale: 30, revalidate: 120, expire: 600 });
 
-  if (!hasEnvVars) {
+  if (!hasEnvVars || shouldSkipSupabaseFetch()) {
     return [];
   }
 
@@ -89,7 +90,7 @@ export async function getAppState(): Promise<AppStateRow> {
   cacheTag(BINGO_CACHE_TAGS.appState);
   cacheLife({ stale: 5, revalidate: 15, expire: 120 });
 
-  if (!hasEnvVars) {
+  if (!hasEnvVars || shouldSkipSupabaseFetch()) {
     return emptyAppState;
   }
 
@@ -108,7 +109,7 @@ export async function getLatestReachLog(): Promise<ReachLogRow | null> {
   cacheTag(BINGO_CACHE_TAGS.reachLogs);
   cacheLife({ stale: 5, revalidate: 15, expire: 120 });
 
-  if (!hasEnvVars) {
+  if (!hasEnvVars || shouldSkipSupabaseFetch()) {
     return null;
   }
 

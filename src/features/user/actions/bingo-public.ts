@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { BINGO_CACHE_TAGS } from "@/lib/queries";
 import type { StampName } from "@/types/bingo/types";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 function invalidateTag(tag: string) {
   revalidateTag(tag, "max");
@@ -20,7 +21,7 @@ export async function sendReactionStamp(name: StampName) {
 }
 
 export async function recordPublicReach() {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase.rpc("record_reach");
 
   if (error) {
