@@ -31,6 +31,7 @@ export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps)
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
+  const runner = useRef<Matter.Runner | null>(null);
   const bingoNumbers = useNumbers(initialNumbers);
   const latestReachLog = useLatestReachLog(initialReachLog);
   const displayBingoNumbers = useMemo(
@@ -74,10 +75,14 @@ export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps)
     Composite.add(engine.current.world, [leftWall, rightWall]);
     Render.run(render.current);
 
-    const runner = Runner.create();
-    Runner.run(runner, engine.current);
+    runner.current = Runner.create();
+    Runner.run(runner.current, engine.current);
 
     return () => {
+      if (runner.current) {
+        Matter.Runner.stop(runner.current);
+        runner.current = null;
+      }
       if (render.current) {
         Matter.Render.stop(render.current);
       }
@@ -89,6 +94,8 @@ export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps)
         render.current.canvas.remove();
         render.current.textures = {};
       }
+      render.current = null;
+      engine.current = null;
     };
   }, []);
 

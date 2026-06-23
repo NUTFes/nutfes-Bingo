@@ -174,7 +174,11 @@ export type Database = {
       decrement_reach: { Args: never; Returns: number };
       increment_reach: { Args: never; Returns: number };
       is_admin: { Args: { target_user?: string }; Returns: boolean };
-      record_reach: { Args: never; Returns: number };
+      record_reach: { Args: { p_fingerprint: string }; Returns: number };
+      record_stamp_trigger: {
+        Args: { p_fingerprint: string; p_name: string };
+        Returns: number;
+      };
     };
     Enums: {
       [_ in never]: never;

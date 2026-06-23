@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 
 import { HomePage } from "@/features/user";
 import { DEFAULT_PUBLIC_PREFERENCES } from "@/types/bingo/public-preferences";
@@ -10,6 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  await connection();
+
   const [numbers, appState] = await Promise.all([getNumbers(), getAppState()]);
 
   return (

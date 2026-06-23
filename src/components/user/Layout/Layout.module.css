@@ -45,6 +45,26 @@
   line-height: 1.5;
 }
 
+.stampError {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 40;
+  width: min(82vw, 360px);
+  margin: 0;
+  transform: translateX(-50%);
+  border: 2px solid #fda29b;
+  border-radius: 8px;
+  background: #fff1f3;
+  color: #b42318;
+  padding: 10px 12px;
+  font-family: "Noto Sans JP";
+  font-size: clamp(12px, 3.5vw, 15px);
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+
 .settingsModal,
 .settingsModal > div {
   display: flex;

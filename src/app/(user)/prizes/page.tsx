@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 
 import { PrizesPage } from "@/features/user";
 import { getAppState, getPrizes } from "@/lib/queries";
@@ -10,6 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  await connection();
+
   const [prizes, appState] = await Promise.all([getPrizes(), getAppState()]);
 
   return (

@@ -92,6 +92,7 @@ function InnerLayout({
   const [stampState, setStampState] = useState({
     isSending: false,
     activeName: null as string | null,
+    error: null as string | null,
   });
   const [reachState, setReachState] = useState({
     isSending: false,
@@ -101,7 +102,7 @@ function InnerLayout({
   const { isReactionModalOpen, isSettingsModalOpen, isReachModalOpen, isSurveyModalOpen } =
     modalState;
   const { isReachIconVisible, isSortOrderActive, isDarkMode } = preferences;
-  const { isSending: isStampSending, activeName: activeStampName } = stampState;
+  const { isSending: isStampSending, activeName: activeStampName, error: stampError } = stampState;
   const { isSending: isReachSending, error: reachError } = reachState;
   const setModalOpen = (key: ModalToggleKey) => (value: SetStateAction<boolean>) => {
     setModalState((prev) => ({
@@ -173,14 +174,23 @@ function InnerLayout({
       setStampState({
         isSending: true,
         activeName: name,
+        error: null,
       });
       await sendReactionStamp(name as (typeof REACTION_IMAGES)[number]["name"]);
+    } catch (error) {
+      setStampState({
+        isSending: false,
+        activeName: null,
+        error: getActionErrorMessage(error, "リアクション送信に失敗しました。"),
+      });
+      return;
     } finally {
       window.setTimeout(() => {
-        setStampState({
+        setStampState((prev) => ({
           isSending: false,
           activeName: null,
-        });
+          error: prev.error,
+        }));
       }, 800);
     }
   };
@@ -274,6 +284,11 @@ function InnerLayout({
           activeName={activeStampName || undefined}
           onClick={handleReactionClick}
         />
+      )}
+      {stampError && (
+        <p className={styles.stampError} role="alert">
+          {stampError}
+        </p>
       )}
       <SurveyPromptModal
         isOpened={isSurveyModalOpen}

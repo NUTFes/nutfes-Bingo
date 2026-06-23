@@ -1,68 +1,102 @@
-name: Automatically labeling pull request.
+name: Automatically labeling pull request
 
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   auto-change-pr:
     runs-on: ubuntu-latest
-
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      PR_ASSIGNEE: ${{ github.event.pull_request.user.login }}
-      PR_BRANCH: ${{ github.event.pull_request.head.ref }}
-
     steps:
-      - uses: actions/checkout@v2
-
-      # 変更されたファイルを取得
-      - name: get changed files
-        uses: dorny/paths-filter@v2
-        id: changes
+      - name: Label and assign pull request
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
-          filters: |
-            frontend:
-              - 'view-user/**'
-              - 'view-admin/**'
-            backend:
-              - 'api/**'
-              - 'hasura/**'
-            infra:
-              - 'docker-compose.*'
-              - '**/*Dockerfile'
-
-      # ブランチ名からラベル名を取得
-      - uses: actions/github-script@v6
-        id: label_name
-        with:
-          github-token: ${{ env.GH_TOKEN }}
           script: |
-            const env = process.env;
-            const branchType = env.PR_BRANCH.split('/')[0]
+            const { owner, repo } = context.repo;
+            const pullRequest = context.payload.pull_request;
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner,
+              repo,
+              pull_number: pullRequest.number,
+              per_page: 100,
+            });
+
+            const changedPaths = files.map((file) => file.filename);
+            const labels = new Set();
+
+            const pathMatches = (prefixes) =>
+              changedPaths.some((path) => prefixes.some((prefix) => path.startsWith(prefix)));
+
+            if (
+              pathMatches([
+                "public/",
+                "src/app/",
+                "src/components/",
+                "src/features/",
+                "src/styles/",
+                "src/utils/i18n/",
+              ])
+            ) {
+              labels.add("frontend");
+            }
+
+            if (
+              pathMatches([
+                "supabase/",
+                "src/lib/auth/",
+                "src/lib/supabase/",
+                "src/features/admin/",
+                "src/features/user/actions/",
+              ])
+            ) {
+              labels.add("backend");
+            }
+
+            if (
+              pathMatches([
+                ".github/",
+                "Caddyfile",
+                "compose.",
+                "dev.Dockerfile",
+                "mise.toml",
+                "package.json",
+                "pnpm-lock.yaml",
+              ])
+            ) {
+              labels.add("infra");
+            }
+
+            const branchType = pullRequest.head.ref.split("/")[0];
             const branchTypeToLabel = {
-                feature: 'enhancement',
-                fix: 'bug',
-                hotfix: 'bug',
-              };
-            core.setOutput('label_name', branchTypeToLabel[branchType] || '')
+              feature: "enhancement",
+              fix: "bug",
+              hotfix: "bug",
+            };
+            const branchLabel = branchTypeToLabel[branchType];
+            if (branchLabel) {
+              labels.add(branchLabel);
+            }
 
-      # PRにラベルを付与
-      - name: Auto frontend labeling
-        if: steps.changes.outputs.frontend == 'true'
-        run: gh pr edit ${{ env.PR_NUMBER }} --add-label frontend
-      - name: Auto backend labeling
-        if: steps.changes.outputs.backend == 'true'
-        run: gh pr edit ${{ env.PR_NUMBER }} --add-label backend
-      - name: Auto infra labeling
-        if: steps.changes.outputs.infra == 'true'
-        run: gh pr edit ${{ env.PR_NUMBER }} --add-label infra
-      - name: Auto labeling
-        if: steps.label_name.outputs.label_name
-        run: gh pr edit ${{ env.PR_NUMBER }} --add-label ${{ steps.label_name.outputs.label_name }}
+            if (labels.size > 0) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pullRequest.number,
+                labels: [...labels],
+              });
+            }
 
-      # PRにAssigneeを付与
-      - name: Auto assignee
-        if: toJSON(github.event.pull_request.assignees) == '[]'
-        run: gh pr edit ${{ env.PR_NUMBER }} --add-assignee ${{ env.PR_ASSIGNEE }}
+            if (pullRequest.assignees.length === 0) {
+              await github.rest.issues.addAssignees({
+                owner,
+                repo,
+                issue_number: pullRequest.number,
+                assignees: [pullRequest.user.login],
+              });
+            }
