@@ -20,3 +20,11 @@
 - ADRは日本語で記述する（フィールド名やコードブロック内の技術用語は英語のままでよい）
 - Accepted ADRは後から判断履歴を消すように編集しない
 - 判断を変える場合は、新しいADRでsupersedeまたはamendする
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# Next.js: ALWAYS read docs before coding
+
+Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+
+<!-- END:nextjs-agent-rules -->
