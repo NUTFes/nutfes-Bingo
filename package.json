@@ -54,11 +54,5 @@
     "node": ">=26.2.0 <27",
     "pnpm": ">=11.2.2 <12"
   },
-  "packageManager": "pnpm@11.2.2",
-  "pnpm": {
-    "overrides": {
-      "@types/react": "19.2.17",
-      "@types/react-dom": "19.2.3"
-    }
-  }
+  "packageManager": "pnpm@11.2.2"
 }
