@@ -10,11 +10,14 @@ dist
 
 # vcs / editor
 .git
+.codex
+.omx
 .vscode
 .idea
 
 # env / logs
 .env*
+secrets
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -23,3 +26,5 @@ yarn-error.log*
 
 # supabase temporary cache
 supabase/.temp
+supabase/self-host/.env.local
+supabase/self-host/upstream

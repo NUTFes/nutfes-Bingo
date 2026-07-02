@@ -1,0 +1,21 @@
+:3000 {
+	encode zstd gzip
+
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	handle_path /supabase/* {
+		reverse_proxy {$SUPABASE_UPSTREAM:supabase_kong_nutfes-Bingo:8000} {
+			header_up Host {upstream_hostport}
+			header_up X-Forwarded-Proto {$EXTERNAL_SCHEME:https}
+		}
+	}
+
+	handle {
+		reverse_proxy web:3000 {
+			header_up Host {host}
+			header_up X-Forwarded-Proto {$EXTERNAL_SCHEME:https}
+		}
+	}
+}

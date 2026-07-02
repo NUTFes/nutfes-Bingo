@@ -24,6 +24,8 @@
 # misc
 .DS_Store
 *.pem
+.codex
+.omx
 
 # debug
 npm-debug.log*
@@ -35,6 +37,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*.local
 .env
+.env.production
+secrets/
+supabase/self-host/.env.local
+supabase/self-host/upstream/
 
 # vercel
 .vercel
@@ -42,3 +48,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.codex/*
+!.codex/agents/
+!.codex/agents/**
+!.codex/skills/
+!.codex/skills/**
+.codex/skills/.system/**
+!.codex/prompts/
+!.codex/prompts/**

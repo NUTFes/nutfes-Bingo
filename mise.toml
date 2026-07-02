@@ -45,6 +45,34 @@ run = "docker compose -f compose.dev.yml up --build"
 description = "Stop development container"
 run = "docker compose -f compose.dev.yml down"
 
+[tasks."prod:config"]
+description = "Validate production Compose config for staging without printing secrets"
+run = "docker compose -f compose.prod.yml --env-file .env.production.local config --quiet"
+
+[tasks."prod:init-env"]
+description = "Generate ignored production env from self-host Supabase generated keys"
+run = "node scripts/prod-init-env-from-selfhost.mjs"
+
+[tasks."prod:caddy-validate"]
+description = "Validate production Caddyfile"
+run = "docker run --rm -v \"$PWD/Caddyfile.prod:/etc/caddy/Caddyfile:ro\" caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile"
+
+[tasks."prod:build"]
+description = "Build production Next.js standalone image"
+run = "docker compose -f compose.prod.yml --env-file .env.production.local build web"
+
+[tasks."prod:up"]
+description = "Start production-like staging stack"
+run = "docker compose -f compose.prod.yml --env-file .env.production.local up -d --build"
+
+[tasks."prod:down"]
+description = "Stop production-like staging stack"
+run = "docker compose -f compose.prod.yml --env-file .env.production.local down"
+
+[tasks."prod:logs"]
+description = "Show bounded production stack logs"
+run = "docker compose -f compose.prod.yml --env-file .env.production.local logs --tail=120 app web cloudflared"
+
 [tasks."sync"]
 description = "Sync dependencies inside running dev container"
 run = "docker compose -f compose.dev.yml exec app pnpm install"
@@ -68,3 +96,85 @@ run = "pnpm exec supabase db reset"
 [tasks."supabase:typegen"]
 description = "Generate DB types from local Supabase schema"
 run = "pnpm exec supabase gen types typescript --local > src/types/database.types.ts"
+
+[tasks."supabase:selfhost:sync"]
+description = "Download pinned official Supabase self-host Docker files"
+run = "node scripts/supabase-selfhost-sync.mjs"
+
+[tasks."supabase:selfhost:init-env"]
+description = "Generate ignored self-host Supabase env with staging URLs and random secrets"
+run = "node scripts/supabase-selfhost-init-env.mjs"
+
+[tasks."supabase:selfhost:config"]
+description = "Validate self-host Supabase Compose config without printing secrets"
+run = '''
+test -f supabase/self-host/upstream/docker-compose.yml || node scripts/supabase-selfhost-sync.mjs
+test -f supabase/self-host/.env.local || node scripts/supabase-selfhost-init-env.mjs
+docker compose \
+  --env-file supabase/self-host/.env.local \
+  -f supabase/self-host/upstream/docker-compose.yml \
+  -f supabase/self-host/compose.override.yml \
+  config --quiet
+'''
+
+[tasks."supabase:selfhost:pull"]
+description = "Pull self-host Supabase images"
+run = '''
+test -f supabase/self-host/upstream/docker-compose.yml || node scripts/supabase-selfhost-sync.mjs
+test -f supabase/self-host/.env.local || node scripts/supabase-selfhost-init-env.mjs
+docker compose \
+  --env-file supabase/self-host/.env.local \
+  -f supabase/self-host/upstream/docker-compose.yml \
+  -f supabase/self-host/compose.override.yml \
+  pull
+'''
+
+[tasks."supabase:selfhost:up"]
+description = "Start self-host Supabase stack"
+run = '''
+test -f supabase/self-host/upstream/docker-compose.yml || node scripts/supabase-selfhost-sync.mjs
+test -f supabase/self-host/.env.local || node scripts/supabase-selfhost-init-env.mjs
+docker compose \
+  --env-file supabase/self-host/.env.local \
+  -f supabase/self-host/upstream/docker-compose.yml \
+  -f supabase/self-host/compose.override.yml \
+  up -d
+'''
+
+[tasks."supabase:selfhost:down"]
+description = "Stop self-host Supabase stack"
+run = '''
+docker compose \
+  --env-file supabase/self-host/.env.local \
+  -f supabase/self-host/upstream/docker-compose.yml \
+  -f supabase/self-host/compose.override.yml \
+  down
+'''
+
+[tasks."supabase:selfhost:ps"]
+description = "Show self-host Supabase containers"
+run = '''
+docker compose \
+  --env-file supabase/self-host/.env.local \
+  -f supabase/self-host/upstream/docker-compose.yml \
+  -f supabase/self-host/compose.override.yml \
+  ps
+'''
+
+[tasks."supabase:selfhost:health"]
+description = "Check self-host Supabase Kong/Auth/REST without printing secrets"
+run = "node scripts/supabase-selfhost-health.mjs"
+
+[tasks."supabase:selfhost:db-apply"]
+description = "Apply repo migrations and seed data to the self-host Supabase database"
+run = "node scripts/supabase-selfhost-db-apply.mjs"
+
+[tasks."supabase:selfhost:logs"]
+description = "Show bounded self-host Supabase logs"
+run = '''
+docker compose \
+  --env-file supabase/self-host/.env.local \
+  -f supabase/self-host/upstream/docker-compose.yml \
+  -f supabase/self-host/compose.override.yml \
+  logs --tail=120
+'''

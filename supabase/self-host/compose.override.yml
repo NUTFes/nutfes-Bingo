@@ -1,0 +1,45 @@
+name: nutfes-bingo-supabase
+
+services:
+  kong:
+    networks:
+      default:
+        aliases:
+          - supabase_kong_nutfes-Bingo
+
+  storage:
+    volumes: !override
+      - supabase-storage-data:/var/lib/storage
+
+  imgproxy:
+    volumes: !override
+      - supabase-storage-data:/var/lib/storage
+
+  db:
+    volumes: !override
+      - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
+      - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
+      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+      - supabase-db-data:/var/lib/postgresql/data
+      - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
+      - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
+      - ./volumes/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+      - db-config:/etc/postgresql-custom
+    networks:
+      default:
+        aliases:
+          - supabase_db_nutfes-Bingo
+
+  supavisor:
+    ports: !override
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+      - "127.0.0.1:${POOLER_TRANSACTION_HOST_PORT:-6543}:6543"
+
+networks:
+  default:
+    name: ${SUPABASE_DOCKER_NETWORK:-supabase_network_nutfes-Bingo}
+
+volumes:
+  supabase-db-data:
+  supabase-storage-data:

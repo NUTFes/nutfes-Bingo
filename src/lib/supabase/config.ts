@@ -1,9 +1,22 @@
 export function getSupabaseServerUrl() {
-  return process.env.SUPABASE_SERVER_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  if (process.env.SUPABASE_SERVER_URL) {
+    return process.env.SUPABASE_SERVER_URL;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return "";
+  }
+
+  return process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 }
 
 export function getSupabasePublishableKey() {
-  return process.env.SUPABASE_PUBLISHABLE_KEY || process.env.ANON_KEY || "";
+  return (
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.ANON_KEY ||
+    ""
+  );
 }
 
 export function getSupabaseSecretKey() {

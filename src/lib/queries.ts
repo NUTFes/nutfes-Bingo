@@ -5,9 +5,13 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 import type { AppStateRow, NumberRow, PrizeWithImageUrl, ReachLogRow } from "@/types/bingo/types";
 import type { Database } from "@/types/database.types";
-import { hasEnvVars } from "@/utils/utils";
 import { resolvePrizeImageUrl } from "@/utils/image";
-import { shouldSkipSupabaseFetch } from "@/lib/supabase/config";
+import {
+  getSupabasePublishableKey,
+  getSupabaseServerUrl,
+  hasSupabaseServerEnvVars,
+  shouldSkipSupabaseFetch,
+} from "@/lib/supabase/config";
 
 const emptyAppState: AppStateRow = {
   id: 1,
@@ -24,18 +28,14 @@ export const BINGO_CACHE_TAGS = {
 } as const;
 
 function createDataClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  return createSupabaseClient<Database>(
-    supabaseUrl,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-        persistSession: false,
-      },
+  const supabaseUrl = getSupabaseServerUrl();
+  return createSupabaseClient<Database>(supabaseUrl, getSupabasePublishableKey(), {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false,
     },
-  );
+  });
 }
 
 export async function getNumbers(): Promise<NumberRow[]> {
@@ -43,7 +43,7 @@ export async function getNumbers(): Promise<NumberRow[]> {
   cacheTag(BINGO_CACHE_TAGS.numbers);
   cacheLife({ stale: 5, revalidate: 30, expire: 300 });
 
-  if (!hasEnvVars || shouldSkipSupabaseFetch()) {
+  if (!hasSupabaseServerEnvVars() || shouldSkipSupabaseFetch()) {
     return [];
   }
 
@@ -65,7 +65,7 @@ export async function getPrizes(): Promise<PrizeWithImageUrl[]> {
   cacheTag(BINGO_CACHE_TAGS.prizes);
   cacheLife({ stale: 30, revalidate: 120, expire: 600 });
 
-  if (!hasEnvVars || shouldSkipSupabaseFetch()) {
+  if (!hasSupabaseServerEnvVars() || shouldSkipSupabaseFetch()) {
     return [];
   }
 
@@ -90,7 +90,7 @@ export async function getAppState(): Promise<AppStateRow> {
   cacheTag(BINGO_CACHE_TAGS.appState);
   cacheLife({ stale: 5, revalidate: 15, expire: 120 });
 
-  if (!hasEnvVars || shouldSkipSupabaseFetch()) {
+  if (!hasSupabaseServerEnvVars() || shouldSkipSupabaseFetch()) {
     return emptyAppState;
   }
 
@@ -109,7 +109,7 @@ export async function getLatestReachLog(): Promise<ReachLogRow | null> {
   cacheTag(BINGO_CACHE_TAGS.reachLogs);
   cacheLife({ stale: 5, revalidate: 15, expire: 120 });
 
-  if (!hasEnvVars || shouldSkipSupabaseFetch()) {
+  if (!hasSupabaseServerEnvVars() || shouldSkipSupabaseFetch()) {
     return null;
   }
 
