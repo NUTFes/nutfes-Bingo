@@ -3,5 +3,6 @@
   "tags": ["-lintignore"],
   "workspaces": {
     ".": {}
-  }
+  },
+  "ignore": [".agents/**", "src/types/database.types.ts"]
 }

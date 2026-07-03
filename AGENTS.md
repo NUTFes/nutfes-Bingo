@@ -1,25 +1,56 @@
-# AGENTS.md
+# Project agent guide
 
-## 作業前に読む文書
+## Environment
 
-作業内容に応じて、以下を確認する。
+- Use Node `26.2.0` and pnpm `11.2.2`, as defined in `mise.toml` and CI.
+- Use pnpm only. Do not use npm or yarn.
+- Add or remove dependencies with `mise run add <pkg>`, `mise run add -D <pkg>`, or `mise run remove <pkg>`.
+- Dependency changes must update `pnpm-lock.yaml`.
 
-- `README.md`
-- 関連する `docs/adr/ADR-*.md`
-- 関連する `docs/exec-plans/*.md`
+## Runtime assumptions
 
-## ExecPlan運用
+- Development, app startup, and builds run through Docker.
+- Do not run `pnpm dev` or `pnpm build` directly on the host.
+- Static checks may run on the host: format, lint, typecheck, React Doctor, and knip.
 
-- 大きな実装・実験を行う場合は、`docs/exec-plans/` にExecPlanを作成または更新する
-- ExecPlanは日本語で記述する
+## Commands
 
-## ADR運用
+- Install: `mise install && mise run install`
+- Dev: `mise run dev`
+- Stop dev stack: `mise run down`
+- Format check: `pnpm fmt:check`
+- Lint: `pnpm lint`
+- Typecheck: `pnpm typecheck`
+- Build: `docker compose -f compose.dev.yml exec app pnpm build`
 
-- 主要な研究判断・設計判断は `docs/adr/` に記録する
-- ADRは `docs/adr/ADR-template.md` に従う
-- ADRは日本語で記述する（フィールド名やコードブロック内の技術用語は英語のままでよい）
-- Accepted ADRは後から判断履歴を消すように編集しない
-- 判断を変える場合は、新しいADRでsupersedeまたはamendする
+* React Doctor: `pnpm doctor`（React/Next.js/frontend changes only）
+* Unused code/dependency check: `pnpm knip`
+
+## Tests
+
+- No automated test suite is currently configured.
+- Do not invent or assume a test command.
+- When reporting results, state that tests were not run because no test suite exists.
+
+## Validation
+
+- For most code changes, run at least:
+  - `pnpm fmt:check`
+  - `pnpm lint`
+  - `pnpm typecheck`
+- Run `pnpm doctor` when changing React, Next.js, routing, UI components, hooks, Server Actions, or frontend-facing behavior.
+- Run `pnpm knip` when changing dependencies, exports, entry points, or deleting code.
+- Run the Docker build when changes may affect runtime behavior, routing, Next.js config, server code, Docker config, or dependency resolution.
+- If a check cannot be run, report which check was skipped and why.
+
+## Architecture boundaries
+
+- Browser code must not call Supabase Auth, PostgREST, or Storage directly.
+- Public access must go through Next.js pages, Server Actions, or `/api/*` routes.
+- Production runs on Proxmox LXC with Cloudflared.
+- Cloudflared must expose only `app:3000`.
+- Do not expose Kong, PostgreSQL, or Storage through public ports or Cloudflared tunnels.
+- Realtime, Studio, Edge Functions, Analytics, postgres-meta, Supavisor, and imgproxy are not started by default.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

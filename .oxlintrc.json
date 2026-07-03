@@ -36,5 +36,5 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": ["src/types/database.types.ts"]
+  "ignorePatterns": [".agents"]
 }

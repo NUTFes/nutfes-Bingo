@@ -89,8 +89,8 @@ description = "Alias for dev"
 run = "mise run dev"
 
 [tasks."docker:down"]
-description = "Alias for dev:down"
-run = "mise run dev:down"
+description = "Alias for down"
+run = "mise run down"
 
 [tasks."sync"]
 description = "Sync dependencies inside running dev container"

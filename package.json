@@ -4,11 +4,13 @@
     "dev": "next dev",
     "build": "NUTFES_SKIP_SUPABASE_FETCH=1 next build",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "load:polling": "node scripts/poll-load-test.mjs",
     "fmt:check": "oxfmt --check",
+    "doctor": "npx -y react-doctor@latest --yes --no-score --project . --scope files --base origin/main --verbose --blocking none",
     "knip": "knip"
   },
   "dependencies": {
