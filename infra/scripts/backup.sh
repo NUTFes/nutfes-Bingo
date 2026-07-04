@@ -32,6 +32,7 @@ services_stopped=true
 
 compose exec -T db pg_dump -U postgres -d postgres -Fc >"$backup_dir/postgres.dump"
 compose exec -T db pg_dumpall -U postgres --globals-only >"$backup_dir/globals.sql"
+compose exec -T db sh -ec 'cat /etc/postgresql-custom/pgsodium_root.key' >"$backup_dir/pgsodium_root.key"
 compose run --rm --no-deps -T --entrypoint tar storage \
   -C /var/lib/storage -czf - . >"$backup_dir/storage.tar.gz"
 compose images --format json >"$backup_dir/images.json"
@@ -41,7 +42,7 @@ services_stopped=false
 
 (
   cd "$backup_dir"
-  sha256sum postgres.dump globals.sql storage.tar.gz images.json >SHA256SUMS
+  sha256sum postgres.dump globals.sql pgsodium_root.key storage.tar.gz images.json >SHA256SUMS
 )
 
 echo "Backup created at $backup_dir"

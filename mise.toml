@@ -9,7 +9,8 @@ SUPABASE_TELEMETRY_DISABLED = "1"
 description = "Install dependencies"
 run = "pnpm install"
 
-[tasks.dev]
+[tasks.up]
+alias = ["dev"]
 description = "Start Docker development stack with Supabase CLI local services"
 run = '''
 set -eu
@@ -37,7 +38,8 @@ export ENABLE_ADMIN_SIGNUP="${ENABLE_ADMIN_SIGNUP:-1}"
 docker compose -f compose.dev.yml up --build --remove-orphans
 '''
 
-[tasks."dev:down"]
+[tasks."down"]
+alias = ["dev:down"]
 description = "Stop Docker development stack and local Supabase services"
 run = '''
 set -eu
@@ -45,7 +47,8 @@ docker compose -f compose.dev.yml down --remove-orphans
 pnpm exec supabase stop
 '''
 
-[tasks."dev:network"]
+[tasks."network"]
+alias = ["dev:network"]
 description = "Create the shared Docker network for local Supabase and the app"
 run = '''
 set -eu
@@ -66,6 +69,7 @@ description = "Run production build"
 run = "pnpm build"
 
 [tasks."add"]
+alias = ["install"]
 description = "Add dependency with pnpm (use -D for devDependency)"
 usage = '''
 arg "<package>" help="Package name to add"
@@ -80,17 +84,10 @@ fi
 '''
 
 [tasks."remove"]
+alias = ["rm"]
 description = "Remove dependency with pnpm"
 usage = 'arg "<package>" help="Package name to remove"'
 run = 'pnpm remove "${usage_package?}"'
-
-[tasks."docker:up"]
-description = "Alias for dev"
-run = "mise run dev"
-
-[tasks."docker:down"]
-description = "Alias for down"
-run = "mise run down"
 
 [tasks."sync"]
 description = "Sync dependencies inside running dev container"
@@ -100,7 +97,7 @@ run = "docker compose -f compose.dev.yml exec app pnpm install"
 description = "Start minimal local Supabase stack on the shared Docker network"
 run = '''
 set -eu
-mise run dev:network
+mise run network
 pnpm exec supabase start \
   --network-id "${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}" \
   --exclude realtime,studio,mailpit,edge-runtime,logflare,vector,imgproxy,postgres-meta,supavisor
@@ -149,6 +146,14 @@ run = "./infra/scripts/compose.sh config --quiet"
 [tasks."prod:down"]
 description = "Stop production stack without deleting persistent data"
 run = "./infra/scripts/compose.sh down --remove-orphans"
+
+[tasks."prod:data:reset:dry-run"]
+description = "Preview the destructive production DB and Storage reset targets"
+run = "./infra/scripts/reset-production-data.sh --dry-run"
+
+[tasks."prod:data:reset"]
+description = "Stop production and wipe event-scoped PostgreSQL and Storage data"
+run = "./infra/scripts/reset-production-data.sh"
 
 [tasks."prod:ps"]
 description = "Show production stack status"

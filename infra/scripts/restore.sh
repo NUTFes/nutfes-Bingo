@@ -16,7 +16,7 @@ if [ "${CONFIRM_RESTORE:-}" != "restore-nutfes-bingo" ]; then
   exit 2
 fi
 
-for file in postgres.dump storage.tar.gz SHA256SUMS; do
+for file in postgres.dump pgsodium_root.key storage.tar.gz SHA256SUMS; do
   if [ ! -f "$backup_dir/$file" ]; then
     echo "Missing backup artifact: $file" >&2
     exit 1
@@ -40,6 +40,9 @@ compose exec -T db pg_restore -l <"$backup_dir/postgres.dump" \
   >"$acl_list"
 
 compose stop cloudflared app kong auth rest storage >/dev/null
+compose exec -T db sh -ec 'cat > /etc/postgresql-custom/pgsodium_root.key && chown postgres:postgres /etc/postgresql-custom/pgsodium_root.key && chmod 600 /etc/postgresql-custom/pgsodium_root.key' <"$backup_dir/pgsodium_root.key"
+compose restart db >/dev/null
+compose up -d --wait db >/dev/null
 compose exec -T db dropdb -U supabase_admin --force postgres
 compose exec -T db createdb -U supabase_admin -O postgres postgres
 compose exec -T db pg_restore -U supabase_admin -d postgres --no-privileges --exit-on-error \

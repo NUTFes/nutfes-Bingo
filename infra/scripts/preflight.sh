@@ -88,6 +88,7 @@ for name in \
   API_EXTERNAL_URL \
   CLOUDFLARE_TUNNEL_TOKEN \
   APP_IMAGE_TAG \
+  SUPABASE_POSTGRES_IMAGE \
   POSTGRES_PASSWORD \
   JWT_SECRET \
   JWT_KEYS \
@@ -102,7 +103,8 @@ for name in \
   S3_PROTOCOL_ACCESS_KEY_ID \
   S3_PROTOCOL_ACCESS_KEY_SECRET \
   SUPABASE_DB_DATA_PATH \
-  SUPABASE_STORAGE_DATA_PATH; do
+  SUPABASE_STORAGE_DATA_PATH \
+  ADDITIONAL_REDIRECT_URLS; do
   require_env "$name"
 done
 
@@ -126,6 +128,11 @@ require_https_url SITE_URL
 if [ "$SITE_URL" != "$NEXT_PUBLIC_SITE_URL" ]; then
   fail "SITE_URL must match NEXT_PUBLIC_SITE_URL"
 fi
+required_redirect_url=$SITE_URL/**
+case ",$ADDITIONAL_REDIRECT_URLS," in
+  *,"$required_redirect_url",*) ;;
+  *) fail "ADDITIONAL_REDIRECT_URLS must include $required_redirect_url" ;;
+esac
 
 for name in SUPABASE_SERVER_URL SUPABASE_PUBLIC_URL API_EXTERNAL_URL; do
   eval "value=\${$name:-}"
@@ -134,6 +141,18 @@ for name in SUPABASE_SERVER_URL SUPABASE_PUBLIC_URL API_EXTERNAL_URL; do
     *) fail "$name must be the Docker-internal Supabase URL http://kong:8000" ;;
   esac
 done
+
+case "$SUPABASE_POSTGRES_IMAGE" in
+  supabase/postgres:*latest* | *:latest) fail "SUPABASE_POSTGRES_IMAGE must be pinned, not latest" ;;
+  supabase/postgres:*) ;;
+  *) fail "SUPABASE_POSTGRES_IMAGE must be a pinned supabase/postgres image" ;;
+esac
+
+case "${CLOUDFLARED_IMAGE:-}" in
+  cloudflare/cloudflared:*latest* | *:latest) fail "CLOUDFLARED_IMAGE must be pinned, not latest" ;;
+  cloudflare/cloudflared:*) ;;
+  *) fail "CLOUDFLARED_IMAGE must be a pinned cloudflare/cloudflared image" ;;
+esac
 
 require_absolute_data_path SUPABASE_DB_DATA_PATH
 require_absolute_data_path SUPABASE_STORAGE_DATA_PATH
@@ -145,13 +164,20 @@ services=$("$repo_root/infra/scripts/compose.sh" config --services)
 printf '%s\n' "$services" | grep -qx cloudflared || fail "cloudflared service is missing from production Compose config"
 printf '%s\n' "$services" | grep -qx app || fail "app service is missing from production Compose config"
 printf '%s\n' "$services" | grep -qx kong || fail "kong service is missing from production Compose config"
-if printf '%s\n' "$services" | grep -qx caddy; then
-  fail "caddy service must not be present in production Compose config"
-fi
+
+for forbidden_service in studio realtime meta functions imgproxy supavisor analytics vector caddy; do
+  if printf '%s\n' "$services" | grep -qx "$forbidden_service"; then
+    fail "$forbidden_service service must not be present in production Compose config"
+  fi
+done
 
 rendered_config=$("$repo_root/infra/scripts/compose.sh" config)
-if printf '%s\n' "$rendered_config" | grep -Eq 'published: "(80|443)"|published: (80|443)'; then
-  fail "production Compose config must not publish host ports 80/443"
+if printf '%s\n' "$rendered_config" | grep -Eq 'published: "?[0-9]+'; then
+  fail "production Compose config must not publish host ports; Cloudflared must be the only ingress"
+fi
+
+if printf '%s\n' "$rendered_config" | grep -Eq 'realtime\.sql|_supabase\.sql|webhooks\.sql|logs\.sql|pooler\.sql'; then
+  fail "production Compose config must not mount unused Supabase init SQL files"
 fi
 
 echo "Preflight passed."

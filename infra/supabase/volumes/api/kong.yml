@@ -58,6 +58,16 @@ services:
     plugins:
       - name: cors
 
+  - name: well-known-oauth
+    url: http://auth:9999/.well-known/oauth-authorization-server
+    routes:
+      - name: well-known-oauth
+        strip_path: true
+        paths:
+          - /.well-known/oauth-authorization-server
+    plugins:
+      - name: cors
+
   - name: auth-v1
     url: http://auth:9999/
     routes:

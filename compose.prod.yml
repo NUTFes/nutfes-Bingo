@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   db:
-    image: supabase/postgres:15.8.1.085
+    image: ${SUPABASE_POSTGRES_IMAGE:?SUPABASE_POSTGRES_IMAGE is required}
     environment:
       POSTGRES_HOST: /var/run/postgresql
       PGPORT: "5432"
@@ -26,12 +26,9 @@ services:
       - -c
       - log_min_messages=warning
     volumes:
-      - ./infra/supabase/volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
       - ./infra/supabase/volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
       - ./infra/supabase/volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
-      - ./infra/supabase/volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro
       - ${SUPABASE_DB_DATA_PATH:-./.data/supabase/db}:/var/lib/postgresql/data
-      - db_config:/etc/postgresql-custom
     healthcheck:
       test:
         [
@@ -68,7 +65,7 @@ services:
       GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
       GOTRUE_JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       GOTRUE_JWT_KEYS: ${JWT_KEYS:?JWT_KEYS is required}
-      GOTRUE_JWT_ISSUER: ${SUPABASE_PUBLIC_URL:?SUPABASE_PUBLIC_URL is required}/auth/v1
+      GOTRUE_JWT_ISSUER: ${API_EXTERNAL_URL:?API_EXTERNAL_URL is required}/auth/v1
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
       GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
@@ -98,16 +95,24 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
       PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,storage}
       PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
       PGRST_DB_EXTRA_SEARCH_PATH: public,extensions
       PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: ${JWT_JWKS:?JWT_JWKS is required}
+      PGRST_JWT_SECRET: ${JWT_JWKS:-${JWT_SECRET}}
       PGRST_DB_USE_LEGACY_GUCS: "false"
       PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
       PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY:-3600}
+      PGRST_ADMIN_SERVER_PORT: 3001
+      PGRST_ADMIN_SERVER_HOST: localhost
+    command: ["postgrest"]
     restart: unless-stopped
     logging: *default-logging
     networks:
@@ -119,7 +124,7 @@ services:
       db:
         condition: service_healthy
       rest:
-        condition: service_started
+        condition: service_healthy
     environment:
       ANON_KEY: ${ANON_KEY:?ANON_KEY is required}
       SERVICE_KEY: ${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY is required}
@@ -157,7 +162,7 @@ services:
       auth:
         condition: service_healthy
       rest:
-        condition: service_started
+        condition: service_healthy
       storage:
         condition: service_healthy
     environment:
@@ -176,7 +181,7 @@ services:
       SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY}
       ANON_KEY_ASYMMETRIC: ${ANON_KEY_ASYMMETRIC}
       SERVICE_ROLE_KEY_ASYMMETRIC: ${SERVICE_ROLE_KEY_ASYMMETRIC}
-    entrypoint: /home/kong/kong-entrypoint.sh
+    entrypoint: ["/bin/sh", "/home/kong/kong-entrypoint.sh"]
     volumes:
       - ./infra/supabase/volumes/api/kong.yml:/home/kong/temp.yml:ro
       - ./infra/supabase/volumes/api/kong-entrypoint.sh:/home/kong/kong-entrypoint.sh:ro
@@ -210,7 +215,7 @@ services:
         --yes
         --db-url "postgresql://postgres:$${POSTGRES_PASSWORD}@db:5432/postgres"
     volumes:
-      - ./supabase:/workspace/supabase:ro
+      - ./supabase:/workspace/supabase
     tmpfs:
       - /workspace/supabase/.temp:mode=0700
     restart: "no"
@@ -260,7 +265,7 @@ services:
 
   seed:
     profiles: ["tools"]
-    image: supabase/postgres:15.8.1.085
+    image: ${SUPABASE_POSTGRES_IMAGE:?SUPABASE_POSTGRES_IMAGE is required}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -276,9 +281,6 @@ services:
     logging: *default-logging
     networks:
       - backend
-
-volumes:
-  db_config:
 
 networks:
   frontend:

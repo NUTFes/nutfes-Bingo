@@ -66,7 +66,7 @@ mise run prod:admin:list
 mise run prod:admin:verify
 ```
 
-ローカルDBもproductionと同じPostgreSQL 15へ固定しています。以前の設定でPostgreSQL 17のlocal volumeを作成済みの場合や、CLI stackのnetworkを変更したい場合は、必要なlocal dataを退避したうえで次を一度実行して作り直します。
+ローカルDBもproductionと同じPostgreSQL 17へ固定しています。以前の設定で別major versionのlocal volumeを作成済みの場合や、CLI stackのnetworkを変更したい場合は、必要なlocal dataを退避したうえで次を一度実行して作り直します。
 
 ```bash
 pnpm exec supabase stop --no-backup
@@ -166,6 +166,12 @@ mise run prod:preflight
 
 `prod:preflight` は、LXC、必須コマンド、`.env.production`の権限、Cloudflared token、永続ディレクトリ、Compose設定を検査します。
 
+LXC上に `mise` がない場合は、同じ検査を直接実行できます。
+
+```bash
+./infra/scripts/annual-ops.sh preflight
+```
+
 5. 起動します。
 
 ```bash
@@ -174,6 +180,14 @@ mise run prod:deploy
 ```
 
 `prod:deploy` は preflight、Compose起動、smoke testを順番に実行します。
+
+LXC上に `mise` がない場合の同等コマンド:
+
+```bash
+./infra/scripts/compose.sh config --quiet
+./infra/scripts/annual-ops.sh deploy
+```
+
 起動時は`supabase/migrations/`が自動適用され、成功後にNext.jsが起動します。
 
 6. 初期データが必要な新規環境だけ、明示的にseedを適用します。
@@ -187,6 +201,13 @@ mise run prod:seed
 ```bash
 mise run prod:ps
 mise run prod:smoke
+```
+
+LXC上に `mise` がない場合の同等コマンド:
+
+```bash
+./infra/scripts/compose.sh ps
+./infra/scripts/annual-ops.sh smoke
 ```
 
 `/api/health`はNext.js process、`/api/ready`はNext.jsからPostgREST/DBまでを確認します。

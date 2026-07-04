@@ -16,7 +16,7 @@
 ## Commands
 
 - Install: `mise install && mise run install`
-- Dev: `mise run dev`
+- Dev: `mise run up`
 - Stop dev stack: `mise run down`
 - Format check: `pnpm fmt:check`
 - Lint: `pnpm lint`

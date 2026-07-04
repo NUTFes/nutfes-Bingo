@@ -109,12 +109,11 @@ prepare_password_file() {
     printf '%s' "$first_password" >"$password_file"
   fi
 
-  password_length=$(node -e '
+  password_length=$(compose run --rm --no-deps -T --entrypoint node app -e '
 const fs = require("fs");
-const path = process.argv[1];
-const password = fs.readFileSync(path, "utf8").replace(/\r?\n$/, "");
+const password = fs.readFileSync(0, "utf8").replace(/\r?\n$/, "");
 process.stdout.write(String([...password].length));
-' "$password_file")
+' <"$password_file")
 
   [ "$password_length" -ge 12 ] || fail "admin password must be at least 12 characters"
 }
@@ -123,9 +122,12 @@ json_payload_for_password() {
   email=$1
   mode=$2
 
-  ADMIN_EMAIL_NORMALIZED=$email ADMIN_PAYLOAD_MODE=$mode node - "$password_file" <<'NODE'
+  compose run --rm --no-deps -T --entrypoint node \
+    -e ADMIN_EMAIL_NORMALIZED="$email" \
+    -e ADMIN_PAYLOAD_MODE="$mode" \
+    app -e '
 const fs = require("fs");
-const password = fs.readFileSync(process.argv[2], "utf8").replace(/\r?\n$/, "");
+const password = fs.readFileSync(0, "utf8").replace(/\r?\n$/, "");
 const payload = {
   password,
   email_confirm: true,
@@ -144,7 +146,7 @@ if (process.env.ADMIN_PAYLOAD_MODE === "create") {
 }
 
 process.stdout.write(JSON.stringify(payload));
-NODE
+' <"$password_file"
 }
 
 auth_admin_request() {
@@ -280,7 +282,6 @@ verify_admins() {
 }
 
 require_command docker
-require_command node
 require_command stat
 load_env_file
 
