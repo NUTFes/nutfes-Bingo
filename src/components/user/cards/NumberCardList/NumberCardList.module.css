@@ -1,12 +1,55 @@
 .container {
   display: grid;
-  grid-template-columns: repeat(3, 20vw);
-  grid-gap: 3.5vw;
+  grid-template-columns: repeat(3, auto);
+  justify-content: center;
+  gap: clamp(14px, 4vw, 20px);
+}
+
+.container > div {
+  animation: listEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.container > div:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.container > div:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.container > div:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.container > div:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.container > div:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.container > div:nth-child(6) {
+  animation-delay: 0.3s;
+}
+.container > div:nth-child(n + 7) {
+  animation-delay: 0.35s;
+}
+
+@keyframes listEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (min-width: 640px) {
+  .container {
+    gap: 16px;
+  }
 }
 
 @media (min-width: 1024px) {
   .container {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 3vw;
+    gap: 24px;
   }
 }

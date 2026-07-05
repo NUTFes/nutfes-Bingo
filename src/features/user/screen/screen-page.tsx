@@ -4,7 +4,9 @@ import Matter from "matter-js";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { getScreenDisplayBingoNumbers } from "./view-model";
-import { NumberCardLarge, NumberCardList, ReachCount } from "@/components/user";
+import ScreenNumberCardLarge from "./components/ScreenNumberCardLarge/ScreenNumberCardLarge";
+import ScreenNumberCardList from "./components/ScreenNumberCardList/ScreenNumberCardList";
+import ScreenReachCount from "./components/ScreenReachCount/ScreenReachCount";
 import { useScreenPollingState, useStampTriggerPolling } from "@/lib/polling";
 import type { NumberRow, ReachLogRow, StampName } from "@/types/bingo/types";
 import styles from "@/styles/user/screen.module.css";
@@ -28,6 +30,12 @@ const IMAGES: Record<string, string> = {
   surprise: "/ReactionIcon/surprise.png",
 } satisfies Record<StampName, string>;
 
+const MAX_STAMP_BODIES = 56;
+const STAMP_TEXTURE_SIZE = 842;
+const WALL_THICKNESS = 96;
+const WALL_INSET = 48;
+const STAMP_LIFETIME_MS = 45000;
+
 export function ScreenPage({
   initialNumbers,
   initialReachLog,
@@ -36,6 +44,10 @@ export function ScreenPage({
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
+  const runner = useRef<Matter.Runner | null>(null);
+  const boundaries = useRef<Matter.Body[]>([]);
+  const stampBodies = useRef<Matter.Body[]>([]);
+  const removalTimers = useRef<number[]>([]);
   const { numbers: bingoNumbers, latestReachLog } = useScreenPollingState(
     initialNumbers,
     initialReachLog,
@@ -44,32 +56,65 @@ export function ScreenPage({
     () => getScreenDisplayBingoNumbers(bingoNumbers),
     [bingoNumbers],
   );
-  const handleStampInsert = useCallback((stamp: { name: StampName; id: number }) => {
-    const texture = IMAGES[stamp.name];
-    if (!texture || !engine.current) {
+  const removeStampBody = useCallback((body: Matter.Body) => {
+    const currentEngine = engine.current;
+    if (!currentEngine) {
       return;
     }
 
-    const x = Math.random() * window.innerWidth;
-    const circle = Matter.Bodies.circle(x, 0, 35, {
-      restitution: 0.8,
-      render: {
-        sprite: {
-          texture,
-          xScale: 0.1,
-          yScale: 0.1,
-        },
-      },
-    });
-
-    Matter.Composite.add(engine.current.world, circle);
-
-    window.setTimeout(() => {
-      if (engine.current) {
-        Matter.Composite.remove(engine.current.world, circle);
-      }
-    }, 5000);
+    Matter.Composite.remove(currentEngine.world, body);
+    stampBodies.current = stampBodies.current.filter((stampBody) => stampBody !== body);
   }, []);
+
+  const handleStampInsert = useCallback(
+    (stamp: { name: StampName; id: number }) => {
+      const texture = IMAGES[stamp.name];
+      const currentEngine = engine.current;
+      if (!texture || !currentEngine) {
+        return;
+      }
+
+      const radius = Math.max(32, Math.min(52, window.innerWidth * 0.035));
+      const diameter = radius * 2;
+      const xRange = Math.max(1, window.innerWidth - (WALL_INSET + radius) * 2);
+      const x = WALL_INSET + radius + Math.random() * xRange;
+      const circle = Matter.Bodies.circle(x, -radius, radius, {
+        density: 0.001,
+        friction: 0.08,
+        frictionAir: 0.012,
+        restitution: 0.28,
+        render: {
+          sprite: {
+            texture,
+            xScale: diameter / STAMP_TEXTURE_SIZE,
+            yScale: diameter / STAMP_TEXTURE_SIZE,
+          },
+        },
+      });
+
+      Matter.Body.setVelocity(circle, {
+        x: (Math.random() - 0.5) * 4,
+        y: 1,
+      });
+      Matter.Body.setAngularVelocity(circle, (Math.random() - 0.5) * 0.16);
+      Matter.Composite.add(currentEngine.world, circle);
+      stampBodies.current.push(circle);
+
+      while (stampBodies.current.length > MAX_STAMP_BODIES) {
+        const oldestBody = stampBodies.current.shift();
+        if (oldestBody) {
+          Matter.Composite.remove(currentEngine.world, oldestBody);
+        }
+      }
+
+      removalTimers.current.push(
+        window.setTimeout(() => {
+          removeStampBody(circle);
+        }, STAMP_LIFETIME_MS),
+      );
+    },
+    [removeStampBody],
+  );
 
   useEffect(() => {
     if (!scene.current) {
@@ -77,51 +122,91 @@ export function ScreenPage({
     }
 
     const { Engine, Render, Runner, Bodies, Composite } = Matter;
-    engine.current = Engine.create();
-    render.current = Render.create({
+    const currentEngine = Engine.create({
+      enableSleeping: true,
+      positionIterations: 4,
+      velocityIterations: 4,
+    });
+    currentEngine.gravity.y = 1;
+    currentEngine.gravity.scale = 0.00125;
+    engine.current = currentEngine;
+
+    const currentRender = Render.create({
       element: scene.current,
-      engine: engine.current,
+      engine: currentEngine,
       options: {
         width: window.innerWidth,
         height: window.innerHeight,
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
         wireframes: false,
         background: "transparent",
       },
     });
+    render.current = currentRender;
 
-    const rightWall = Bodies.rectangle(
-      window.innerWidth,
-      window.innerHeight / 2,
-      1,
-      window.innerHeight,
-      {
+    const createBoundaries = (width: number, height: number) => [
+      Bodies.rectangle(width / 2, height + WALL_THICKNESS / 2, width, WALL_THICKNESS, {
         isStatic: true,
+        label: "stamp-floor",
         render: { visible: false },
-      },
-    );
-    const leftWall = Bodies.rectangle(0, window.innerHeight / 2, 1, window.innerHeight, {
-      isStatic: true,
-      render: { visible: false },
+      }),
+      Bodies.rectangle(WALL_INSET - WALL_THICKNESS / 2, height / 2, WALL_THICKNESS, height * 2, {
+        isStatic: true,
+        label: "stamp-left-wall",
+        render: { visible: false },
+      }),
+      Bodies.rectangle(
+        width - WALL_INSET + WALL_THICKNESS / 2,
+        height / 2,
+        WALL_THICKNESS,
+        height * 2,
+        {
+          isStatic: true,
+          label: "stamp-right-wall",
+          render: { visible: false },
+        },
+      ),
+    ];
+
+    const syncSceneSize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      Render.setPixelRatio(currentRender, Math.min(window.devicePixelRatio || 1, 2));
+      Render.setSize(currentRender, width, height);
+      if (boundaries.current.length > 0) {
+        Composite.remove(currentEngine.world, boundaries.current);
+      }
+      boundaries.current = createBoundaries(width, height);
+      Composite.add(currentEngine.world, boundaries.current);
+    };
+
+    syncSceneSize();
+    window.addEventListener("resize", syncSceneSize, { passive: true });
+
+    Render.run(currentRender);
+    runner.current = Runner.create({
+      delta: 1000 / 60,
+      maxUpdates: 2,
     });
-
-    Composite.add(engine.current.world, [leftWall, rightWall]);
-    Render.run(render.current);
-
-    const runner = Runner.create();
-    Runner.run(runner, engine.current);
+    Runner.run(runner.current, currentEngine);
 
     return () => {
-      if (render.current) {
-        Matter.Render.stop(render.current);
+      window.removeEventListener("resize", syncSceneSize);
+      removalTimers.current.forEach((timer) => window.clearTimeout(timer));
+      removalTimers.current = [];
+      stampBodies.current = [];
+      boundaries.current = [];
+      if (runner.current) {
+        Runner.stop(runner.current);
+        runner.current = null;
       }
-      if (engine.current) {
-        Matter.Composite.clear(engine.current.world, true);
-        Matter.Engine.clear(engine.current);
-      }
-      if (render.current?.canvas) {
-        render.current.canvas.remove();
-        render.current.textures = {};
-      }
+      Render.stop(currentRender);
+      Composite.clear(currentEngine.world, false, true);
+      Engine.clear(currentEngine);
+      currentRender.canvas.remove();
+      currentRender.textures = {};
+      render.current = null;
+      engine.current = null;
     };
   }, []);
 
@@ -131,11 +216,13 @@ export function ScreenPage({
     <>
       <div ref={scene} className={styles.scene} />
       <div className={styles.overlay}>
-        <div className={styles.flex}>
-          <NumberCardLarge bingoNumber={displayBingoNumbers.large} />
-          <div className={styles.column}>
-            <NumberCardList screen bingoNumber={displayBingoNumbers.list} />
-            <ReachCount count={latestReachLog?.reach_num ?? 0} />
+        <div className={styles.layout}>
+          <div className={styles.mainContent}>
+            <ScreenNumberCardLarge bingoNumber={displayBingoNumbers.large} />
+          </div>
+          <div className={styles.sideContent}>
+            <ScreenNumberCardList bingoNumber={displayBingoNumbers.list} />
+            <ScreenReachCount count={latestReachLog?.reach_num ?? 0} />
           </div>
         </div>
       </div>

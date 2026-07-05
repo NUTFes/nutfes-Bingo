@@ -10,3 +10,10 @@
   place-items: start center;
   row-gap: 5vw;
 }
+
+@media (min-width: 640px) {
+  .frame {
+    grid-template-columns: repeat(3, 129px);
+    row-gap: 22px;
+  }
+}

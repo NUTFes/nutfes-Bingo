@@ -56,6 +56,7 @@ export type Database = {
           is_won: boolean;
           name_en: string | null;
           name_jp: string;
+          sort_order: number;
           updated_at: string;
         };
         Insert: {
@@ -65,6 +66,7 @@ export type Database = {
           is_won?: boolean;
           name_en?: string | null;
           name_jp?: string;
+          sort_order?: number;
           updated_at?: string;
         };
         Update: {
@@ -74,6 +76,7 @@ export type Database = {
           is_won?: boolean;
           name_en?: string | null;
           name_jp?: string;
+          sort_order?: number;
           updated_at?: string;
         };
         Relationships: [];

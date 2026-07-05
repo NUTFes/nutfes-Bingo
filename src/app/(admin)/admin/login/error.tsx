@@ -34,7 +34,7 @@ export default function Error({
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
             もしくは{" "}
-            <Link href="/auth/login" variant="secondary" className="underline-offset-4">
+            <Link href="/admin/login" variant="secondary" className="underline-offset-4">
               ログイン画面に戻る
             </Link>
           </p>

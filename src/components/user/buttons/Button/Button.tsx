@@ -7,15 +7,20 @@ interface ButtonProps {
   inversion?: boolean;
   disabled?: boolean;
   onClick?: () => void;
+  className?: string;
 }
 
 const Button: React.FC<ButtonProps> = (props) => {
   return (
     <button
       type="button"
-      className={cn(styles.button, {
-        [styles.inversion]: props.inversion,
-      })}
+      className={cn(
+        styles.button,
+        {
+          [styles.inversion]: props.inversion,
+        },
+        props.className,
+      )}
       disabled={props.disabled}
       onClick={props.onClick}
     >

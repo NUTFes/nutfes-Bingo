@@ -8,12 +8,14 @@ interface ModalProps {
   isOpened: boolean;
   canCloseByClickingBackground?: boolean;
   setIsOpened: (isOpened: boolean) => void;
+  ariaLabel?: string;
 }
 
 const Modal = ({
   children,
   isOpened,
   canCloseByClickingBackground = true,
+  ariaLabel = "モーダル",
   setIsOpened,
 }: ModalProps) => {
   const contentRef = useRef<HTMLDialogElement>(null);
@@ -74,7 +76,13 @@ const Modal = ({
     <>
       {isOpened && (
         <div className={styles.wrapper}>
-          <dialog ref={contentRef} className={styles.content} tabIndex={-1} open>
+          <dialog
+            ref={contentRef}
+            className={styles.content}
+            tabIndex={-1}
+            aria-label={ariaLabel}
+            open
+          >
             {children}
           </dialog>
           {canCloseByClickingBackground && (

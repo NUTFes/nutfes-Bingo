@@ -27,11 +27,3 @@ export function hasSupabaseServiceRoleEnvVars() {
 export function shouldSkipSupabaseFetch() {
   return process.env.NUTFES_SKIP_SUPABASE_FETCH === "1";
 }
-
-export function isAdminSignupEnabled() {
-  if (process.env.ENABLE_ADMIN_SIGNUP === "1") {
-    return true;
-  }
-
-  return process.env.NODE_ENV !== "production" && process.env.ENABLE_ADMIN_SIGNUP !== "0";
-}

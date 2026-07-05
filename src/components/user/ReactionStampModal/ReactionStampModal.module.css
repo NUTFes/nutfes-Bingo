@@ -10,11 +10,16 @@
   box-sizing: border-box;
   max-width: 87.5vw;
   background: var(--background-color);
-  box-shadow: 1.09375vw 1.09375vw 0px 0px var(--main-color);
+  box-shadow:
+    1.09375vw 1.09375vw 0px 0px var(--main-color),
+    0 2.5vw 8vw rgba(0, 0, 0, 0.65);
   border-radius: 5.46875vw;
   border: var(--main-color) solid 1.640625vw;
   padding: 1rem;
   z-index: 100;
+  transform-origin: bottom center;
+  animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
 }
 
 .effectFrame {
@@ -170,6 +175,17 @@
   }
 }
 
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 @keyframes rippleExpand {
   0% {
     transform: translate(-50%, -50%) scale(0.5);
@@ -192,5 +208,67 @@
   100% {
     transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.6);
     opacity: 0;
+  }
+}
+
+@media (min-width: 640px) {
+  .bubble {
+    width: 376px;
+    height: 219px;
+    max-width: 376px;
+    border-width: 7px;
+    border-radius: 24px;
+    box-shadow:
+      5px 5px 0 0 var(--main-color),
+      0 15px 40px rgba(0, 0, 0, 0.65);
+  }
+
+  .bubble:before {
+    border-width: 35px 18px 0;
+    bottom: -38px;
+    margin-left: -18px;
+    filter: drop-shadow(2px 5px var(--main-color));
+  }
+
+  .bubble:after {
+    border-width: 27px 11px 0;
+    bottom: -25px;
+    margin-left: -11px;
+  }
+
+  .iconButton .ripple {
+    border-width: 2px;
+  }
+
+  .particles {
+    inset: -8px;
+  }
+
+  .particle {
+    width: 21px;
+    height: 21px;
+  }
+
+  .particle:nth-child(1) {
+    --ty: -39px;
+  }
+  .particle:nth-child(2) {
+    --tx: 31px;
+    --ty: -23px;
+  }
+  .particle:nth-child(3) {
+    --tx: 31px;
+    --ty: 23px;
+  }
+  .particle:nth-child(4) {
+    --ty: 39px;
+  }
+  .particle:nth-child(5) {
+    --tx: -31px;
+    --ty: 23px;
+  }
+  .particle:nth-child(6) {
+    --tx: -31px;
+    --ty: -23px;
   }
 }

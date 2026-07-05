@@ -63,3 +63,24 @@
 .iconContainer.color_inversion .text {
   color: var(--background-color);
 }
+
+@media (min-width: 640px) {
+  .iconContainer {
+    width: 73px;
+    height: 73px;
+    padding: 13px;
+    border-radius: 13px;
+    font-size: 73px;
+  }
+
+  .wide {
+    width: 145px;
+    height: 77px;
+    padding: 11px;
+    font-size: 77px;
+  }
+
+  .outline {
+    border-width: 5px;
+  }
+}

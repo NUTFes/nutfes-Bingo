@@ -81,3 +81,31 @@
   white-space: nowrap;
   line-height: 1;
 }
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 108px;
+  }
+
+  .card {
+    width: 108px;
+    height: 108px;
+    margin-bottom: 6px;
+    border-width: 5px;
+    border-radius: 13px;
+    box-shadow: 4px 4px 0 var(--main-color);
+  }
+
+  .image {
+    border-radius: 9px;
+  }
+
+  .text {
+    font-size: 12px;
+  }
+
+  .wonBadge {
+    font-size: 12px;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+  }
+}

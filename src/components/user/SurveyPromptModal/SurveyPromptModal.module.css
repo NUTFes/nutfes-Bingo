@@ -19,12 +19,12 @@
   margin-top: 3vw;
 }
 
-@media screen and (min-width: 1024px) {
+@media (min-width: 640px) {
   .title {
-    font-size: 2vw;
+    font-size: 24px;
   }
   .actions {
-    gap: 1vw;
-    margin-top: 1vw;
+    gap: 16px;
+    margin-top: 16px;
   }
 }

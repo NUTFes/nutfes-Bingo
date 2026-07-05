@@ -17,3 +17,16 @@
   justify-content: center;
   gap: 3vw;
 }
+
+@media (min-width: 640px) {
+  .navigationBar {
+    padding: 13px 6px calc(13px + env(safe-area-inset-bottom));
+    box-shadow:
+      0 -3px 13px 0 var(--nav-top-shadow-color, transparent),
+      0 -3px 13px rgba(0, 0, 0, 0.1);
+  }
+
+  .center {
+    gap: 13px;
+  }
+}

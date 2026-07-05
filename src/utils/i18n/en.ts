@@ -1,8 +1,8 @@
 export const en = {
   reachModal: {
-    title: "Did you reach?",
-    yes: "Yes",
-    no: "No",
+    title: "Are you reaching?",
+    yes: "Declare Reach",
+    no: "Cancel",
   },
   settingsModal: {
     languageSelection: "Language Selection",

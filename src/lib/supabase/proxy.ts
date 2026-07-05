@@ -12,18 +12,19 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 function isProtectedPath(pathname: string) {
-  return pathname === "/admin" || pathname.startsWith("/admin/");
-}
+  const isAdminAuthPath = pathname === "/admin/login" || pathname === "/admin/auth-error";
 
-function shouldRefreshSession(pathname: string) {
-  return isProtectedPath(pathname) || pathname === "/auth/confirm";
+  return (pathname === "/admin" || pathname.startsWith("/admin/")) && !isAdminAuthPath;
 }
 
 function shouldIssuePublicClientId(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   return (
-    request.method === "GET" && !pathname.startsWith("/api/") && !pathname.startsWith("/auth/")
+    request.method === "GET" &&
+    pathname !== "/admin" &&
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/admin/")
   );
 }
 
@@ -48,7 +49,7 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  if (!hasSupabaseServerEnvVars() || !shouldRefreshSession(request.nextUrl.pathname)) {
+  if (!hasSupabaseServerEnvVars() || !isProtectedPath(request.nextUrl.pathname)) {
     return withPublicClientCookie(request, supabaseResponse);
   }
 
@@ -83,7 +84,7 @@ export async function updateSession(request: NextRequest) {
   if (isProtectedPath(request.nextUrl.pathname) && !user) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
+    url.pathname = "/admin/login";
     const redirectTo = `${request.nextUrl.pathname}${request.nextUrl.search}`;
     url.searchParams.set("redirectTo", redirectTo);
     return NextResponse.redirect(url);

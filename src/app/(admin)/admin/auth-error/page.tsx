@@ -4,7 +4,7 @@ import { Link } from "@/components/ui/Link";
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   admin_role_required:
-    "このアカウントには管理者権限がありません。Supabase 上での権限付与を運用担当へ依頼してください。",
+    "このアカウントには管理者権限がありません。管理者アカウントはCLIで作成してください。",
 };
 
 async function ErrorContent({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
@@ -40,7 +40,7 @@ export default function Page({ searchParams }: { searchParams: Promise<{ error?:
             </Suspense>
           </div>
           <div className="mt-7 flex flex-wrap gap-4 text-sm">
-            <Link href="/auth/login" variant="secondary" className="underline-offset-4">
+            <Link href="/admin/login" variant="secondary" className="underline-offset-4">
               ログイン画面へ戻る
             </Link>
           </div>

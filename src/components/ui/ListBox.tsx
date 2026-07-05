@@ -31,10 +31,8 @@ const dropdownItemStyles = tv({
 });
 
 export function DropdownItem(props: ListBoxItemProps) {
-  const textValue =
-    props.textValue || (typeof props.children === "string" ? props.children : undefined);
   return (
-    <AriaListBoxItem {...props} textValue={textValue} className={dropdownItemStyles}>
+    <AriaListBoxItem {...props} className={dropdownItemStyles}>
       {composeRenderProps(props.children, (children, { isSelected }) => (
         <>
           <span className="flex items-center flex-1 gap-2 font-normal truncate group-selected:font-semibold">

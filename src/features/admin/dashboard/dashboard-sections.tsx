@@ -34,8 +34,8 @@ export function CreateNumberSection({
           }}
         >
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">登録する番号</p>
             <NumberField
+              label="登録する番号"
               key={submitNumberFieldKey}
               minValue={1}
               maxValue={99}
@@ -99,8 +99,8 @@ export function DeleteNumberSection({
           }}
         >
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">削除する番号</p>
             <ComboBox
+              label="削除する番号"
               allowsCustomValue
               selectedKey={selectedDeleteNumber}
               inputValue={deleteInput}
@@ -112,7 +112,11 @@ export function DeleteNumberSection({
                 onDeleteSelectionChange(key ? String(key) : null);
               }}
             >
-              {(item) => <ComboBoxItem id={item.id}>{item.label}</ComboBoxItem>}
+              {(item) => (
+                <ComboBoxItem id={item.id} textValue={item.label}>
+                  {item.label}
+                </ComboBoxItem>
+              )}
             </ComboBox>
           </div>
           <Button

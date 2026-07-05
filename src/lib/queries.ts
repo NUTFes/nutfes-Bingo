@@ -68,6 +68,8 @@ export async function getPrizes(): Promise<PrizeWithImageUrl[]> {
   const { data, error } = await supabase
     .from("prizes")
     .select("*")
+    .order("is_won", { ascending: true })
+    .order("sort_order", { ascending: true })
     .order("id", { ascending: true });
 
   if (error) {

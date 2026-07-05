@@ -1,8 +1,8 @@
 export const ja = {
   reachModal: {
-    title: "リーチしましたか？",
-    yes: "はい",
-    no: "いいえ",
+    title: "リーチですか？",
+    yes: "リーチする",
+    no: "キャンセル",
   },
   settingsModal: {
     languageSelection: "言語の選択",

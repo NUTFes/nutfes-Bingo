@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from "react";
+import { useLayoutEffect, useRef, useState, type SetStateAction } from "react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -17,6 +17,14 @@ import {
   SurveyPromptModal,
   ToggleButton,
 } from "@/components/user/common";
+import {
+  Globe,
+  ArrowUpDown,
+  Moon,
+  MessageSquare,
+  Settings as SettingsLucideIcon,
+  PartyPopper,
+} from "lucide-react";
 import { REACTION_IMAGES } from "@/types/bingo/constants";
 import {
   applyPublicTheme,
@@ -144,18 +152,15 @@ function InnerLayout({
   }, [isDarkMode]);
 
   const prevSurveyActiveRef = useRef(appState.is_survey_active);
-  useEffect(() => {
-    if (appState.is_survey_active === prevSurveyActiveRef.current) {
-      return;
-    }
-
+  if (appState.is_survey_active !== prevSurveyActiveRef.current) {
     prevSurveyActiveRef.current = appState.is_survey_active;
-    if (appState.is_survey_active && appState.survey_url) {
-      setModalState((prev) => ({ ...prev, isSurveyModalOpen: true }));
-    } else if (!appState.is_survey_active) {
-      setModalState((prev) => ({ ...prev, isSurveyModalOpen: false }));
-    }
-  }, [appState.is_survey_active, appState.survey_url]);
+    const nextSurveyModalOpen = appState.is_survey_active && Boolean(appState.survey_url);
+    setModalState((prev) =>
+      prev.isSurveyModalOpen === nextSurveyModalOpen
+        ? prev
+        : { ...prev, isSurveyModalOpen: nextSurveyModalOpen },
+    );
+  }
 
   const handleReactionClick = async (name: string) => {
     if (isStampSending) {
@@ -275,13 +280,21 @@ function InnerLayout({
       />
       <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
         <div className={styles.reachModal}>
-          <p>{t.reachModal.title}</p>
-          <Button inversion disabled={isReachSending} onClick={handleConfirmReach}>
-            {t.reachModal.yes}
+          <div className={styles.reachIconWrapper}>
+            <PartyPopper className={styles.reachModalIcon} />
+          </div>
+          <p className={styles.reachModalTitle}>{t.reachModal.title}</p>
+          <Button disabled={isReachSending} onClick={handleConfirmReach}>
+            {isReachSending ? <div className={styles.spinner}></div> : t.reachModal.yes}
           </Button>
-          <Button disabled={isReachSending} onClick={() => setIsReachModalOpen(false)}>
+          <button
+            type="button"
+            className={styles.cancelButton}
+            disabled={isReachSending}
+            onClick={() => setIsReachModalOpen(false)}
+          >
             {t.reachModal.no}
-          </Button>
+          </button>
           {reachError && (
             <p className={styles.reachError} role="alert">
               {reachError}
@@ -291,38 +304,62 @@ function InnerLayout({
       </Modal>
       <Modal isOpened={isSettingsModalOpen} setIsOpened={setIsSettingsModalOpen}>
         <div className={styles.settingsModal}>
-          {appState.is_survey_active && appState.survey_url && (
-            <div>
-              <p>{t.settingsModal.survey}</p>
-              <div className={styles.surveyActions}>
-                <Button inversion onClick={handleAnswerSurvey}>
-                  {t.settingsModal.answerSurvey}
-                </Button>
+          <div className={styles.settingsHeader}>
+            <SettingsLucideIcon className={styles.headerIcon} />
+            <h2 className={styles.modalTitle}>SETTINGS</h2>
+          </div>
+          <div className={styles.settingsList}>
+            {appState.is_survey_active && appState.survey_url && (
+              <div className={styles.settingsRow}>
+                <div className={styles.settingsRowLabel}>
+                  <MessageSquare className={styles.rowIcon} />
+                  <span>{t.settingsModal.survey}</span>
+                </div>
+                <div className={styles.settingsRowControl}>
+                  <Button inversion className={styles.surveyButton} onClick={handleAnswerSurvey}>
+                    {t.settingsModal.answerSurvey}
+                  </Button>
+                </div>
+              </div>
+            )}
+            <div className={styles.settingsRow}>
+              <div className={styles.settingsRowLabel}>
+                <Globe className={styles.rowIcon} />
+                <span>{t.settingsModal.languageSelection}</span>
+              </div>
+              <div className={styles.settingsRowControl}>
+                <ToggleButton isActive={language !== "ja"} onClick={toggleLanguage}>
+                  <span>{t.settingsModal.japanese}</span>
+                  <span>{t.settingsModal.english}</span>
+                </ToggleButton>
               </div>
             </div>
-          )}
-          <div>
-            <p>{t.settingsModal.languageSelection}</p>
-            <ToggleButton isActive={language !== "ja"} onClick={toggleLanguage}>
-              <span>{t.settingsModal.japanese}</span>
-              <span>{t.settingsModal.english}</span>
-            </ToggleButton>
-          </div>
-          {setIsSortedAscending && (
-            <div>
-              <p>{t.settingsModal.sortOrder}</p>
-              <ToggleButton isActive={isSortOrderActive} onClick={toggleSortOrder}>
-                <span>{t.settingsModal.drawOrder}</span>
-                <span>{t.settingsModal.ascending}</span>
-              </ToggleButton>
+            {setIsSortedAscending && (
+              <div className={styles.settingsRow}>
+                <div className={styles.settingsRowLabel}>
+                  <ArrowUpDown className={styles.rowIcon} />
+                  <span>{t.settingsModal.sortOrder}</span>
+                </div>
+                <div className={styles.settingsRowControl}>
+                  <ToggleButton isActive={isSortOrderActive} onClick={toggleSortOrder}>
+                    <span>{t.settingsModal.drawOrder}</span>
+                    <span>{t.settingsModal.ascending}</span>
+                  </ToggleButton>
+                </div>
+              </div>
+            )}
+            <div className={styles.settingsRow}>
+              <div className={styles.settingsRowLabel}>
+                <Moon className={styles.rowIcon} />
+                <span>{t.settingsModal.theme}</span>
+              </div>
+              <div className={styles.settingsRowControl}>
+                <ToggleButton isActive={isDarkMode} onClick={toggleDarkMode}>
+                  <span>{t.settingsModal.light}</span>
+                  <span>{t.settingsModal.dark}</span>
+                </ToggleButton>
+              </div>
             </div>
-          )}
-          <div>
-            <p>{t.settingsModal.theme}</p>
-            <ToggleButton isActive={isDarkMode} onClick={toggleDarkMode}>
-              <span>{t.settingsModal.light}</span>
-              <span>{t.settingsModal.dark}</span>
-            </ToggleButton>
           </div>
         </div>
       </Modal>

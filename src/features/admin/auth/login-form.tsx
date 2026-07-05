@@ -4,7 +4,6 @@ import { useActionState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Form } from "@/components/ui/Form";
-import { Link } from "@/components/ui/Link";
 import { TextField } from "@/components/ui/TextField";
 import { login, type AuthActionState } from "./actions";
 import { AuthFormCard, AuthFormError } from "./components/AuthFormCard";
@@ -13,13 +12,7 @@ const initialState: AuthActionState = {
   errorMessage: null,
 };
 
-export function LoginForm({
-  redirectTo,
-  canSignUp = false,
-}: {
-  redirectTo?: string;
-  canSignUp?: boolean;
-}) {
+export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const [state, formAction, isPending] = useActionState(login.bind(null, redirectTo), initialState);
 
   return (
@@ -47,14 +40,6 @@ export function LoginForm({
         <Button type="submit" className="h-11 w-full font-medium" isPending={isPending}>
           ログイン
         </Button>
-        {canSignUp && (
-          <p className="text-center text-sm leading-relaxed text-muted-foreground">
-            アカウントをお持ちでない場合は{" "}
-            <Link href="/auth/sign-up" variant="secondary" className="underline-offset-4">
-              新規登録
-            </Link>
-          </p>
-        )}
       </Form>
     </AuthFormCard>
   );

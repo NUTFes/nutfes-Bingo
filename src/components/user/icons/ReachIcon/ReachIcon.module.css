@@ -2,25 +2,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(4px, 1.6vw, 10px);
-  width: clamp(180px, 34vw, 320px);
-  height: clamp(70px, 15vw, 120px);
-  padding: clamp(10px, 3vw, 18px) clamp(14px, 3.6vw, 22px);
+  gap: 12px;
+  width: clamp(160px, 30vw, 220px);
+  height: clamp(64px, 12vw, 76px);
+  padding: 0 24px;
   border: 2px solid var(--main-color);
   border-radius: 999px;
   background-color: var(--main-color);
   color: var(--background-color);
   cursor: pointer;
-  box-shadow: 0 1.2vw 0 0 rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 0 0 color-mix(in srgb, var(--main-color) 85%, #000);
   transition:
+    transform 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.1s cubic-bezier(0.4, 0, 0.2, 1),
     background-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease;
+    color 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-}
-
-.reachButton:active {
-  filter: brightness(0.98);
+  transform: translateY(0);
 }
 
 .reachButton:focus-visible {
@@ -28,26 +26,55 @@
   outline-offset: 4px;
 }
 
+.reachButton:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 0 color-mix(in srgb, var(--main-color) 85%, #000);
+  filter: brightness(0.96);
+}
+
 .inverted {
   background-color: var(--background-color);
   color: var(--main-color);
-  box-shadow: 0 1.2vw 0 0 rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 0 0 color-mix(in srgb, var(--main-color) 20%, transparent);
+}
+
+.inverted:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 0 color-mix(in srgb, var(--main-color) 20%, transparent);
+  filter: brightness(0.96);
 }
 
 .text {
   font-family: var(--font-silom), "Noto Sans JP", sans-serif;
-  font-size: clamp(22px, 5vw, 36px);
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: clamp(20px, 4vw, 28px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
   line-height: 1;
 }
 
 .icon {
-  width: clamp(32px, 9vw, 56px);
-  height: clamp(32px, 9vw, 56px);
+  width: clamp(28px, 6vw, 40px);
+  height: clamp(28px, 6vw, 40px);
   display: block;
   background-color: currentColor;
   mask: url("/icon_reach.svg") no-repeat center / contain;
   -webkit-mask: url("/icon_reach.svg") no-repeat center / contain;
-  transform: translateY(-12%);
+  transform: translateY(-2px);
+}
+
+@media (min-width: 640px) {
+  .reachButton {
+    width: 180px;
+    height: 72px;
+    gap: 12px;
+  }
+
+  .text {
+    font-size: 24px;
+  }
+
+  .icon {
+    width: 36px;
+    height: 36px;
+  }
 }

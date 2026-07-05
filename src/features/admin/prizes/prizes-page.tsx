@@ -32,7 +32,7 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
             <div className="max-w-3xl space-y-1">
               <h2 className="text-xl font-semibold text-foreground sm:text-2xl">景品管理</h2>
               <p className="text-sm text-muted-foreground">
-                景品の追加、編集、当選状況の管理を行います。
+                景品の追加、編集、当選状況、表示順の管理を行います。
               </p>
             </div>
 
@@ -47,6 +47,11 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
                 表示 {filteredPrizes.length} / 全 {bingoPrize.length} 件
               </p>
             </div>
+            {searchText && (
+              <p className="basis-full text-sm text-muted-foreground">
+                検索中は並び替えを無効にしています。並び替える場合は検索を解除してください。
+              </p>
+            )}
           </header>
         </section>
 
@@ -55,6 +60,7 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
           setBingoPrize={setBingoPrize}
           showOverlay={true}
           showToggle={true}
+          canReorder={!searchText}
           onToggle={async (id, isWon) => {
             const result = await prizeActions.togglePrizeWon(id, isWon);
             if (!result.ok) {
@@ -77,6 +83,13 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
               formData.set("file", file);
             }
             const result = await prizeActions.updatePrize(formData);
+            if (!result.ok) {
+              throw new Error(result.error);
+            }
+            return result.data;
+          }}
+          onReorder={async (orderedIds) => {
+            const result = await prizeActions.reorderPrizeGroup(orderedIds);
             if (!result.ok) {
               throw new Error(result.error);
             }

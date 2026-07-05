@@ -60,13 +60,13 @@ export async function requireAdmin() {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect("/auth/login");
+    redirect("/admin/login");
   }
 
   const profile = await getCurrentProfile();
 
   if (!profile || profile.role !== "admin") {
-    redirect("/auth/error?error=admin_role_required");
+    redirect("/admin/auth-error?error=admin_role_required");
   }
 
   return {

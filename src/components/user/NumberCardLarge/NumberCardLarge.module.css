@@ -31,3 +31,14 @@
     font-size: 15vw;
   }
 }
+
+@media (min-width: 640px) {
+  .container {
+    width: 269px;
+    height: 269px;
+    border: 9px solid var(--main-color);
+    border-radius: 30px;
+    box-shadow: 4px 4px 0 4px var(--main-color);
+    font-size: 134px;
+  }
+}

@@ -23,7 +23,9 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
   } as React.CSSProperties;
 
   const modalBottom: React.CSSProperties = {
-    bottom: props.height ? `calc(${props.height}px + (${props.height}px / 7))` : "0px",
+    bottom: props.height
+      ? `calc(${props.height}px + clamp(48px, 10vw, 64px))`
+      : "clamp(64px, 16vw, 96px)",
   };
 
   const handleClick = (name: string) => {

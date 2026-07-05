@@ -30,6 +30,32 @@ const showToast = (content: { title: string; description?: string }) => {
   queue.add(content, { timeout: TOAST_TIMEOUT });
 };
 
+const handleLogout = async () => {
+  await dashboardActions.logout();
+};
+
+const handleIncrementReach = async () => {
+  const result = await dashboardActions.incrementReach();
+  if (!result.ok) {
+    console.error(result.error);
+    showToast({ title: "更新失敗", description: "リーチ数の増加に失敗しました。" });
+    return;
+  }
+
+  showToast({ title: "更新完了", description: "リーチ数を 1 増加しました。" });
+};
+
+const handleDecrementReach = async () => {
+  const result = await dashboardActions.decrementReach();
+  if (!result.ok) {
+    console.error(result.error);
+    showToast({ title: "更新失敗", description: "リーチ数の減少に失敗しました。" });
+    return;
+  }
+
+  showToast({ title: "更新完了", description: "リーチ数を 1 減少しました。" });
+};
+
 export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
   const [bingoNumbers, setBingoNumbers] = useState(initialNumbers);
   const dashboardState = useDashboardState({
@@ -83,10 +109,6 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
     showToast({ title: "削除完了", description: `${target} を削除しました。` });
   };
 
-  const handleLogout = async () => {
-    await dashboardActions.logout();
-  };
-
   const handleSurvey = async (isSurveyActive: boolean) => {
     const result = await dashboardActions.saveSurveyState({
       surveyUrl: dashboardState.surveyUrl,
@@ -102,28 +124,6 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       title: isSurveyActive ? "アンケート配信" : "アンケート停止",
       description: isSurveyActive ? "アンケートを送信しました。" : "アンケートを停止しました。",
     });
-  };
-
-  const handleIncrementReach = async () => {
-    const result = await dashboardActions.incrementReach();
-    if (!result.ok) {
-      console.error(result.error);
-      showToast({ title: "更新失敗", description: "リーチ数の増加に失敗しました。" });
-      return;
-    }
-
-    showToast({ title: "更新完了", description: "リーチ数を 1 増加しました。" });
-  };
-
-  const handleDecrementReach = async () => {
-    const result = await dashboardActions.decrementReach();
-    if (!result.ok) {
-      console.error(result.error);
-      showToast({ title: "更新失敗", description: "リーチ数の減少に失敗しました。" });
-      return;
-    }
-
-    showToast({ title: "更新完了", description: "リーチ数を 1 減少しました。" });
   };
 
   const deleteNumberOptions = [...bingoNumbers].reverse().map((bingoNumber) => ({

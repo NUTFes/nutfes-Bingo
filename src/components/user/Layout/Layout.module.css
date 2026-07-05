@@ -18,62 +18,220 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2vw;
+  padding: clamp(16px, 4vw, 24px);
+  gap: clamp(12px, 3vw, 16px);
 }
 
-.reachModal p {
-  font-family: "Noto Sans JP";
-  font-size: 6vw;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
+.reachIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: color-mix(in srgb, var(--main-color) 10%, transparent);
+  border-radius: 50%;
+  width: clamp(64px, 16vw, 80px);
+  height: clamp(64px, 16vw, 80px);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--main-color) 15%, transparent);
+}
+
+.reachModalIcon {
+  width: clamp(32px, 8vw, 40px);
+  height: clamp(32px, 8vw, 40px);
+  color: var(--main-color);
+}
+
+.reachModalTitle {
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: clamp(22px, 6vw, 28px);
+  font-weight: 800;
   color: var(--main-color);
   text-align: center;
-  margin-bottom: 4vw;
+  letter-spacing: 0.02em;
+  margin: 0 0 clamp(8px, 2vw, 16px);
 }
 
-.reachModal button {
-  margin-top: 3vw;
+.reachModal > button:first-of-type {
+  width: clamp(200px, 60vw, 260px);
+  height: clamp(48px, 12vw, 56px);
+  font-size: clamp(16px, 4.5vw, 18px);
+  border-radius: 99px;
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s ease;
 }
 
-.reachModal .reachError {
+.reachModal > button:first-of-type:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--main-color) 25%, transparent);
+}
+
+.cancelButton {
+  background: none;
+  border: none;
+  color: color-mix(in srgb, var(--main-color) 60%, transparent);
+  font-size: clamp(14px, 4vw, 16px);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 99px;
+  font-family: "Noto Sans JP", sans-serif;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--main-color) 5%, transparent);
+  color: var(--main-color);
+}
+
+.cancelButton:active {
+  transform: scale(0.96);
+}
+
+.cancelButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: clamp(20px, 5vw, 24px);
+  height: clamp(20px, 5vw, 24px);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.reachError {
   max-width: min(72vw, 320px);
-  margin: 3vw 0 0;
   color: #b42318;
   font-size: clamp(12px, 3.5vw, 16px);
   font-weight: 700;
   line-height: 1.5;
-}
-
-.settingsModal,
-.settingsModal > div {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  text-align: center;
+  margin: 0;
+  background: color-mix(in srgb, #b42318 10%, transparent);
+  padding: 8px 12px;
+  border-radius: 8px;
 }
 
 .settingsModal {
-  gap: 9vw;
-}
-
-.settingsModal p {
-  font-family: "Noto Sans JP";
-  font-size: 6vw;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
-  color: var(--main-color);
-  text-align: center;
-  margin-bottom: 3.5vw;
-}
-
-.surveyActions {
   display: flex;
-  gap: 12px;
-  margin-top: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(24px, 6vw, 32px);
+  width: 100%;
 }
 
-.resetButton > button {
-  width: auto;
+.settingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 12px);
+}
+
+.headerIcon {
+  width: clamp(24px, 6.5vw, 28px);
+  height: clamp(24px, 6.5vw, 28px);
+  color: var(--main-color);
+  margin-top: -2px;
+}
+
+.modalTitle {
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-size: clamp(24px, 7.5vw, 30px);
+  font-weight: 900;
+  color: var(--main-color);
+  margin: 0;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.settingsList {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0;
+}
+
+.settingsRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: clamp(12px, 4vw, 16px);
+  padding: clamp(16px, 4vw, 20px) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--main-color) 30%, transparent);
+}
+.settingsRow:last-child {
+  border-bottom: none;
+}
+
+.settingsRowLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2.5vw, 12px);
+  width: 100%;
+}
+
+.settingsRowLabel span {
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: clamp(15px, 4.2vw, 18px);
+  font-weight: 700;
+  color: var(--main-color);
+  margin: 0;
+  text-align: center;
+}
+
+.rowIcon {
+  width: clamp(18px, 4.5vw, 22px);
+  height: clamp(18px, 4.5vw, 22px);
+  color: var(--main-color);
+}
+
+.settingsRowControl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.settingsRowControl button {
+  width: clamp(180px, 50vw, 220px);
+  height: clamp(40px, 10vw, 48px);
+  border-width: 2px;
+  border-radius: 99px;
+}
+
+.settingsRowControl button span {
+  font-size: clamp(13px, 3.5vw, 15px);
+}
+
+.settingsRowControl .surveyButton {
+  min-width: 0;
+  width: auto !important;
+  padding: 0 clamp(20px, 6vw, 32px) !important;
+}
+
+@media (min-width: 640px) {
+  .layoutWrapper {
+    width: min(100%, 430px);
+    margin: 0 auto;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.18);
+  }
+
+  .content {
+    padding: 26px 0 40px;
+  }
+
+  .surveyButton {
+    min-width: 260px;
+    padding: 0 24px !important;
+  }
 }

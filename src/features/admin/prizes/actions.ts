@@ -18,20 +18,39 @@ const ALLOWED_PRIZE_IMAGE_TYPES = {
   "image/png": "png",
   "image/webp": "webp",
 } as const;
+const PRIZE_SORT_ORDER_STEP = 1000;
 
-function toPrizeWithImageUrl(prize: {
+type PrizeRecord = {
   id: number;
   name_jp: string;
   name_en: string | null;
   image_path: string | null;
   is_won: boolean;
+  sort_order: number;
   created_at: string;
   updated_at: string;
-}): PrizeWithImageUrl {
+};
+
+function toPrizeWithImageUrl(prize: PrizeRecord): PrizeWithImageUrl {
   return {
     ...prize,
     image_url: resolvePrizeImageUrl(prize.image_path),
   };
+}
+
+async function fetchOrderedPrizes(supabase: AdminSupabaseClient): Promise<PrizeWithImageUrl[]> {
+  const { data, error } = await supabase
+    .from("prizes")
+    .select("*")
+    .order("is_won", { ascending: true })
+    .order("sort_order", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (error) {
+    throw new Error(`景品一覧の取得に失敗しました: ${error.message}`);
+  }
+
+  return data.map(toPrizeWithImageUrl);
 }
 
 async function uploadPrizeImage(supabase: AdminSupabaseClient, file: File) {
@@ -115,6 +134,21 @@ export async function createPrize(formData: FormData) {
     throw new Error("景品名を入力してください。");
   }
 
+  const { data: lastPrize, error: lastPrizeError } = await supabase
+    .from("prizes")
+    .select("sort_order")
+    .eq("is_won", false)
+    .order("sort_order", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (lastPrizeError) {
+    throw new Error(`景品の表示順取得に失敗しました: ${lastPrizeError.message}`);
+  }
+
+  const sortOrder = (lastPrize?.sort_order ?? 0) + PRIZE_SORT_ORDER_STEP;
+
   let imagePath: string | null = null;
   if (file instanceof File && file.size > 0) {
     imagePath = await uploadPrizeImage(supabase, file);
@@ -127,6 +161,7 @@ export async function createPrize(formData: FormData) {
       name_en: typeof nameEn === "string" && nameEn.trim() !== "" ? nameEn.trim() : null,
       image_path: imagePath,
       is_won: false,
+      sort_order: sortOrder,
     })
     .select("*")
     .single();
@@ -216,6 +251,70 @@ export async function togglePrizeWon(id: number, isWon: boolean) {
 
   invalidateTag(BINGO_CACHE_TAGS.prizes);
   return toPrizeWithImageUrl(data);
+}
+
+export async function reorderPrizeGroup(orderedIds: number[]) {
+  const ids = orderedIds.map((id) => Number(id));
+  const uniqueIds = new Set(ids);
+  if (ids.length < 2 || uniqueIds.size !== ids.length || ids.some((id) => !Number.isInteger(id))) {
+    throw new Error("景品の表示順が不正です。");
+  }
+
+  const supabase = await createAdminClient();
+  const { data: requestedPrizes, error: requestedError } = await supabase
+    .from("prizes")
+    .select("id,is_won")
+    .in("id", ids);
+
+  if (requestedError) {
+    throw new Error(`景品の表示順取得に失敗しました: ${requestedError.message}`);
+  }
+
+  if (requestedPrizes.length !== ids.length) {
+    throw new Error("表示順を変更する景品が見つかりません。");
+  }
+
+  const groupIsWon = requestedPrizes[0]?.is_won;
+  if (
+    typeof groupIsWon !== "boolean" ||
+    requestedPrizes.some((prize) => prize.is_won !== groupIsWon)
+  ) {
+    throw new Error("未当選と当選済みをまたいだ並び替えはできません。");
+  }
+
+  const { data: groupPrizes, error: groupError } = await supabase
+    .from("prizes")
+    .select("id")
+    .eq("is_won", groupIsWon)
+    .order("sort_order", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (groupError) {
+    throw new Error(`景品の表示順取得に失敗しました: ${groupError.message}`);
+  }
+
+  const requestedIdSet = new Set(ids);
+  const nextIds = [
+    ...ids,
+    ...groupPrizes.map((prize) => prize.id).filter((id) => !requestedIdSet.has(id)),
+  ];
+
+  const updates = await Promise.all(
+    nextIds.map((id, index) =>
+      supabase
+        .from("prizes")
+        .update({ sort_order: (index + 1) * PRIZE_SORT_ORDER_STEP })
+        .eq("id", id)
+        .eq("is_won", groupIsWon),
+    ),
+  );
+  const failedUpdate = updates.find((result) => result.error);
+  if (failedUpdate?.error) {
+    throw new Error(`景品の表示順更新に失敗しました: ${failedUpdate.error.message}`);
+  }
+
+  invalidateTag(BINGO_CACHE_TAGS.prizes);
+  return fetchOrderedPrizes(supabase);
 }
 
 export async function deletePrize(id: number) {
