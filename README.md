@@ -2,56 +2,117 @@
 
 技大祭当日に使うビンゴアプリです。
 
-## セットアップ
+## 開発環境クイックスタート
+
+### 前提
+
+- Docker Engine / Docker Compose が起動していること
+- `mise` が使えること
+- Node と pnpm は `mise.toml` の `node = "26.2.0"` / `pnpm = "11.2.2"` に固定します
+- アプリの起動とproduction buildはDocker内で行います。ホストで `pnpm dev` / `pnpm build` は実行しません
+
+### 初回セットアップ
 
 ```bash
-pnpm install
-cp .env.example .env
-```
-
-Docker開発だけを使う場合、`.env` のSupabase keyは `mise run dev` がローカルSupabase CLIから取得してComposeへ渡します。
-ホストで `pnpm dev` などを直接実行する場合だけ、`.env` にローカルSupabaseの値を設定してください。
-
-```env
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-SUPABASE_SERVER_URL=http://localhost:54321
-SUPABASE_PUBLISHABLE_KEY=...
-SUPABASE_SECRET_KEY=...
-```
-
-## mise での環境構築・タスク実行（推奨）
-
-このリポジトリには `mise.toml` を用意しており、`node` / `pnpm` のバージョン管理と
-Supabase ローカル運用タスクをまとめて実行できます。
-
-```bash
+mise trust
 mise install
 mise run install
-mise run dev
+cp .env.example .env
+mise run up
 ```
 
-`mise run dev` は次を順番に実行します。
+`mise run up` は次を順番に実行します。
 
 1. `nutfes-bingo-dev` Docker networkを作成する
 2. Supabase CLI local development stackをそのnetworkへ起動する
 3. ローカルanon/service role keyを `supabase status -o env` から取得する
-4. Next.js dev containerを `compose.dev.yml` で起動する
+4. Next.js dev containerを `compose.dev.yml` でbuildして起動する
 
-アプリは `http://localhost:3000` でアクセスします。ブラウザはSupabase APIを直接呼ばず、すべてNext.jsの画面、Server Action、`/api/*` routeを経由します。Docker内のNext.js server-side処理は、同じDocker network上のKong `http://supabase_kong_nutfes-Bingo:8000` へ接続します。
+`.env` のSupabase keyは通常編集しません。Docker開発では `mise run up` がローカルSupabase CLIから取得した値をComposeへ渡します。ローカルで上書きしたい値がある場合だけ `.env` に設定してください。
 
-開発環境は本番self-hosted stackを使いません。`supabase start` で起動するCLI local stackだけを使います。
+### 起動後に見る場所
 
-主な mise タスク:
+- User home: `http://localhost:3000`
+- User screen: `http://localhost:3000/screen`
+- Prize list: `http://localhost:3000/prizes`
+- Admin login: `http://localhost:3000/admin/login`
+- Admin dashboard: `http://localhost:3000/admin`
+- Health check: `http://localhost:3000/api/health`
+- Readiness check: `http://localhost:3000/api/ready`
+
+Adminアカウントはself-service signupでは作成しません。開発環境ではローカルSupabase起動後にCLIで作成します。
 
 ```bash
-mise run dev
-mise run dev:down
-mise run dev:network
-mise run supabase:start
-mise run supabase:status
-mise run supabase:db-reset
-mise run supabase:typegen
-mise run supabase:stop
+# 12文字以上のパスワードを入力して保存します
+nano /tmp/nutfes-local-admin-password
+chmod 0600 /tmp/nutfes-local-admin-password
+
+ADMIN_EMAIL=admin@example.com \
+ADMIN_PASSWORD_FILE=/tmp/nutfes-local-admin-password \
+  mise run admin:bootstrap
+
+mise run admin:list
+mise run admin:verify
+rm -f /tmp/nutfes-local-admin-password
+```
+
+### 日常操作
+
+```bash
+mise run up        # 開発stackを起動
+mise run ps        # app containerとSupabase local statusを確認
+mise run logs      # app container logを追う
+mise run shell     # app containerへ入る
+mise run sync      # package変更後、起動中container内の依存関係を同期
+mise run down      # app containerとSupabase local stackを停止
+```
+
+品質チェック:
+
+```bash
+mise run check     # pnpm fmt:check + pnpm lint + pnpm typecheck
+pnpm doctor        # React / Next.js変更時
+pnpm knip          # 依存関係、exports、entry point、削除変更時
+```
+
+production buildの確認は、開発container起動中に実行します。
+
+```bash
+mise run build
+```
+
+このリポジトリには自動テストスイートがありません。動作確認は該当画面/APIの手動確認、`/api/health`、`/api/ready`、上記の静的チェックで行います。
+
+### ローカルSupabase・DB・型生成
+
+開発環境は本番self-hosted stackを使いません。`supabase start` で起動するCLI local stackだけを使います。ブラウザはSupabase APIを直接呼ばず、すべてNext.jsの画面、Server Action、`/api/*` routeを経由します。Docker内のNext.js server-side処理は、同じDocker network上のKong `http://supabase_kong_nutfes-Bingo:8000` へ接続します。
+
+defaultで起動するSupabase local serviceはAuth、Kong、PostgREST、Storage、PostgreSQLです。コードベースで未使用のRealtime、Mailpit、Edge Runtime、Logflare、Vector、imgproxy、Supavisorはdefault起動しません。Studioとpostgres-metaも通常起動しません。
+
+```bash
+mise run db-status
+mise run db-reset
+mise run typegen
+mise run db-down
+```
+
+StudioでAuth user、DB、Storageを確認したい場合だけ、opt-inで起動します。`mise run db-status` にStudio URLが表示されます。
+
+```bash
+mise run up:studio
+mise run db-status
+```
+
+ローカルDBもproductionと同じPostgreSQL 17へ固定しています。以前の設定で別major versionのlocal volumeを作成済みの場合や、CLI stackのnetworkを変更したい場合は、必要なlocal dataを退避したうえで次を一度実行して作り直します。
+
+```bash
+pnpm exec supabase stop --no-backup
+mise run up
+```
+
+### 本番運用タスクの入口
+
+```bash
 mise run prod:env:init
 mise run prod:preflight
 mise run prod:config
@@ -65,29 +126,6 @@ mise run prod:admin:reset-password
 mise run prod:admin:list
 mise run prod:admin:verify
 ```
-
-ローカルDBもproductionと同じPostgreSQL 17へ固定しています。以前の設定で別major versionのlocal volumeを作成済みの場合や、CLI stackのnetworkを変更したい場合は、必要なlocal dataを退避したうえで次を一度実行して作り直します。
-
-```bash
-pnpm exec supabase stop --no-backup
-mise run dev
-```
-
-## Docker Compose のローカル開発
-
-このリポジトリのDocker開発環境はCaddyを使いません。Next.jsは `http://localhost:3000` で起動します。Supabase CLI local stackはCLIの標準どおりローカル開発用portを持ちますが、アプリのブラウザ実装はそのURLを使いません。Next.js containerからSupabaseへは固定Docker network `nutfes-bingo-dev` 上のKongへDocker DNSで到達します。
-
-```bash
-mise run dev
-```
-
-停止:
-
-```bash
-mise run dev:down
-```
-
-defaultで起動するSupabase local serviceはAuth、Kong、PostgREST、Storage、PostgreSQLです。コードベースで未使用のRealtime、Studio、Inbucket、Edge Runtime/Functions、Analytics、Vector、imgproxy、postgres-metaはdefault起動しません。
 
 ## Proxmox LXC + Cloudflared 本番Docker + self-hosted Supabase
 
@@ -227,8 +265,8 @@ mise run prod:migrate:dry-run
 local schemaから型を再生成します。
 
 ```bash
-mise run supabase:db-reset
-mise run supabase:typegen
+mise run db-reset
+mise run typegen
 git diff -- src/types/database.types.ts
 ```
 
@@ -276,17 +314,18 @@ Docker imageは`latest`を使わず、Compose内の固定tagまたはupstream co
 ## Admin 認証の運用方針
 
 - メールサーバーは使用しないため、確認メール経由の運用やパスワードリセット/更新機能は提供しません。
-- 本番ではGoTrueとアプリ画面の両方でサインアップを無効にします。`DISABLE_SIGNUP=true` と `ENABLE_ADMIN_SIGNUP=0` を維持します。
+- self-service signupは開発・本番とも提供しません。Admin作成はCLIだけに限定し、本番Supabase Authは `DISABLE_SIGNUP=true` を維持します。
 - 初期AdminはSupabase Auth Admin APIでAuth userを作成し、PostgREST公開対象外の `private.bootstrap_initial_admin` database functionで `profiles.role = 'admin'` にします。
-- `auth.users` へSQLで直接insertしません。Supabase Studioも通常運用では起動しません。
+- `auth.users` へSQLで直接insertしません。Supabase Studioも本番の通常運用では起動しません。
 
 この判断は `docs/adr/ADR-0003-admin-bootstrap-with-auth-admin-api.md` に記録しています。
 
 初期Admin作成は、`prod:deploy` が成功したあとにLXC上で実行します。パスワードはファイルから渡すか、未指定なら対話入力します。ファイルを使う場合はmode 0600にしてください。
 
 ```bash
-install -m 0600 /dev/null /tmp/nutfes-admin-password
-$EDITOR /tmp/nutfes-admin-password
+# 12文字以上のパスワードを入力して保存します
+nano /tmp/nutfes-admin-password
+chmod 0600 /tmp/nutfes-admin-password
 
 ADMIN_EMAIL=admin@example.com \
 ADMIN_PASSWORD_FILE=/tmp/nutfes-admin-password \
@@ -306,8 +345,9 @@ mise run prod:admin:verify
 メールによるパスワードリセットは使いません。Adminパスワードを再設定する場合は、対象emailと確認用環境変数を明示してAuth Admin APIから更新します。
 
 ```bash
-install -m 0600 /dev/null /tmp/nutfes-admin-password
-$EDITOR /tmp/nutfes-admin-password
+# 12文字以上のパスワードを入力して保存します
+nano /tmp/nutfes-admin-password
+chmod 0600 /tmp/nutfes-admin-password
 
 ADMIN_EMAIL=admin@example.com \
 ADMIN_PASSWORD_FILE=/tmp/nutfes-admin-password \
@@ -317,14 +357,13 @@ CONFIRM_RESET_ADMIN_PASSWORD=reset-nutfes-bingo-admin-password \
 rm -f /tmp/nutfes-admin-password
 ```
 
-## pnpm コマンド
+## コマンド方針
 
-```bash
-pnpm dev
-pnpm lint
-pnpm build
-pnpm start
-```
+- package managerはpnpmだけを使います。依存関係の追加・削除は `mise run add <pkg>`、`mise run add -D <pkg>`、`mise run remove <pkg>` を使います
+- アプリ起動は `mise run up`、停止は `mise run down` です
+- 静的チェックは `mise run check` です
+- production build確認は、開発container起動後に `mise run build` で実行します
+- `.env`、`.env.production`、`.env*.local` はcommitしません
 
 ## Branch 命名規則
 

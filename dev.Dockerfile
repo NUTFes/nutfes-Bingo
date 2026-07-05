@@ -5,7 +5,7 @@ FROM node:26.2.0-alpine
 WORKDIR /app
 RUN npm i -g pnpm@11.2.2
 
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
 
 RUN pnpm i --frozen-lockfile --ignore-scripts --prefer-offline
 

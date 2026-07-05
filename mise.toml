@@ -10,12 +10,12 @@ description = "Install dependencies"
 run = "pnpm install"
 
 [tasks.up]
-alias = ["dev"]
 description = "Start Docker development stack with Supabase CLI local services"
 run = '''
 set -eu
 
-mise run supabase:start
+db_up_task="${NUTFES_DB_UP_TASK:-db-up}"
+mise run "$db_up_task"
 
 status_env=$(mktemp)
 trap 'rm -f "$status_env"' EXIT HUP INT TERM
@@ -27,19 +27,40 @@ set +a
 
 export SUPABASE_DOCKER_NETWORK="${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}"
 export NEXT_PUBLIC_SITE_URL="${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
-export SUPABASE_PUBLISHABLE_KEY="${SUPABASE_PUBLISHABLE_KEY:-${PUBLISHABLE_KEY:-${ANON_KEY:?ANON_KEY was not returned by supabase status}}}"
-export SUPABASE_SERVER_URL="${SUPABASE_SERVER_URL:-http://supabase_kong_nutfes-Bingo:8000}"
+
+local_supabase_url="http://supabase_kong_nutfes-Bingo:8000"
+local_publishable_key="${PUBLISHABLE_KEY:-${ANON_KEY:?ANON_KEY was not returned by supabase status}}"
 local_service_role_key="${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY was not returned by supabase status}"
-export SUPABASE_SECRET_KEY="${SUPABASE_SECRET_KEY:-$local_service_role_key}"
-export SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-$local_service_role_key}"
-export NUTFES_PUBLIC_ACTION_HASH_SALT="${NUTFES_PUBLIC_ACTION_HASH_SALT:-local-dev-public-action-salt}"
-export ENABLE_ADMIN_SIGNUP="${ENABLE_ADMIN_SIGNUP:-1}"
+
+case "${SUPABASE_SERVER_URL:-}" in
+  ""|"http://localhost:54321") export SUPABASE_SERVER_URL="$local_supabase_url" ;;
+  *) export SUPABASE_SERVER_URL ;;
+esac
+case "${SUPABASE_PUBLISHABLE_KEY:-}" in
+  ""|"your-publishable-or-anon-key") export SUPABASE_PUBLISHABLE_KEY="$local_publishable_key" ;;
+  *) export SUPABASE_PUBLISHABLE_KEY ;;
+esac
+case "${SUPABASE_SECRET_KEY:-}" in
+  ""|"your-service-role-or-secret-key") export SUPABASE_SECRET_KEY="$local_service_role_key" ;;
+  *) export SUPABASE_SECRET_KEY ;;
+esac
+case "${SUPABASE_SERVICE_ROLE_KEY:-}" in
+  ""|"your-service-role-or-secret-key") export SUPABASE_SERVICE_ROLE_KEY="$local_service_role_key" ;;
+  *) export SUPABASE_SERVICE_ROLE_KEY ;;
+esac
+case "${NUTFES_PUBLIC_ACTION_HASH_SALT:-}" in
+  ""|"replace-with-random-secret") export NUTFES_PUBLIC_ACTION_HASH_SALT="local-dev-public-action-salt" ;;
+  *) export NUTFES_PUBLIC_ACTION_HASH_SALT ;;
+esac
 
 docker compose -f compose.dev.yml up --build --remove-orphans
 '''
 
+[tasks."up:studio"]
+description = "Start Docker development stack with local Supabase Studio"
+run = "NUTFES_DB_UP_TASK=db-up:studio mise run up"
+
 [tasks."down"]
-alias = ["dev:down"]
 description = "Stop Docker development stack and local Supabase services"
 run = '''
 set -eu
@@ -47,8 +68,23 @@ docker compose -f compose.dev.yml down --remove-orphans
 pnpm exec supabase stop
 '''
 
+[tasks.logs]
+description = "Follow development app logs"
+run = "docker compose -f compose.dev.yml logs -f app"
+
+[tasks.ps]
+description = "Show development app and Supabase status"
+run = '''
+set -eu
+docker compose -f compose.dev.yml ps
+pnpm exec supabase status -o pretty
+'''
+
+[tasks.shell]
+description = "Open a shell in the running development app container"
+run = "docker compose -f compose.dev.yml exec app sh"
+
 [tasks."network"]
-alias = ["dev:network"]
 description = "Create the shared Docker network for local Supabase and the app"
 run = '''
 set -eu
@@ -61,15 +97,14 @@ fi
 '''
 
 [tasks.check]
-description = "Run oxc"
-run = "pnpm fmt && pnpm lint"
+description = "Run format, lint, and TypeScript checks"
+run = "pnpm check"
 
 [tasks.build]
-description = "Run production build"
-run = "pnpm build"
+description = "Run production build inside the running development container"
+run = "docker compose -f compose.dev.yml exec app pnpm build"
 
 [tasks."add"]
-alias = ["install"]
 description = "Add dependency with pnpm (use -D for devDependency)"
 usage = '''
 arg "<package>" help="Package name to add"
@@ -84,7 +119,6 @@ fi
 '''
 
 [tasks."remove"]
-alias = ["rm"]
 description = "Remove dependency with pnpm"
 usage = 'arg "<package>" help="Package name to remove"'
 run = 'pnpm remove "${usage_package?}"'
@@ -93,39 +127,62 @@ run = 'pnpm remove "${usage_package?}"'
 description = "Sync dependencies inside running dev container"
 run = "docker compose -f compose.dev.yml exec app pnpm install"
 
-[tasks."supabase:start"]
+[tasks."db-up"]
 description = "Start minimal local Supabase stack on the shared Docker network"
 run = '''
 set -eu
 mise run network
 pnpm exec supabase start \
   --network-id "${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}" \
-  --exclude realtime,studio,mailpit,edge-runtime,logflare,vector,imgproxy,postgres-meta,supavisor
+  --exclude logflare,realtime,studio,postgres-meta,mailpit,edge-runtime,vector,imgproxy,supavisor
 '''
 
-[tasks."supabase:stop"]
+[tasks."db-up:studio"]
+description = "Start local Supabase stack with Studio and database inspection tools"
+run = '''
+set -eu
+mise run network
+pnpm exec supabase start \
+  --network-id "${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}" \
+  --exclude logflare,realtime,mailpit,edge-runtime,vector,imgproxy,supavisor
+'''
+
+[tasks."db-down"]
 description = "Stop local Supabase stack"
 run = "pnpm exec supabase stop"
 
-[tasks."supabase:status"]
+[tasks."db-status"]
 description = "Show local Supabase status"
 run = 'pnpm exec supabase status -o pretty'
 
-[tasks."supabase:db-reset"]
+[tasks."db-reset"]
 description = "Reset local Supabase database"
 run = "pnpm exec supabase db reset"
 
-[tasks."supabase:typegen"]
+[tasks."typegen"]
 description = "Generate DB types from local Supabase schema"
 run = "pnpm exec supabase gen types typescript --local --schema public > src/types/database.types.ts"
+
+[tasks."admin:bootstrap"]
+description = "Create or update a local admin account"
+run = "node scripts/local-admin.mjs bootstrap"
+
+[tasks."admin:reset-password"]
+description = "Reset an existing local admin password"
+run = "node scripts/local-admin.mjs reset-password"
+
+[tasks."admin:list"]
+description = "List local admin accounts"
+run = "node scripts/local-admin.mjs list"
+
+[tasks."admin:verify"]
+description = "Verify that at least one local admin account exists"
+run = "node scripts/local-admin.mjs verify"
 
 [tasks."prod:env:init"]
 description = "Create .env.production with generated self-hosted Supabase secrets"
 run = "./infra/scripts/init-production-env.sh"
 
-[tasks."prod:up"]
-description = "Alias for prod:deploy"
-run = "mise run prod:deploy"
 
 [tasks."prod:deploy"]
 description = "Preflight, deploy, and smoke test the Proxmox LXC + Cloudflared production stack"
