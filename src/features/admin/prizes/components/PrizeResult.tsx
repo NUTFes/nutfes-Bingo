@@ -1,9 +1,23 @@
 "use client";
 
 import Image from "next/image";
-import React, { type DragEvent, useMemo, useRef, useState } from "react";
-import { GridLayout, GridList, GridListItem, Virtualizer } from "react-aria-components";
-import { IoChevronDown, IoChevronUp, IoClose, IoCreateOutline } from "react-icons/io5";
+import React, { type Key, useMemo, useReducer } from "react";
+import { LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
+import {
+  DropIndicator,
+  GridLayout,
+  GridList,
+  GridListItem,
+  Virtualizer,
+  useDragAndDrop,
+} from "react-aria-components";
+import {
+  IoChevronDown,
+  IoChevronUp,
+  IoClose,
+  IoCreateOutline,
+  IoReorderThreeOutline,
+} from "react-icons/io5";
 
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { Button } from "@/components/ui/Button";
@@ -43,6 +57,75 @@ const comparePrizeOrder = (a: PrizeWithImageUrl, b: PrizeWithImageUrl) => {
   return a.sort_order - b.sort_order || a.id - b.id;
 };
 
+const OPTIMISTIC_PRIZE_SORT_ORDER_STEP = 1000;
+
+function toNumericKeys(keys: Set<Key>): number[] {
+  const ids: number[] = [];
+
+  for (const key of keys) {
+    const id = Number(key);
+    if (Number.isFinite(id) && Number.isInteger(id)) {
+      ids.push(id);
+    }
+  }
+
+  return ids;
+}
+
+function getReorderedIds(
+  currentIds: number[],
+  movedIds: number[],
+  targetKey: Key,
+  dropPosition: "before" | "after",
+): number[] | null {
+  if (movedIds.length === 0) {
+    return null;
+  }
+
+  const currentIdSet = new Set(currentIds);
+  if (movedIds.some((id) => !currentIdSet.has(id))) {
+    return null;
+  }
+
+  const targetId = Number(targetKey);
+  if (!Number.isFinite(targetId) || !Number.isInteger(targetId) || !currentIdSet.has(targetId)) {
+    return null;
+  }
+
+  const movedIdSet = new Set(movedIds);
+  const remainingIds = currentIds.filter((id) => !movedIdSet.has(id));
+  const targetIndex = remainingIds.indexOf(targetId);
+  if (targetIndex === -1) {
+    return null;
+  }
+
+  const insertIndex = dropPosition === "after" ? targetIndex + 1 : targetIndex;
+  const nextIds = [
+    ...remainingIds.slice(0, insertIndex),
+    ...movedIds,
+    ...remainingIds.slice(insertIndex),
+  ];
+
+  return nextIds.length === currentIds.length &&
+    nextIds.every((id, index) => id === currentIds[index])
+    ? null
+    : nextIds;
+}
+
+function applyOptimisticGroupOrder(
+  prizes: PrizeWithImageUrl[],
+  orderedIds: number[],
+): PrizeWithImageUrl[] {
+  const sortOrderById = new Map(
+    orderedIds.map((id, index) => [id, (index + 1) * OPTIMISTIC_PRIZE_SORT_ORDER_STEP]),
+  );
+
+  return prizes.map((prize) => {
+    const sortOrder = sortOrderById.get(prize.id);
+    return sortOrder === undefined ? prize : { ...prize, sort_order: sortOrder };
+  });
+}
+
 type MoveDirection = "up" | "down";
 
 interface PrizeGridItemProps {
@@ -51,16 +134,6 @@ interface PrizeGridItemProps {
     showOverlay: boolean;
     showToggle: boolean;
   };
-  reorder: {
-    canDrag: boolean;
-    isDragging: boolean;
-  } | null;
-  onDragStart: (event: DragEvent<HTMLDivElement>, prize: PrizeWithImageUrl) => void;
-  onDragOver: (event: DragEvent<HTMLDivElement>, prize: PrizeWithImageUrl) => void;
-  onDrop: (event: DragEvent<HTMLDivElement>, prize: PrizeWithImageUrl) => void;
-  onDragEnd: () => void;
-  onMove: (prize: PrizeWithImageUrl, direction: MoveDirection) => void;
-  isMoveDisabled: (prize: PrizeWithImageUrl, direction: MoveDirection) => boolean;
   onEditClick: (prize: PrizeWithImageUrl) => void;
   onDeleteClick: (prize: PrizeWithImageUrl) => void;
   onToggleChange: (id: number, isWon: boolean) => void;
@@ -69,72 +142,35 @@ interface PrizeGridItemProps {
 const PrizeGridItem = ({
   prize,
   display,
-  reorder,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
-  onMove,
-  isMoveDisabled,
   onEditClick,
   onDeleteClick,
   onToggleChange,
 }: PrizeGridItemProps) => (
   <GridListItem id={prize.id} textValue={prize.name_jp}>
     <div
-      className={`group relative flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-3 text-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-md sm:p-4 ${
-        reorder?.canDrag ? "cursor-grab active:cursor-grabbing" : ""
-      } ${reorder?.isDragging ? "opacity-60 ring-2 ring-primary" : ""}`}
+      className="group relative flex h-full flex-col gap-3 rounded-lg border border-border bg-card p-3 text-foreground transition-colors hover:border-primary/50 sm:p-4"
       id={`prize-${prize.id}`}
-      draggable={reorder?.canDrag ?? false}
-      onDragStart={(event) => onDragStart(event, prize)}
-      onDragOver={(event) => onDragOver(event, prize)}
-      onDrop={(event) => onDrop(event, prize)}
-      onDragEnd={onDragEnd}
     >
-      {reorder && (
-        <div className="absolute left-2 top-2 z-10 flex gap-1">
-          <Button
-            variant="secondary"
-            aria-label={`${prize.name_jp}を上へ移動`}
-            className="size-8 p-0"
-            isDisabled={isMoveDisabled(prize, "up")}
-            onPress={() => onMove(prize, "up")}
-          >
-            <IoChevronUp />
-          </Button>
-          <Button
-            variant="secondary"
-            aria-label={`${prize.name_jp}を下へ移動`}
-            className="size-8 p-0"
-            isDisabled={isMoveDisabled(prize, "down")}
-            onPress={() => onMove(prize, "down")}
-          >
-            <IoChevronDown />
-          </Button>
-        </div>
-      )}
-
       <div className="absolute right-2 top-2 z-10 flex gap-2">
         <Button
           variant="secondary"
-          aria-label="edit"
-          className="size-9 p-0"
+          aria-label={`${prize.name_jp}を編集`}
+          className="size-11 p-0"
           onPress={() => onEditClick(prize)}
         >
-          <IoCreateOutline />
+          <IoCreateOutline className="size-5" />
         </Button>
         <Button
           variant="secondary"
-          aria-label="delete"
-          className="size-9 p-0"
+          aria-label={`${prize.name_jp}を削除`}
+          className="size-11 p-0"
           onPress={() => onDeleteClick(prize)}
         >
-          <IoClose />
+          <IoClose className="size-5" />
         </Button>
       </div>
 
-      <div className="relative aspect-4/3 overflow-hidden rounded-2xl border border-border bg-background">
+      <div className="relative aspect-4/3 overflow-hidden rounded-md bg-secondary/30">
         {prize.image_url ? (
           <Image
             src={prize.image_url}
@@ -146,10 +182,10 @@ const PrizeGridItem = ({
           />
         ) : null}
         {display.showOverlay && prize.is_won && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/70">
-            <p className="m-0 inline-flex w-4/5 items-center justify-center rounded-full bg-amber-400 px-3 py-2 text-base font-semibold text-amber-900">
+          <div className="absolute inset-0 flex bg-background/50 p-2">
+            <span className="inline-flex h-fit items-center rounded bg-foreground px-2 py-1 text-xs font-medium text-background">
               当選済み
-            </p>
+            </span>
           </div>
         )}
       </div>
@@ -167,7 +203,7 @@ const PrizeGridItem = ({
               isSelected={prize.is_won}
               onChange={(isSelected) => onToggleChange(prize.id, isSelected)}
             >
-              <span className="text-xs font-medium text-foreground">
+              <span className="text-sm text-foreground">
                 {prize.is_won ? "当選済み" : "未当選"}
               </span>
             </Switch>
@@ -178,38 +214,312 @@ const PrizeGridItem = ({
   </GridListItem>
 );
 
-const PrizeResult = ({
+interface PrizeReorderGroup {
+  key: "unwon" | "won";
+  title: string;
+  description: string;
+  prizes: PrizeWithImageUrl[];
+}
+
+interface PrizeReorderSectionProps {
+  group: PrizeReorderGroup;
+  canDrag: boolean;
+  movingId: number | null;
+  onReorderGroup: (orderedIds: number[], movedId: number) => void;
+  onMove: (prize: PrizeWithImageUrl, direction: MoveDirection) => void;
+  isMoveDisabled: (prize: PrizeWithImageUrl, direction: MoveDirection) => boolean;
+  shouldReduceMotion: boolean;
+}
+
+const PrizeReorderSection = ({
+  group,
+  canDrag,
+  movingId,
+  onReorderGroup,
+  onMove,
+  isMoveDisabled,
+  shouldReduceMotion,
+}: PrizeReorderSectionProps) => {
+  const groupIds = useMemo(() => group.prizes.map((prize) => prize.id), [group.prizes]);
+  const { dragAndDropHooks } = useDragAndDrop<PrizeWithImageUrl>({
+    isDisabled: !canDrag,
+    getItems(_keys, items) {
+      return items.map((item) => ({
+        "text/plain": item.name_jp,
+        "application/x-nutfes-bingo-prize-id": String(item.id),
+      }));
+    },
+    onReorder(event) {
+      if (event.target.dropPosition !== "before" && event.target.dropPosition !== "after") {
+        return;
+      }
+
+      const movedIds = toNumericKeys(event.keys);
+      const movedId = movedIds[0];
+      if (movedId === undefined) {
+        return;
+      }
+
+      const nextIds = getReorderedIds(
+        groupIds,
+        movedIds,
+        event.target.key,
+        event.target.dropPosition,
+      );
+      if (!nextIds) {
+        return;
+      }
+
+      onReorderGroup(nextIds, movedId);
+    },
+    renderDropIndicator(target) {
+      return (
+        <DropIndicator
+          target={target}
+          className="mx-2 my-1 h-1 rounded-full bg-transparent outline-none data-[drop-target]:bg-primary"
+        />
+      );
+    },
+  });
+
+  return (
+    <section className="space-y-4">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold tracking-tight text-foreground">{group.title}</h3>
+          <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+            {group.prizes.length} 件
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground">{group.description}</p>
+      </div>
+
+      {group.prizes.length > 0 ? (
+        <GridList
+          aria-label={`${group.title}の並び替え`}
+          items={group.prizes}
+          dragAndDropHooks={dragAndDropHooks}
+          className="space-y-2 outline-none"
+        >
+          {(prize) => (
+            <PrizeReorderRow
+              prize={prize}
+              movingId={movingId}
+              onMove={onMove}
+              isMoveDisabled={isMoveDisabled}
+              shouldReduceMotion={shouldReduceMotion}
+            />
+          )}
+        </GridList>
+      ) : (
+        <div className="flex items-center justify-center rounded-lg border border-dashed border-border bg-card/30 py-8">
+          <p className="text-sm text-muted-foreground">該当する景品はありません。</p>
+        </div>
+      )}
+    </section>
+  );
+};
+
+interface PrizeReorderRowProps {
+  prize: PrizeWithImageUrl;
+  movingId: number | null;
+  onMove: (prize: PrizeWithImageUrl, direction: MoveDirection) => void;
+  isMoveDisabled: (prize: PrizeWithImageUrl, direction: MoveDirection) => boolean;
+  shouldReduceMotion: boolean;
+}
+
+const PrizeReorderRow = ({
+  prize,
+  movingId,
+  onMove,
+  isMoveDisabled,
+  shouldReduceMotion,
+}: PrizeReorderRowProps) => {
+  const isBusy = movingId === prize.id;
+
+  return (
+    <GridListItem id={prize.id} textValue={prize.name_jp} className="outline-none">
+      {({ allowsDragging }) => (
+        <m.div
+          layout="position"
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 40,
+            duration: shouldReduceMotion ? 0 : undefined,
+          }}
+          className={`group flex items-center gap-3 rounded-md border border-border bg-card p-2 text-foreground transition-colors sm:gap-4 sm:p-3 ${
+            isBusy
+              ? "scale-[0.98] opacity-50 ring-2 ring-primary ring-offset-2 ring-offset-background"
+              : "hover:border-primary/30 hover:bg-muted/30"
+          }`}
+          aria-busy={isBusy}
+        >
+          <Button
+            slot="drag"
+            variant="quiet"
+            aria-label={`${prize.name_jp}をドラッグして並び替え`}
+            isDisabled={!allowsDragging || isBusy}
+            className={`flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              allowsDragging
+                ? "cursor-grab active:cursor-grabbing"
+                : "cursor-not-allowed opacity-50"
+            }`}
+          >
+            <IoReorderThreeOutline className="size-5" aria-hidden />
+          </Button>
+
+          <div className="relative size-12 shrink-0 overflow-hidden rounded border border-border/50 bg-secondary/30 sm:size-14">
+            {prize.image_url ? (
+              <Image
+                src={prize.image_url}
+                alt={prize.name_jp}
+                fill
+                sizes="56px"
+                className="bg-white object-contain p-1"
+                draggable={false}
+              />
+            ) : (
+              <span className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
+                画像なし
+              </span>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-foreground sm:text-base">
+              {prize.name_jp}
+            </p>
+          </div>
+
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 pr-1">
+            <Button
+              variant="secondary"
+              aria-label={`${prize.name_jp}を上へ移動`}
+              isDisabled={isMoveDisabled(prize, "up")}
+              onPress={() => onMove(prize, "up")}
+              className="size-9 p-0 sm:size-10"
+            >
+              <IoChevronUp className="size-4" aria-hidden />
+            </Button>
+            <Button
+              variant="secondary"
+              aria-label={`${prize.name_jp}を下へ移動`}
+              isDisabled={isMoveDisabled(prize, "down")}
+              onPress={() => onMove(prize, "down")}
+              className="size-9 p-0 sm:size-10"
+            >
+              <IoChevronDown className="size-4" aria-hidden />
+            </Button>
+          </div>
+        </m.div>
+      )}
+    </GridListItem>
+  );
+};
+
+interface PrizeUiState {
+  isDeleteOpen: boolean;
+  isEditOpen: boolean;
+  selected: PrizeWithImageUrl | null;
+  movingId: number | null;
+}
+
+type PrizeUiAction =
+  | { type: "openDelete"; prize: PrizeWithImageUrl }
+  | { type: "openEdit"; prize: PrizeWithImageUrl }
+  | { type: "setDeleteOpen"; isOpen: boolean }
+  | { type: "setEditOpen"; isOpen: boolean }
+  | { type: "startMove"; id: number }
+  | { type: "finishMove" };
+
+const INITIAL_PRIZE_UI_STATE: PrizeUiState = {
+  isDeleteOpen: false,
+  isEditOpen: false,
+  selected: null,
+  movingId: null,
+};
+
+function prizeUiReducer(state: PrizeUiState, action: PrizeUiAction): PrizeUiState {
+  switch (action.type) {
+    case "openDelete":
+      return { ...state, isDeleteOpen: true, selected: action.prize };
+    case "openEdit":
+      return { ...state, isEditOpen: true, selected: action.prize };
+    case "setDeleteOpen":
+      return {
+        ...state,
+        isDeleteOpen: action.isOpen,
+        selected: action.isOpen ? state.selected : null,
+      };
+    case "setEditOpen":
+      return {
+        ...state,
+        isEditOpen: action.isOpen,
+        selected: action.isOpen ? state.selected : null,
+      };
+    case "startMove":
+      return { ...state, movingId: action.id };
+    case "finishMove":
+      return { ...state, movingId: null };
+  }
+}
+
+function usePrizeResultController({
   prizeResult,
   setBingoPrize,
-  showOverlay,
-  showToggle,
   canReorder = false,
   onToggle,
   onReorder,
   onDelete,
   onUpdate,
-}: PrizeResultProps) => {
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selected, setSelected] = useState<PrizeWithImageUrl | null>(null);
-  const [movingId, setMovingId] = useState<number | null>(null);
-  const [draggedPrizeId, setDraggedPrizeId] = useState<number | null>(null);
-  const draggedPrizeIdRef = useRef<number | null>(null);
+}: PrizeResultProps) {
+  const [state, dispatch] = useReducer(prizeUiReducer, INITIAL_PRIZE_UI_STATE);
 
   const sortedPrizes = useMemo(() => prizeResult.toSorted(comparePrizeOrder), [prizeResult]);
 
-  const { unwonPrizeIds, wonPrizeIds } = useMemo(() => {
+  const { unwonPrizes, wonPrizes, unwonPrizeIds, wonPrizeIds } = useMemo(() => {
+    const unwon: PrizeWithImageUrl[] = [];
+    const won: PrizeWithImageUrl[] = [];
     const unwonIds: number[] = [];
     const wonIds: number[] = [];
+
     for (const prize of sortedPrizes) {
       if (prize.is_won) {
+        won.push(prize);
         wonIds.push(prize.id);
       } else {
+        unwon.push(prize);
         unwonIds.push(prize.id);
       }
     }
-    return { unwonPrizeIds: unwonIds, wonPrizeIds: wonIds };
+
+    return {
+      unwonPrizes: unwon,
+      wonPrizes: won,
+      unwonPrizeIds: unwonIds,
+      wonPrizeIds: wonIds,
+    };
   }, [sortedPrizes]);
+
+  const prizeGroups = useMemo<PrizeReorderGroup[]>(
+    () => [
+      {
+        key: "unwon",
+        title: "未当選",
+        description: "公開ページで先に表示",
+        prizes: unwonPrizes,
+      },
+      {
+        key: "won",
+        title: "当選済み",
+        description: "公開ページで後に表示",
+        prizes: wonPrizes,
+      },
+    ],
+    [unwonPrizes, wonPrizes],
+  );
+
   const prizePositions = useMemo(() => {
     const positions = new Map<number, { ids: number[]; index: number }>();
     [unwonPrizeIds, wonPrizeIds].forEach((ids) => {
@@ -220,28 +530,41 @@ const PrizeResult = ({
     return positions;
   }, [unwonPrizeIds, wonPrizeIds]);
 
+  const isReordering = canReorder && Boolean(onReorder);
+
   const applyReorder = async (orderedIds: number[], movedId: number) => {
     if (!onReorder) {
       return;
     }
 
+    let rollbackPrizes: PrizeWithImageUrl[] | null = null;
+
     try {
-      setMovingId(movedId);
+      dispatch({ type: "startMove", id: movedId });
+      setBingoPrize((prev) => {
+        rollbackPrizes = prev;
+        return applyOptimisticGroupOrder(prev, orderedIds);
+      });
+
       const reordered = await onReorder(orderedIds);
       setBingoPrize(reordered);
-      showToast({ title: "並び替え完了", description: "景品の表示順を更新しました。" });
+      showToast({ title: "順番を保存しました" });
     } catch (error) {
       console.error(error);
-      showToast({ title: "並び替え失敗", description: "景品の表示順更新に失敗しました。" });
+      if (rollbackPrizes) {
+        setBingoPrize(rollbackPrizes);
+      }
+      showToast({
+        title: "並び替え失敗",
+        description: "元の順番に戻しました。再度お試しください。",
+      });
     } finally {
-      setMovingId(null);
-      setDraggedPrizeId(null);
-      draggedPrizeIdRef.current = null;
+      dispatch({ type: "finishMove" });
     }
   };
 
-  const handleMove = async (prize: PrizeWithImageUrl, direction: "up" | "down") => {
-    if (!canReorder || !onReorder || movingId !== null) {
+  const handleMove = async (prize: PrizeWithImageUrl, direction: MoveDirection) => {
+    if (!isReordering || state.movingId !== null) {
       return;
     }
 
@@ -261,77 +584,20 @@ const PrizeResult = ({
     await applyReorder(nextIds, prize.id);
   };
 
-  const isMoveDisabled = (prize: PrizeWithImageUrl, direction: "up" | "down") => {
+  const isMoveDisabled = (prize: PrizeWithImageUrl, direction: MoveDirection) => {
     const position = prizePositions.get(prize.id);
-    if (!canReorder || !onReorder || movingId !== null || !position) {
+    if (!isReordering || state.movingId !== null || !position) {
       return true;
     }
     return direction === "up" ? position.index === 0 : position.index === position.ids.length - 1;
   };
 
-  const handleDragStart = (event: DragEvent<HTMLDivElement>, prize: PrizeWithImageUrl) => {
-    if (!canReorder || !onReorder || movingId !== null) {
-      event.preventDefault();
+  const handleReorderGroup = async (orderedIds: number[], movedId: number) => {
+    if (!isReordering || state.movingId !== null) {
       return;
     }
 
-    draggedPrizeIdRef.current = prize.id;
-    setDraggedPrizeId(prize.id);
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", prize.id.toString());
-  };
-
-  const handleDragOver = (event: DragEvent<HTMLDivElement>, targetPrize: PrizeWithImageUrl) => {
-    const currentDraggedPrizeId = draggedPrizeIdRef.current;
-    if (!canReorder || !onReorder || currentDraggedPrizeId === null || movingId !== null) {
-      return;
-    }
-
-    const draggedPrize = sortedPrizes.find((prize) => prize.id === currentDraggedPrizeId);
-    if (
-      !draggedPrize ||
-      draggedPrize.id === targetPrize.id ||
-      draggedPrize.is_won !== targetPrize.is_won
-    ) {
-      return;
-    }
-
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDrop = (event: DragEvent<HTMLDivElement>, targetPrize: PrizeWithImageUrl) => {
-    event.preventDefault();
-    const currentDraggedPrizeId = draggedPrizeIdRef.current;
-    if (!canReorder || !onReorder || currentDraggedPrizeId === null || movingId !== null) {
-      draggedPrizeIdRef.current = null;
-      setDraggedPrizeId(null);
-      return;
-    }
-
-    const draggedPrize = sortedPrizes.find((prize) => prize.id === currentDraggedPrizeId);
-    if (
-      !draggedPrize ||
-      draggedPrize.id === targetPrize.id ||
-      draggedPrize.is_won !== targetPrize.is_won
-    ) {
-      draggedPrizeIdRef.current = null;
-      setDraggedPrizeId(null);
-      return;
-    }
-
-    const groupIds = targetPrize.is_won ? wonPrizeIds : unwonPrizeIds;
-    const withoutDragged = groupIds.filter((id) => id !== draggedPrize.id);
-    const targetIndex = withoutDragged.indexOf(targetPrize.id);
-    if (targetIndex === -1) {
-      draggedPrizeIdRef.current = null;
-      setDraggedPrizeId(null);
-      return;
-    }
-
-    const nextIds = [...withoutDragged];
-    nextIds.splice(targetIndex, 0, draggedPrize.id);
-    void applyReorder(nextIds, draggedPrize.id);
+    await applyReorder(orderedIds, movedId);
   };
 
   const handleToggleChange = async (id: number, isWon: boolean) => {
@@ -351,92 +617,131 @@ const PrizeResult = ({
   };
 
   const confirmDelete = async () => {
-    if (!selected) {
+    if (!state.selected) {
       return;
     }
 
     try {
-      await onDelete(selected);
-      setBingoPrize((prev) => prev.filter((prize) => prize.id !== selected.id));
+      await onDelete(state.selected);
+      setBingoPrize((prev) => prev.filter((prize) => prize.id !== state.selected?.id));
       showToast({ title: "削除完了", description: "景品を削除しました。" });
     } catch (error) {
       console.error(error);
       showToast({ title: "削除失敗", description: "景品の削除に失敗しました。" });
     } finally {
-      setSelected(null);
-      setIsDeleteOpen(false);
+      dispatch({ type: "setDeleteOpen", isOpen: false });
     }
   };
 
   const submitEdit = async (params: { nameJp: string; nameEn: string; file?: File | null }) => {
-    if (!selected) {
+    if (!state.selected) {
       return;
     }
 
     try {
-      const updated = await onUpdate({ id: selected.id, ...params });
-      setBingoPrize((prev) => prev.map((prize) => (prize.id === selected.id ? updated : prize)));
+      const updated = await onUpdate({ id: state.selected.id, ...params });
+      setBingoPrize((prev) =>
+        prev.map((prize) => (prize.id === state.selected?.id ? updated : prize)),
+      );
       showToast({ title: "更新完了", description: "景品を更新しました。" });
     } catch (error) {
       console.error(error);
       showToast({ title: "更新失敗", description: "景品の更新に失敗しました。" });
     } finally {
-      setSelected(null);
-      setIsEditOpen(false);
+      dispatch({ type: "setEditOpen", isOpen: false });
     }
   };
+
+  return {
+    ...state,
+    sortedPrizes,
+    prizeGroups,
+    isReordering,
+    handleReorderGroup,
+    handleMove,
+    isMoveDisabled,
+    handleToggleChange,
+    confirmDelete,
+    submitEdit,
+    openEdit: (prize: PrizeWithImageUrl) => dispatch({ type: "openEdit", prize }),
+    openDelete: (prize: PrizeWithImageUrl) => dispatch({ type: "openDelete", prize }),
+    setDeleteOpen: (isOpen: boolean) => dispatch({ type: "setDeleteOpen", isOpen }),
+    setEditOpen: (isOpen: boolean) => dispatch({ type: "setEditOpen", isOpen }),
+  };
+}
+const PrizeResult = (props: PrizeResultProps) => {
+  const { showOverlay, showToggle } = props;
+  const {
+    sortedPrizes,
+    prizeGroups,
+    isReordering,
+    isDeleteOpen,
+    isEditOpen,
+    selected,
+    movingId,
+    handleReorderGroup,
+    handleMove,
+    isMoveDisabled,
+    handleToggleChange,
+    confirmDelete,
+    submitEdit,
+    openEdit,
+    openDelete,
+    setDeleteOpen,
+    setEditOpen,
+  } = usePrizeResultController(props);
+
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="space-y-4 sm:space-y-5">
-          <Virtualizer
-            layout={GridLayout}
-            layoutOptions={{
-              maxColumns: 5,
-            }}
-          >
-            <GridList layout="grid" aria-label="景品一覧" items={sortedPrizes}>
-              {(prize) => (
-                <PrizeGridItem
-                  prize={prize}
-                  display={{ showOverlay, showToggle }}
-                  reorder={
-                    onReorder
-                      ? {
-                          canDrag: canReorder,
-                          isDragging: draggedPrizeId === prize.id,
-                        }
-                      : null
+        {isReordering ? (
+          <LazyMotion features={domAnimation}>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:gap-10">
+              {prizeGroups.map((group) => (
+                <PrizeReorderSection
+                  key={group.key}
+                  group={group}
+                  canDrag={movingId === null}
+                  movingId={movingId}
+                  onReorderGroup={(orderedIds, movedId) =>
+                    void handleReorderGroup(orderedIds, movedId)
                   }
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onDragEnd={() => {
-                    draggedPrizeIdRef.current = null;
-                    setDraggedPrizeId(null);
-                  }}
                   onMove={(targetPrize, direction) => void handleMove(targetPrize, direction)}
                   isMoveDisabled={isMoveDisabled}
-                  onEditClick={(targetPrize) => {
-                    setSelected(targetPrize);
-                    setIsEditOpen(true);
-                  }}
-                  onDeleteClick={(targetPrize) => {
-                    setSelected(targetPrize);
-                    setIsDeleteOpen(true);
-                  }}
-                  onToggleChange={handleToggleChange}
+                  shouldReduceMotion={Boolean(shouldReduceMotion)}
                 />
-              )}
-            </GridList>
-          </Virtualizer>
-        </div>
+              ))}
+            </div>
+          </LazyMotion>
+        ) : (
+          <div className="space-y-4 sm:space-y-5">
+            <Virtualizer
+              layout={GridLayout}
+              layoutOptions={{
+                maxColumns: 5,
+              }}
+            >
+              <GridList layout="grid" aria-label="景品一覧" items={sortedPrizes}>
+                {(prize) => (
+                  <PrizeGridItem
+                    prize={prize}
+                    display={{ showOverlay, showToggle }}
+                    onEditClick={openEdit}
+                    onDeleteClick={openDelete}
+                    onToggleChange={handleToggleChange}
+                  />
+                )}
+              </GridList>
+            </Virtualizer>
+          </div>
+        )}
       </div>
 
       <PrizeDeleteModal
         isOpened={isDeleteOpen}
-        setIsOpened={setIsDeleteOpen}
+        setIsOpened={setDeleteOpen}
         prizeName={selected?.name_jp}
         onConfirm={confirmDelete}
       />
@@ -444,12 +749,7 @@ const PrizeResult = ({
         <PrizeEditModal
           key={selected.id}
           isOpened={isEditOpen}
-          setIsOpened={(nextOpen) => {
-            setIsEditOpen(nextOpen);
-            if (!nextOpen) {
-              setSelected(null);
-            }
-          }}
+          setIsOpened={setEditOpen}
           id={selected.id}
           initialNameJp={selected.name_jp}
           initialNameEn={selected.name_en}
