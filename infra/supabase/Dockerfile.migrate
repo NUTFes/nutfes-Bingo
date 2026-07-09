@@ -1,12 +1,14 @@
-FROM node:26.2.0-alpine
+FROM node:26.2.0-alpine@sha256:7c6af15abe4e3de859690e7db171d0d711bf37d27528eddfe625b2fe89e097f8
 
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
 WORKDIR /tool
 
-RUN npm install --global pnpm@11.2.2 \
-  && printf '{"private":true,"dependencies":{"supabase":"2.105.0"}}\n' > package.json \
-  && pnpm install --prod --lockfile=false \
+RUN npm install --global pnpm@11.2.2
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
+
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts \
   && pnpm store prune \
   && npm cache clean --force
 

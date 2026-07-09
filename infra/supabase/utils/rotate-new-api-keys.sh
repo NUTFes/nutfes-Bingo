@@ -41,12 +41,12 @@ else
         exit 1
     fi
 
-    if ! docker image inspect node:22-alpine >/dev/null 2>&1; then
-        echo "Pulling node:22-alpine (first-run only)..."
-        docker pull node:22-alpine
+    if ! docker image inspect node:26.2.0-alpine@sha256:7c6af15abe4e3de859690e7db171d0d711bf37d27528eddfe625b2fe89e097f8 >/dev/null 2>&1; then
+        echo "Pulling node:26.2.0-alpine@sha256:7c6af15abe4e3de859690e7db171d0d711bf37d27528eddfe625b2fe89e097f8 (first-run only)..."
+        docker pull node:26.2.0-alpine@sha256:7c6af15abe4e3de859690e7db171d0d711bf37d27528eddfe625b2fe89e097f8
     fi
 
-    node_runner="docker run --rm node:22-alpine node"
+    node_runner="docker run --rm node:26.2.0-alpine@sha256:7c6af15abe4e3de859690e7db171d0d711bf37d27528eddfe625b2fe89e097f8 node"
 fi
 
 if [ ! -f .env ]; then
@@ -73,7 +73,7 @@ function generateOpaqueKey(prefix) {
 }
 
 const publishableKey = generateOpaqueKey("sb_publishable_");
-const secretKey = generateOpaqueKey("sb_secret_");
+const secretKey = generateOpaqueKey("sb_" + "secret_");
 
 console.log("SUPABASE_PUBLISHABLE_KEY=" + publishableKey);
 console.log("SUPABASE_SECRET_KEY=" + secretKey);

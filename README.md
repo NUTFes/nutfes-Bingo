@@ -153,6 +153,9 @@ Supabase Docker設定は公式リポジトリのcommitを固定して取り込�
 - `openssl`、`curl`
 - Cloudflare Zero TrustのTunnelとPublic Hostnameを作成できること
 - Public Hostnameを1つ作成し、serviceを `http://app:3000` にすること
+  - `<NEXT_PUBLIC_SITE_URL host> -> http://app:3000` だけを設定します
+  - `/auth/v1`、`/rest/v1`、`/storage/v1` 用のPublic Hostnameは作成しません
+  - Cloudflare API tokenを用意できる場合は `mise run prod:cloudflare:check` で検証します
 - firewallでは原則SSHなどの管理口だけを許可し、アプリ公開用にTCP 80/443やUDP 443を開けないこと
 - PostgreSQL、Kong、Next.jsのportをLXCホストへ公開しないこと
 
@@ -177,9 +180,9 @@ NEXT_PUBLIC_SITE_URL=https://app.example.com
 SITE_URL=https://app.example.com
 SUPABASE_SERVER_URL=http://kong:8000
 SUPABASE_PUBLIC_URL=http://kong:8000
-API_EXTERNAL_URL=http://kong:8000
+API_EXTERNAL_URL=http://kong:8000/auth/v1
 ADDITIONAL_REDIRECT_URLS=https://app.example.com/**
-CLOUDFLARE_TUNNEL_TOKEN=...
+CLOUDFLARE_TUNNEL_TOKEN=replace-with-cloudflare-tunnel-token
 SUPABASE_DB_DATA_PATH=/srv/nutfes-bingo/postgres
 SUPABASE_STORAGE_DATA_PATH=/srv/nutfes-bingo/storage
 ```
@@ -228,6 +231,34 @@ LXC上に `mise` がない場合の同等コマンド:
 
 起動時は`supabase/migrations/`が自動適用され、成功後にNext.jsが起動します。
 
+本番appはLXC上でbuildせず、`APP_IMAGE=ghcr.io/nutfes/nutfes-bingo@sha256:<digest>` をpullします。release registry credentialsがない環境では、review済みcommitから次を実行してdigestを取得し、`.env.production` の `APP_IMAGE` へ反映します。
+
+```bash
+docker buildx build \
+  --build-arg NEXT_PUBLIC_SITE_URL=https://app.example.com \
+  --tag ghcr.io/nutfes/nutfes-bingo:<git-sha> \
+  --push .
+docker buildx imagetools inspect ghcr.io/nutfes/nutfes-bingo:<git-sha>
+```
+
+通常の `prod:deploy` はlocal buildを行いません。緊急時にLXCでlocal buildする場合だけ、`mise run prod:backup` 後に明示的にoverrideを足します。
+
+```bash
+docker compose --env-file .env.production -f compose.prod.yml -f compose.prod.build.yml up -d --wait --remove-orphans
+```
+
+Production base/service image digestは、次の形式で解決して記録します。
+
+```bash
+docker buildx imagetools inspect node:26.2.0-alpine
+docker buildx imagetools inspect supabase/gotrue:v2.189.0
+docker buildx imagetools inspect postgrest/postgrest:v14.12
+docker buildx imagetools inspect supabase/storage-api:v1.60.4
+docker buildx imagetools inspect kong/kong:3.9.1
+docker buildx imagetools inspect supabase/postgres:17.6.1.136
+docker buildx imagetools inspect cloudflare/cloudflared:2026.6.1
+```
+
 6. 初期データが必要な新規環境だけ、明示的にseedを適用します。
 
 ```bash
@@ -251,6 +282,12 @@ LXC上に `mise` がない場合の同等コマンド:
 `/api/health`はNext.js process、`/api/ready`はNext.jsからPostgREST/DBまでを確認します。
 smoke testは `NEXT_PUBLIC_SITE_URL` の `/api/health`、`/api/ready`、`/api/bingo/state`、`/api/bingo/prizes`、`/api/bingo/screen` を確認します。Supabase疎通はNext.jsの `/api/ready` とBFF API経由で確認します。
 
+### Security model
+
+This project uses a BFF-only Supabase model: browser code must not create Supabase clients or call Auth/PostgREST/Storage directly; authorization happens in Next.js Server Actions and API routes; the service-role/secret key is a total-compromise secret.
+
+Public, anon, and authenticated Data API grants are intentionally revoked. RLS remains defense-in-depth, not the primary app authorization layer.
+
 ### Migration・typegen
 
 - schema変更は必ず`supabase/migrations/`へ追加します。
@@ -270,6 +307,8 @@ mise run typegen
 git diff -- src/types/database.types.ts
 ```
 
+CIはSupabase変更時にlocal DB reset、型生成、`src/types/database.types.ts` のdiff確認を実行し、生成型のfreshnessを強制します。
+
 ### Backup・restore
 
 DB dump、global roles、Storage実体を同じtimestamp directoryへ保存します。
@@ -282,6 +321,16 @@ mise run prod:backup
 
 backup directoryはLXCとは別の暗号化された保存先へ転送してください。DB backupだけではStorageの画像実体は復元できません。
 
+Offsite backupは `rclone copy` だけを使います。systemd timerまたはcronでは、`REMOTE_BACKUP_TARGET` を含むmode 0600の環境ファイルを読み込み、次を実行します。
+
+```bash
+REMOTE_BACKUP_TARGET=remote:nutfes-bingo-backups mise run prod:backup:offsite
+```
+
+例: `/etc/systemd/system/nutfes-bingo-backup.service` は `EnvironmentFile=/etc/nutfes-bingo-backup.env` とし、`ExecStart=/usr/bin/env mise run prod:backup:offsite` を設定します。cronの場合も同じ環境ファイルをsourceしてから同じcommandを実行します。
+
+各backupには `deployment-manifest.json` と `SHA256SUMS` が含まれます。manifestは非secretのcommit、Compose/Supabase設定hash、image参照、migration一覧を記録します。
+
 restoreは破壊的操作なので明示確認が必要です。対象backupと同じSupabase/PostgreSQL versionで、先に検証環境へrestoreしてください。
 
 ```bash
@@ -289,9 +338,11 @@ CONFIRM_RESTORE=restore-nutfes-bingo \
   ./infra/scripts/restore.sh /mnt/backup/nutfes-bingo/20260609T120000Z
 ```
 
-rollbackは「アプリ/image tagを直前の値へ戻す」だけではDB変更を戻せません。更新前backupを取得し、必要なら次の順で戻します。
+Restore検証はproduction credentialsを使わず、同じimage digestと `.env.production` 互換設定を持つstaging LXCで実行します。手順は、backupをstagingへ配置し、`CONFIRM_RESTORE=restore-nutfes-bingo ./infra/scripts/restore.sh <backup-dir>` を実行し、最後に `mise run prod:smoke` で確認します。
 
-1. `APP_IMAGE_TAG` とCompose/Supabase image tagを直前のcommitの値へ戻す
+rollbackは「アプリ/image digestを直前の値へ戻す」だけではDB変更を戻せません。更新前backupを取得し、必要なら次の順で戻します。
+
+1. `APP_IMAGE` とCompose/Supabase image digestを直前のcommitの値へ戻す
 2. 対象backupを検証環境でrestoreして内容を確認する
 3. 本番で `CONFIRM_RESTORE=restore-nutfes-bingo ./infra/scripts/restore.sh <backup>` を実行する
 4. `mise run prod:deploy` とsmoke testで復旧を確認する
@@ -309,7 +360,7 @@ mise run prod:down
 ```
 
 `docker compose down -v`、DB/Storage pathの削除、restoreはデータ消失を伴うため通常運用では実行しません。
-Docker imageは`latest`を使わず、Compose内の固定tagまたはupstream commitに対応するtagへ明示更新します。
+Docker imageは`latest`を使わず、Compose内の固定tag+digestまたはCIで作成したapp image digestへ明示更新します。
 
 ## Admin 認証の運用方針
 
@@ -362,8 +413,36 @@ rm -f /tmp/nutfes-admin-password
 - package managerはpnpmだけを使います。依存関係の追加・削除は `mise run add <pkg>`、`mise run add -D <pkg>`、`mise run remove <pkg>` を使います
 - アプリ起動は `mise run up`、停止は `mise run down` です
 - 静的チェックは `mise run check` です
-- production build確認は、開発container起動後に `mise run build` で実行します
+- production build確認は `docker build --build-arg NEXT_PUBLIC_SITE_URL=https://app.example.test --tag nutfes-bingo:test .` で実行します
 - `.env`、`.env.production`、`.env*.local` はcommitしません
+- 生成した `.env.production` と `.env.production.local` は、issue、PR、archive、screenshot、agent transcriptにも共有しません。露出した場合は、Cloudflare tunnel token、Postgres password、JWT/JWKS/API keys、S3 protocol credentials、`NUTFES_PUBLIC_ACTION_HASH_SALT` の順でrotateします
+
+### Annual reproducible install
+
+- このrepositoryのnpm registryは `.npmrc` の `https://npm.flatt.tech/` を必須とします。registry ownerが変更を決めるまではdeploy時に編集しません。
+- 年次preflightでは `https://npm.flatt.tech/` が到達可能であることを確認します。
+- registryが利用できない場合、deploy中に `.npmrc` をad hocに編集しません。review済みPRでregistryを切り替えるか、CIで作成済みのapp image digestを使用します。
+
+### Annual maintenance checklist
+
+1. `mise install`
+2. `mise run install`
+3. `pnpm audit --audit-level moderate`
+4. `pnpm outdated`
+5. apply grouped dependency updates
+6. `mise run check`
+7. `pnpm doctor`
+8. `pnpm knip`
+9. `mise run prod:config`
+10. `NUTFES_ALLOW_NON_LXC=1 mise run prod:preflight` for local/CI config validation
+11. Docker build or release workflow
+12. staging restore + smoke before production deploy
+
+### Intentional tooling choices
+
+- oxlint/oxfmt are the lint/format tools; do not add ESLint/Prettier unless replacing them.
+- `skipLibCheck` is intentional for dependency churn, but annual updates should watch type package majors.
+- Knip ignores generated DB types and admin script intentionally.
 
 ## Branch 命名規則
 

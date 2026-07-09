@@ -45,9 +45,21 @@ export function ScreenPage({
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
   const runner = useRef<Matter.Runner | null>(null);
-  const boundaries = useRef<Matter.Body[]>([]);
-  const stampBodies = useRef<Matter.Body[]>([]);
-  const removalTimers = useRef<number[]>([]);
+  const boundariesRef = useRef<Matter.Body[] | null>(null);
+  if (boundariesRef.current === null) {
+    boundariesRef.current = [];
+  }
+  const boundaries = boundariesRef.current;
+  const stampBodiesRef = useRef<Matter.Body[] | null>(null);
+  if (stampBodiesRef.current === null) {
+    stampBodiesRef.current = [];
+  }
+  const stampBodies = stampBodiesRef.current;
+  const removalTimersRef = useRef<Map<Matter.Body, number> | null>(null);
+  if (removalTimersRef.current === null) {
+    removalTimersRef.current = new Map();
+  }
+  const removalTimers = removalTimersRef.current;
   const { numbers: bingoNumbers, latestReachLog } = useScreenPollingState(
     initialNumbers,
     initialReachLog,
@@ -56,15 +68,27 @@ export function ScreenPage({
     () => getScreenDisplayBingoNumbers(bingoNumbers),
     [bingoNumbers],
   );
-  const removeStampBody = useCallback((body: Matter.Body) => {
-    const currentEngine = engine.current;
-    if (!currentEngine) {
-      return;
-    }
+  const removeStampBody = useCallback(
+    (body: Matter.Body) => {
+      const currentEngine = engine.current;
+      if (!currentEngine) {
+        return;
+      }
 
-    Matter.Composite.remove(currentEngine.world, body);
-    stampBodies.current = stampBodies.current.filter((stampBody) => stampBody !== body);
-  }, []);
+      const timer = removalTimers.get(body);
+      if (timer !== undefined) {
+        window.clearTimeout(timer);
+        removalTimers.delete(body);
+      }
+
+      Matter.Composite.remove(currentEngine.world, body);
+      const bodyIndex = stampBodies.indexOf(body);
+      if (bodyIndex >= 0) {
+        stampBodies.splice(bodyIndex, 1);
+      }
+    },
+    [removalTimers, stampBodies],
+  );
 
   const handleStampInsert = useCallback(
     (stamp: { name: StampName; id: number }) => {
@@ -98,22 +122,21 @@ export function ScreenPage({
       });
       Matter.Body.setAngularVelocity(circle, (Math.random() - 0.5) * 0.16);
       Matter.Composite.add(currentEngine.world, circle);
-      stampBodies.current.push(circle);
+      stampBodies.push(circle);
 
-      while (stampBodies.current.length > MAX_STAMP_BODIES) {
-        const oldestBody = stampBodies.current.shift();
+      while (stampBodies.length > MAX_STAMP_BODIES) {
+        const oldestBody = stampBodies[0];
         if (oldestBody) {
-          Matter.Composite.remove(currentEngine.world, oldestBody);
+          removeStampBody(oldestBody);
         }
       }
 
-      removalTimers.current.push(
-        window.setTimeout(() => {
-          removeStampBody(circle);
-        }, STAMP_LIFETIME_MS),
-      );
+      const timer = window.setTimeout(() => {
+        removeStampBody(circle);
+      }, STAMP_LIFETIME_MS);
+      removalTimers.set(circle, timer);
     },
-    [removeStampBody],
+    [removeStampBody, removalTimers, stampBodies],
   );
 
   useEffect(() => {
@@ -173,11 +196,11 @@ export function ScreenPage({
       const height = window.innerHeight;
       Render.setPixelRatio(currentRender, Math.min(window.devicePixelRatio || 1, 2));
       Render.setSize(currentRender, width, height);
-      if (boundaries.current.length > 0) {
-        Composite.remove(currentEngine.world, boundaries.current);
+      if (boundaries.length > 0) {
+        Composite.remove(currentEngine.world, boundaries);
       }
-      boundaries.current = createBoundaries(width, height);
-      Composite.add(currentEngine.world, boundaries.current);
+      boundaries.splice(0, boundaries.length, ...createBoundaries(width, height));
+      Composite.add(currentEngine.world, boundaries);
     };
 
     syncSceneSize();
@@ -192,10 +215,10 @@ export function ScreenPage({
 
     return () => {
       window.removeEventListener("resize", syncSceneSize);
-      removalTimers.current.forEach((timer) => window.clearTimeout(timer));
-      removalTimers.current = [];
-      stampBodies.current = [];
-      boundaries.current = [];
+      removalTimers.forEach((timer) => window.clearTimeout(timer));
+      removalTimers.clear();
+      stampBodies.length = 0;
+      boundaries.length = 0;
       if (runner.current) {
         Runner.stop(runner.current);
         runner.current = null;
@@ -208,7 +231,7 @@ export function ScreenPage({
       render.current = null;
       engine.current = null;
     };
-  }, []);
+  }, [boundaries, removalTimers, stampBodies]);
 
   useStampTriggerPolling(initialStampCursor, handleStampInsert);
 

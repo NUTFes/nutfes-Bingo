@@ -26,21 +26,21 @@ import {
   PartyPopper,
 } from "lucide-react";
 import { REACTION_IMAGES } from "@/types/bingo/constants";
-import {
-  applyPublicTheme,
-  DEFAULT_PUBLIC_PREFERENCES,
-  preferenceCookie,
-  PUBLIC_PREFERENCE_KEYS,
-  type PublicPreferences,
-  parseBooleanPreference,
-  resolveDarkModePreference,
-} from "@/types/bingo/public-preferences";
 import type { AppStateRow } from "@/types/bingo/types";
 import { BingoLanguageProvider, useBingoLanguage } from "@/utils/i18n/provider";
 import { recordPublicReach, sendReactionStamp } from "@/features/user/actions/bingo-public";
 import { openHttpsUrl } from "@/utils/url";
 
 import styles from "./Layout.module.css";
+import {
+  persistBooleanPreference,
+  usePublicPreferences,
+} from "@/components/user/Layout/usePublicPreferences";
+import {
+  DEFAULT_PUBLIC_PREFERENCES,
+  PUBLIC_PREFERENCE_KEYS,
+  type PublicPreferences,
+} from "@/types/bingo/public-preferences";
 
 interface InnerLayoutProps {
   children: React.ReactNode;
@@ -58,11 +58,6 @@ type ModalState = {
 };
 
 type ModalToggleKey = keyof ModalState;
-
-const persistBooleanPreference = (key: string, value: boolean) => {
-  window.localStorage.setItem(key, value.toString());
-  document.cookie = preferenceCookie(key, value);
-};
 
 function getActionErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message ? error.message : fallback;
@@ -84,11 +79,10 @@ function InnerLayout({
     isReachModalOpen: false,
     isSurveyModalOpen: false,
   });
-  const [preferences, setPreferences] = useState(() => ({
-    isReachIconVisible: initialPreferences.isReachIconVisible,
-    isSortOrderActive: initialPreferences.isSortedAscending,
-    isDarkMode: resolveDarkModePreference(initialPreferences.isDarkMode),
-  }));
+  const { preferences, setPreferences } = usePublicPreferences(
+    initialPreferences,
+    setIsSortedAscending,
+  );
   const [navBarHeight, setNavBarHeight] = useState<string>();
   const [stampState, setStampState] = useState({
     isSending: false,
@@ -122,34 +116,6 @@ function InnerLayout({
       setNavBarHeight(navHeight.toString());
     }
   }, []);
-
-  useLayoutEffect(() => {
-    const nextReachVisibility = parseBooleanPreference(
-      window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.reachIconVisible) ?? undefined,
-      initialPreferences.isReachIconVisible,
-    );
-    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, nextReachVisibility);
-
-    const nextSortOrder = parseBooleanPreference(
-      window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.sortedAscending) ?? undefined,
-      initialPreferences.isSortedAscending,
-    );
-    setIsSortedAscending?.(nextSortOrder);
-    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.sortedAscending, nextSortOrder);
-
-    const nextDarkMode = resolveDarkModePreference(initialPreferences.isDarkMode);
-    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.darkMode, nextDarkMode);
-
-    setPreferences({
-      isReachIconVisible: nextReachVisibility,
-      isSortOrderActive: nextSortOrder,
-      isDarkMode: nextDarkMode,
-    });
-  }, [initialPreferences, setIsSortedAscending]);
-
-  useLayoutEffect(() => {
-    applyPublicTheme(isDarkMode);
-  }, [isDarkMode]);
 
   const prevSurveyActiveRef = useRef(appState.is_survey_active);
   if (appState.is_survey_active !== prevSurveyActiveRef.current) {

@@ -62,6 +62,14 @@ require_command curl
 require_command openssl
 require_command sed
 require_command sha256sum
+require_command pnpm
+
+registry=$(pnpm config get registry)
+if [ "$registry" != "https://npm.flatt.tech/" ]; then
+  fail "pnpm registry must be https://npm.flatt.tech/ (got $registry)"
+fi
+pnpm view next version --silent >/dev/null || fail "npm registry is not reachable: https://npm.flatt.tech/"
+
 
 if command -v systemd-detect-virt >/dev/null 2>&1; then
   virt=$(systemd-detect-virt --container 2>/dev/null || true)
@@ -87,7 +95,7 @@ for name in \
   SUPABASE_PUBLIC_URL \
   API_EXTERNAL_URL \
   CLOUDFLARE_TUNNEL_TOKEN \
-  APP_IMAGE_TAG \
+  APP_IMAGE \
   SUPABASE_POSTGRES_IMAGE \
   POSTGRES_PASSWORD \
   JWT_SECRET \
@@ -134,13 +142,36 @@ case ",$ADDITIONAL_REDIRECT_URLS," in
   *) fail "ADDITIONAL_REDIRECT_URLS must include $required_redirect_url" ;;
 esac
 
-for name in SUPABASE_SERVER_URL SUPABASE_PUBLIC_URL API_EXTERNAL_URL; do
-  eval "value=\${$name:-}"
-  case "$value" in
-    http://kong:8000) ;;
-    *) fail "$name must be the Docker-internal Supabase URL http://kong:8000" ;;
-  esac
-done
+if [ "${DISABLE_SIGNUP:-}" != "true" ]; then
+  if [ "${NUTFES_ALLOW_SIGNUP_BOOTSTRAP:-}" = "1" ]; then
+    [ "${CONFIRM_BOOTSTRAP_SIGNUP_WINDOW:-}" = "allow-temporary-signup" ] || fail "CONFIRM_BOOTSTRAP_SIGNUP_WINDOW=allow-temporary-signup is required when signup bootstrap is allowed"
+    echo "Warning: signup is temporarily enabled for bootstrap; restore DISABLE_SIGNUP=true immediately after bootstrap." >&2
+  else
+    fail "DISABLE_SIGNUP must be true in production"
+  fi
+fi
+
+case "$SUPABASE_SERVER_URL" in
+  http://kong:8000) ;;
+  *) fail "SUPABASE_SERVER_URL must be the Docker-internal Supabase URL http://kong:8000" ;;
+esac
+case "$SUPABASE_PUBLIC_URL" in
+  http://kong:8000) ;;
+  *) fail "SUPABASE_PUBLIC_URL must be the Docker-internal Supabase URL http://kong:8000" ;;
+esac
+case "$API_EXTERNAL_URL" in
+  http://kong:8000/auth/v1) ;;
+  *) fail "API_EXTERNAL_URL must be the Docker-internal Supabase Auth URL http://kong:8000/auth/v1" ;;
+esac
+
+case "$APP_IMAGE" in
+  *@sha256:*) ;;
+  *) fail "APP_IMAGE must be an immutable image digest reference containing @sha256:" ;;
+esac
+digest=${APP_IMAGE##*@sha256:}
+if ! printf '%s\n' "$digest" | grep -Eq '^[0-9a-f]{64}$'; then
+  fail "APP_IMAGE digest must be a 64-character lowercase hex sha256"
+fi
 
 case "$SUPABASE_POSTGRES_IMAGE" in
   supabase/postgres:*latest* | *:latest) fail "SUPABASE_POSTGRES_IMAGE must be pinned, not latest" ;;

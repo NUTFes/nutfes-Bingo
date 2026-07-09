@@ -7,7 +7,7 @@ SUPABASE_TELEMETRY_DISABLED = "1"
 
 [tasks.install]
 description = "Install dependencies"
-run = "pnpm install"
+run = "pnpm install --frozen-lockfile"
 
 [tasks.up]
 description = "Start Docker development stack with Supabase CLI local services"
@@ -125,6 +125,14 @@ run = 'pnpm remove "${usage_package?}"'
 
 [tasks."sync"]
 description = "Sync dependencies inside running dev container"
+run = "docker compose -f compose.dev.yml exec app pnpm install --frozen-lockfile"
+
+[tasks."deps:update"]
+description = "Refresh pnpm lockfile intentionally"
+run = "pnpm install"
+
+[tasks."sync:update"]
+description = "Refresh dependencies inside the running dev container intentionally"
 run = "docker compose -f compose.dev.yml exec app pnpm install"
 
 [tasks."db-up"]
@@ -231,6 +239,14 @@ run = "./infra/scripts/annual-ops.sh migrate:dry-run"
 [tasks."prod:backup"]
 description = "Back up PostgreSQL and Supabase Storage"
 run = "./infra/scripts/annual-ops.sh backup"
+
+[tasks."prod:backup:offsite"]
+description = "Back up PostgreSQL and Storage, then copy with rclone"
+run = "./infra/scripts/backup-offsite.sh"
+
+[tasks."prod:cloudflare:check"]
+description = "Verify Cloudflare tunnel routes only to the app service"
+run = "./infra/scripts/check-cloudflare-tunnel.sh"
 
 [tasks."prod:admin:bootstrap"]
 description = "Create or update the initial production admin account"

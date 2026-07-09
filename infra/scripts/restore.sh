@@ -23,6 +23,15 @@ for file in postgres.dump pgsodium_root.key storage.tar.gz SHA256SUMS; do
   fi
 done
 
+if [ -f "$backup_dir/deployment-manifest.json" ]; then
+  if ! grep -q 'deployment-manifest.json' "$backup_dir/SHA256SUMS"; then
+    echo "deployment-manifest.json exists but is missing from SHA256SUMS" >&2
+    exit 1
+  fi
+else
+  echo "Warning: deployment-manifest.json is absent; continuing with legacy backup format." >&2
+fi
+
 (
   cd "$backup_dir"
   sha256sum -c SHA256SUMS

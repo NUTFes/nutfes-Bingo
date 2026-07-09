@@ -324,37 +324,9 @@ using (true);
 drop policy if exists "stamp_triggers_insert_all" on public.stamp_triggers;
 
 insert into storage.buckets (id, name, public)
-values ('prize-images', 'prize-images', true)
+values ('prize-images', 'prize-images', false)
 on conflict (id) do update set public = excluded.public;
 
-drop policy if exists "prize_images_public_read" on storage.objects;
-create policy "prize_images_public_read"
-on storage.objects
-for select
-to anon, authenticated
-using (bucket_id = 'prize-images');
-
-drop policy if exists "prize_images_admin_insert" on storage.objects;
-create policy "prize_images_admin_insert"
-on storage.objects
-for insert
-to authenticated
-with check (bucket_id = 'prize-images' and (select public.is_admin()));
-
-drop policy if exists "prize_images_admin_update" on storage.objects;
-create policy "prize_images_admin_update"
-on storage.objects
-for update
-to authenticated
-using (bucket_id = 'prize-images' and (select public.is_admin()))
-with check (bucket_id = 'prize-images' and (select public.is_admin()));
-
-drop policy if exists "prize_images_admin_delete" on storage.objects;
-create policy "prize_images_admin_delete"
-on storage.objects
-for delete
-to authenticated
-using (bucket_id = 'prize-images' and (select public.is_admin()));
 
 commit;
 
@@ -719,9 +691,6 @@ as $$
 declare
   claimed boolean;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' then
-    raise exception 'service role is required' using errcode = '42501';
-  end if;
 
   if p_client_hash is null or char_length(p_client_hash) < 32 or char_length(p_client_hash) > 128 then
     raise exception 'invalid_public_client' using errcode = '22023';
@@ -763,9 +732,6 @@ as $$
 declare
   inserted_stamp public.stamp_triggers%rowtype;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' then
-    raise exception 'service role is required' using errcode = '42501';
-  end if;
 
   perform public.claim_public_action('reaction_stamp', p_client_hash, interval '2 seconds');
 
@@ -787,9 +753,6 @@ declare
   accepted_client_hash text;
   new_num integer;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' then
-    raise exception 'service role is required' using errcode = '42501';
-  end if;
 
   if p_client_hash is null or char_length(p_client_hash) < 32 or char_length(p_client_hash) > 128 then
     raise exception 'invalid_public_client' using errcode = '22023';
@@ -830,9 +793,6 @@ as $$
 declare
   new_num integer;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' then
-    raise exception 'service role is required' using errcode = '42501';
-  end if;
 
   update public.app_state
   set reach_count = reach_count + 1
@@ -856,9 +816,6 @@ declare
   current_num integer;
   new_num integer;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' then
-    raise exception 'service role is required' using errcode = '42501';
-  end if;
 
   select reach_count
   into current_num
@@ -945,7 +902,7 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public, auth, private
+set search_path = pg_catalog, public, auth, private
 as $$
 declare
   normalized_email text := lower(nullif(btrim(p_email), ''));
@@ -962,18 +919,18 @@ begin
 
   if not exists (
     select 1
-    from auth.users
-    where id = p_user_id
-      and lower(email) = normalized_email
+    from auth.users as users
+    where users.id = p_user_id
+      and lower(users.email) = normalized_email
   ) then
     raise exception 'auth user does not match id/email' using errcode = 'P0001';
   end if;
 
   select count(*)
   into other_admin_count
-  from public.profiles
-  where role = 'admin'
-    and id <> p_user_id;
+  from public.profiles as profiles
+  where profiles.role = 'admin'
+    and profiles.id <> p_user_id;
 
   if other_admin_count > 0 then
     raise exception 'initial admin already exists' using errcode = 'P0001';
@@ -981,9 +938,9 @@ begin
 
   select exists (
     select 1
-    from public.profiles
-    where id = p_user_id
-      and role = 'admin'
+    from public.profiles as profiles
+    where profiles.id = p_user_id
+      and profiles.role = 'admin'
   )
   into was_admin_before;
 
@@ -996,7 +953,7 @@ begin
 
   return query
   select profiles.id, profiles.email, profiles.role, was_admin_before
-  from public.profiles
+  from public.profiles as profiles
   where profiles.id = p_user_id;
 end;
 $$;

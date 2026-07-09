@@ -45,8 +45,8 @@ services:
       - backend
 
   auth:
-    image: supabase/gotrue:v2.189.0
-    command: ["auth", "serve"]
+    image: supabase/gotrue:v2.189.0@sha256:385184459f57569c54c25209f51f3b2be99ddd7c4ce9e3555b5d3eea8447b7cf
+    command: ["sh", "-c", "auth migrate && exec auth serve"]
     depends_on:
       db:
         condition: service_healthy
@@ -65,7 +65,7 @@ services:
       GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
       GOTRUE_JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       GOTRUE_JWT_KEYS: ${JWT_KEYS:?JWT_KEYS is required}
-      GOTRUE_JWT_ISSUER: ${API_EXTERNAL_URL:?API_EXTERNAL_URL is required}/auth/v1
+      GOTRUE_JWT_ISSUER: ${API_EXTERNAL_URL:?API_EXTERNAL_URL is required}
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
       GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
@@ -91,7 +91,7 @@ services:
       - backend
 
   rest:
-    image: postgrest/postgrest:v14.12
+    image: postgrest/postgrest:v14.12@sha256:54000f24847d01a2c2302e0041cf0618b875c57fb48507d743cfa9aaa50bf43c
     depends_on:
       db:
         condition: service_healthy
@@ -119,7 +119,7 @@ services:
       - backend
 
   storage:
-    image: supabase/storage-api:v1.60.4
+    image: supabase/storage-api:v1.60.4@sha256:c8eb9858eafec891a97c27125470aaad54703c3f4eb4d55ca7f1bf6c6411febf
     depends_on:
       db:
         condition: service_healthy
@@ -157,7 +157,7 @@ services:
       - backend
 
   kong:
-    image: kong/kong:3.9.1
+    image: kong/kong:3.9.1@sha256:6addf50e6bd8d578314cb9ce4f2d2d1e3781d2edecef59f707e00c6e05d384f5
     depends_on:
       auth:
         condition: service_healthy
@@ -224,12 +224,7 @@ services:
       - backend
 
   app:
-    image: nutfes-bingo:${APP_IMAGE_TAG:?APP_IMAGE_TAG is required}
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL is required}
+    image: ${APP_IMAGE:?APP_IMAGE is required}
     depends_on:
       migrate:
         condition: service_completed_successfully

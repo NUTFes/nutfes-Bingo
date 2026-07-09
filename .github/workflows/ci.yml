@@ -42,6 +42,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
+      - name: Secret Scan
+        run: pnpm run secrets:check
+
+      - name: Tool Version Check
+        run: pnpm run versions:check
 
       - name: Oxfmt Check
         run: pnpm run fmt:check
@@ -82,9 +87,10 @@ jobs:
             -e "s|^SITE_URL=.*|SITE_URL=https://app.example.test|" \
             -e "s|^SUPABASE_SERVER_URL=.*|SUPABASE_SERVER_URL=http://kong:8000|" \
             -e "s|^SUPABASE_PUBLIC_URL=.*|SUPABASE_PUBLIC_URL=http://kong:8000|" \
-            -e "s|^API_EXTERNAL_URL=.*|API_EXTERNAL_URL=http://kong:8000|" \
+            -e "s|^API_EXTERNAL_URL=.*|API_EXTERNAL_URL=http://kong:8000/auth/v1|" \
             -e "s|^ADDITIONAL_REDIRECT_URLS=.*|ADDITIONAL_REDIRECT_URLS=https://app.example.test/**|" \
             -e "s|^CLOUDFLARE_TUNNEL_TOKEN=.*|CLOUDFLARE_TUNNEL_TOKEN=ci-cloudflare-token|" \
+            -e "s|^APP_IMAGE=.*|APP_IMAGE=ghcr.io/nutfes/nutfes-bingo@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|" \
             -e "s|^SUPABASE_DB_DATA_PATH=.*|SUPABASE_DB_DATA_PATH=$tmpdir/postgres|" \
             -e "s|^SUPABASE_STORAGE_DATA_PATH=.*|SUPABASE_STORAGE_DATA_PATH=$tmpdir/storage|" \
             "$tmpdir/.env.production"
@@ -121,4 +127,4 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build
-        run: pnpm run build
+        run: docker build --build-arg NEXT_PUBLIC_SITE_URL=https://app.example.test --tag nutfes-bingo:test .

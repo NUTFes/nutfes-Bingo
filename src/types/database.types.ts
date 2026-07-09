@@ -199,9 +199,9 @@ export type Database = {
       decrement_reach: { Args: never; Returns: number };
       increment_reach: { Args: never; Returns: number };
       is_admin: { Args: { target_user?: string }; Returns: boolean };
-      record_reach: { Args: { client_hash: string }; Returns: number };
+      record_reach: { Args: { p_client_hash: string }; Returns: number };
       record_reaction_stamp: {
-        Args: { client_hash: string; stamp_name: string };
+        Args: { p_client_hash: string; p_stamp_name: string };
         Returns: {
           created_at: string;
           id: number;

@@ -18,15 +18,17 @@
 
 <!-- URLとともに貼る（なければ空欄でよい） -->
 
-# テスト項目
+# チェックリスト
 
-<!-- テストしてほしい内容を記載 -->
-<!-- ex) コンポーネントのデザインが崩れないか -->
-<!-- ex) データが表示できてるか・反映されてるか -->
-
-- [ ]
-- [ ]
-- [ ]
+- [ ] pnpmだけを使用した
+- [ ] lockfile変更は意図したものだけである
+- [ ] Node/pnpm pinを確認した
+- [ ] Docker build/deploy pathへの影響を確認した
+- [ ] Supabase migration/typegenへの影響を確認した
+- [ ] `infra/supabase/UPSTREAM.md` への影響を確認した
+- [ ] `.env.example` / `.env.production.example` への影響を確認した
+- [ ] infra/deploy変更では `prod:config` / `prod:preflight` / smoke evidenceを添付した
+- [ ] backup/restore/rollbackへの影響を説明した
 
 # 備考
 

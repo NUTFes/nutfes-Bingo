@@ -1,27 +1,40 @@
 ---
-name: issue template
-about: Describe this issue template's purpose here.
+name: maintenance issue
+about: Track dependency, Docker, Supabase, or annual deployment maintenance
 title: ""
-labels: enhancement
+labels: maintenance
 assignees: ""
 ---
 
 # 概要
 
-<!-- 何を実装するか ex)ボタンの実装 -->
+<!-- dependency / Docker / Supabase / annual deploy のどれに関係するかを記載 -->
 
-# 開発目的
+# 対象領域
 
-<!-- なぜ実装するか ex)追加ボタンが必要になったから -->
+- [ ] Dependencies / pnpm lockfile
+- [ ] Docker image / digest / build path
+- [ ] Supabase migration / Auth / Storage / PostgREST
+- [ ] Cloudflared / production deploy / preflight
+- [ ] Backup / restore / rollback
+- [ ] Documentation / ADR / templates
 
-# 考えられる開発内容
+# 現在の状態
 
-<!-- どのように実装するか ex)1.どこどこにファイルを作る  2.〇〇を使って実装する~  3.~ -->
+<!-- 現在のversion、digest、設定、失敗しているcommandなど -->
+
+# 期待する状態
+
+<!-- 更新後に満たすべき状態、検証command、rollback条件など -->
+
+# 影響確認
+
+- [ ] `pnpm audit` / `pnpm outdated` を確認した
+- [ ] `mise run check` の影響を確認した
+- [ ] `pnpm doctor` / `pnpm knip` の要否を確認した
+- [ ] `prod:config` / `prod:preflight` / smoke の要否を確認した
+- [ ] backup/restore/rollbackへの影響を確認した
 
 # 備考
 
-<!-- 参考 ex)参考URLなど -->
-
-# 期限
-
-<!-- 期限 ex)2023-10-10 -->
+<!-- 参考URL、upstream changelog、operator actionなど -->

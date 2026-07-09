@@ -1,6 +1,10 @@
 const Loading = () => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-6 backdrop-blur-md">
+    <output
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-6 backdrop-blur-md"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <div className="flex w-full max-w-sm flex-col items-center gap-3.5 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-2xl sm:p-7">
         <p className="text-xl tracking-[0.08em] font-semibold sm:text-2xl">Admin Console</p>
         <svg
@@ -26,7 +30,7 @@ const Loading = () => {
         </svg>
         <p className="text-sm text-muted-foreground sm:text-base">管理画面を読み込み中...</p>
       </div>
-    </div>
+    </output>
   );
 };
 

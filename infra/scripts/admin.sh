@@ -191,20 +191,23 @@ const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVIC
 
 get_user_id_by_email() {
   email=$1
-  psql_scalar -v admin_email="$email" -c \
-    "select id from auth.users where lower(email) = lower(:'admin_email') order by created_at asc limit 1;"
+  psql_scalar -v admin_email="$email" <<'SQL'
+select id from auth.users where lower(email) = lower(:'admin_email') order by created_at asc limit 1;
+SQL
 }
 
 get_admin_user_id_by_email() {
   email=$1
-  psql_scalar -v admin_email="$email" -c \
-    "select p.id from public.profiles p join auth.users u on u.id = p.id where p.role = 'admin' and lower(u.email) = lower(:'admin_email') order by p.created_at asc limit 1;"
+  psql_scalar -v admin_email="$email" <<'SQL'
+select p.id from public.profiles p join auth.users u on u.id = p.id where p.role = 'admin' and lower(u.email) = lower(:'admin_email') order by p.created_at asc limit 1;
+SQL
 }
 
 get_other_admin_count() {
   email=$1
-  psql_scalar -v admin_email="$email" -c \
-    "select count(*) from public.profiles p join auth.users u on u.id = p.id where p.role = 'admin' and lower(u.email) <> lower(:'admin_email');"
+  psql_scalar -v admin_email="$email" <<'SQL'
+select count(*) from public.profiles p join auth.users u on u.id = p.id where p.role = 'admin' and lower(u.email) <> lower(:'admin_email');
+SQL
 }
 
 require_private_bootstrap_function() {
@@ -246,8 +249,9 @@ bootstrap_admin() {
     echo "Updated existing Auth user for $email"
   fi
 
-  psql -X -v user_id="$user_id" -v admin_email="$email" -c \
-    "select * from private.bootstrap_initial_admin(:'user_id'::uuid, :'admin_email');"
+  psql -X -v user_id="$user_id" -v admin_email="$email" <<'SQL'
+select * from private.bootstrap_initial_admin(:'user_id'::uuid, :'admin_email');
+SQL
 
   echo "Initial admin is ready: $email"
 }

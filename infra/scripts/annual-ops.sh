@@ -38,6 +38,7 @@ case "$cmd" in
     ;;
   deploy)
     "$repo_root/infra/scripts/preflight.sh"
+    "$repo_root/infra/scripts/annual-ops.sh" migrate:dry-run
     "$repo_root/infra/scripts/deploy.sh"
     "$repo_root/infra/scripts/annual-ops.sh" smoke
     ;;

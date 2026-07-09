@@ -13,6 +13,8 @@
 
 `volumes/api/kong.yml`は、このアプリが利用するAuth、PostgREST、Storageだけへrouteを限定するため、公式ファイルを基に縮小している。Authの`/.well-known/oauth-authorization-server`は公式Auth routeとして残している。公式`self-hosted/v0.6.0`のRealtime `/api/tenants` / `/api/openapi` block routeは、Realtime route自体を持たないため反映不要。
 
+Auth follows Supabase's 2026 self-hosted convention: `API_EXTERNAL_URL` includes `/auth/v1`, and `GOTRUE_JWT_ISSUER` uses `${API_EXTERNAL_URL}` directly.
+
 `volumes/db/roles.sql`は現行サービスが接続に使う`authenticator`、`supabase_auth_admin`、`supabase_storage_admin`だけのパスワードを更新する。Realtime、Analytics、Supavisorを起動しないため、公式`realtime.sql`、`webhooks.sql`、`logs.sql`、`pooler.sql`、`_supabase.sql`は現行最小構成ではmountしない。
 
 PostgreSQL imageは公式`self-hosted/v0.6.0`に合わせて`supabase/postgres:17.6.1.136`を`.env.production.example`の既定にしている。Cloudflaredは2026-07-04時点のlatestと同じ`cloudflare/cloudflared:2026.6.1`へpinし、`latest`はproduction preflightで拒否する。
