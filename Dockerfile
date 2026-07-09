@@ -4,14 +4,15 @@ FROM node:26.2.0-alpine AS base
 
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
+FROM base AS pnpm-base
 RUN npm i -g pnpm@11.2.2
 
-FROM base AS deps
+FROM pnpm-base AS deps
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
 RUN pnpm i --frozen-lockfile --ignore-scripts
 
-FROM base AS builder
+FROM pnpm-base AS builder
 
 ARG NEXT_PUBLIC_SITE_URL
 
@@ -24,6 +25,11 @@ RUN pnpm run build
 FROM base AS runner
 
 ENV NODE_ENV=production
+RUN apk upgrade --no-cache \
+  && rm -rf /usr/local/lib/node_modules/npm \
+    /usr/local/bin/npm \
+    /usr/local/bin/npx
+
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 

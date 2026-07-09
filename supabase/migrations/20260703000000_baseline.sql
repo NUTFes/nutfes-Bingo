@@ -460,8 +460,8 @@ end;
 $$;
 
 create or replace function public.record_reaction_stamp(
-  stamp_name text,
-  client_hash text
+  p_stamp_name text,
+  p_client_hash text
 )
 returns public.stamp_triggers
 language plpgsql
@@ -471,17 +471,17 @@ as $$
 declare
   inserted_stamp public.stamp_triggers%rowtype;
 begin
-  perform public.claim_public_action('reaction_stamp', client_hash, interval '2 seconds');
+  perform public.claim_public_action('reaction_stamp', p_client_hash, interval '2 seconds');
 
   insert into public.stamp_triggers (name)
-  values (stamp_name)
+  values (p_stamp_name)
   returning * into inserted_stamp;
 
   return inserted_stamp;
 end;
 $$;
 
-create or replace function public.record_reach(client_hash text)
+create or replace function public.record_reach(p_client_hash text)
 returns integer
 language plpgsql
 security definer
@@ -491,14 +491,14 @@ declare
   accepted_client_hash text;
   new_num integer;
 begin
-  if client_hash is null or char_length(client_hash) < 32 or char_length(client_hash) > 128 then
+  if p_client_hash is null or char_length(p_client_hash) < 32 or char_length(p_client_hash) > 128 then
     raise exception 'invalid_public_client' using errcode = '22023';
   end if;
 
   insert into public.reach_submissions (client_hash)
-  values (client_hash)
+  values (p_client_hash)
   on conflict (client_hash) do nothing
-  returning client_hash into accepted_client_hash;
+  returning reach_submissions.client_hash into accepted_client_hash;
 
   if accepted_client_hash is null then
     select reach_count
@@ -752,8 +752,8 @@ end;
 $$;
 
 create or replace function public.record_reaction_stamp(
-  stamp_name text,
-  client_hash text
+  p_stamp_name text,
+  p_client_hash text
 )
 returns public.stamp_triggers
 language plpgsql
@@ -767,17 +767,17 @@ begin
     raise exception 'service role is required' using errcode = '42501';
   end if;
 
-  perform public.claim_public_action('reaction_stamp', client_hash, interval '2 seconds');
+  perform public.claim_public_action('reaction_stamp', p_client_hash, interval '2 seconds');
 
   insert into public.stamp_triggers (name)
-  values (stamp_name)
+  values (p_stamp_name)
   returning * into inserted_stamp;
 
   return inserted_stamp;
 end;
 $$;
 
-create or replace function public.record_reach(client_hash text)
+create or replace function public.record_reach(p_client_hash text)
 returns integer
 language plpgsql
 security invoker
@@ -791,14 +791,14 @@ begin
     raise exception 'service role is required' using errcode = '42501';
   end if;
 
-  if client_hash is null or char_length(client_hash) < 32 or char_length(client_hash) > 128 then
+  if p_client_hash is null or char_length(p_client_hash) < 32 or char_length(p_client_hash) > 128 then
     raise exception 'invalid_public_client' using errcode = '22023';
   end if;
 
   insert into public.reach_submissions (client_hash)
-  values (client_hash)
+  values (p_client_hash)
   on conflict (client_hash) do nothing
-  returning client_hash into accepted_client_hash;
+  returning reach_submissions.client_hash into accepted_client_hash;
 
   if accepted_client_hash is null then
     select reach_count

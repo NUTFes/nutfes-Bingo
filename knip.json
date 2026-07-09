@@ -4,5 +4,5 @@
   "workspaces": {
     ".": {}
   },
-  "ignore": [".agents/**", "src/types/database.types.ts"]
+  "ignore": [".agents/**", "src/types/database.types.ts", "scripts/local-admin.mjs"]
 }

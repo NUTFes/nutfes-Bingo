@@ -2,7 +2,6 @@ export { default as Header } from "./Header";
 export { default as Modal } from "./Modal";
 export { default as NavigationBar } from "./NavigationBar";
 export { default as ReactionStampModal } from "./ReactionStampModal";
-export { default as ReachCount } from "./ReachCount";
 export { default as SurveyPromptModal } from "./SurveyPromptModal/SurveyPromptModal";
 export { default as Button } from "./buttons/Button";
 export { default as ToggleButton } from "./buttons/ToggleButton";

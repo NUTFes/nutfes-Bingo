@@ -54,13 +54,5 @@
     "node": "26.2.0",
     "pnpm": "11.2.2"
   },
-  "packageManager": "pnpm@11.2.2",
-  "knip": {
-    "ignoreFiles": [
-      "scripts/local-admin.mjs"
-    ],
-    "ignoreDependencies": [
-      "supabase"
-    ]
-  }
+  "packageManager": "pnpm@11.2.2"
 }

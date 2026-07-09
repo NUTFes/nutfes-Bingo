@@ -1,0 +1,69 @@
+name: Supabase
+
+on:
+  pull_request:
+    paths:
+      - "supabase/**"
+      - "infra/supabase/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/supabase.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/**"
+      - "infra/supabase/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/supabase.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "26.2.0"
+  PNPM_VERSION: "11.2.2"
+  SUPABASE_TELEMETRY_DISABLED: "1"
+
+jobs:
+  database:
+    name: Database lint and tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Start local database
+        run: pnpm exec supabase db start
+
+      - name: Lint local database
+        run: pnpm exec supabase db lint --local --schema public --level warning --fail-on warning
+
+      - name: Run pgTAP tests when present
+        run: |
+          if [ -d supabase/tests ]; then
+            pnpm exec supabase test db
+          else
+            echo "supabase/tests is absent; skipping pgTAP tests."
+          fi
