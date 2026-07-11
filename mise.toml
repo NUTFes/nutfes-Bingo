@@ -2,107 +2,37 @@
 node = "26.2.0"
 pnpm = "11.2.2"
 
-[env]
-SUPABASE_TELEMETRY_DISABLED = "1"
-
 [tasks.install]
 description = "Install dependencies"
 run = "pnpm install --frozen-lockfile"
 
-[tasks.up]
-description = "Start Docker development stack with Supabase CLI local services"
-run = '''
-set -eu
-
-db_up_task="${NUTFES_DB_UP_TASK:-db-up}"
-mise run "$db_up_task"
-
-status_env=$(mktemp)
-trap 'rm -f "$status_env"' EXIT HUP INT TERM
-
-pnpm exec supabase status -o env >"$status_env"
-set -a
-. "$status_env"
-set +a
-
-export SUPABASE_DOCKER_NETWORK="${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}"
-export NEXT_PUBLIC_SITE_URL="${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
-
-local_supabase_url="http://supabase_kong_nutfes-Bingo:8000"
-local_publishable_key="${PUBLISHABLE_KEY:-${ANON_KEY:?ANON_KEY was not returned by supabase status}}"
-local_service_role_key="${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY was not returned by supabase status}"
-
-case "${SUPABASE_SERVER_URL:-}" in
-  ""|"http://localhost:54321") export SUPABASE_SERVER_URL="$local_supabase_url" ;;
-  *) export SUPABASE_SERVER_URL ;;
-esac
-case "${SUPABASE_PUBLISHABLE_KEY:-}" in
-  ""|"your-publishable-or-anon-key") export SUPABASE_PUBLISHABLE_KEY="$local_publishable_key" ;;
-  *) export SUPABASE_PUBLISHABLE_KEY ;;
-esac
-case "${SUPABASE_SECRET_KEY:-}" in
-  ""|"your-service-role-or-secret-key") export SUPABASE_SECRET_KEY="$local_service_role_key" ;;
-  *) export SUPABASE_SECRET_KEY ;;
-esac
-case "${SUPABASE_SERVICE_ROLE_KEY:-}" in
-  ""|"your-service-role-or-secret-key") export SUPABASE_SERVICE_ROLE_KEY="$local_service_role_key" ;;
-  *) export SUPABASE_SERVICE_ROLE_KEY ;;
-esac
-case "${NUTFES_PUBLIC_ACTION_HASH_SALT:-}" in
-  ""|"replace-with-random-secret") export NUTFES_PUBLIC_ACTION_HASH_SALT="local-dev-public-action-salt" ;;
-  *) export NUTFES_PUBLIC_ACTION_HASH_SALT ;;
-esac
-
-docker compose -f compose.dev.yml up --build --remove-orphans
-'''
-
-[tasks."up:studio"]
-description = "Start Docker development stack with local Supabase Studio"
-run = "NUTFES_DB_UP_TASK=db-up:studio mise run up"
-
-[tasks."down"]
-description = "Stop Docker development stack and local Supabase services"
-run = '''
-set -eu
-docker compose -f compose.dev.yml down --remove-orphans
-pnpm exec supabase stop
-'''
-
-[tasks.logs]
-description = "Follow development app logs"
-run = "docker compose -f compose.dev.yml logs -f app"
-
-[tasks.ps]
-description = "Show development app and Supabase status"
-run = '''
-set -eu
-docker compose -f compose.dev.yml ps
-pnpm exec supabase status -o pretty
-'''
-
-[tasks.shell]
-description = "Open a shell in the running development app container"
-run = "docker compose -f compose.dev.yml exec app sh"
-
-[tasks."network"]
-description = "Create the shared Docker network for local Supabase and the app"
-run = '''
-set -eu
-network="${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}"
-if ! docker network inspect "$network" >/dev/null 2>&1; then
-  docker network create \
-    -o com.docker.network.bridge.host_binding_ipv4=127.0.0.1 \
-    "$network" >/dev/null
-fi
-'''
+[tasks.dev]
+description = "Run the local Cloudflare Workers and Vite environment"
+run = "pnpm dev"
 
 [tasks.check]
-description = "Run format, lint, and TypeScript checks"
+description = "Run all static checks and tests"
 run = "pnpm check"
 
+[tasks.test]
+description = "Run automated tests"
+run = "pnpm test"
+
 [tasks.build]
-description = "Run production build inside the running development container"
-run = "docker compose -f compose.dev.yml exec app pnpm build"
+description = "Build the Worker and static assets"
+run = "pnpm build"
+
+[tasks.deploy]
+description = "Build and deploy to Cloudflare"
+run = "pnpm deploy"
+
+[tasks.types]
+description = "Generate Worker binding types"
+run = "pnpm types"
+
+[tasks."dev:reset"]
+description = "Reset local Durable Object and R2 state"
+run = "node scripts/reset-local.mjs"
 
 [tasks."add"]
 description = "Add dependency with pnpm (use -D for devDependency)"
@@ -122,144 +52,3 @@ fi
 description = "Remove dependency with pnpm"
 usage = 'arg "<package>" help="Package name to remove"'
 run = 'pnpm remove "${usage_package?}"'
-
-[tasks."sync"]
-description = "Sync dependencies inside running dev container"
-run = "docker compose -f compose.dev.yml exec app pnpm install --frozen-lockfile"
-
-[tasks."deps:update"]
-description = "Refresh pnpm lockfile intentionally"
-run = "pnpm install"
-
-[tasks."sync:update"]
-description = "Refresh dependencies inside the running dev container intentionally"
-run = "docker compose -f compose.dev.yml exec app pnpm install"
-
-[tasks."db-up"]
-description = "Start minimal local Supabase stack on the shared Docker network"
-run = '''
-set -eu
-mise run network
-pnpm exec supabase start \
-  --network-id "${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}" \
-  --exclude logflare,realtime,studio,postgres-meta,mailpit,edge-runtime,vector,imgproxy,supavisor
-'''
-
-[tasks."db-up:studio"]
-description = "Start local Supabase stack with Studio and database inspection tools"
-run = '''
-set -eu
-mise run network
-pnpm exec supabase start \
-  --network-id "${SUPABASE_DOCKER_NETWORK:-nutfes-bingo-dev}" \
-  --exclude logflare,realtime,mailpit,edge-runtime,vector,imgproxy,supavisor
-'''
-
-[tasks."db-down"]
-description = "Stop local Supabase stack"
-run = "pnpm exec supabase stop"
-
-[tasks."db-status"]
-description = "Show local Supabase status"
-run = 'pnpm exec supabase status -o pretty'
-
-[tasks."db-reset"]
-description = "Reset local Supabase database"
-run = "pnpm exec supabase db reset"
-
-[tasks."typegen"]
-description = "Generate DB types from local Supabase schema"
-run = "pnpm exec supabase gen types typescript --local --schema public > src/types/database.types.ts"
-
-[tasks."admin:bootstrap"]
-description = "Create or update a local admin account"
-run = "node scripts/local-admin.mjs bootstrap"
-
-[tasks."admin:reset-password"]
-description = "Reset an existing local admin password"
-run = "node scripts/local-admin.mjs reset-password"
-
-[tasks."admin:list"]
-description = "List local admin accounts"
-run = "node scripts/local-admin.mjs list"
-
-[tasks."admin:verify"]
-description = "Verify that at least one local admin account exists"
-run = "node scripts/local-admin.mjs verify"
-
-[tasks."prod:env:init"]
-description = "Create .env.production with generated self-hosted Supabase secrets"
-run = "./infra/scripts/init-production-env.sh"
-
-
-[tasks."prod:deploy"]
-description = "Preflight, deploy, and smoke test the Proxmox LXC + Cloudflared production stack"
-run = "./infra/scripts/annual-ops.sh deploy"
-
-[tasks."prod:preflight"]
-description = "Validate Proxmox LXC + Cloudflared production prerequisites"
-run = "./infra/scripts/annual-ops.sh preflight"
-
-[tasks."prod:smoke"]
-description = "Smoke test production using NEXT_PUBLIC_SITE_URL from .env.production"
-run = "./infra/scripts/annual-ops.sh smoke"
-
-[tasks."prod:config"]
-description = "Validate rendered production Compose config"
-run = "./infra/scripts/compose.sh config --quiet"
-
-[tasks."prod:down"]
-description = "Stop production stack without deleting persistent data"
-run = "./infra/scripts/compose.sh down --remove-orphans"
-
-[tasks."prod:data:reset:dry-run"]
-description = "Preview the destructive production DB and Storage reset targets"
-run = "./infra/scripts/reset-production-data.sh --dry-run"
-
-[tasks."prod:data:reset"]
-description = "Stop production and wipe event-scoped PostgreSQL and Storage data"
-run = "./infra/scripts/reset-production-data.sh"
-
-[tasks."prod:ps"]
-description = "Show production stack status"
-run = "./infra/scripts/compose.sh ps"
-
-[tasks."prod:logs"]
-description = "Follow production stack logs"
-run = "./infra/scripts/compose.sh logs -f"
-
-[tasks."prod:seed"]
-description = "Apply the explicit idempotent production seed"
-run = "./infra/scripts/compose.sh --profile tools run --rm seed"
-
-[tasks."prod:migrate:dry-run"]
-description = "Preview pending production migrations without applying them"
-run = "./infra/scripts/annual-ops.sh migrate:dry-run"
-
-[tasks."prod:backup"]
-description = "Back up PostgreSQL and Supabase Storage"
-run = "./infra/scripts/annual-ops.sh backup"
-
-[tasks."prod:backup:offsite"]
-description = "Back up PostgreSQL and Storage, then copy with rclone"
-run = "./infra/scripts/backup-offsite.sh"
-
-[tasks."prod:cloudflare:check"]
-description = "Verify Cloudflare tunnel routes only to the app service"
-run = "./infra/scripts/check-cloudflare-tunnel.sh"
-
-[tasks."prod:admin:bootstrap"]
-description = "Create or update the initial production admin account"
-run = "./infra/scripts/admin.sh bootstrap"
-
-[tasks."prod:admin:reset-password"]
-description = "Reset an existing production admin password"
-run = "./infra/scripts/admin.sh reset-password"
-
-[tasks."prod:admin:list"]
-description = "List production admin accounts"
-run = "./infra/scripts/admin.sh list"
-
-[tasks."prod:admin:verify"]
-description = "Verify that at least one production admin account exists"
-run = "./infra/scripts/admin.sh verify"

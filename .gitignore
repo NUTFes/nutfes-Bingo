@@ -14,19 +14,18 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-/backups/
-/.data/
+# Cloudflare and Vite build output
+/.wrangler/
+/dist/
+/coverage/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
 
 # misc
 .DS_Store
 *.pem
-supabase/.temp/
+*.local
 
 # debug
 npm-debug.log*
@@ -35,16 +34,11 @@ yarn-error.log*
 .pnpm-debug.log*
 .deepsec
 
-# env files (can opt-in for committing if needed)
-.env*.local
-.env
-.env.production
-
-# vercel
-.vercel
-
-# typescript
+# legacy environment files
+.env*
+!.env.example
+!.dev.vars.example
+# tooling
 *.tsbuildinfo
-next-env.d.ts
 
 temp

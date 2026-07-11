@@ -1,0 +1,7 @@
+# Copy to .dev.vars for local development. Never commit the real file.
+COOKIE_SIGNING_SECRET=replace-with-at-least-32-random-characters
+DEV_ADMIN_TOKEN=replace-with-a-random-local-admin-token
+
+# Required in preview and production as Wrangler secrets.
+ACCESS_AUD=your-cloudflare-access-application-audience
+ACCESS_TEAM_DOMAIN=https://your-team.cloudflareaccess.com

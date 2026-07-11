@@ -1,0 +1,68 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "nutfes-bingo",
+  "main": "./src/worker/index.ts",
+  "compatibility_date": "2026-07-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "BINGO_ROOM", "class_name": "BingoRoom" },
+      { "name": "REACTION_ROOM", "class_name": "ReactionRoom" },
+    ],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BingoRoom", "ReactionRoom"] }],
+  "r2_buckets": [{ "binding": "PRIZE_IMAGES", "bucket_name": "nutfes-bingo-images-local" }],
+  "vars": {
+    "ENVIRONMENT": "local",
+    "EVENT_ID": "2026",
+    "REACTION_SHARDS": "4",
+    "PUBLIC_ORIGIN": "http://localhost:5173",
+    "DEV_ACCESS_BYPASS": "true",
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "env": {
+    "preview": {
+      "name": "nutfes-bingo-preview",
+      "durable_objects": {
+        "bindings": [
+          { "name": "BINGO_ROOM", "class_name": "BingoRoom" },
+          { "name": "REACTION_ROOM", "class_name": "ReactionRoom" },
+        ],
+      },
+      "r2_buckets": [{ "binding": "PRIZE_IMAGES", "bucket_name": "nutfes-bingo-images-preview" }],
+      "vars": {
+        "ENVIRONMENT": "preview",
+        "EVENT_ID": "2026",
+        "REACTION_SHARDS": "4",
+        "PUBLIC_ORIGIN": "https://preview-bingo.example.invalid",
+        "DEV_ACCESS_BYPASS": "false",
+      },
+    },
+    "production": {
+      "name": "nutfes-bingo",
+      "durable_objects": {
+        "bindings": [
+          { "name": "BINGO_ROOM", "class_name": "BingoRoom" },
+          { "name": "REACTION_ROOM", "class_name": "ReactionRoom" },
+        ],
+      },
+      "r2_buckets": [
+        { "binding": "PRIZE_IMAGES", "bucket_name": "nutfes-bingo-images-production" },
+      ],
+      "vars": {
+        "ENVIRONMENT": "production",
+        "EVENT_ID": "2026",
+        "REACTION_SHARDS": "4",
+        "PUBLIC_ORIGIN": "https://bingo.example.invalid",
+        "DEV_ACCESS_BYPASS": "false",
+      },
+    },
+  },
+}
