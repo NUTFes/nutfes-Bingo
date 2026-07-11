@@ -25,6 +25,8 @@ function isAllowedValue(value) {
     value === "" ||
     value.startsWith("replace-with-") ||
     value.startsWith("your-") ||
+    value.startsWith("$") ||
+    value === "string;" ||
     value.includes("${{") ||
     value.includes("process.env") ||
     value.includes("env.")
