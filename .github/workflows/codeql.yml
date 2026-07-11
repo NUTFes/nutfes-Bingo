@@ -8,7 +8,8 @@ on:
       - "package.json"
       - "pnpm-lock.yaml"
       - "tsconfig.json"
-      - "next.config.ts"
+      - "vite.config.ts"
+      - "wrangler.jsonc"
       - ".github/workflows/codeql.yml"
   push:
     branches: [main]
@@ -18,7 +19,8 @@ on:
       - "package.json"
       - "pnpm-lock.yaml"
       - "tsconfig.json"
-      - "next.config.ts"
+      - "vite.config.ts"
+      - "wrangler.jsonc"
       - ".github/workflows/codeql.yml"
   schedule:
     - cron: "31 18 * * 1"
