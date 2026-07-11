@@ -7,55 +7,41 @@
 - Add or remove dependencies with `mise run add <pkg>`, `mise run add -D <pkg>`, or `mise run remove <pkg>`.
 - Dependency changes must update `pnpm-lock.yaml`.
 
-## Runtime assumptions
+## Runtime
 
-- Development, app startup, and builds run through Docker.
-- Do not run `pnpm dev` or `pnpm build` directly on the host.
-- Static checks may run on the host: format, lint, typecheck, React Doctor, and knip.
+- The application is a React SPA and Cloudflare Worker built with Vite.
+- Static assets, HTTP APIs, Durable Objects, local SQLite, and local R2 run through the Cloudflare Vite plugin and Wrangler.
+- Local development and builds run directly on the host; containers are not part of the architecture.
 
 ## Commands
 
 - Install: `mise install && mise run install`
-- Dev: `mise run up`
-- Stop dev stack: `mise run down`
+- Dev: `pnpm dev`
+- Reset local Cloudflare state: `mise run dev:reset`
+- Format: `pnpm format`
 - Format check: `pnpm fmt:check`
 - Lint: `pnpm lint`
 - Typecheck: `pnpm typecheck`
-- Build: `docker compose -f compose.dev.yml exec app pnpm build`
-
-* React Doctor: `pnpm doctor`（React/Next.js/frontend changes only）
-* Unused code/dependency check: `pnpm knip`
-
-## Tests
-
-- No automated test suite is currently configured.
-- Do not invent or assume a test command.
-- When reporting results, state that tests were not run because no test suite exists.
+- Tests: `pnpm test`
+- Build: `pnpm build`
+- Production build: `pnpm build:production`
+- Deploy: `pnpm deploy`
+- React Doctor: `pnpm doctor`
+- Unused code/dependency check: `pnpm knip`
 
 ## Validation
 
-- For most code changes, run at least:
-  - `pnpm fmt:check`
-  - `pnpm lint`
-  - `pnpm typecheck`
-- Run `pnpm doctor` when changing React, Next.js, routing, UI components, hooks, Server Actions, or frontend-facing behavior.
-- Run `pnpm knip` when changing dependencies, exports, entry points, or deleting code.
-- Run the Docker build when changes may affect runtime behavior, routing, Next.js config, server code, Docker config, or dependency resolution.
-- If a check cannot be run, report which check was skipped and why.
+- For code changes, run `pnpm fmt:check`, `pnpm lint`, `pnpm typecheck`, and the focused tests.
+- Run `pnpm doctor` for React, routing, hooks, or frontend behavior.
+- Run `pnpm knip` after changing dependencies, exports, entry points, or deleting code.
+- Run `pnpm build` and `pnpm exec wrangler deploy --dry-run` for runtime, routing, Worker, binding, or dependency changes.
+- Never run the load test against a remote target without explicit authorization. It requires `ALLOW_LOAD_TEST=true`.
 
 ## Architecture boundaries
 
-- Browser code must not call Supabase Auth, PostgREST, or Storage directly.
-- Public access must go through Next.js pages, Server Actions, or `/api/*` routes.
-- Production runs on Proxmox LXC with Cloudflared.
-- Cloudflared must expose only `app:3000`.
-- Do not expose Kong, PostgreSQL, or Storage through public ports or Cloudflared tunnels.
-- Realtime, Studio, Edge Functions, Analytics, postgres-meta, Supavisor, and imgproxy are not started by default.
-
-<!-- BEGIN:nextjs-agent-rules -->
-
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-
-<!-- END:nextjs-agent-rules -->
+- Browser code communicates only with `/api/*` and WebSocket endpoints exposed by the Worker.
+- `BingoRoom` owns authoritative event state, versioned deltas, reach deduplication, and SQLite persistence.
+- `ReactionRoom` is independently sharded and rate-limited so reaction load cannot block number operations.
+- Prize image bytes are private in R2 and served through `/api/prize-images/*`.
+- Every `/api/admin/*` operation validates Cloudflare Access JWTs in the Worker. The local bypass is allowed only when `ENVIRONMENT=local` and requires `DEV_ADMIN_TOKEN`.
+- Production uses Cloudflare Workers Static Assets, Workers, Durable Objects, R2, and Access only.
