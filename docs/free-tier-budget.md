@@ -1,156 +1,156 @@
-# Free-tier budget
+# 無料枠の試算
 
-Estimate date: 2026-07-11. Recheck Cloudflare limits immediately before each annual event.
+試算日: 2026-07-11。年次イベントの直前にCloudflareの上限を必ず再確認してください。
 
-Official references:
+公式資料:
 
-- [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/)
-- [Durable Objects pricing](https://developers.cloudflare.com/durable-objects/platform/pricing/)
-- [R2 pricing](https://developers.cloudflare.com/r2/pricing/)
-- [Static Assets billing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/)
+- [Workersの料金](https://developers.cloudflare.com/workers/platform/pricing/)
+- [Durable Objectsの料金](https://developers.cloudflare.com/durable-objects/platform/pricing/)
+- [R2の料金](https://developers.cloudflare.com/r2/pricing/)
+- [Static Assetsの課金](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/)
 
-## Free-plan limits used
+## 試算に使用したFreeプラン上限
 
-| Resource                |                                      Included usage |
-| ----------------------- | --------------------------------------------------: |
-| Worker dynamic requests |                                         100,000/day |
-| Static Assets requests  | free and unlimited; do not invoke Worker by default |
-| Durable Object requests |                                         100,000/day |
-| Durable Object duration |                                     13,000 GB-s/day |
-| DO SQLite rows read     |                                       5,000,000/day |
-| DO SQLite rows written  |                                         100,000/day |
-| DO SQLite stored data   |                                          5 GB total |
-| R2 Standard storage     |                                   10 GB-month/month |
-| R2 Class A              |                                     1,000,000/month |
-| R2 Class B              |                                    10,000,000/month |
-| R2 egress               |                                                free |
+| リソース                |                                   無料枠 |
+| ----------------------- | ---------------------------------------: |
+| Worker動的request       |                             100,000件/日 |
+| Static Assets request   | 無料・無制限。既定ではWorkerを起動しない |
+| Durable Object request  |                             100,000件/日 |
+| Durable Object duration |                           13,000 GB-s/日 |
+| DO SQLite読み取りrow    |                           5,000,000件/日 |
+| DO SQLite書き込みrow    |                             100,000件/日 |
+| DO SQLite保存データ     |                                 合計5 GB |
+| R2 Standard storage     |                           10 GB-month/月 |
+| R2 Class A              |                           1,000,000件/月 |
+| R2 Class B              |                          10,000,000件/月 |
+| R2 egress               |                                     無料 |
 
-Free-plan operations fail after a limit is exceeded; they do not transparently become paid overage. The operational target is therefore below 70–80%, not exactly 100%.
+Freeプランでは、上限を超えたoperationは失敗し、自動的に有料超過分として処理されることはありません。そのため、運用上の目標は100%ではなく70〜80%未満とします。
 
-## Event assumptions
+## イベントの前提条件
 
-- 1,000 participant connections
-- 4-hour event
-- 4 reaction shards
-- two reconnects per participant during the event (three total connection waves)
-- 1,000 reach attempts
-- up to 500 admin operations
-- 20 prize images and every participant opens the prize list once
-- 25-second application heartbeat on Bingo WebSocket
-- reaction hard cap: 16,000 accepted/event total, divided by `REACTION_SHARDS`
-- rejected reaction messages are assumed no more than accepted messages under normal operation
+- 参加者1,000接続
+- 4時間のイベント
+- reaction shard 4個
+- イベント中に参加者ごとに2回再接続（初回を含めて合計3回の接続wave）
+- リーチ送信1,000回
+- 管理操作は最大500回
+- 景品画像20枚を用意し、すべての参加者が景品一覧を1回開く
+- Bingo WebSocketで25秒間隔のapplication heartbeat
+- リアクションのhard capは、`REACTION_SHARDS`で分割してイベント全体でaccepted 16,000件
+- 通常運用では、拒否されたリアクションメッセージがaccepted件数を超えないと仮定
 
-The hard cap is intentionally much lower than the 10-second client cooldown would theoretically permit. It protects SQLite rows-written and Durable Object request budgets.
+hard capは、クライアントの10秒cooldownから理論上許容できる件数より意図的に低く設定しています。SQLiteの書き込みrow数とDurable Object request数を保護するためです。
 
-## Worker requests
+## Worker request
 
-Static HTML, JavaScript, CSS, fonts, and reaction images are Static Assets and do not consume Worker request quota.
+静的HTML、JavaScript、CSS、font、リアクション画像はStatic Assetsとして配信するため、Worker request枠を消費しません。
 
-| Dynamic source                                   |   Estimate |
-| ------------------------------------------------ | ---------: |
-| `GET /api/session`                               |      1,000 |
-| Bingo WebSocket upgrades, 3 waves                |      3,000 |
-| Participant reaction WebSocket upgrades, 3 waves |      3,000 |
-| Venue reaction upgrades, 4 shards × 3 waves      |         12 |
-| Reach POST                                       |      1,000 |
-| Admin API                                        |        500 |
-| Prize image reads, 20 × 1,000                    |     20,000 |
-| Manual state resync allowance                    |      1,000 |
-| **Total**                                        | **29,512** |
+| 動的requestの発生源                        |     試算値 |
+| ------------------------------------------ | ---------: |
+| `GET /api/session`                         |      1,000 |
+| Bingo WebSocket upgrade、3 wave            |      3,000 |
+| 参加者のreaction WebSocket upgrade、3 wave |      3,000 |
+| 会場reaction upgrade、4 shard × 3 wave     |         12 |
+| Reach POST                                 |      1,000 |
+| Admin API                                  |        500 |
+| 景品画像読み取り、20 × 1,000               |     20,000 |
+| 手動状態再同期の予備                       |      1,000 |
+| **合計**                                   | **29,512** |
 
-Safety ratio: `100,000 / 29,512 = 3.39×`; estimated use is 29.5%.
+安全率: `100,000 / 29,512 = 3.39×`。推定使用率は29.5%です。
 
-Image reads dominate Worker requests. Browser immutable caching prevents repeated reads on the same device. If the prize count is much larger than 20, recalculate before the event.
+Worker requestでは画像読み取りが大半を占めます。ブラウザのimmutable cacheによって同じ端末からの重複読み取りを防ぎます。景品数が20点を大幅に超える場合は、イベント前に再試算してください。
 
-## Durable Object requests and messages
+## Durable Object requestとメッセージ
 
-Cloudflare counts a DO WebSocket connection as a request. Incoming WebSocket messages use a 20:1 billing ratio; outgoing messages are not billed as requests.
+Cloudflareでは、DO WebSocket接続をrequestとして数えます。受信WebSocketメッセージは20:1の比率でrequestへ換算され、送信メッセージはrequestとして課金されません。
 
 ### BingoRoom
 
-| Source                                                    |   Estimate |
-| --------------------------------------------------------- | ---------: |
-| WebSocket connections                                     |      3,000 |
-| Heartbeats: `1,000 × 14,400 / 25 = 576,000` messages ÷ 20 |     28,800 |
-| Reach RPC                                                 |      1,000 |
-| Admin/state RPC allowance                                 |      1,000 |
-| **BingoRoom subtotal**                                    | **33,800** |
+| 発生源                                                   |     試算値 |
+| -------------------------------------------------------- | ---------: |
+| WebSocket接続                                            |      3,000 |
+| Heartbeat: `1,000 × 14,400 / 25 = 576,000` messages ÷ 20 |     28,800 |
+| Reach RPC                                                |      1,000 |
+| Admin/state RPCの予備                                    |      1,000 |
+| **BingoRoom小計**                                        | **33,800** |
 
 ### ReactionRoom
 
-| Source                                          |   Estimate |
-| ----------------------------------------------- | ---------: |
-| Reaction WebSocket connections                  |      3,012 |
-| 16,000 accepted + 16,000 rejected messages ÷ 20 |      1,600 |
-| Admin enable/reset RPC, all shards              |       <100 |
-| **Reaction subtotal**                           | **<4,712** |
+| 発生源                                     |     試算値 |
+| ------------------------------------------ | ---------: |
+| Reaction WebSocket接続                     |      3,012 |
+| accepted 16,000件 + rejected 16,000件 ÷ 20 |      1,600 |
+| 全shardの管理用enable/reset RPC            |       <100 |
+| **Reaction小計**                           | **<4,712** |
 
-Combined expected DO requests: approximately **38,512/day**, 38.5% of the 100,000/day limit. Safety ratio: about **2.60×**.
+DO requestの合計推定値は**約38,512件/日**で、100,000件/日の上限に対して38.5%です。安全率は約**2.60倍**です。
 
-Abusive reconnects can increase Worker and DO upgrade requests. Cloudflare Access protects admin traffic, while public abuse must also be controlled with zone-level WAF/rate limiting if observed.
+悪意のある再接続によって、WorkerとDOのupgrade requestが増える可能性があります。管理トラフィックはCloudflare Accessで保護します。公開側で乱用が確認された場合は、zone levelのWAF・rate limitingでも制御する必要があります。
 
 ## Durable Object duration
 
-Every DO is allocated/billed as 128 MiB (`0.125 GB`) while active and unable to hibernate.
+各DOはactiveでHibernationできない間、128 MiB（`0.125 GB`）が割り当て・課金されます。
 
-Conservative worst case where BingoRoom and all four ReactionRoom shards remain active for all four hours:
+BingoRoomと4つのReactionRoom shardが4時間を通じてactiveである保守的な最悪ケース:
 
 ```text
 5 objects × 4 hours × 3,600 seconds × 0.125 GB = 9,000 GB-s
 ```
 
-This is 69.2% of the 13,000 GB-s/day limit; safety ratio 1.44×. Actual duration should be lower because both classes use Hibernation WebSocket API and are duration-free while idle/eligible to hibernate. Heartbeats may keep BingoRoom active during busy periods, so duration is the tightest compute budget and must be monitored.
+これは13,000 GB-s/日の上限に対して69.2%、安全率1.44倍です。両classはHibernation WebSocket APIを使用し、idleでHibernation可能な時間はduration対象外となるため、実際の使用量はこれより少なくなる想定です。ただし、混雑時はheartbeatによってBingoRoomがactiveのままになる可能性があり、durationが最も余裕の少ないcompute budgetです。必ず監視してください。
 
-At 70% DO duration or request use, disable reactions. At 80%, also disable reach submissions and survey while preserving number operations.
+DO durationまたはrequest使用率が70%に達した場合、リアクションを無効にします。80%に達した場合は番号操作を維持したまま、リーチ送信とアンケートも無効にします。
 
-## SQLite rows
+## SQLite row
 
-### Writes
+### 書き込み
 
-A reaction acceptance updates a client rate row, second bucket, and budget row; the text primary key may add index writes. Budget conservatively at four rows written per accepted reaction:
+リアクションを1件受け付けると、クライアントレートrow、秒bucket、budget rowを更新します。text primary keyによるindex書き込みが加わる可能性があるため、accepted reactionごとに4 rowを書き込む前提で保守的に試算します。
 
 ```text
 16,000 × 4 = 64,000 reaction rows written
 ```
 
-Bingo reach/admin/event-log allowance: 10,000 rows. Estimated total: **74,000 rows**, 74% of 100,000/day; safety ratio 1.35×.
+Bingoのリーチ、管理操作、event logには10,000 rowを確保します。推定合計は**74,000 row**で、100,000件/日の74%、安全率1.35倍です。
 
-### Reads
+### 読み取り
 
-Even assuming ten rows read per reaction and 100 rows read per admin/snapshot operation, the result is below 500,000 rows, under 10% of 5,000,000/day.
+リアクションごとに10 row、管理操作・snapshot操作ごとに100 rowを読み取ると仮定しても500,000 row未満で、5,000,000件/日の10%未満です。
 
-### Stored data
+### 保存データ
 
-The bounded 256-row event history, fewer than 100 numbers, a small prize list, 1,000 reach hashes, and 1,000 reaction hashes/shard are far below 5 GB. Historical reactions are never stored.
+最大256 rowのイベント履歴、100件未満の番号、小規模な景品一覧、1,000件のリーチハッシュ、shardごとに1,000件のリアクションハッシュを合わせても、5 GBを大幅に下回ります。過去のリアクションは保存しません。
 
 ## R2
 
-Worst-case 20 images at 2 MiB:
+画像20枚が各2 MiBである最悪ケース:
 
 ```text
 20 × 2 MiB = 40 MiB ≈ 0.04 GB-month
 ```
 
-| Operation             |      Estimate |       Free limit |
-| --------------------- | ------------: | ---------------: |
-| Class A upload/update |          <100 |  1,000,000/month |
-| Class B image reads   |        20,000 | 10,000,000/month |
-| Delete                |          free |             free |
-| Storage               | 0.04 GB-month |      10 GB-month |
+| Operation             |        試算値 |          無料枠 |
+| --------------------- | ------------: | --------------: |
+| Class A upload/update |          <100 |  1,000,000件/月 |
+| Class B image read    |        20,000 | 10,000,000件/月 |
+| Delete                |          無料 |            無料 |
+| Storage               | 0.04 GB-month |     10 GB-month |
 
-R2 has very large safety margins. Keep the bucket private and use Standard storage so the free tier applies.
+R2には十分な余裕があります。無料枠の対象となるようbucketを非公開に保ち、Standard storageを使用します。
 
-## Reconnect and message estimate
+## 再接続とメッセージの試算
 
-- Expected Bingo reconnect upgrades: 2,000 beyond initial 1,000.
-- Expected reaction reconnect upgrades: 2,000 beyond initial 1,000, plus venue shard connections.
-- Number broadcast for 100 draws: 100,000 outgoing messages. Outgoing DO WebSocket messages do not count as DO requests.
-- Heartbeats: 576,000 incoming messages, billed as about 28,800 DO requests at 20:1.
-- Maximum accepted reactions: 16,000; each is one incoming client message and one outgoing venue message.
+- Bingoの再接続upgrade: 初回1,000接続に加えて2,000件
+- Reactionの再接続upgrade: 初回1,000接続に加えて2,000件、および会場の各shard接続
+- 100回の抽選番号broadcast: 送信メッセージ100,000件。DO WebSocketの送信メッセージはDO requestとして数えません
+- Heartbeat: 受信メッセージ576,000件。20:1換算で約28,800 DO request
+- accepted reaction最大16,000件。1件ごとに参加者からの受信メッセージ1件と、会場への送信メッセージ1件
 
-## Local 1,000-connection result
+## ローカル1,000接続試験の結果
 
-Command executed against local Wrangler/workerd on 2026-07-11:
+2026-07-11にローカルWrangler/workerdに対して次のコマンドを実行しました。
 
 ```bash
 ALLOW_LOAD_TEST=true \
@@ -162,21 +162,21 @@ LOAD_TEST_ADMIN_TOKEN=local-admin \
 pnpm test:load
 ```
 
-| Metric                                 |                            Result |
-| -------------------------------------- | --------------------------------: |
-| Initial connected / errors             |                         1,000 / 0 |
-| Initial connect p50 / p95 / max        | 1,552.44 / 1,585.12 / 1,597.23 ms |
-| Reconnected / errors                   |                         1,000 / 0 |
-| Reconnect p50 / p95 / max              | 1,838.54 / 1,966.06 / 1,975.14 ms |
-| Number delta delivered / errors        |                         1,000 / 0 |
-| Broadcast p50 / p95 / max              |        91.81 / 127.76 / 131.55 ms |
-| Reaction clients                       |                               100 |
-| First reaction accepted                |                               100 |
-| Immediate second reaction rate-limited |                               100 |
-| Reaction errors                        |                                 0 |
-| Estimated upgrades                     |                             2,100 |
-| Estimated messages                     |                             3,400 |
-| Load-process heap growth               |                  25,584,216 bytes |
-| Elapsed                                |                       5,340.39 ms |
+| 指標                       |                              結果 |
+| -------------------------- | --------------------------------: |
+| 初回接続数 / error         |                         1,000 / 0 |
+| 初回接続 p50 / p95 / max   | 1,552.44 / 1,585.12 / 1,597.23 ms |
+| 再接続数 / error           |                         1,000 / 0 |
+| 再接続 p50 / p95 / max     | 1,838.54 / 1,966.06 / 1,975.14 ms |
+| 番号delta受信数 / error    |                         1,000 / 0 |
+| Broadcast p50 / p95 / max  |        91.81 / 127.76 / 131.55 ms |
+| リアクションクライアント数 |                               100 |
+| 初回リアクションaccepted   |                               100 |
+| 直後の2回目をrate limit    |                               100 |
+| リアクションerror          |                                 0 |
+| 推定upgrade数              |                             2,100 |
+| 推定メッセージ数           |                             3,400 |
+| 負荷試験processのheap増加  |                  25,584,216 bytes |
+| 経過時間                   |                       5,340.39 ms |
 
-This proves local behavior and client-script capacity, not Cloudflare edge latency or production capacity. A remote preview load test requires explicit authorization and Cloudflare dashboard evidence for DO duration, error rate, memory, and disconnect metrics.
+この結果が証明するのはローカルでの動作とクライアントscriptの処理能力であり、Cloudflare edgeの遅延や本番処理能力ではありません。preview環境に対するリモート負荷試験には明示的な許可が必要です。また、DO duration、error rate、memory、切断metricsをCloudflare dashboardで確認する必要があります。

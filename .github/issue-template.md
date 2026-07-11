@@ -1,24 +1,24 @@
 ---
-name: maintenance issue
-about: Track dependencies, Cloudflare resources, or annual event operations
+name: メンテナンス
+about: 依存関係、Cloudflareリソース、年次イベント運用を管理する
 title: ""
 labels: maintenance
 assignees: ""
 ---
 
-# Target area
+# 対象領域
 
-- [ ] Dependencies / pnpm lockfile
-- [ ] Worker / Durable Objects / WebSocket protocol
-- [ ] R2 prize images
-- [ ] Cloudflare Access / secrets
-- [ ] Static assets / frontend
-- [ ] CI/CD / deployment
-- [ ] Event backup / reset / operations
-- [ ] Documentation
+- [ ] 依存関係 / pnpm lockfile
+- [ ] Worker / Durable Objects / WebSocketプロトコル
+- [ ] R2景品画像
+- [ ] Cloudflare Access / シークレット
+- [ ] 静的asset / フロントエンド
+- [ ] CI/CD / デプロイ
+- [ ] イベントのbackup / reset / 運用
+- [ ] ドキュメント
 
-# Current behavior
+# 現在の動作
 
-# Expected behavior
+# 期待する動作
 
-# Verification evidence
+# 検証結果

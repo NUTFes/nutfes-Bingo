@@ -1,27 +1,27 @@
-# Operations
+# 運用手順
 
-## Before first production deployment
+## 初回本番デプロイ前
 
-1. Create or select the Cloudflare account and zone.
-2. Create private R2 buckets:
+1. Cloudflareアカウントとzoneを作成または選択します。
+2. 非公開R2 bucketを作成します。
    - `nutfes-bingo-images-preview`
    - `nutfes-bingo-images-production`
-3. Replace `PUBLIC_ORIGIN` placeholders in `wrangler.jsonc` with the actual preview and production origins.
-4. Create a Cloudflare Access self-hosted application covering:
+3. `wrangler.jsonc`内の`PUBLIC_ORIGIN` placeholderを、実際のpreviewおよびproduction originへ置き換えます。
+4. 次のパスを対象にCloudflare Accessのself-hosted applicationを作成します。
    - `/admin/*`
    - `/api/admin/*`
-5. Add an Allow policy for the small administrator group. Do not use a bypass policy in production.
-6. Store `COOKIE_SIGNING_SECRET`, `ACCESS_AUD`, and `ACCESS_TEAM_DOMAIN` with `wrangler secret put --env production`.
-7. Create GitHub Environment `production`, enable required reviewers, and add:
-   - secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `COOKIE_SIGNING_SECRET`, `ACCESS_AUD`, `ACCESS_TEAM_DOMAIN`
+5. 少数の管理者groupを対象とするAllow policyを追加します。productionでbypass policyを使用してはいけません。
+6. `wrangler secret put --env production`を使用して`COOKIE_SIGNING_SECRET`、`ACCESS_AUD`、`ACCESS_TEAM_DOMAIN`を保存します。
+7. GitHub Environment `production`を作成し、required reviewerを有効化して次を追加します。
+   - secrets: `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`COOKIE_SIGNING_SECRET`、`ACCESS_AUD`、`ACCESS_TEAM_DOMAIN`
    - variable: `PRODUCTION_URL`
-8. Restrict the API token to the target account with Workers Scripts edit, Workers R2 Storage edit, and the minimum account/zone read permissions required by Wrangler. Do not use a Global API Key.
-9. Deploy once. Wrangler applies the `v1` SQLite Durable Object migration.
-10. Confirm the R2 bucket does not expose an `r2.dev` public URL.
+8. API tokenを対象アカウントに限定し、Workers Scripts edit、Workers R2 Storage edit、およびWranglerに必要な最小限のaccount/zone read権限だけを付与します。Global API Keyは使用しません。
+9. 1回デプロイします。Wranglerによって`v1` SQLite Durable Object migrationが適用されます。
+10. R2 bucketが`r2.dev`公開URLを提供していないことを確認します。
 
-## Pre-event checklist
+## イベント前チェックリスト
 
-### One to four weeks before
+### 1〜4週間前
 
 ```bash
 mise install
@@ -31,103 +31,103 @@ pnpm build:production
 pnpm exec wrangler deploy --dry-run
 ```
 
-- Confirm Cloudflare Free plan limits and product pricing have not changed.
-- Confirm `EVENT_ID` is the intended year/event identifier.
-- Confirm `REACTION_SHARDS=4` or the selected tested shard count.
-- Confirm Access application `AUD` still matches the Worker secret.
-- Confirm team domain and Access JWKS endpoint are reachable.
-- Rotate `COOKIE_SIGNING_SECRET` only before the event; rotation invalidates participant reach/reaction identities.
-- Upload representative JPEG, PNG, and WebP files; reject a >2 MiB file and mismatched MIME/signature.
-- Verify number add/update/delete/reset, reach controls, survey, prize lifecycle, all feature flags, and event initialization.
-- Run the 1,000-connection load test against local or an explicitly approved preview target. Never target production without written authorization.
+- Cloudflare Freeプランの上限と製品価格に変更がないことを確認します。
+- `EVENT_ID`が対象年・イベントの識別子であることを確認します。
+- `REACTION_SHARDS=4`、または選択した検証済みshard数であることを確認します。
+- Access applicationの`AUD`がWorker secretと一致していることを確認します。
+- team domainとAccess JWKS endpointへ接続できることを確認します。
+- `COOKIE_SIGNING_SECRET`はイベント前にだけrotationします。rotationすると参加者のリーチ・リアクション識別子が無効になります。
+- 代表的なJPEG、PNG、WebPをアップロードし、2 MiB超のファイルやMIME/signatureが一致しないファイルが拒否されることを確認します。
+- 番号の追加、更新、削除、リセット、リーチ操作、アンケート、景品のlifecycle、全機能フラグ、イベント初期化を検証します。
+- ローカルまたは明示的に承認されたpreview環境に対して1,000接続負荷試験を実行します。書面による許可なくproductionを対象にしてはいけません。
 
-### Event-day preflight
+### イベント当日の事前確認
 
-1. Open `/admin` through Access in a private browser.
-2. Open `/screen` on the venue display.
-3. Open `/` on a participant device and `/prizes` in a second tab.
-4. Use **Initialize event** and type `RESET`. This removes numbers, reaches, prizes, prize images, survey state, rate limits, and reaction budgets.
-5. Confirm flags:
+1. private browserでAccessを経由して`/admin`を開きます。
+2. 会場ディスプレイで`/screen`を開きます。
+3. 参加者端末で`/`を開き、別tabで`/prizes`を開きます。
+4. **イベントを初期化**を選び、`RESET`と入力します。番号、リーチ、景品、景品画像、アンケート状態、レート制限、リアクション上限が削除されます。
+5. 次のフラグを確認します。
    - `reactionsEnabled=true`
    - `reachSubmissionEnabled=true`
    - `surveyEnabled=true`
    - `adminWritesEnabled=true`
    - `readOnlyMode=false`
-6. Add and remove one test number. Confirm participant and venue update without reload.
-7. Submit one reach and reaction. Confirm venue count/animation.
-8. Confirm Worker, Durable Object, and R2 dashboards show no errors.
-9. Reset test data again before admitting participants.
+6. テスト番号を1件追加して削除します。再読み込みせずに参加者画面と会場画面が更新されることを確認します。
+7. リーチとリアクションを1回ずつ送信し、会場画面の数値・アニメーションを確認します。
+8. Worker、Durable Object、R2 dashboardにエラーがないことを確認します。
+9. 参加者を受け入れる前に、テストデータを再度リセットします。
 
-## Start of event
+## イベント開始時
 
-- Keep one admin tab and one read-only participant tab on separate devices/networks.
-- Keep venue status indicators green for Bingo and Reactions.
-- Record starting version from **Current state**.
-- Do not refresh all clients simultaneously unless recovery requires it.
+- 管理者tabと読み取り専用の参加者tabを、異なる端末・networkで1つずつ維持します。
+- 会場画面のBingoとReactionsの状態表示が緑色であることを確認します。
+- **現在の状態**から開始時のversionを記録します。
+- 復旧に必要な場合を除き、全クライアントを同時に再読み込みしません。
 
-## During event
+## イベント中
 
-### Normal drawing
+### 通常の抽選
 
-- Use number add for each draw.
-- Correct mistakes with number update; delete only the selected row.
-- Avoid full reset after the event starts.
-- Monitor Worker request count, Durable Object requests/duration/SQLite rows, and error logs.
+- 抽選のたびに番号追加を使用します。
+- 誤りは番号更新で修正し、削除する場合は選択した行だけを削除します。
+- イベント開始後は全番号リセットを避けます。
+- Worker request数、Durable Objectのrequest数・duration・SQLite row数、およびerror logを監視します。
 
-### Survey
+### アンケート
 
-- Save an HTTPS URL only.
-- Publish when ready; stop after collection.
-- `surveyEnabled=false` is the degradation switch and overrides the stored active state.
+- HTTPS URLだけを保存します。
+- 準備が整ってから公開し、回答受付終了後に停止します。
+- `surveyEnabled=false`は縮退運転用のswitchで、保存済みのactive状態より優先されます。
 
-### Prize operation
+### 景品操作
 
-- Images must be JPEG, PNG, or WebP and no larger than 2 MiB.
-- Mark awarded prizes as won instead of deleting them when the history matters.
-- Reorder with up/down controls; order is deterministic across clients.
+- 画像はJPEG、PNG、WebPのいずれかで、2 MiB以下である必要があります。
+- 当選履歴が必要な場合は景品を削除せず、当選済みに変更します。
+- 上下操作で並べ替えます。すべてのクライアントで表示順は一意に決まります。
 
-## Degradation procedure
+## 縮退運転手順
 
-Protect features in this order: number display, number administration, venue display, reach, survey, reactions.
+機能を保護する優先順位は、番号表示、番号管理、会場表示、リーチ、アンケート、リアクションの順です。
 
-1. **Reaction pressure or errors**: set `reactionsEnabled=false`. This propagates to every ReactionRoom shard. BingoRoom is unaffected.
-2. **Survey issue**: set `surveyEnabled=false`.
-3. **Reach pressure**: set `reachSubmissionEnabled=false`. Admin reach controls remain available.
-4. **Unsafe writes or broad incident**: set `readOnlyMode=true`. Existing SQLite state, snapshots, static assets, and connected readers remain available; all non-flag writes are rejected.
-5. If admin writes alone must stop while readers continue, set `adminWritesEnabled=false`.
+1. **リアクションの負荷上昇またはエラー**: `reactionsEnabled=false`にします。すべてのReactionRoom shardへ反映され、BingoRoomには影響しません。
+2. **アンケートの問題**: `surveyEnabled=false`にします。
+3. **リーチの負荷上昇**: `reachSubmissionEnabled=false`にします。管理者のリーチ操作は引き続き使用できます。
+4. **安全でない書き込みまたは広範な障害**: `readOnlyMode=true`にします。既存のSQLite状態、snapshot、静的asset、接続済みreaderは利用を継続でき、フラグ以外のすべての書き込みを拒否します。
+5. 読み取りを維持したまま管理者の書き込みだけを停止する場合は、`adminWritesEnabled=false`にします。
 
-Do not disable `adminWritesEnabled` and then navigate away before deciding whether it must be re-enabled; flag updates remain intentionally allowed so recovery is possible.
+`adminWritesEnabled`を無効にした後、再度有効にする必要があるか判断する前に管理画面から移動しないでください。復旧可能にするため、機能フラグの更新は意図的に許可されたままです。
 
-## Connectivity incident
+## 接続障害
 
-- Clients reconnect automatically with exponential backoff and jitter.
-- A connected client keeps its last snapshot and shows offline state.
-- Use the **Resync** button for a one-time `GET /api/state`; there is no automatic HTTP polling.
-- If only reaction status is red, continue number drawing and disable reactions.
-- If Bingo status is red, stop number mutation until at least admin and venue have resynchronized.
-- Check Workers Logs for structured `request.failed` entries and Durable Object metrics.
+- クライアントは指数バックオフとjitterを使用して自動再接続します。
+- 接続済みクライアントは最後のsnapshotを保持したまま、offline状態を表示します。
+- **再同期**ボタンから`GET /api/state`を1回だけ呼び出します。自動HTTPポーリングはありません。
+- リアクションの状態だけが赤い場合、番号抽選を継続し、リアクションを無効にします。
+- Bingoの状態が赤い場合、少なくとも管理画面と会場画面が再同期するまで番号変更を停止します。
+- Workers Logsで構造化された`request.failed` entryとDurable Object metricsを確認します。
 
-## Free-tier limit approach
+## 無料枠上限への接近時
 
-- Reaction shards stop automatically after 4,000 accepted reactions each (16,000 total with four shards).
-- Disable reactions earlier when Durable Object requests approach 70% of the daily allowance.
-- At 80% of any critical daily limit, disable reach submissions and survey if they contribute traffic.
-- Preserve number reads/writes until the event ends.
-- Free-plan overage does not bill silently; operations of the exceeded type fail. Treat dashboard warnings as an incident before that point.
+- Reaction shardはそれぞれ4,000件、4 shard合計16,000件のリアクションを受け付けると自動停止します。
+- Durable Object requestが1日上限の70%に近づいた時点で、先にリアクションを無効にします。
+- 重要な1日上限の80%に達した場合、トラフィックへの影響があるリーチ送信とアンケートも無効にします。
+- イベント終了まで番号の読み取り・書き込みを優先して維持します。
+- Freeプランでは、上限超過分が自動的に有料課金されるのではなく、超過した種類のoperationが失敗します。dashboardの警告を上限到達前の障害として扱います。
 
-## End of event
+## イベント終了時
 
-1. Set `reactionsEnabled=false` and stop the survey.
-2. Expand **Current state** and save the JSON to the approved event archive if retention is required.
-3. Download required prize source images separately; there is no public bucket listing/export endpoint.
-4. Record final version, number sequence, reach count, and awarded prizes.
-5. Review Worker and Durable Object errors and usage.
-6. Use **Initialize event** only after archival approval. It deletes prize metadata and R2 objects.
-7. Confirm `/api/state` returns an empty number/prize list and zero reach count.
+1. `reactionsEnabled=false`にして、アンケートを停止します。
+2. **現在の状態**を展開し、保存が必要な場合はJSONを承認済みイベントarchiveへ保存します。
+3. 必要な景品の元画像を個別にダウンロードします。公開bucket一覧・export endpointはありません。
+4. 最終version、番号順、リーチ数、当選済み景品を記録します。
+5. WorkerとDurable Objectのエラーおよび使用量を確認します。
+6. archiveの承認後にだけ**イベントを初期化**を使用します。景品メタデータとR2 objectも削除されます。
+7. `/api/state`が空の番号・景品一覧とリーチ数0を返すことを確認します。
 
-## Rollback
+## ロールバック
 
-- Worker code: use `wrangler versions list` then `wrangler rollback <VERSION_ID>`.
-- SQLite data: use Durable Objects Point-in-Time Recovery through the supported Cloudflare procedure before event initialization if state recovery is required.
-- Do not roll back to the removed server/database architecture; it has no compatible schema or runtime.
-- A code rollback does not automatically roll back R2 objects or SQLite data. Verify protocol/schema compatibility before rollback.
+- Workerコード: `wrangler versions list`でversionを確認し、`wrangler rollback <VERSION_ID>`を実行します。
+- SQLiteデータ: イベント初期化前であれば、Cloudflareが提供するDurable Objects Point-in-Time Recoveryの手順で復旧します。
+- 削除済みのサーバー・データベース構成へはロールバックしません。schemaとruntimeに互換性がありません。
+- コードのロールバックでは、R2 objectやSQLiteデータは自動的に戻りません。ロールバック前にprotocol・schemaの互換性を確認します。

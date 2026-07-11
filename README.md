@@ -11,7 +11,7 @@ NUTFes のビンゴ大会向けリアルタイムアプリです。React SPA、C
 - **R2**: 最大 2 MiB の JPEG / PNG / WebP 景品画像。バケットは公開せず Worker 経由で配信
 - **Cloudflare Access**: `/admin/*` と `/api/admin/*` を保護。Worker でも JWT の署名、`iss`、`aud`、期限を再検証
 
-詳細は [architecture](docs/architecture.md) と [WebSocket protocol](docs/websocket-protocol.md) を参照してください。
+詳細は[アーキテクチャ](docs/architecture.md)と[WebSocketプロトコル](docs/websocket-protocol.md)を参照してください。
 
 ## 必要ツール
 
@@ -48,17 +48,17 @@ mise run dev:reset
 ## コマンド
 
 ```bash
-pnpm dev                 # Vite + workerd + local DO SQLite + local R2
-pnpm check               # versions, format, lint, typecheck, tests
+pnpm dev                 # Vite + workerd + ローカルDO SQLite + ローカルR2
+pnpm check               # バージョン、format、lint、型、テストを確認
 pnpm test                # unit + integration
 pnpm test:unit
 pnpm test:integration
-pnpm build               # local Cloudflare environment
+pnpm build               # ローカルCloudflare環境
 pnpm build:preview
 pnpm build:production
 pnpm exec wrangler deploy --dry-run
-pnpm deploy              # production environmentをbuildしてdeploy
-pnpm test:load           # defaultは安全にskip
+pnpm deploy              # production環境をビルドしてデプロイ
+pnpm test:load           # 既定では安全のためskip
 ```
 
 リモート負荷試験は明示的な許可なしに実行しないでください。承認済みターゲットでのみ次を設定します。
@@ -85,7 +85,7 @@ production 導入前に以下を作成します。
 
 `wrangler.jsonc` は local / preview / production を分離します。Cloudflare Vite plugin では environment を build 時に選択するため、production は `CLOUDFLARE_ENV=production vite build` を使います。`wrangler deploy --env production` を build 後に指定しても environment は変わりません。
 
-## Secrets
+## シークレット
 
 秘密値は Git へコミットせず Wrangler secret と GitHub Environment secret へ保存します。
 
@@ -140,7 +140,7 @@ GitHub Actions の `Deploy Cloudflare` は `main` merge または手動実行で
 
 ## 本番前・当日・障害時
 
-実施手順は [operations](docs/operations.md) に集約しています。要点:
+実施手順は[運用手順](docs/operations.md)に集約しています。要点:
 
 - 事前: Access、secrets、R2 非公開、production origin、4 shard、smoke / 1000 connection test を確認
 - 開始: event initialization、機能フラグ、会場画面、一般画面を確認
@@ -150,12 +150,12 @@ GitHub Actions の `Deploy Cloudflare` は `main` merge または手動実行で
 
 ## 無料枠
 
-[free-tier budget](docs/free-tier-budget.md) に 1,000 接続・4時間の見積もり、縮退閾値、2026-07-11 にローカルで実施した 1,000 WebSocket 負荷試験結果を記載しています。Static Assets request は無料かつ Worker request に数えられません。リアクションは shard ごとにイベント最大 4,000 件、全体最大 16,000 件で自動停止します。
+[無料枠の試算](docs/free-tier-budget.md)に、1,000接続・4時間の見積もり、縮退閾値、2026-07-11にローカルで実施した1,000 WebSocket接続の負荷試験結果を記載しています。Static Assets requestは無料で、Worker requestには数えられません。リアクションはshardごとにイベント最大4,000件、全体最大16,000件で自動停止します。
 
 ## 関連文書
 
-- [Architecture](docs/architecture.md)
-- [WebSocket protocol](docs/websocket-protocol.md)
-- [Operations](docs/operations.md)
-- [Free-tier budget](docs/free-tier-budget.md)
-- [Migration notes](docs/migration-notes.md)
+- [アーキテクチャ](docs/architecture.md)
+- [WebSocketプロトコル](docs/websocket-protocol.md)
+- [運用手順](docs/operations.md)
+- [無料枠の試算](docs/free-tier-budget.md)
+- [移行記録](docs/migration-notes.md)

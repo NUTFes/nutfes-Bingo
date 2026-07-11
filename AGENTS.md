@@ -1,47 +1,47 @@
-# Project agent guide
+# プロジェクトエージェントガイド
 
-## Environment
+## 環境
 
-- Use Node `26.2.0` and pnpm `11.2.2`, as defined in `mise.toml` and CI.
-- Use pnpm only. Do not use npm or yarn.
-- Add or remove dependencies with `mise run add <pkg>`, `mise run add -D <pkg>`, or `mise run remove <pkg>`.
-- Dependency changes must update `pnpm-lock.yaml`.
+- `mise.toml`とCIで定義しているNode `26.2.0`、pnpm `11.2.2`を使用してください。
+- pnpmだけを使用し、npmやyarnは使用しないでください。
+- 依存関係の追加・削除には`mise run add <pkg>`、`mise run add -D <pkg>`、または`mise run remove <pkg>`を使用してください。
+- 依存関係を変更した場合は`pnpm-lock.yaml`も更新してください。
 
-## Runtime
+## ランタイム
 
-- The application is a React SPA and Cloudflare Worker built with Vite.
-- Static assets, HTTP APIs, Durable Objects, local SQLite, and local R2 run through the Cloudflare Vite plugin and Wrangler.
-- Local development and builds run directly on the host; containers are not part of the architecture.
+- アプリケーションはViteでビルドするReact SPAとCloudflare Workerです。
+- 静的asset、HTTP API、Durable Objects、ローカルSQLite、ローカルR2はCloudflare Vite pluginとWranglerを通じて動作します。
+- ローカル開発とビルドはhost上で直接実行します。コンテナはアーキテクチャに含まれません。
 
-## Commands
+## コマンド
 
-- Install: `mise install && mise run install`
-- Dev: `pnpm dev`
-- Reset local Cloudflare state: `mise run dev:reset`
-- Format: `pnpm format`
-- Format check: `pnpm fmt:check`
-- Lint: `pnpm lint`
-- Typecheck: `pnpm typecheck`
-- Tests: `pnpm test`
-- Build: `pnpm build`
-- Production build: `pnpm build:production`
-- Deploy: `pnpm deploy`
+- インストール: `mise install && mise run install`
+- 開発: `pnpm dev`
+- ローカルCloudflare状態のリセット: `mise run dev:reset`
+- format: `pnpm format`
+- format確認: `pnpm fmt:check`
+- lint: `pnpm lint`
+- 型確認: `pnpm typecheck`
+- テスト: `pnpm test`
+- ビルド: `pnpm build`
+- productionビルド: `pnpm build:production`
+- デプロイ: `pnpm deploy`
 - React Doctor: `pnpm doctor`
-- Unused code/dependency check: `pnpm knip`
+- 未使用コード・依存関係の確認: `pnpm knip`
 
-## Validation
+## 検証
 
-- For code changes, run `pnpm fmt:check`, `pnpm lint`, `pnpm typecheck`, and the focused tests.
-- Run `pnpm doctor` for React, routing, hooks, or frontend behavior.
-- Run `pnpm knip` after changing dependencies, exports, entry points, or deleting code.
-- Run `pnpm build` and `pnpm exec wrangler deploy --dry-run` for runtime, routing, Worker, binding, or dependency changes.
-- Never run the load test against a remote target without explicit authorization. It requires `ALLOW_LOAD_TEST=true`.
+- コードを変更した場合は、`pnpm fmt:check`、`pnpm lint`、`pnpm typecheck`、および変更箇所に対応するテストを実行してください。
+- React、routing、hook、フロントエンドの動作を変更した場合は`pnpm doctor`を実行してください。
+- 依存関係、export、entry pointを変更した場合やコードを削除した場合は`pnpm knip`を実行してください。
+- runtime、routing、Worker、binding、依存関係を変更した場合は`pnpm build`と`pnpm exec wrangler deploy --dry-run`を実行してください。
+- 明示的な許可なくremote targetに対して負荷試験を実行しないでください。実行には`ALLOW_LOAD_TEST=true`が必要です。
 
-## Architecture boundaries
+## アーキテクチャ境界
 
-- Browser code communicates only with `/api/*` and WebSocket endpoints exposed by the Worker.
-- `BingoRoom` owns authoritative event state, versioned deltas, reach deduplication, and SQLite persistence.
-- `ReactionRoom` is independently sharded and rate-limited so reaction load cannot block number operations.
-- Prize image bytes are private in R2 and served through `/api/prize-images/*`.
-- Every `/api/admin/*` operation validates Cloudflare Access JWTs in the Worker. The local bypass is allowed only when `ENVIRONMENT=local` and requires `DEV_ADMIN_TOKEN`.
-- Production uses Cloudflare Workers Static Assets, Workers, Durable Objects, R2, and Access only.
+- browser codeはWorkerが公開する`/api/*`とWebSocket endpointだけを使用して通信します。
+- `BingoRoom`は信頼できるイベント状態、version付きdelta、リーチ重複排除、SQLite永続化を担当します。
+- `ReactionRoom`は独立してshard化・rate limitされ、リアクション負荷が番号操作を妨げないようにします。
+- 景品画像のbyte dataはR2で非公開にし、`/api/prize-images/*`を通じて配信します。
+- すべての`/api/admin/*`操作でWorkerがCloudflare Access JWTを検証します。ローカルバイパスは`ENVIRONMENT=local`の場合だけ許可し、`DEV_ADMIN_TOKEN`を必須とします。
+- productionではCloudflare Workers Static Assets、Workers、Durable Objects、R2、Accessだけを使用します。

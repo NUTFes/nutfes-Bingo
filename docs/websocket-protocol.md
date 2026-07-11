@@ -1,22 +1,22 @@
-# WebSocket protocol
+# WebSocketプロトコル
 
-All messages are UTF-8 JSON. Client messages larger than 4 KiB are rejected with close code `1009`. Three invalid or rejected messages close the connection with `1008`.
+すべてのメッセージはUTF-8 JSONです。4 KiBを超えるクライアントメッセージはclose code `1009`で拒否します。不正または拒否されたメッセージが3回に達すると、`1008`で接続を切断します。
 
-## Endpoints
+## エンドポイント
 
-| Endpoint                                | Object                        | Client role                         |
-| --------------------------------------- | ----------------------------- | ----------------------------------- |
-| `/api/ws`                               | `BingoRoom`                   | participant, venue, admin read-only |
-| `/api/reactions/ws?role=client`         | selected `ReactionRoom` shard | participant sender                  |
-| `/api/reactions/ws?role=screen&shard=N` | explicit `ReactionRoom` shard | venue receiver                      |
+| エンドポイント                          | Object                         | クライアントの役割                 |
+| --------------------------------------- | ------------------------------ | ---------------------------------- |
+| `/api/ws`                               | `BingoRoom`                    | 参加者、会場、読み取り専用の管理者 |
+| `/api/reactions/ws?role=client`         | 選択された`ReactionRoom` shard | 参加者側の送信                     |
+| `/api/reactions/ws?role=screen&shard=N` | 指定した`ReactionRoom` shard   | 会場側の受信                       |
 
-The venue opens one reaction connection for every shard from `/api/session.reactionShards`.
+会場画面は`/api/session`の`reactionShards`で返されたすべてのshardに対して、リアクション接続を1つずつ開きます。
 
-## Bingo connection
+## Bingo接続
 
-### First connection
+### 初回接続
 
-Connect without `lastVersion`:
+`lastVersion`を付けずに接続します。
 
 ```text
 GET /api/ws
@@ -24,7 +24,7 @@ Connection: Upgrade
 Upgrade: websocket
 ```
 
-BingoRoom immediately returns a complete snapshot.
+BingoRoomは直ちに完全なsnapshotを返します。
 
 ```json
 {
@@ -46,50 +46,50 @@ BingoRoom immediately returns a complete snapshot.
 }
 ```
 
-### Resume
+### 再開
 
-The client stores the last applied version in memory and reconnects with:
+クライアントは最後に適用したversionをメモリに保持し、次の形式で再接続します。
 
 ```text
 GET /api/ws?lastVersion=100
 ```
 
-- If all events `101..current` remain in the 256-event history, BingoRoom sends them in ascending order.
-- If history is missing, non-contiguous, or the client version is ahead, BingoRoom sends a snapshot.
-- If the client is already current, no state message is required; the client keeps its last snapshot.
-- A client may explicitly send `{"type":"resync","lastVersion":100}` after connection.
+- `101..current`の全イベントが最大256件の履歴内に残っている場合、BingoRoomは昇順で送信します。
+- 履歴が不足している、連続していない、またはクライアントのversionが先行している場合、BingoRoomはsnapshotを送信します。
+- クライアントがすでに最新の場合、状態メッセージは不要です。クライアントは最後のsnapshotを保持します。
+- 接続後にクライアントから`{"type":"resync","lastVersion":100}`を明示的に送信することもできます。
 
-The SPA reconnect delay is exponential, capped at 30 seconds, with 0.75–1.25 jitter. No automatic HTTP polling exists.
+SPAの再接続待機時間は指数的に増加し、最大30秒、0.75〜1.25倍のjitterを加えます。自動HTTPポーリングは行いません。
 
-## Bingo delta messages
+## Bingo deltaメッセージ
 
-Every delta contains the version committed in the same SQLite transaction as the state mutation.
+すべてのdeltaには、状態変更と同じSQLite transaction内でcommitされたversionが含まれます。
 
-### Number added
+### 番号の追加
 
 ```json
 { "type": "number.added", "version": 101, "payload": { "id": 2, "number": 42 } }
 ```
 
-### Number updated
+### 番号の更新
 
 ```json
 { "type": "number.updated", "version": 102, "payload": { "id": 2, "number": 43 } }
 ```
 
-### Number deleted
+### 番号の削除
 
 ```json
 { "type": "number.deleted", "version": 103, "payload": { "id": 2, "number": 43 } }
 ```
 
-### All numbers reset
+### 全番号のリセット
 
 ```json
 { "type": "numbers.reset", "version": 104, "payload": {} }
 ```
 
-### Reach changed or reset
+### リーチ数の変更またはリセット
 
 ```json
 { "type": "reach.updated", "version": 105, "payload": { "count": 11 } }
@@ -99,7 +99,7 @@ Every delta contains the version committed in the same SQLite transaction as the
 { "type": "reach.reset", "version": 106, "payload": { "count": 0 } }
 ```
 
-### Survey
+### アンケート
 
 ```json
 {
@@ -109,9 +109,9 @@ Every delta contains the version committed in the same SQLite transaction as the
 }
 ```
 
-### Prizes
+### 景品
 
-Prize mutations send the complete, deterministically ordered prize list because the list is small and create/update/delete/reorder can change multiple display positions.
+景品一覧は小さく、作成、更新、削除、並び替えによって複数の表示位置が変化する可能性があるため、景品操作時は一意に並べた完全な景品一覧を送信します。
 
 ```json
 {
@@ -131,7 +131,7 @@ Prize mutations send the complete, deterministically ordered prize list because 
 }
 ```
 
-### Feature flags
+### 機能フラグ
 
 ```json
 {
@@ -147,51 +147,51 @@ Prize mutations send the complete, deterministically ordered prize list because 
 }
 ```
 
-### Event initialized
+### イベント初期化
 
 ```json
 { "type": "event.initialized", "version": 110, "payload": {} }
 ```
 
-The client then requests a fresh snapshot once. This is an event-driven resync, not polling.
+このメッセージを受信したクライアントは、新しいsnapshotを1回だけ要求します。これはイベント駆動の再同期であり、ポーリングではありません。
 
 ## Heartbeat
 
-The runtime handles protocol ping/pong frames without waking a hibernated object. The browser also sends an application heartbeat every 25 seconds while connected:
+ランタイムは、hibernate中のObjectを起動せずにプロトコルレベルのping/pong frameを処理します。ブラウザからも接続中に25秒ごとにapplication heartbeatを送信します。
 
 ```json
 { "type": "ping" }
 ```
 
-Response:
+応答:
 
 ```json
 { "type": "pong", "version": 110 }
 ```
 
-Application heartbeat traffic is included in the free-tier estimate.
+application heartbeatのトラフィックは無料枠の試算に含めています。
 
-## Reaction protocol
+## リアクションプロトコル
 
-### Send
+### 送信
 
 ```json
 { "type": "reaction", "name": "heart" }
 ```
 
-Allowed names:
+許可される名前:
 
 ```text
 angry cracker crap good heart peace sad skull smile surprise
 ```
 
-Success acknowledgement:
+成功応答:
 
 ```json
 { "type": "reaction.accepted", "at": 1783754000000 }
 ```
 
-Venue message (the envelope supports future 100–250 ms batching):
+会場向けメッセージ。envelopeは将来の100〜250 ms単位のbatch送信にも対応できる形式です。
 
 ```json
 {
@@ -200,30 +200,30 @@ Venue message (the envelope supports future 100–250 ms batching):
 }
 ```
 
-Reaction state is transient. Historical reactions are not persisted.
+リアクション状態は一時的なものです。過去のリアクションは永続化しません。
 
-## Errors and close codes
+## エラーとclose code
 
-Application error:
+アプリケーションエラー:
 
 ```json
 { "type": "error", "code": "invalid_message", "message": "Invalid WebSocket message" }
 ```
 
-Reaction rejection:
+リアクション拒否:
 
 ```json
 { "type": "error", "code": "reaction_rejected", "message": "Reaction rate limit exceeded" }
 ```
 
-| Code   | Meaning                                      |
-| ------ | -------------------------------------------- |
-| `1000` | normal client shutdown                       |
-| `1003` | client rejected invalid server JSON          |
-| `1008` | policy violation / repeated invalid messages |
-| `1009` | message exceeds 4 KiB                        |
-| `1011` | server broadcast failure                     |
+| Code   | 意味                                       |
+| ------ | ------------------------------------------ |
+| `1000` | クライアントによる正常終了                 |
+| `1003` | クライアントが不正なサーバーJSONを拒否     |
+| `1008` | ポリシー違反または不正メッセージの繰り返し |
+| `1009` | メッセージが4 KiBを超過                    |
+| `1011` | サーバー側のbroadcast失敗                  |
 
-## Hibernation recovery
+## Hibernationからの復帰
 
-Both object classes use `DurableObjectState.acceptWebSocket()`. Connection metadata is serialized with `serializeAttachment()` and restored with `deserializeAttachment()` after hibernation. Active sockets are enumerated with `getWebSockets()`; authoritative state and rate limits come from SQLite, not process memory.
+両方のObject classで`DurableObjectState.acceptWebSocket()`を使用します。接続メタデータは`serializeAttachment()`でシリアライズし、Hibernationからの復帰後に`deserializeAttachment()`で復元します。接続中のsocketは`getWebSockets()`で列挙します。信頼できる状態とレート制限はprocess memoryではなくSQLiteから取得します。

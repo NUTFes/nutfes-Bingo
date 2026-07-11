@@ -1,16 +1,16 @@
-## Summary
+## 概要
 
-## Cloudflare impact
+## Cloudflareへの影響
 
 - [ ] Worker API
 - [ ] BingoRoom Durable Object / SQLite schema
-- [ ] ReactionRoom shards / WebSockets
-- [ ] R2 prize images
-- [ ] Cloudflare Access / authorization
-- [ ] Static assets / frontend
-- [ ] No Cloudflare runtime impact
+- [ ] ReactionRoom shard / WebSocket
+- [ ] R2景品画像
+- [ ] Cloudflare Access / 認可
+- [ ] 静的asset / フロントエンド
+- [ ] Cloudflare runtimeへの影響なし
 
-## Verification
+## 検証
 
 - [ ] `pnpm fmt:check`
 - [ ] `pnpm lint`
@@ -18,11 +18,11 @@
 - [ ] `pnpm test`
 - [ ] `pnpm build`
 - [ ] `pnpm exec wrangler deploy --dry-run`
-- [ ] Browser smoke test for affected UI
+- [ ] 変更したUIのbrowser smoke test
 
-## Operations and risk
+## 運用とリスク
 
-- [ ] Secrets and environment-specific values are not committed
-- [ ] Durable Object migration implications are documented
-- [ ] Free-tier and reaction degradation implications are documented
-- [ ] Rollback and event-day operational impact are explained
+- [ ] シークレットと環境固有の値をcommitしていない
+- [ ] Durable Object migrationへの影響を記載した
+- [ ] 無料枠とリアクション縮退運転への影響を記載した
+- [ ] rollbackとイベント当日の運用への影響を記載した

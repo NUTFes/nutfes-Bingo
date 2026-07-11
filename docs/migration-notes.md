@@ -1,62 +1,62 @@
-# Migration notes
+# 移行記録
 
-## Cutover
+## 切り替え方針
 
-This branch is a clean Cloudflare-native cutover. It intentionally provides no compatibility layer for the previous runtime, API routes, database schema, sessions, or production procedures.
+このブランチでは、Cloudflareネイティブ構成へ完全に切り替えています。以前のruntime、API route、database schema、session、本番運用手順との互換layerは意図的に提供していません。
 
-## Removed
+## 削除した構成
 
-- Next.js server runtime, SSR, Server Components, Server Actions, BFF routes, `next/cache`, and `next/headers`
-- ETag polling endpoints and polling hooks
-- Supabase Auth, client libraries, CLI, migrations, generated database types, Storage, PostgREST, service role credentials, and profile-based authorization
-- Self-hosted PostgreSQL and all database bootstrap scripts
-- Kong, GoTrue, Storage API, and related configuration
-- Development and production Dockerfiles / Compose files
-- Proxmox LXC scripts, backup/restore scripts, and annual container operations
-- Cloudflare Tunnel configuration and token handling
-- Supabase and container CI workflows
-- Supabase-specific local agent skills and maintenance templates
+- Next.js server runtime、SSR、Server Components、Server Actions、BFF route、`next/cache`、`next/headers`
+- ETagポーリングendpointとポーリングhook
+- Supabase Auth、client library、CLI、migration、生成済みdatabase型、Storage、PostgREST、service role credential、profileベースの認可
+- self-hosted PostgreSQLとすべてのdatabase bootstrap script
+- Kong、GoTrue、Storage API、および関連設定
+- 開発・本番用DockerfileとCompose file
+- Proxmox LXC script、backup・restore script、年次コンテナ運用
+- Cloudflare Tunnel設定とtoken処理
+- Supabase・コンテナ用CI workflow
+- Supabase専用のローカルagent skillとメンテナンステンプレート
 
-## Added
+## 追加した構成
 
-- React SPA built by Vite and served by Workers Static Assets
+- Viteでビルドし、Workers Static Assetsで配信するReact SPA
 - Cloudflare Worker HTTP API
-- SQLite-backed `BingoRoom` and sharded `ReactionRoom` Durable Objects
-- WebSocket Hibernation API with snapshot/delta version protocol
-- Signed participant cookie and reach deduplication
-- Cloudflare Access JWT verification on every admin API call
-- Private R2 image lifecycle with size/MIME/signature validation
-- Unit, integration, WebSocket, R2, and guarded 1,000-connection load tests
-- Cloudflare-native CI/CD and production approval environment
-- Event-day degradation flags and operations documentation
+- SQLite-backed `BingoRoom`およびshard化した`ReactionRoom` Durable Objects
+- snapshot・delta version protocolを使用するWebSocket Hibernation API
+- 署名済み参加者Cookieとリーチ重複排除
+- すべての管理API呼び出しに対するCloudflare Access JWT検証
+- サイズ、MIME、signatureを検証する非公開R2画像lifecycle
+- unit、integration、WebSocket、R2、および実行guard付き1,000接続負荷試験
+- CloudflareネイティブCI/CDと本番承認Environment
+- イベント当日の縮退用機能フラグと運用文書
 
-## Data migration
+## データ移行
 
-No old database import is supplied or required. The event is initialized as an empty Durable Object state. If historical records must be preserved, archive them outside this application before cutover.
+旧databaseからのimportは提供せず、必要ともしていません。イベントは空のDurable Object状態として初期化します。過去の記録を保持する必要がある場合は、切り替え前にこのアプリケーションの外部へarchiveしてください。
 
-The Worker uses the configured `EVENT_ID` to select `bingo-room:<eventId>`. Changing `EVENT_ID` creates a new logical event object without deleting the previous object.
+Workerは設定済み`EVENT_ID`を使用して`bingo-room:<eventId>`を選択します。`EVENT_ID`を変更すると、以前のObjectを削除せずに新しい論理イベントObjectを作成します。
 
-## API compatibility
+## API互換性
 
-Old `/api/bingo/state`, `/api/bingo/screen`, `/api/bingo/stamps`, and polling response types were removed. Current public endpoints are:
+旧`/api/bingo/state`、`/api/bingo/screen`、`/api/bingo/stamps`、およびポーリング用response型は削除しました。現在の公開endpointは次のとおりです。
 
 - `GET /api/session`
-- `GET /api/state` (manual fallback only)
-- `GET /api/ws` (WebSocket)
-- `GET /api/reactions/ws` (WebSocket)
+- `GET /api/state`（手動fallbackのみ）
+- `GET /api/ws`（WebSocket）
+- `GET /api/reactions/ws`（WebSocket）
 - `POST /api/reach`
 - `GET /api/prize-images/*`
 
-Admin operations use `/api/admin/*` and are not compatible with prior Server Actions.
+管理操作には`/api/admin/*`を使用し、以前のServer Actionsとの互換性はありません。
 
-## Operational migration
+## 運用移行
 
-There is no origin host, exposed database, tunnel daemon, or container lifecycle. Operations move to:
+オリジンホスト、公開database、tunnel daemon、コンテナlifecycleはありません。運用先は次のように変わります。
 
-- Wrangler and the Cloudflare dashboard for deploy/logs/metrics;
-- Access for administrator identity and policies;
-- Durable Object SQLite/PITR for state;
-- R2 for prize images;
-- GitHub Environment approval for production deployment.
+- デプロイ、log、metrics: WranglerとCloudflare dashboard
+- 管理者identityとpolicy: Access
+- 状態: Durable Object SQLiteおよびPITR
+- 景品画像: R2
+- 本番デプロイ承認: GitHub Environment
 
-Before DNS cutover, complete every human action in `README.md` and `docs/operations.md`, especially real origins, Access policies, R2 bucket creation, secrets, GitHub environment variables, and an approved preview load test.
+DNSを切り替える前に、`README.md`と`docs/operations.md`に記載したすべての手動作業を完了してください。特に、実際のorigin、Access policy、R2 bucket作成、secret、GitHub Environment variable、および承認済みpreview負荷試験が必要です。
