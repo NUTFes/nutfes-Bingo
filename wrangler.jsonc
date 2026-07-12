@@ -45,6 +45,24 @@
         "DEV_ACCESS_BYPASS": "false",
       },
     },
+    "personal": {
+      "name": "nutfes-bingo-personal",
+      "routes": [{ "pattern": "bingo-test.tkymhrt.dpdns.org", "custom_domain": true }],
+      "durable_objects": {
+        "bindings": [
+          { "name": "BINGO_ROOM", "class_name": "BingoRoom" },
+          { "name": "REACTION_ROOM", "class_name": "ReactionRoom" },
+        ],
+      },
+      "r2_buckets": [{ "binding": "PRIZE_IMAGES", "bucket_name": "nutfes-bingo-images-personal" }],
+      "vars": {
+        "ENVIRONMENT": "personal",
+        "EVENT_ID": "personal-test-2026",
+        "REACTION_SHARDS": "4",
+        "PUBLIC_ORIGIN": "https://bingo-test.tkymhrt.dpdns.org",
+        "DEV_ACCESS_BYPASS": "false",
+      },
+    },
     "production": {
       "name": "nutfes-bingo",
       "durable_objects": {

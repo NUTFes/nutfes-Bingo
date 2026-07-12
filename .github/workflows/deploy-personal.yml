@@ -1,15 +1,13 @@
-name: Deploy Cloudflare
+name: Deploy personal Cloudflare environment
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: cloudflare-production
+  group: cloudflare-personal-test
   cancel-in-progress: false
 
 env:
@@ -18,9 +16,9 @@ env:
 
 jobs:
   deploy:
-    name: Deploy Worker, assets, and Durable Object migration
+    name: Verify and deploy isolated personal environment
     runs-on: ubuntu-latest
-    environment: production
+    environment: personal-test
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -42,10 +40,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: Verify release
-        run: pnpm check
+      - name: Verify code and personal configuration
+        run: pnpm check && pnpm build:personal && pnpm exec wrangler deploy --dry-run --env personal
 
-      - name: Configure Worker secrets
+      - name: Configure personal Worker secrets
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -61,15 +59,15 @@ jobs:
             --arg domain "$ACCESS_TEAM_DOMAIN" \
             '{COOKIE_SIGNING_SECRET: $cookie, ACCESS_AUD: $aud, ACCESS_TEAM_DOMAIN: $domain}' \
             > "$secrets_file"
-          pnpm exec wrangler secret bulk "$secrets_file" --env production
+          pnpm exec wrangler secret bulk "$secrets_file" --env personal
 
-      - name: Deploy
+      - name: Deploy personal Worker, assets, and Durable Objects
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm build:production && pnpm exec wrangler deploy --env production
+        run: pnpm exec wrangler deploy --env personal
 
-      - name: Production readiness and realtime smoke test
+      - name: Personal public smoke test
         env:
-          SMOKE_URL: ${{ vars.PRODUCTION_URL }}
+          SMOKE_URL: ${{ vars.PERSONAL_URL }}
         run: pnpm test:smoke

@@ -19,6 +19,43 @@
 9. 1回デプロイします。Wranglerによって`v1` SQLite Durable Object migrationが適用されます。
 10. R2 bucketが`r2.dev`公開URLを提供していないことを確認します。
 
+## 個人検証環境
+
+`personal`はproduction／previewとresource名、event ID、R2 bucket、Custom Domainを共有しません。
+
+```bash
+pnpm exec wrangler r2 bucket create nutfes-bingo-images-personal
+pnpm build:personal
+pnpm exec wrangler deploy --dry-run --env personal
+pnpm exec wrangler secret bulk <秘密情報JSON> --env personal
+pnpm exec wrangler deploy --env personal
+SMOKE_URL=https://bingo-test.tkymhrt.dpdns.org pnpm test:smoke
+```
+
+- Worker: `nutfes-bingo-personal`
+- R2: `nutfes-bingo-images-personal`
+- Custom Domain: `bingo-test.tkymhrt.dpdns.org`
+- Durable Objects: personal Workerの`BingoRoom`／`ReactionRoom` binding
+- GitHub Environment: `personal-test`
+- R2の`r2.dev`、Public Development URL、S3 Access Keyは有効化しません。
+- destructiveな`event.initialize`は`ENVIRONMENT=personal`とhostnameを再確認してから実行します。
+
+### 個人検証の手動確認
+
+1. PC通常browserで`/`、`/screen`、`/prizes`を開き、Accessへredirectされないことを確認します。
+2. secret browserで`/admin`を開き、One-time PINを本人の許可メールアドレスへ送信します。
+3. 認証後に管理画面と`/api/admin/session`が成功し、別メールアドレスが拒否されることを確認します。
+4. 番号の追加・更新・削除、リーチ重複防止、リアクションbroadcastを確認します。
+5. JPEG、PNG、WebP景品を作成し、2 MiB超過とMIME/signature不一致が拒否されることを確認します。
+6. 景品画像更新・景品削除後に、古いR2 objectがcleanupされることを確認します。
+7. survey開始／停止、全feature flag、`readOnlyMode`、`adminWritesEnabled`を確認します。
+8. personal hostnameと`ENVIRONMENT=personal`を再確認し、`event.initialize`を実行します。
+9. 初期化後に番号、景品、リーチ、survey、reaction budgetが初期状態へ収束し、R2 objectが残っていないことを確認します。
+10. スマートフォンとモバイル回線で公開ページを開き、PCとの同期、画面回転、言語／theme切替を確認します。
+11. 両端末でnetworkを切断・復旧し、再読み込みなしでsnapshotとreaction接続が回復することを確認します。
+
+ロールバックは`pnpm exec wrangler versions list --env personal`でversionを確認し、`pnpm exec wrangler rollback <VERSION_ID> --env personal`を実行します。環境を廃止する場合はCustom Domainを解除してからWorkerを削除し、R2 objectとDurable Objectデータは保全要否を確認して別々に削除します。コードのロールバックだけではR2／Durable Objectデータは復元されません。
+
 ## イベント前チェックリスト
 
 ### 1〜4週間前
