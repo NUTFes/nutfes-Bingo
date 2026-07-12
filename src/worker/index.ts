@@ -1,4 +1,4 @@
-import type { AdminCommand } from "../shared/protocol";
+import type { AdminCommand, BingoSnapshot } from "../shared/protocol";
 import { adminCommandSchema } from "../shared/schemas";
 import { ValidationError, requirePositiveId, requirePrizeName } from "../shared/validation";
 import { BingoRoom } from "./bingo-room";
@@ -34,6 +34,93 @@ function bingoRoom(env: Env): DurableObjectStub<BingoRoom> {
   return env.BINGO_ROOM.getByName(`bingo-room:${eventId(env)}`);
 }
 
+class RequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
+async function commitAdmin(
+  room: DurableObjectStub<BingoRoom>,
+  command: AdminCommand,
+): Promise<BingoSnapshot> {
+  const result = await room.adminResult(command);
+  if (!result.ok) throw new RequestError(result.error, result.status);
+  return result.snapshot;
+}
+
+async function cleanupUploadedImage(env: Env, imageKey: string): Promise<void> {
+  const room = bingoRoom(env);
+  try {
+    if (await room.isImageReferenced(imageKey)) return;
+    await room.enqueueImageDeletion(imageKey);
+    await room.flushMaintenance();
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        event: "prize.image_cleanup_deferred",
+        message: error instanceof Error ? error.message : "Unknown cleanup error",
+      }),
+    );
+  }
+}
+
+function runtimeConfigurationErrors(env: Env): string[] {
+  const errors: string[] = [];
+  try {
+    eventId(env);
+    shardCount(env);
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : "Runtime identifiers are invalid");
+  }
+  if (!env.COOKIE_SIGNING_SECRET || env.COOKIE_SIGNING_SECRET.length < 32) {
+    errors.push("COOKIE_SIGNING_SECRET is missing or too short");
+  }
+  if (env.ENVIRONMENT !== "local") {
+    let origin: URL | null = null;
+    try {
+      origin = new URL(env.PUBLIC_ORIGIN);
+    } catch {
+      errors.push("PUBLIC_ORIGIN is invalid");
+    }
+    if (
+      origin &&
+      (origin.protocol !== "https:" ||
+        origin.hostname.endsWith(".invalid") ||
+        origin.hostname === "localhost")
+    ) {
+      errors.push("PUBLIC_ORIGIN must be a deployable HTTPS origin");
+    }
+    if (!env.ACCESS_AUD) errors.push("ACCESS_AUD is missing");
+    if (!env.ACCESS_TEAM_DOMAIN) errors.push("ACCESS_TEAM_DOMAIN is missing");
+  }
+  return errors;
+}
+
+async function handleReadiness(env: Env): Promise<Response> {
+  const errors = runtimeConfigurationErrors(env);
+  let maintenance = null;
+  try {
+    const room = bingoRoom(env);
+    await room.getSnapshot();
+    maintenance = await room.maintenanceStatus();
+  } catch {
+    errors.push("BingoRoom is unavailable or not migrated");
+  }
+  try {
+    await env.PRIZE_IMAGES.head("__readiness_probe__");
+  } catch {
+    errors.push("PRIZE_IMAGES binding is unavailable");
+  }
+  return json(
+    { ok: errors.length === 0, errors, maintenance },
+    { status: errors.length === 0 ? 200 : 503 },
+  );
+}
+
 async function readJsonCommand(request: Request): Promise<AdminCommand> {
   const declaredLength = Number(request.headers.get("Content-Length") ?? 0);
   if (declaredLength > MAX_JSON_BYTES) throw new ValidationError("Request body is too large");
@@ -59,26 +146,33 @@ async function handleSession(request: Request, env: Env): Promise<Response> {
 
 async function handleBingoSocket(request: Request, env: Env): Promise<Response> {
   requireSameOrigin(request, env);
-  return bingoRoom(env).fetch(request);
+  const clientHash = await readClientHash(request, env.COOKIE_SIGNING_SECRET);
+  if (!clientHash) throw new Error("Client session is missing or invalid");
+  const headers = new Headers(request.headers);
+  headers.set("x-client-hash", clientHash);
+  return bingoRoom(env).fetch(new Request(request, { headers }));
 }
 
 async function handleReactionSocket(request: Request, env: Env): Promise<Response> {
   requireSameOrigin(request, env);
   const url = new URL(request.url);
-  const role = url.searchParams.get("role") === "screen" ? "screen" : "client";
+  const role = url.searchParams.get("role");
+  if (role !== "screen" && role !== "client") {
+    throw new ValidationError("Reaction role is invalid");
+  }
+  const clientHash = await readClientHash(request, env.COOKIE_SIGNING_SECRET);
+  if (!clientHash) throw new Error("Client session is missing or invalid");
   const count = shardCount(env);
   let targetShard: number;
   const headers = new Headers(request.headers);
+  headers.set("x-client-hash", clientHash);
   if (role === "screen") {
     targetShard = Number(url.searchParams.get("shard"));
     if (!Number.isInteger(targetShard) || targetShard < 0 || targetShard >= count) {
       throw new ValidationError("Reaction shard is invalid");
     }
   } else {
-    const clientHash = await readClientHash(request, env.COOKIE_SIGNING_SECRET);
-    if (!clientHash) throw new Error("Client session is missing or invalid");
     targetShard = Number.parseInt(clientHash.slice(0, 8), 16) % count;
-    headers.set("x-client-hash", clientHash);
   }
   return env.REACTION_ROOM.getByName(`reaction-room:${eventId(env)}:${targetShard}`).fetch(
     new Request(request, { headers }),
@@ -105,12 +199,6 @@ async function handleAdminCommand(request: Request, env: Env): Promise<Response>
       "Prize create, update, and delete must use the image lifecycle endpoint",
     );
   }
-  const imageKeysToDelete =
-    command.type === "event.initialize"
-      ? (await bingoRoom(env).getSnapshot()).prizes.flatMap((prize) =>
-          prize.imageKey ? [prize.imageKey] : [],
-        )
-      : [];
   if (command.type === "number.add" || command.type === "number.update") {
     const current = await bingoRoom(env).getSnapshot();
     const duplicate = current.numbers.some(
@@ -119,28 +207,9 @@ async function handleAdminCommand(request: Request, env: Env): Promise<Response>
     );
     if (duplicate) throw new Error("duplicate number");
   }
-  const snapshot = await bingoRoom(env).admin(command);
-  if (imageKeysToDelete.length > 0) await env.PRIZE_IMAGES.delete(imageKeysToDelete);
-  if (command.type === "event.initialize") {
-    const resets: Promise<void>[] = [];
-    for (let shard = 0; shard < shardCount(env); shard += 1) {
-      resets.push(
-        env.REACTION_ROOM.getByName(`reaction-room:${eventId(env)}:${shard}`).resetEvent(),
-      );
-    }
-    await Promise.all(resets);
-  }
-  if (command.type === "flags.update" && command.flags.reactionsEnabled !== undefined) {
-    const updates: Promise<void>[] = [];
-    for (let shard = 0; shard < shardCount(env); shard += 1) {
-      updates.push(
-        env.REACTION_ROOM.getByName(`reaction-room:${eventId(env)}:${shard}`).setEnabled(
-          command.flags.reactionsEnabled,
-        ),
-      );
-    }
-    await Promise.all(updates);
-  }
+  const room = bingoRoom(env);
+  const snapshot = await commitAdmin(room, command);
+  await room.flushMaintenance();
   return json(snapshot);
 }
 
@@ -178,7 +247,8 @@ async function handlePrizeCreate(request: Request, env: Env): Promise<Response> 
   let imageKey: string | null = null;
   try {
     if (form.file) imageKey = await uploadPrizeImage(form.file, env.PRIZE_IMAGES);
-    const snapshot = await bingoRoom(env).admin({
+    const room = bingoRoom(env);
+    const snapshot = await commitAdmin(room, {
       type: "prize.create",
       prize: {
         nameJa: form.nameJa,
@@ -188,9 +258,10 @@ async function handlePrizeCreate(request: Request, env: Env): Promise<Response> 
         isWon: form.isWon,
       },
     });
+    await room.flushMaintenance();
     return json(snapshot, { status: 201 });
   } catch (error) {
-    if (imageKey) await env.PRIZE_IMAGES.delete(imageKey);
+    if (imageKey) await cleanupUploadedImage(env, imageKey);
     throw error;
   }
 }
@@ -199,16 +270,18 @@ async function handlePrizeUpdate(request: Request, env: Env, id: number): Promis
   requireSameOrigin(request, env);
   await requireAdmin(request, env);
   requirePrizeFormSize(request);
-  const current = await bingoRoom(env).getPrize(id);
+  const room = bingoRoom(env);
+  const current = await room.getPrize(id);
   if (!current) return json({ error: "Prize not found" }, { status: 404 });
   const form = readPrizeForm(await request.formData());
   let uploadedKey: string | null = null;
   try {
     if (form.file) uploadedKey = await uploadPrizeImage(form.file, env.PRIZE_IMAGES);
     const imageKey = uploadedKey ?? current.imageKey;
-    const snapshot = await bingoRoom(env).admin({
+    const snapshot = await commitAdmin(room, {
       type: "prize.update",
       id,
+      expectedImageKey: current.imageKey,
       prize: {
         nameJa: form.nameJa,
         nameEn: form.nameEn,
@@ -217,10 +290,10 @@ async function handlePrizeUpdate(request: Request, env: Env, id: number): Promis
         isWon: form.isWon,
       },
     });
-    if (uploadedKey && current.imageKey) await env.PRIZE_IMAGES.delete(current.imageKey);
+    await room.flushMaintenance();
     return json(snapshot);
   } catch (error) {
-    if (uploadedKey) await env.PRIZE_IMAGES.delete(uploadedKey);
+    if (uploadedKey) await cleanupUploadedImage(env, uploadedKey);
     throw error;
   }
 }
@@ -228,10 +301,15 @@ async function handlePrizeUpdate(request: Request, env: Env, id: number): Promis
 async function handlePrizeDelete(request: Request, env: Env, id: number): Promise<Response> {
   requireSameOrigin(request, env);
   await requireAdmin(request, env);
-  const current = await bingoRoom(env).getPrize(id);
+  const room = bingoRoom(env);
+  const current = await room.getPrize(id);
   if (!current) return json({ error: "Prize not found" }, { status: 404 });
-  const snapshot = await bingoRoom(env).admin({ type: "prize.delete", id });
-  if (current.imageKey) await env.PRIZE_IMAGES.delete(current.imageKey);
+  const snapshot = await commitAdmin(room, {
+    type: "prize.delete",
+    id,
+    expectedImageKey: current.imageKey,
+  });
+  await room.flushMaintenance();
   return json(snapshot);
 }
 
@@ -259,6 +337,7 @@ async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const { pathname } = url;
   if (pathname === "/api/health" && request.method === "GET") return json({ ok: true });
+  if (pathname === "/api/readiness" && request.method === "GET") return handleReadiness(env);
   if (pathname === "/api/session" && request.method === "GET") return handleSession(request, env);
   if (pathname === "/api/state" && request.method === "GET")
     return json(await bingoRoom(env).getSnapshot());
@@ -291,18 +370,25 @@ export default {
       return await route(request, env);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unexpected error";
+      const explicitStatus =
+        error && typeof error === "object" && "status" in error && typeof error.status === "number"
+          ? error.status
+          : null;
       const status =
-        error instanceof ValidationError
-          ? 400
+        explicitStatus ??
+        (/Origin is not allowed/i.test(message)
+          ? 403
           : /Unauthorized|Access|JWT/i.test(message)
             ? 403
             : /missing or invalid|session/i.test(message)
               ? 401
-              : /UNIQUE|duplicate/i.test(message)
-                ? 409
-                : /disabled|read.only/i.test(message)
-                  ? 503
-                  : 500;
+              : /not found/i.test(message)
+                ? 404
+                : /UNIQUE|duplicate|conflict/i.test(message)
+                  ? 409
+                  : /disabled|read.only/i.test(message)
+                    ? 503
+                    : 500);
       console.error(
         JSON.stringify({
           event: "request.failed",

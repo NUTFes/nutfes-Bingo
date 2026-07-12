@@ -80,8 +80,13 @@ export type AdminCommand =
   | { type: "reach.reset" }
   | { type: "survey.update"; active: boolean; url: string }
   | { type: "prize.create"; prize: Omit<Prize, "id" | "sortOrder"> }
-  | { type: "prize.update"; id: number; prize: Partial<Omit<Prize, "id" | "sortOrder">> }
-  | { type: "prize.delete"; id: number }
+  | {
+      type: "prize.update";
+      id: number;
+      prize: Partial<Omit<Prize, "id" | "sortOrder">>;
+      expectedImageKey?: string | null;
+    }
+  | { type: "prize.delete"; id: number; expectedImageKey?: string | null }
   | { type: "prize.toggleWon"; id: number; isWon: boolean }
   | { type: "prize.reorder"; ids: number[] }
   | { type: "flags.update"; flags: Partial<FeatureFlags> }

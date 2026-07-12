@@ -7,6 +7,8 @@ const CLIENT_COOLDOWN_MS = 10_000;
 const MAX_REACTIONS_PER_SECOND = 100;
 const MAX_REACTIONS_PER_EVENT = 16_000;
 const MAX_MESSAGE_BYTES = 4096;
+const MAX_CLIENT_CONNECTIONS = 500;
+const MAX_SCREEN_CONNECTIONS = 32;
 
 type ReactionAttachment =
   | { role: "client"; clientHash: string; invalidMessages: number }
@@ -26,7 +28,8 @@ export class ReactionRoom extends DurableObject<Env> {
       );
       CREATE TABLE IF NOT EXISTS reaction_config (
         id INTEGER PRIMARY KEY CHECK (id = 1),
-        enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1))
+        enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
+        version INTEGER NOT NULL DEFAULT 0
       );
       CREATE TABLE IF NOT EXISTS reaction_budget (
         id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -35,6 +38,14 @@ export class ReactionRoom extends DurableObject<Env> {
       INSERT OR IGNORE INTO reaction_config (id, enabled) VALUES (1, 1);
       INSERT OR IGNORE INTO reaction_budget (id, accepted_count) VALUES (1, 0);
     `);
+    const configColumns = this.ctx.storage.sql
+      .exec<{ name: string }>("PRAGMA table_info(reaction_config)")
+      .toArray();
+    if (!configColumns.some(({ name }) => name === "version")) {
+      this.ctx.storage.sql.exec(
+        "ALTER TABLE reaction_config ADD COLUMN version INTEGER NOT NULL DEFAULT 0",
+      );
+    }
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -42,7 +53,15 @@ export class ReactionRoom extends DurableObject<Env> {
       return new Response("WebSocket upgrade required", { status: 426 });
     }
     const url = new URL(request.url);
-    const role = url.searchParams.get("role") === "screen" ? "screen" : "client";
+    const roleValue = url.searchParams.get("role");
+    if (roleValue !== "client" && roleValue !== "screen") {
+      return new Response("Reaction role is invalid", { status: 400 });
+    }
+    const role = roleValue;
+    const connectionLimit = role === "client" ? MAX_CLIENT_CONNECTIONS : MAX_SCREEN_CONNECTIONS;
+    if (this.ctx.getWebSockets(role).length >= connectionLimit) {
+      return new Response("Reaction connection limit reached", { status: 429 });
+    }
     const clientHash = request.headers.get("x-client-hash");
     let attachment: ReactionAttachment;
     if (role === "client") {
@@ -62,23 +81,43 @@ export class ReactionRoom extends DurableObject<Env> {
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  setEnabled(enabled: boolean): void {
-    this.ctx.storage.sql.exec(
-      "UPDATE reaction_config SET enabled = ? WHERE id = 1",
-      Number(enabled),
-    );
-    if (!enabled) {
+  applyConfig(version: number, enabled: boolean, resetBudget: boolean): void {
+    if (!Number.isInteger(version) || version < 0)
+      throw new Error("Invalid reaction config version");
+    let disabled = false;
+    this.ctx.storage.transactionSync(() => {
+      const current = this.ctx.storage.sql
+        .exec<{ version: number }>("SELECT version FROM reaction_config WHERE id = 1")
+        .one().version;
+      if (version <= current) return;
+      if (resetBudget) {
+        this.ctx.storage.sql.exec("DELETE FROM reaction_rate_limits");
+        this.ctx.storage.sql.exec("DELETE FROM global_rate_limits");
+        this.ctx.storage.sql.exec("UPDATE reaction_budget SET accepted_count = 0 WHERE id = 1");
+      }
+      this.ctx.storage.sql.exec(
+        "UPDATE reaction_config SET enabled = ?, version = ? WHERE id = 1",
+        Number(enabled),
+        version,
+      );
+      disabled = !enabled;
+    });
+    if (disabled) {
       const message = JSON.stringify({ type: "reaction.disabled" });
       for (const socket of this.ctx.getWebSockets("client")) socket.send(message);
     }
   }
-  resetEvent(): void {
-    this.ctx.storage.transactionSync(() => {
-      this.ctx.storage.sql.exec("DELETE FROM reaction_rate_limits");
-      this.ctx.storage.sql.exec("DELETE FROM global_rate_limits");
-      this.ctx.storage.sql.exec("UPDATE reaction_budget SET accepted_count = 0 WHERE id = 1");
-      this.ctx.storage.sql.exec("UPDATE reaction_config SET enabled = 1 WHERE id = 1");
-    });
+
+  getConfig(): { enabled: boolean; version: number; acceptedCount: number } {
+    const config = this.ctx.storage.sql
+      .exec<{ enabled: number; version: number }>(
+        "SELECT enabled, version FROM reaction_config WHERE id = 1",
+      )
+      .one();
+    const acceptedCount = this.ctx.storage.sql
+      .exec<{ accepted_count: number }>("SELECT accepted_count FROM reaction_budget WHERE id = 1")
+      .one().accepted_count;
+    return { enabled: Boolean(config.enabled), version: config.version, acceptedCount };
   }
 
   webSocketMessage(socket: WebSocket, message: ArrayBuffer | string): void {

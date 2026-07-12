@@ -150,10 +150,30 @@ SPAの再接続待機時間は指数的に増加し、最大30秒、0.75〜1.25�
 ### イベント初期化
 
 ```json
-{ "type": "event.initialized", "version": 110, "payload": {} }
+{
+  "type": "event.initialized",
+  "version": 110,
+  "payload": {
+    "type": "snapshot",
+    "version": 110,
+    "eventId": "2026",
+    "numbers": [],
+    "latestNumber": null,
+    "reachCount": 0,
+    "survey": { "active": false, "url": "" },
+    "prizes": [],
+    "flags": {
+      "reactionsEnabled": true,
+      "reachSubmissionEnabled": true,
+      "surveyEnabled": true,
+      "adminWritesEnabled": true,
+      "readOnlyMode": false
+    }
+  }
+}
 ```
 
-このメッセージを受信したクライアントは、新しいsnapshotを1回だけ要求します。これはイベント駆動の再同期であり、ポーリングではありません。
+`event.initialized`は初期化後の完全snapshotをpayloadに含みます。クライアントはこのsnapshotを同じversionの状態として原子的に適用し、追加のHTTP取得には依存しません。version gapまたは不正なpayloadを検出した場合は、`lastVersion`なしで再接続して完全snapshotを取得します。現在versionより古いsnapshotとdeltaは破棄します。
 
 ## Heartbeat
 

@@ -14,8 +14,9 @@ const surveyPayloadSchema = z.object({ active: z.boolean(), url: z.string() });
 
 export type ConnectionStatus = "connecting" | "online" | "offline";
 
-function applyEvent(snapshot: BingoSnapshot, event: ServerEvent): BingoSnapshot {
+export function applyEvent(snapshot: BingoSnapshot, event: ServerEvent): BingoSnapshot {
   if (event.version <= snapshot.version) return snapshot;
+  if (event.version !== snapshot.version + 1) return snapshot;
   const base = { ...snapshot, version: event.version };
   switch (event.type) {
     case "number.added": {
@@ -47,9 +48,19 @@ function applyEvent(snapshot: BingoSnapshot, event: ServerEvent): BingoSnapshot 
       return { ...base, prizes: z.array(prizeSchema).parse(event.payload) };
     case "flags.updated":
       return { ...base, flags: featureFlagsSchema.parse(event.payload) };
-    case "event.initialized":
-      return base;
+    case "event.initialized": {
+      const initialized = bingoSocketMessageSchema.parse(event.payload);
+      if (initialized.type !== "snapshot" || initialized.version !== event.version) return snapshot;
+      return initialized;
+    }
   }
+}
+
+export function selectNewerSnapshot(
+  current: BingoSnapshot | null,
+  next: BingoSnapshot,
+): BingoSnapshot {
+  return current && next.version < current.version ? current : next;
 }
 
 export function useBingoSocket(): {
@@ -64,17 +75,23 @@ export function useBingoSocket(): {
   const [error, setError] = useState<string | null>(null);
   const versionRef = useRef(0);
   const hasSnapshotRef = useRef(false);
+  const snapshotRef = useRef<BingoSnapshot | null>(null);
+  const needsFullSnapshotRef = useRef(false);
 
   const replaceSnapshot = useCallback((next: BingoSnapshot) => {
+    const selected = selectNewerSnapshot(snapshotRef.current, next);
+    if (selected !== next) return false;
+    snapshotRef.current = next;
     versionRef.current = next.version;
     hasSnapshotRef.current = true;
+    needsFullSnapshotRef.current = false;
     setSnapshot(next);
+    return true;
   }, []);
 
   const refresh = useCallback(async () => {
     const next = await fetchSnapshot();
-    replaceSnapshot(next);
-    setError(null);
+    if (replaceSnapshot(next)) setError(null);
   }, [replaceSnapshot]);
 
   useEffect(() => {
@@ -90,7 +107,10 @@ export function useBingoSocket(): {
         if (stopped) return;
         setStatus("connecting");
         const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-        const resumeQuery = hasSnapshotRef.current ? `?lastVersion=${versionRef.current}` : "";
+        const resumeQuery =
+          hasSnapshotRef.current && !needsFullSnapshotRef.current
+            ? `?lastVersion=${versionRef.current}`
+            : "";
         socket = new WebSocket(`${protocol}//${location.host}/api/ws${resumeQuery}`);
         socket.addEventListener("open", () => {
           attempt = 0;
@@ -107,9 +127,22 @@ export function useBingoSocket(): {
             if (parsed.type === "snapshot") {
               replaceSnapshot(parsed);
             } else if ("version" in parsed && "payload" in parsed) {
-              versionRef.current = parsed.version;
-              setSnapshot((current) => (current ? applyEvent(current, parsed) : current));
-              if (parsed.type === "event.initialized") void refresh();
+              const current = snapshotRef.current;
+              if (current && parsed.version <= current.version) return;
+              if (!current || parsed.version !== current.version + 1) {
+                needsFullSnapshotRef.current = true;
+                hasSnapshotRef.current = false;
+                socket?.close(1012, "Full resynchronization required");
+                return;
+              }
+              const next = applyEvent(current, parsed);
+              if (next === current) {
+                needsFullSnapshotRef.current = true;
+                hasSnapshotRef.current = false;
+                socket?.close(1012, "Full resynchronization required");
+                return;
+              }
+              replaceSnapshot(next);
             } else if (parsed.type === "error") {
               setError(parsed.message);
             }

@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from "jose";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { validatePrizeImage } from "../../src/worker/images";
 import { createClientCookie, readClientHash, verifyAccessToken } from "../../src/worker/security";
@@ -55,6 +55,125 @@ describe("bingo invariants", () => {
     });
     expect(snapshot.prizes.map((prize) => prize.nameJa)).toEqual(["A", "B"]);
   });
+
+  it("keeps the committed image referenced until deferred old-image cleanup succeeds", async () => {
+    const room = env.BINGO_ROOM.getByName("unit-image-outbox-room");
+    const oldKey = "prizes/00000000-0000-4000-8000-000000000001.png";
+    const newKey = "prizes/00000000-0000-4000-8000-000000000002.png";
+    await env.PRIZE_IMAGES.put(oldKey, Uint8Array.of(1));
+    await env.PRIZE_IMAGES.put(newKey, Uint8Array.of(2));
+    const created = await room.admin({
+      type: "prize.create",
+      prize: {
+        nameJa: "旧景品",
+        nameEn: "Old prize",
+        imageKey: oldKey,
+        imageUrl: null,
+        isWon: false,
+      },
+    });
+    const prize = created.prizes[0]!;
+
+    const updated = await room.admin({
+      type: "prize.update",
+      id: prize.id,
+      expectedImageKey: oldKey,
+      prize: { imageKey: newKey },
+    });
+    expect(updated.prizes[0]?.imageKey).toBe(newKey);
+    expect(await env.PRIZE_IMAGES.head(newKey)).not.toBeNull();
+    expect(await room.maintenanceStatus()).toMatchObject({ pendingImageDeletions: 1 });
+
+    const result = await room.flushMaintenance();
+    expect(result.pendingImageDeletions).toBe(0);
+    expect(await env.PRIZE_IMAGES.head(oldKey)).toBeNull();
+    expect(await env.PRIZE_IMAGES.head(newKey)).not.toBeNull();
+  });
+
+  it("retries a failed R2 cleanup without deleting the committed replacement", async () => {
+    const room = env.BINGO_ROOM.getByName("unit-image-cleanup-retry-room");
+    const key = "prizes/00000000-0000-4000-8000-000000000006.png";
+    await env.PRIZE_IMAGES.put(key, Uint8Array.of(6));
+    await room.enqueueImageDeletion(key);
+    const deleteFailure = vi
+      .spyOn(env.PRIZE_IMAGES, "delete")
+      .mockRejectedValueOnce(new Error("Injected R2 delete failure"));
+
+    expect(await room.flushMaintenance()).toMatchObject({ pendingImageDeletions: 1 });
+    expect(await env.PRIZE_IMAGES.head(key)).not.toBeNull();
+    deleteFailure.mockRestore();
+    expect(await room.flushMaintenance()).toMatchObject({ pendingImageDeletions: 0 });
+    expect(await env.PRIZE_IMAGES.head(key)).toBeNull();
+  });
+
+  it("preserves stored survey state while the display flag is disabled", async () => {
+    const room = env.BINGO_ROOM.getByName("unit-survey-flag-room");
+    await room.admin({ type: "survey.update", active: true, url: "https://example.com/survey" });
+    await room.admin({ type: "flags.update", flags: { surveyEnabled: false } });
+    const disabledSnapshot = await room.getSnapshot();
+    expect(disabledSnapshot.survey.active).toBe(true);
+    expect(disabledSnapshot.flags.surveyEnabled).toBe(false);
+    const enabledSnapshot = await room.admin({
+      type: "flags.update",
+      flags: { surveyEnabled: true },
+    });
+    expect(enabledSnapshot.survey.active).toBe(true);
+    expect(enabledSnapshot.flags.surveyEnabled).toBe(true);
+  });
+
+  it("converges every reaction shard and applies read-only mode", async () => {
+    const room = env.BINGO_ROOM.getByName("unit-reaction-sync-room");
+    await room.admin({ type: "flags.update", flags: { readOnlyMode: true } });
+    expect((await room.maintenanceStatus()).pendingReactionSyncs).toBe(Number(env.REACTION_SHARDS));
+    await room.flushMaintenance();
+    for (let shard = 0; shard < Number(env.REACTION_SHARDS); shard += 1) {
+      const config = await env.REACTION_ROOM.getByName(
+        `reaction-room:${env.EVENT_ID}:${shard}`,
+      ).getConfig();
+      expect(config.enabled).toBe(false);
+      expect(config.version).toBe(1);
+    }
+  });
+
+  it("resumes event initialization cleanup after a partial reaction-shard result", async () => {
+    const room = env.BINGO_ROOM.getByName("unit-initialize-retry-room");
+    const imageKey = "prizes/00000000-0000-4000-8000-000000000005.png";
+    await env.PRIZE_IMAGES.put(imageKey, Uint8Array.of(5));
+    await room.admin({
+      type: "prize.create",
+      prize: {
+        nameJa: "初期化景品",
+        nameEn: "Initialize prize",
+        imageKey,
+        imageUrl: null,
+        isWon: false,
+      },
+    });
+    await room.admin({ type: "number.add", number: 42 });
+    await room.admin({ type: "flags.update", flags: { reactionsEnabled: false } });
+
+    const initialized = await room.admin({ type: "event.initialize" });
+    expect(initialized.numbers).toEqual([]);
+    expect(initialized.prizes).toEqual([]);
+    expect(await room.maintenanceStatus()).toEqual({
+      pendingImageDeletions: 1,
+      pendingReactionSyncs: Number(env.REACTION_SHARDS),
+    });
+
+    await env.REACTION_ROOM.getByName(`reaction-room:${env.EVENT_ID}:0`).applyConfig(2, true, true);
+    await room.flushMaintenance();
+    expect(await room.maintenanceStatus()).toEqual({
+      pendingImageDeletions: 0,
+      pendingReactionSyncs: 0,
+    });
+    expect(await env.PRIZE_IMAGES.head(imageKey)).toBeNull();
+    for (let shard = 0; shard < Number(env.REACTION_SHARDS); shard += 1) {
+      const config = await env.REACTION_ROOM.getByName(
+        `reaction-room:${env.EVENT_ID}:${shard}`,
+      ).getConfig();
+      expect(config).toMatchObject({ enabled: true, version: 2, acceptedCount: 0 });
+    }
+  });
 });
 
 describe("validation", () => {
@@ -69,7 +188,11 @@ describe("validation", () => {
 
   it("checks both image MIME and file signature", () => {
     const png = Uint8Array.of(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+    const jpeg = Uint8Array.of(0xff, 0xd8, 0xff);
+    const webp = new TextEncoder().encode("RIFF0000WEBP");
     expect(validatePrizeImage(png, "image/png").extension).toBe("png");
+    expect(validatePrizeImage(jpeg, "image/jpeg").extension).toBe("jpg");
+    expect(validatePrizeImage(webp, "image/webp").extension).toBe("webp");
     expect(() => validatePrizeImage(png, "image/jpeg")).toThrow();
     expect(() => validatePrizeImage(new Uint8Array(2 * 1024 * 1024 + 1), "image/png")).toThrow();
   });

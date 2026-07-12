@@ -9,6 +9,7 @@ import {
 } from "../shared/protocol";
 import { bingoClientMessageSchema } from "../shared/schemas";
 import {
+  ValidationError,
   requireBingoNumber,
   requirePositiveId,
   requirePrizeName,
@@ -17,8 +18,10 @@ import {
 
 const EVENT_HISTORY_LIMIT = 256;
 const MAX_SOCKET_MESSAGE_BYTES = 4096;
+const MAINTENANCE_RETRY_MS = 5_000;
+const MAX_BINGO_CONNECTIONS = 1_000;
 
-type SocketAttachment = { invalidMessages: number };
+type SocketAttachment = { clientHash: string; invalidMessages: number };
 type NumberRow = { id: number; number: number };
 type PrizeRow = {
   id: number;
@@ -38,6 +41,44 @@ type ConfigRow = {
   admin_writes_enabled: number;
   read_only_mode: number;
 };
+type PendingReactionRow = {
+  shard: number;
+  config_version: number;
+  enabled: number;
+  reset_budget: number;
+};
+
+export type MaintenanceStatus = {
+  pendingImageDeletions: number;
+  pendingReactionSyncs: number;
+};
+
+export type MaintenanceResult = MaintenanceStatus & {
+  completedImageDeletions: number;
+  completedReactionSyncs: number;
+};
+
+export type AdminRpcResult =
+  | { ok: true; snapshot: BingoSnapshot }
+  | { ok: false; error: string; status: number };
+
+export type MaintenanceOutcome<T> = { item: T; ok: true } | { item: T; ok: false; error: unknown };
+
+export async function runMaintenanceBatch<T>(
+  items: readonly T[],
+  process: (item: T) => Promise<void>,
+): Promise<Array<MaintenanceOutcome<T>>> {
+  const outcomes: Array<MaintenanceOutcome<T>> = [];
+  for (const item of items) {
+    try {
+      await process(item);
+      outcomes.push({ item, ok: true });
+    } catch (error) {
+      outcomes.push({ item, ok: false, error });
+    }
+  }
+  return outcomes;
+}
 
 export class BingoRoom extends DurableObject<Env> {
   constructor(ctx: DurableObjectState, env: Env) {
@@ -52,7 +93,8 @@ export class BingoRoom extends DurableObject<Env> {
         reach_submission_enabled INTEGER NOT NULL DEFAULT 1 CHECK (reach_submission_enabled IN (0, 1)),
         survey_enabled INTEGER NOT NULL DEFAULT 1 CHECK (survey_enabled IN (0, 1)),
         admin_writes_enabled INTEGER NOT NULL DEFAULT 1 CHECK (admin_writes_enabled IN (0, 1)),
-        read_only_mode INTEGER NOT NULL DEFAULT 0 CHECK (read_only_mode IN (0, 1))
+        read_only_mode INTEGER NOT NULL DEFAULT 0 CHECK (read_only_mode IN (0, 1)),
+        reaction_config_version INTEGER NOT NULL DEFAULT 0
       );
       CREATE TABLE IF NOT EXISTS live_state (
         id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -81,8 +123,29 @@ export class BingoRoom extends DurableObject<Env> {
         payload_json TEXT NOT NULL,
         created_at INTEGER NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS pending_image_deletions (
+        image_key TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL,
+        attempts INTEGER NOT NULL DEFAULT 0
+      );
+      CREATE TABLE IF NOT EXISTS pending_reaction_syncs (
+        shard INTEGER NOT NULL,
+        config_version INTEGER NOT NULL,
+        enabled INTEGER NOT NULL CHECK (enabled IN (0, 1)),
+        reset_budget INTEGER NOT NULL CHECK (reset_budget IN (0, 1)),
+        attempts INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (shard, config_version)
+      );
       INSERT OR IGNORE INTO live_state (id) VALUES (1);
     `);
+    const configColumns = this.ctx.storage.sql
+      .exec<{ name: string }>("PRAGMA table_info(event_config)")
+      .toArray();
+    if (!configColumns.some(({ name }) => name === "reaction_config_version")) {
+      this.ctx.storage.sql.exec(
+        "ALTER TABLE event_config ADD COLUMN reaction_config_version INTEGER NOT NULL DEFAULT 0",
+      );
+    }
     this.ctx.storage.sql.exec(
       "INSERT OR IGNORE INTO event_config (id, event_id) VALUES (1, ?)",
       env.EVENT_ID,
@@ -93,12 +156,19 @@ export class BingoRoom extends DurableObject<Env> {
     if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       return new Response("WebSocket upgrade required", { status: 426 });
     }
+    const clientHash = request.headers.get("x-client-hash");
+    if (!clientHash || !/^[a-f0-9]{64}$/.test(clientHash)) {
+      return new Response("Valid client identity required", { status: 401 });
+    }
+    if (this.ctx.getWebSockets().length >= MAX_BINGO_CONNECTIONS) {
+      return new Response("Bingo connection limit reached", { status: 429 });
+    }
 
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     if (!client || !server) throw new Error("WebSocket pair creation failed");
     this.ctx.acceptWebSocket(server);
-    server.serializeAttachment({ invalidMessages: 0 } satisfies SocketAttachment);
+    server.serializeAttachment({ clientHash, invalidMessages: 0 } satisfies SocketAttachment);
 
     const lastVersionValue = new URL(request.url).searchParams.get("lastVersion");
     const lastVersion = lastVersionValue === null ? null : Number(lastVersionValue);
@@ -110,7 +180,6 @@ export class BingoRoom extends DurableObject<Env> {
 
     return new Response(null, { status: 101, webSocket: client });
   }
-
   getSnapshot(): BingoSnapshot {
     const config = this.ctx.storage.sql
       .exec<ConfigRow>("SELECT * FROM event_config WHERE id = 1")
@@ -133,7 +202,7 @@ export class BingoRoom extends DurableObject<Env> {
       latestNumber: numbers.at(-1)?.number ?? null,
       reachCount: live.reach_count,
       survey: {
-        active: Boolean(config.survey_active) && Boolean(config.survey_enabled),
+        active: Boolean(config.survey_active),
         url: config.survey_url,
       },
       prizes,
@@ -190,12 +259,136 @@ export class BingoRoom extends DurableObject<Env> {
     return this.getSnapshot();
   }
 
+  adminResult(command: AdminCommand): AdminRpcResult {
+    try {
+      return { ok: true, snapshot: this.admin(command) };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Administrative command failed";
+      const status =
+        error instanceof ValidationError
+          ? 400
+          : /not found/i.test(message)
+            ? 404
+            : /UNIQUE|duplicate|conflict/i.test(message)
+              ? 409
+              : /disabled|read.only/i.test(message)
+                ? 503
+                : 500;
+      return { ok: false, error: message, status };
+    }
+  }
+
   getPrize(id: number): Prize | null {
     requirePositiveId(id);
     const rows = this.ctx.storage.sql
       .exec<PrizeRow>("SELECT * FROM prizes WHERE id = ?", id)
       .toArray();
     return rows[0] ? this.prizeFromRow(rows[0]) : null;
+  }
+
+  isImageReferenced(imageKey: string): boolean {
+    return (
+      this.ctx.storage.sql
+        .exec<{ count: number }>(
+          "SELECT COUNT(*) AS count FROM prizes WHERE image_key = ?",
+          imageKey,
+        )
+        .one().count > 0
+    );
+  }
+
+  enqueueImageDeletion(imageKey: string): void {
+    if (this.isImageReferenced(imageKey)) return;
+    this.ctx.storage.sql.exec(
+      `INSERT OR IGNORE INTO pending_image_deletions (image_key, created_at) VALUES (?, ?)`,
+      imageKey,
+      Date.now(),
+    );
+  }
+
+  maintenanceStatus(): MaintenanceStatus {
+    return {
+      pendingImageDeletions: this.ctx.storage.sql
+        .exec<{ count: number }>("SELECT COUNT(*) AS count FROM pending_image_deletions")
+        .one().count,
+      pendingReactionSyncs: this.ctx.storage.sql
+        .exec<{ count: number }>("SELECT COUNT(*) AS count FROM pending_reaction_syncs")
+        .one().count,
+    };
+  }
+
+  async flushMaintenance(): Promise<MaintenanceResult> {
+    let completedImageDeletions = 0;
+    let completedReactionSyncs = 0;
+    const imageRows = this.ctx.storage.sql
+      .exec<{ image_key: string }>(
+        "SELECT image_key FROM pending_image_deletions ORDER BY created_at LIMIT 100",
+      )
+      .toArray();
+    for (const { image_key: imageKey } of imageRows) {
+      if (this.isImageReferenced(imageKey)) {
+        this.ctx.storage.sql.exec(
+          "DELETE FROM pending_image_deletions WHERE image_key = ?",
+          imageKey,
+        );
+        continue;
+      }
+      try {
+        await this.env.PRIZE_IMAGES.delete(imageKey);
+        this.ctx.storage.sql.exec(
+          "DELETE FROM pending_image_deletions WHERE image_key = ?",
+          imageKey,
+        );
+        completedImageDeletions += 1;
+      } catch {
+        this.ctx.storage.sql.exec(
+          "UPDATE pending_image_deletions SET attempts = attempts + 1 WHERE image_key = ?",
+          imageKey,
+        );
+      }
+    }
+
+    const reactionRows = this.ctx.storage.sql
+      .exec<PendingReactionRow>(
+        `SELECT shard, config_version, enabled, reset_budget
+         FROM pending_reaction_syncs ORDER BY config_version, shard LIMIT 100`,
+      )
+      .toArray();
+    const reactionOutcomes = await runMaintenanceBatch(reactionRows, async (row) => {
+      await this.env.REACTION_ROOM.getByName(
+        `reaction-room:${this.env.EVENT_ID}:${row.shard}`,
+      ).applyConfig(row.config_version, Boolean(row.enabled), Boolean(row.reset_budget));
+    });
+    for (const outcome of reactionOutcomes) {
+      const row = outcome.item;
+      if (outcome.ok) {
+        this.ctx.storage.sql.exec(
+          "DELETE FROM pending_reaction_syncs WHERE shard = ? AND config_version = ?",
+          row.shard,
+          row.config_version,
+        );
+        completedReactionSyncs += 1;
+      } else {
+        this.ctx.storage.sql.exec(
+          `UPDATE pending_reaction_syncs SET attempts = attempts + 1
+           WHERE shard = ? AND config_version = ?`,
+          row.shard,
+          row.config_version,
+        );
+      }
+    }
+
+    const status = this.maintenanceStatus();
+    if (status.pendingImageDeletions > 0 || status.pendingReactionSyncs > 0) {
+      await this.ctx.storage.setAlarm(Date.now() + MAINTENANCE_RETRY_MS);
+    } else {
+      await this.ctx.storage.deleteAlarm();
+    }
+    return { ...status, completedImageDeletions, completedReactionSyncs };
+  }
+
+  async alarm(): Promise<void> {
+    await this.flushMaintenance();
   }
 
   webSocketMessage(socket: WebSocket, message: ArrayBuffer | string): void {
@@ -223,6 +416,7 @@ export class BingoRoom extends DurableObject<Env> {
       throw new Error("Unsupported message");
     } catch {
       const attachment = (socket.deserializeAttachment() as SocketAttachment | null) ?? {
+        clientHash: "",
         invalidMessages: 0,
       };
       attachment.invalidMessages += 1;
@@ -263,6 +457,10 @@ export class BingoRoom extends DurableObject<Env> {
       case "number.update": {
         const id = requirePositiveId(command.id);
         const number = requireBingoNumber(command.number);
+        const existing = this.ctx.storage.sql
+          .exec<NumberRow>("SELECT id, number FROM numbers WHERE id = ?", id)
+          .toArray()[0];
+        if (!existing) throw new Error("Number not found");
         let updated!: NumberRow;
         return this.recordEvent(
           "number.updated",
@@ -281,17 +479,13 @@ export class BingoRoom extends DurableObject<Env> {
       }
       case "number.delete": {
         const id = requirePositiveId(command.id);
-        let deleted!: NumberRow;
-        return this.recordEvent(
-          "number.deleted",
-          null,
-          () => {
-            deleted = this.ctx.storage.sql
-              .exec<NumberRow>("DELETE FROM numbers WHERE id = ? RETURNING id, number", id)
-              .one();
-          },
-          () => deleted,
-        );
+        const existing = this.ctx.storage.sql
+          .exec<NumberRow>("SELECT id, number FROM numbers WHERE id = ?", id)
+          .toArray()[0];
+        if (!existing) throw new Error("Number not found");
+        return this.recordEvent("number.deleted", existing, () => {
+          this.ctx.storage.sql.exec("DELETE FROM numbers WHERE id = ?", id);
+        });
       }
       case "numbers.reset":
         return this.recordEvent("numbers.reset", {}, () =>
@@ -352,6 +546,9 @@ export class BingoRoom extends DurableObject<Env> {
         const id = requirePositiveId(command.id);
         const current = this.getPrize(id);
         if (!current) throw new Error("Prize not found");
+        if ("expectedImageKey" in command && current.imageKey !== command.expectedImageKey) {
+          throw new Error("Prize update conflict");
+        }
         const next = { ...current, ...command.prize };
         const nameJa = requirePrizeName(next.nameJa, "Japanese prize name");
         const nameEn = requirePrizeName(next.nameEn, "English prize name");
@@ -367,17 +564,26 @@ export class BingoRoom extends DurableObject<Env> {
               Number(next.isWon),
               id,
             );
+            if (current.imageKey && current.imageKey !== next.imageKey) {
+              this.queueImageDeletion(current.imageKey);
+            }
           },
           () => this.readPrizes(),
         );
       }
       case "prize.delete": {
         const id = requirePositiveId(command.id);
+        const current = this.getPrize(id);
+        if (!current) throw new Error("Prize not found");
+        if ("expectedImageKey" in command && current.imageKey !== command.expectedImageKey) {
+          throw new Error("Prize update conflict");
+        }
         return this.recordEvent(
           "prizes.updated",
           null,
           () => {
             this.ctx.storage.sql.exec("DELETE FROM prizes WHERE id = ?", id);
+            if (current.imageKey) this.queueImageDeletion(current.imageKey);
             this.resequencePrizes();
           },
           () => this.readPrizes(),
@@ -385,6 +591,7 @@ export class BingoRoom extends DurableObject<Env> {
       }
       case "prize.toggleWon": {
         const id = requirePositiveId(command.id);
+        if (!this.getPrize(id)) throw new Error("Prize not found");
         return this.recordEvent(
           "prizes.updated",
           null,
@@ -419,33 +626,93 @@ export class BingoRoom extends DurableObject<Env> {
         );
       }
       case "flags.update": {
-        const current = this.flagsFromRow(
-          this.ctx.storage.sql.exec<ConfigRow>("SELECT * FROM event_config WHERE id = 1").one(),
-        );
+        const config = this.ctx.storage.sql
+          .exec<ConfigRow & { reaction_config_version: number }>(
+            "SELECT * FROM event_config WHERE id = 1",
+          )
+          .one();
+        const current = this.flagsFromRow(config);
         const flags = { ...current, ...command.flags };
+        const syncReactions =
+          command.flags.reactionsEnabled !== undefined || command.flags.readOnlyMode !== undefined;
+        const configVersion = config.reaction_config_version + Number(syncReactions);
         return this.recordEvent("flags.updated", flags, () => {
           this.ctx.storage.sql.exec(
             `UPDATE event_config SET reactions_enabled = ?, reach_submission_enabled = ?, survey_enabled = ?,
-             admin_writes_enabled = ?, read_only_mode = ? WHERE id = 1`,
+             admin_writes_enabled = ?, read_only_mode = ?, reaction_config_version = ? WHERE id = 1`,
             Number(flags.reactionsEnabled),
             Number(flags.reachSubmissionEnabled),
             Number(flags.surveyEnabled),
             Number(flags.adminWritesEnabled),
             Number(flags.readOnlyMode),
+            configVersion,
           );
+          if (syncReactions) {
+            this.queueReactionSync(
+              configVersion,
+              flags.reactionsEnabled && !flags.readOnlyMode,
+              false,
+            );
+          }
         });
       }
-      case "event.initialize":
-        return this.recordEvent("event.initialized", {}, () => {
-          this.ctx.storage.sql.exec("DELETE FROM numbers");
-          this.ctx.storage.sql.exec("DELETE FROM prizes");
-          this.ctx.storage.sql.exec("DELETE FROM reach_submissions");
-          this.ctx.storage.sql.exec("UPDATE live_state SET reach_count = 0 WHERE id = 1");
-          this.ctx.storage.sql.exec(
-            `UPDATE event_config SET survey_active = 0, survey_url = '', reactions_enabled = 1,
-             reach_submission_enabled = 1, survey_enabled = 1, admin_writes_enabled = 1, read_only_mode = 0 WHERE id = 1`,
-          );
-        });
+      case "event.initialize": {
+        const config = this.ctx.storage.sql
+          .exec<{ reaction_config_version: number }>(
+            "SELECT reaction_config_version FROM event_config WHERE id = 1",
+          )
+          .one();
+        const configVersion = config.reaction_config_version + 1;
+        return this.recordEvent(
+          "event.initialized",
+          null,
+          () => {
+            for (const prize of this.readPrizes()) {
+              if (prize.imageKey) this.queueImageDeletion(prize.imageKey);
+            }
+            this.ctx.storage.sql.exec("DELETE FROM numbers");
+            this.ctx.storage.sql.exec("DELETE FROM prizes");
+            this.ctx.storage.sql.exec("DELETE FROM reach_submissions");
+            this.ctx.storage.sql.exec("UPDATE live_state SET reach_count = 0 WHERE id = 1");
+            this.ctx.storage.sql.exec(
+              `UPDATE event_config SET survey_active = 0, survey_url = '', reactions_enabled = 1,
+               reach_submission_enabled = 1, survey_enabled = 1, admin_writes_enabled = 1,
+               read_only_mode = 0, reaction_config_version = ? WHERE id = 1`,
+              configVersion,
+            );
+            this.queueReactionSync(configVersion, true, true);
+          },
+          () => this.getSnapshot(),
+        );
+      }
+    }
+  }
+
+  private queueImageDeletion(imageKey: string): void {
+    this.ctx.storage.sql.exec(
+      `INSERT OR IGNORE INTO pending_image_deletions (image_key, created_at) VALUES (?, ?)`,
+      imageKey,
+      Date.now(),
+    );
+  }
+
+  private queueReactionSync(configVersion: number, enabled: boolean, resetBudget: boolean): void {
+    const configured = Number(this.env.REACTION_SHARDS);
+    const count = Number.isInteger(configured) && configured > 0 ? configured : 4;
+    for (let shard = 0; shard < count; shard += 1) {
+      this.ctx.storage.sql.exec(
+        "DELETE FROM pending_reaction_syncs WHERE shard = ? AND config_version < ?",
+        shard,
+        configVersion,
+      );
+      this.ctx.storage.sql.exec(
+        `INSERT OR REPLACE INTO pending_reaction_syncs
+         (shard, config_version, enabled, reset_budget, attempts) VALUES (?, ?, ?, ?, 0)`,
+        shard,
+        configVersion,
+        Number(enabled),
+        Number(resetBudget),
+      );
     }
   }
 

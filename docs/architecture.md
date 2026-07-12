@@ -126,9 +126,10 @@ SQLiteテーブル:
 2. WorkerがAccessとOriginを検証します。
 3. Workerが最大サイズ、宣言されたMIME type、magic bytesを検証します。
 4. WorkerがUUIDのkeyを生成し、R2 bindingを介して書き込みます。
-5. BingoRoomがメタデータをcommitします。失敗時はWorkerがアップロード済みobjectを削除します。
-6. 更新、削除、イベント初期化時に不要になったobjectを削除します。
-7. 公開読み取りには`/api/prize-images/<encoded-key>`を使用し、bucket自体は非公開に保ちます。
+5. BingoRoomがメタデータと旧objectの削除予定を同じSQLite transactionでcommitします。
+6. commitが失敗した場合、Workerは現在のメタデータが新しいkeyを参照していないことを確認してから、そのkeyを削除outboxへ登録します。commit結果が不明な場合は参照中のobjectを削除しません。
+7. 更新、削除、イベント初期化で不要になったobjectは永続outboxから冪等に削除し、失敗時はDurable Object alarmで再試行します。
+8. 公開読み取りには`/api/prize-images/<encoded-key>`を使用し、bucket自体は非公開に保ちます。
 
 ## 認証境界
 
@@ -144,8 +145,10 @@ SQLiteテーブル:
 
 - Reaction shardはBingoRoomと状態処理経路を共有しません。
 - `reactionsEnabled`はすべてのshardへ反映されます。
+- Reaction設定には単調増加するversionを付け、BingoRoomの永続outboxから各shardへ冪等に反映します。部分失敗はalarmで再試行し、`readOnlyMode`も全shardへ伝播します。
 - `reachSubmissionEnabled`は参加者からのリーチ送信を停止しますが、管理者によるリーチ操作は継続できます。
 - `surveyEnabled`は保存済みURLを削除せずにアンケート案内を非表示にします。
 - `adminWritesEnabled`はフラグ更新以外の管理操作を拒否します。
-- `readOnlyMode`は書き込みを拒否しますが、SQLiteからのsnapshotとWebSocket読み取りを継続します。
-- WebSocket再接続には指数バックオフとjitterを使用します。HTTP fallbackは手動`GET /api/state`だけで、自動ポーリングは行いません。
+- `readOnlyMode`はリアクションを含むフラグ更新以外の書き込みを拒否しますが、SQLiteからのsnapshotとWebSocket読み取りを継続します。
+- Bingo WebSocketとReaction WebSocketには有効な署名済みsession Cookieが必要で、Durable Objectごとに接続上限を適用します。
+- WebSocket再接続には指数バックオフとjitterを使用します。version gapまたは初期化payload不整合時は`lastVersion`を送らず、完全snapshotを取得します。
