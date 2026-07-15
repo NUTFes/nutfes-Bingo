@@ -296,7 +296,8 @@ async function runPool(total, concurrency, task) {
   await Promise.all(workers);
 }
 
-const args = parseArgs(process.argv.slice(2));
+const rawArgs = process.argv.slice(2);
+const args = parseArgs(rawArgs[0] === "--" ? rawArgs.slice(1) : rawArgs);
 if (args.has("help") || !args.has("run")) {
   help();
   process.exit(0);
