@@ -8,7 +8,9 @@ out
 build
 dist
 .data
-backups
+snapshots
+*.snapshot.json
+*.logical-export.json
 
 # vcs / editor
 .git
@@ -17,11 +19,9 @@ backups
 
 # env / logs
 .env*
+.dev.vars*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 .DS_Store
-
-# supabase temporary cache
-supabase/.temp

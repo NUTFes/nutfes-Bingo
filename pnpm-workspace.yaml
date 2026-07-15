@@ -4,10 +4,11 @@ packages:
 minimumReleaseAge: 10080
 trustPolicy: no-downgrade
 trustPolicyExclude:
-  - undici-types@6.21.0
   - semver@6.3.1
 allowBuilds:
+  esbuild: true
   sharp: true
+  workerd: true
 
 overrides:
   postcss: 8.5.16

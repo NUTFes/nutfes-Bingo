@@ -44,7 +44,7 @@ const Modal = ({
       }
 
       const focusableElements = contentRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+        'iframe, a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
       );
       const first = focusableElements[0];
       const last = focusableElements[focusableElements.length - 1];

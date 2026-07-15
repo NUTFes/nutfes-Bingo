@@ -1,11 +1,10 @@
 function isDirectImagePath(imagePath: string): boolean {
-  if (imagePath.startsWith("/")) {
+  if (imagePath.startsWith("/PrizeItem/") || imagePath.startsWith("/api/prize-images/")) {
     return true;
   }
 
   try {
-    void new URL(imagePath);
-    return true;
+    return new URL(imagePath).protocol === "https:";
   } catch {
     return false;
   }

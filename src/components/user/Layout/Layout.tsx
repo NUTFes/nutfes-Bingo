@@ -23,13 +23,13 @@ import {
   Moon,
   MessageSquare,
   Settings as SettingsLucideIcon,
-  PartyPopper,
 } from "lucide-react";
 import { REACTION_IMAGES } from "@/types/bingo/constants";
 import type { AppStateRow } from "@/types/bingo/types";
 import { BingoLanguageProvider, useBingoLanguage } from "@/utils/i18n/provider";
-import { recordPublicReach, sendReactionStamp } from "@/features/user/actions/bingo-public";
+import { sendReactionStamp } from "@/features/user/actions/bingo-public";
 import { openHttpsUrl } from "@/utils/url";
+import ReachConfirmationModal from "@/components/user/ReachConfirmationModal";
 
 import styles from "./Layout.module.css";
 import {
@@ -59,9 +59,7 @@ type ModalState = {
 
 type ModalToggleKey = keyof ModalState;
 
-function getActionErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error && error.message ? error.message : fallback;
-}
+const STAMP_COOLDOWN_MS = 2_100;
 
 function InnerLayout({
   children,
@@ -88,16 +86,11 @@ function InnerLayout({
     isSending: false,
     activeName: null as string | null,
   });
-  const [reachState, setReachState] = useState({
-    isSending: false,
-    error: null as string | null,
-  });
   const navRef = useRef<HTMLDivElement>(null);
   const { isReactionModalOpen, isSettingsModalOpen, isReachModalOpen, isSurveyModalOpen } =
     modalState;
   const { isReachIconVisible, isSortOrderActive, isDarkMode } = preferences;
   const { isSending: isStampSending, activeName: activeStampName } = stampState;
-  const { isSending: isReachSending, error: reachError } = reachState;
   const setModalOpen = (key: ModalToggleKey) => (value: SetStateAction<boolean>) => {
     setModalState((prev) => ({
       ...prev,
@@ -133,43 +126,25 @@ function InnerLayout({
       return;
     }
 
+    const startedAt = performance.now();
     try {
       setStampState({
         isSending: true,
         activeName: name,
       });
       await sendReactionStamp(name as (typeof REACTION_IMAGES)[number]["name"]);
+    } catch (error) {
+      // Reactions are loss-tolerant. Keep the UI responsive while retaining a diagnostic signal.
+      console.error("リアクション送信に失敗しました。", error);
     } finally {
+      const remainingCooldown = Math.max(0, STAMP_COOLDOWN_MS - (performance.now() - startedAt));
       window.setTimeout(() => {
         setStampState({
           isSending: false,
           activeName: null,
         });
-      }, 800);
+      }, remainingCooldown);
     }
-  };
-
-  const handleConfirmReach = async () => {
-    if (isReachSending) {
-      return;
-    }
-
-    setReachState({ isSending: true, error: null });
-
-    try {
-      await recordPublicReach();
-      setPreferences((prev) => ({ ...prev, isReachIconVisible: false }));
-      persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, false);
-      setIsReachModalOpen(false);
-    } catch (error) {
-      setReachState({
-        isSending: false,
-        error: getActionErrorMessage(error, "リーチ送信に失敗しました。"),
-      });
-      return;
-    }
-
-    setReachState({ isSending: false, error: null });
   };
 
   const toggleSortOrder = () => {
@@ -244,30 +219,17 @@ function InnerLayout({
         setIsOpened={setIsSurveyModalOpen}
         surveyUrl={appState.survey_url}
       />
-      <Modal isOpened={isReachModalOpen} setIsOpened={setIsReachModalOpen}>
-        <div className={styles.reachModal}>
-          <div className={styles.reachIconWrapper}>
-            <PartyPopper className={styles.reachModalIcon} />
-          </div>
-          <p className={styles.reachModalTitle}>{t.reachModal.title}</p>
-          <Button disabled={isReachSending} onClick={handleConfirmReach}>
-            {isReachSending ? <div className={styles.spinner}></div> : t.reachModal.yes}
-          </Button>
-          <button
-            type="button"
-            className={styles.cancelButton}
-            disabled={isReachSending}
-            onClick={() => setIsReachModalOpen(false)}
-          >
-            {t.reachModal.no}
-          </button>
-          {reachError && (
-            <p className={styles.reachError} role="alert">
-              {reachError}
-            </p>
-          )}
-        </div>
-      </Modal>
+      {isReachModalOpen && (
+        <ReachConfirmationModal
+          copy={t.reachModal}
+          language={language}
+          onClose={() => setIsReachModalOpen(false)}
+          onConfirmed={() => {
+            setPreferences((previous) => ({ ...previous, isReachIconVisible: false }));
+            persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, false);
+          }}
+        />
+      )}
       <Modal isOpened={isSettingsModalOpen} setIsOpened={setIsSettingsModalOpen}>
         <div className={styles.settingsModal}>
           <div className={styles.settingsHeader}>

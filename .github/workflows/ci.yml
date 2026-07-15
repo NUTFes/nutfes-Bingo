@@ -23,6 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Setup pnpm
@@ -57,46 +58,20 @@ jobs:
       - name: TypeScript Check
         run: pnpm run typecheck
 
+      - name: Worker Binding Type Check
+        run: pnpm run worker:types:check
+
+      - name: Worker and Durable Object Tests
+        run: pnpm run test
+
+      - name: React Doctor
+        run: pnpm run doctor
+
       - name: Knip Check
         run: pnpm run knip
 
-      - name: Docker Compose Config Check
-        env:
-          SUPABASE_PUBLISHABLE_KEY: ci-publishable-key
-          SUPABASE_SECRET_KEY: ci-secret-key
-          SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
-          CLOUDFLARE_TUNNEL_TOKEN: ci-cloudflare-token
-        run: |
-          docker compose -f compose.dev.yml config --quiet
-          docker compose --env-file .env.production.example -f compose.prod.yml -f compose.cloudflare.yml config --quiet
-
       - name: Shell Script Syntax Check
-        run: sh -n infra/scripts/*.sh
-
-      - name: Production Preflight Check
-        env:
-          NUTFES_ALLOW_NON_LXC: "1"
-        run: |
-          tmpdir=$(mktemp -d)
-          trap 'rm -rf "$tmpdir"' EXIT
-
-          ./infra/scripts/init-production-env.sh "$tmpdir/.env.production"
-          mkdir -p "$tmpdir/postgres" "$tmpdir/storage"
-          sed -i \
-            -e "s|^NEXT_PUBLIC_SITE_URL=.*|NEXT_PUBLIC_SITE_URL=https://app.example.test|" \
-            -e "s|^SITE_URL=.*|SITE_URL=https://app.example.test|" \
-            -e "s|^SUPABASE_SERVER_URL=.*|SUPABASE_SERVER_URL=http://kong:8000|" \
-            -e "s|^SUPABASE_PUBLIC_URL=.*|SUPABASE_PUBLIC_URL=http://kong:8000|" \
-            -e "s|^API_EXTERNAL_URL=.*|API_EXTERNAL_URL=http://kong:8000/auth/v1|" \
-            -e "s|^ADDITIONAL_REDIRECT_URLS=.*|ADDITIONAL_REDIRECT_URLS=https://app.example.test/**|" \
-            -e "s|^CLOUDFLARE_TUNNEL_TOKEN=.*|CLOUDFLARE_TUNNEL_TOKEN=ci-cloudflare-token|" \
-            -e "s|^APP_IMAGE=.*|APP_IMAGE=ghcr.io/nutfes/nutfes-bingo@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|" \
-            -e "s|^SUPABASE_DB_DATA_PATH=.*|SUPABASE_DB_DATA_PATH=$tmpdir/postgres|" \
-            -e "s|^SUPABASE_STORAGE_DATA_PATH=.*|SUPABASE_STORAGE_DATA_PATH=$tmpdir/storage|" \
-            "$tmpdir/.env.production"
-          chmod 600 "$tmpdir/.env.production"
-
-          ENV_FILE="$tmpdir/.env.production" ./infra/scripts/preflight.sh
+        run: sh -n scripts/*.sh
 
   build:
     name: Build
@@ -127,4 +102,20 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build
-        run: docker build --build-arg NEXT_PUBLIC_SITE_URL=https://app.example.test --tag nutfes-bingo:test .
+        env:
+          NEXT_PUBLIC_MEDIA_ORIGIN: https://media.example.test
+          NEXT_PUBLIC_SITE_URL: https://app.example.test
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+        run: ./scripts/build-cloudflare-assets.sh
+
+      - name: Wrangler Dry Run
+        run: pnpm run worker:dry-run
+
+      - name: Worker Tests Against Built Assets
+        run: pnpm run test
+
+      - name: Enforce Free-plan Worker Bundle Limit
+        run: pnpm run worker:bundle:check
+
+      - name: Worker Startup Profile
+        run: pnpm exec wrangler check startup --env='' --outfile .wrangler-dist/worker-startup.cpuprofile

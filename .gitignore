@@ -20,13 +20,11 @@
 
 # production
 /build
-/backups/
 /.data/
 
 # misc
 .DS_Store
 *.pem
-supabase/.temp/
 
 # debug
 npm-debug.log*
@@ -39,6 +37,10 @@ yarn-error.log*
 .env*.local
 .env
 .env.production
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.cloudflare.deploy.*.env
 
 # vercel
 .vercel
@@ -48,3 +50,5 @@ yarn-error.log*
 next-env.d.ts
 
 temp
+.wrangler/
+.wrangler-dist/

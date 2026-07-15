@@ -47,6 +47,23 @@
   font-size: clamp(14px, 4vw, 18px);
   color: var(--main-color);
   letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.retryButton {
+  border: 2px solid var(--main-color);
+  border-radius: 999px;
+  padding: 0.65rem 1.25rem;
+  background: var(--main-color);
+  color: var(--background-color);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.retryButton:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
 }
 
 @keyframes spin {

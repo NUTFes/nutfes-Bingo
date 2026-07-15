@@ -4,21 +4,29 @@ on:
   pull_request:
     paths:
       - "src/**"
+      - "worker/**"
+      - "test/**"
       - "scripts/**"
       - "package.json"
       - "pnpm-lock.yaml"
       - "tsconfig.json"
       - "next.config.ts"
+      - "vitest.config.mts"
+      - "wrangler.jsonc"
       - ".github/workflows/codeql.yml"
   push:
     branches: [main]
     paths:
       - "src/**"
+      - "worker/**"
+      - "test/**"
       - "scripts/**"
       - "package.json"
       - "pnpm-lock.yaml"
       - "tsconfig.json"
       - "next.config.ts"
+      - "vitest.config.mts"
+      - "wrangler.jsonc"
       - ".github/workflows/codeql.yml"
   schedule:
     - cron: "31 18 * * 1"

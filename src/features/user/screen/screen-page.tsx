@@ -7,14 +7,15 @@ import { getScreenDisplayBingoNumbers } from "./view-model";
 import ScreenNumberCardLarge from "./components/ScreenNumberCardLarge/ScreenNumberCardLarge";
 import ScreenNumberCardList from "./components/ScreenNumberCardList/ScreenNumberCardList";
 import ScreenReachCount from "./components/ScreenReachCount/ScreenReachCount";
-import { useScreenPollingState, useStampTriggerPolling } from "@/lib/polling";
+import Loading from "@/components/user/Loading";
+import { useScreenRealtimeState, useStampStream } from "@/lib/realtime";
+import type { StampEvent } from "@/types/bingo/realtime";
 import type { NumberRow, ReachLogRow, StampName } from "@/types/bingo/types";
 import styles from "@/styles/user/screen.module.css";
 
 interface ScreenPageProps {
   initialNumbers: NumberRow[];
   initialReachLog: ReachLogRow | null;
-  initialStampCursor: number;
 }
 
 const IMAGES: Record<string, string> = {
@@ -36,11 +37,7 @@ const WALL_THICKNESS = 96;
 const WALL_INSET = 48;
 const STAMP_LIFETIME_MS = 45000;
 
-export function ScreenPage({
-  initialNumbers,
-  initialReachLog,
-  initialStampCursor,
-}: ScreenPageProps) {
+export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps) {
   const scene = useRef<HTMLDivElement>(null);
   const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
@@ -60,10 +57,11 @@ export function ScreenPage({
     removalTimersRef.current = new Map();
   }
   const removalTimers = removalTimersRef.current;
-  const { numbers: bingoNumbers, latestReachLog } = useScreenPollingState(
-    initialNumbers,
-    initialReachLog,
-  );
+  const {
+    numbers: bingoNumbers,
+    latestReachLog,
+    isReady,
+  } = useScreenRealtimeState(initialNumbers, initialReachLog);
   const displayBingoNumbers = useMemo(
     () => getScreenDisplayBingoNumbers(bingoNumbers),
     [bingoNumbers],
@@ -91,7 +89,7 @@ export function ScreenPage({
   );
 
   const handleStampInsert = useCallback(
-    (stamp: { name: StampName; id: number }) => {
+    (stamp: StampEvent) => {
       const texture = IMAGES[stamp.name];
       const currentEngine = engine.current;
       if (!texture || !currentEngine) {
@@ -140,7 +138,7 @@ export function ScreenPage({
   );
 
   useEffect(() => {
-    if (!scene.current) {
+    if (!isReady || !scene.current) {
       return;
     }
 
@@ -231,9 +229,13 @@ export function ScreenPage({
       render.current = null;
       engine.current = null;
     };
-  }, [boundaries, removalTimers, stampBodies]);
+  }, [boundaries, isReady, removalTimers, stampBodies]);
 
-  useStampTriggerPolling(initialStampCursor, handleStampInsert);
+  useStampStream(handleStampInsert);
+
+  if (!isReady) {
+    return <Loading />;
+  }
 
   return (
     <>

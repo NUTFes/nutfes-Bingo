@@ -1,4 +1,4 @@
-export function normalizeHttpsUrl(input: string, message = "URLの形式が不正です。") {
+function normalizeHttpsUrl(input: string, message = "URLの形式が不正です。") {
   const trimmed = input.trim();
 
   if (trimmed === "") {

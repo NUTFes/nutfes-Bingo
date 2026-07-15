@@ -23,11 +23,10 @@
 - [ ] pnpmだけを使用した
 - [ ] lockfile変更は意図したものだけである
 - [ ] Node/pnpm pinを確認した
-- [ ] Docker build/deploy pathへの影響を確認した
-- [ ] Supabase migration/typegenへの影響を確認した
-- [ ] `infra/supabase/UPSTREAM.md` への影響を確認した
-- [ ] `.env.example` / `.env.production.example` への影響を確認した
-- [ ] infra/deploy変更では `prod:config` / `prod:preflight` / smoke evidenceを添付した
+- [ ] Cloudflare static build / Worker deploy pathへの影響を確認した
+- [ ] Durable Objects / R2 / Access / Turnstile bindingsへの影響を確認した
+- [ ] `wrangler.jsonc` / `.dev.vars.example` への影響を確認した
+- [ ] Worker変更では `mise run cloudflare:check` / remote smoke evidenceを添付した
 - [ ] backup/restore/rollbackへの影響を説明した
 
 # 備考

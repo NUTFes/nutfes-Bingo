@@ -4,7 +4,8 @@ import { useState } from "react";
 
 import { getHomeDisplayBingoNumbers } from "./view-model";
 import { Layout, NumberCardLarge, NumberCardList } from "@/components/user";
-import { useHomePollingState } from "@/lib/polling";
+import Loading from "@/components/user/Loading";
+import { useHomeRealtimeState } from "@/lib/realtime";
 import type { PublicPreferences } from "@/types/bingo/public-preferences";
 import type { AppStateRow, NumberRow } from "@/types/bingo/types";
 import styles from "@/styles/user/home.module.css";
@@ -19,8 +20,12 @@ export function HomePage({ initialNumbers, initialAppState, initialPreferences }
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(
     () => initialPreferences.isSortedAscending,
   );
-  const { numbers, appState } = useHomePollingState(initialNumbers, initialAppState);
+  const { numbers, appState, isReady } = useHomeRealtimeState(initialNumbers, initialAppState);
   const displayBingoNumbers = getHomeDisplayBingoNumbers(isSortedAscending, numbers);
+
+  if (!isReady) {
+    return <Loading />;
+  }
 
   return (
     <Layout

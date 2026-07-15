@@ -6,7 +6,7 @@ import { isFileDropItem, type DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
 import { IoCloudUploadOutline } from "react-icons/io5";
 
-import { AdminHeader } from "@/components/admin";
+import { AdminHeader, AdminLoading } from "@/components/admin";
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { Button } from "@/components/ui/Button";
 import { DropZone } from "@/components/ui/DropZone";
@@ -17,6 +17,7 @@ import { MyToastRegion } from "@/components/ui/Toast";
 import { queue } from "@/components/ui/toastQueue";
 import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
+import { fetchAdminState } from "@/lib/admin-api";
 
 interface AdminPrizeCreatePageProps {
   initialPrizes: PrizeWithImageUrl[];
@@ -30,6 +31,8 @@ const showToast = (content: { title: string; description?: string }) => {
 
 export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProps) {
   const [bingoPrize, setBingoPrize] = useState(initialPrizes);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [formState, setFormState] = useState({
     prizeNameJp: "",
     prizeNameEn: "",
@@ -38,6 +41,23 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { prizeNameJp, prizeNameEn, imageFile, previewUrl } = formState;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetchAdminState(controller.signal)
+      .then((state) => {
+        setBingoPrize(state.prizes);
+        setIsLoaded(true);
+      })
+      .catch((error) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          console.error(error);
+          setLoadError("景品データを取得できませんでした。接続を確認して再読み込みしてください。");
+          showToast({ title: "読込失敗", description: "景品データを取得できませんでした。" });
+        }
+      });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -107,6 +127,10 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
       setIsSubmitting(false);
     }
   };
+
+  if (!isLoaded) {
+    return <AdminLoading error={loadError} />;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-8 text-foreground sm:pb-10">

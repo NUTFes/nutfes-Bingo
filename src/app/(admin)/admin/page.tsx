@@ -1,12 +1,6 @@
-import { connection } from "next/server";
-
 import { AdminDashboardPage } from "@/features/admin";
-import { requireAdmin } from "@/lib/auth/auth";
-import { getAppState, getNumbers } from "@/lib/queries";
+import { EMPTY_APP_STATE } from "@/types/bingo/types";
 
-export default async function Page() {
-  await Promise.all([connection(), requireAdmin()]);
-  const [numbers, appState] = await Promise.all([getNumbers(), getAppState()]);
-
-  return <AdminDashboardPage initialNumbers={numbers} initialAppState={appState} />;
+export default function Page() {
+  return <AdminDashboardPage initialNumbers={[]} initialAppState={EMPTY_APP_STATE} />;
 }

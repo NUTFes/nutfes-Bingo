@@ -3,30 +3,30 @@ name: Trivy
 on:
   pull_request:
     paths:
-      - "Dockerfile"
-      - "dev.Dockerfile"
-      - "compose*.yml"
-      - "infra/**"
+      - "Dockerfile.cloudflare"
+      - "scripts/**"
       - "src/**"
+      - "worker/**"
       - "public/**"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - "next.config.ts"
+      - "wrangler.jsonc"
       - ".github/workflows/trivy.yml"
   push:
     branches: [main]
     paths:
-      - "Dockerfile"
-      - "dev.Dockerfile"
-      - "compose*.yml"
-      - "infra/**"
+      - "Dockerfile.cloudflare"
+      - "scripts/**"
       - "src/**"
+      - "worker/**"
       - "public/**"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - "next.config.ts"
+      - "wrangler.jsonc"
       - ".github/workflows/trivy.yml"
   schedule:
     - cron: "47 18 * * 1"
@@ -99,8 +99,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Build production image
-        run: docker build --build-arg NEXT_PUBLIC_SITE_URL=https://app.example.test -t "${IMAGE_NAME}" .
+      - name: Build Cloudflare toolchain image
+        run: >-
+          docker build --file Dockerfile.cloudflare --target development
+          --build-arg NEXT_PUBLIC_SITE_URL=https://app.example.test
+          --build-arg NEXT_PUBLIC_MEDIA_ORIGIN=https://media.example.test
+          --build-arg NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+          --tag "${IMAGE_NAME}" .
 
       - name: Generate SARIF
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0

@@ -1,6 +1,6 @@
 ---
 name: maintenance issue
-about: Track dependency, Docker, Supabase, or annual deployment maintenance
+about: Track dependency, Cloudflare, or annual event maintenance
 title: ""
 labels: maintenance
 assignees: ""
@@ -8,14 +8,15 @@ assignees: ""
 
 # 概要
 
-<!-- dependency / Docker / Supabase / annual deploy のどれに関係するかを記載 -->
+<!-- dependency / Cloudflare / annual event operations のどれに関係するかを記載 -->
 
 # 対象領域
 
 - [ ] Dependencies / pnpm lockfile
-- [ ] Docker image / digest / build path
-- [ ] Supabase migration / Auth / Storage / PostgREST
-- [ ] Cloudflared / production deploy / preflight
+- [ ] Docker static-build toolchain / image digest
+- [ ] Workers / Durable Objects / Static Assets
+- [ ] Access / Turnstile / WAF
+- [ ] R2 image / snapshot
 - [ ] Backup / restore / rollback
 - [ ] Documentation / ADR / templates
 
@@ -32,7 +33,7 @@ assignees: ""
 - [ ] `pnpm audit` / `pnpm outdated` を確認した
 - [ ] `mise run check` の影響を確認した
 - [ ] `pnpm doctor` / `pnpm knip` の要否を確認した
-- [ ] `prod:config` / `prod:preflight` / smoke の要否を確認した
+- [ ] `mise run cloudflare:check` / remote smoke の要否を確認した
 - [ ] backup/restore/rollbackへの影響を確認した
 
 # 備考

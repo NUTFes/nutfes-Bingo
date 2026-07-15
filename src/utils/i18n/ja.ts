@@ -1,8 +1,11 @@
 export const ja = {
   reachModal: {
+    ariaLabel: "リーチ申告",
     title: "リーチですか？",
     yes: "リーチする",
     no: "キャンセル",
+    verificationPending: "送信の準備をしています。",
+    verificationError: "確認に時間がかかっています。もう一度お試しください。",
   },
   settingsModal: {
     languageSelection: "言語の選択",

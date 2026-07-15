@@ -8,12 +8,9 @@ const EXPECTED_PNPM = "11.2.2";
 const files = [
   "mise.toml",
   "package.json",
-  "Dockerfile",
-  "dev.Dockerfile",
-  "infra/supabase/Dockerfile.migrate",
+  "Dockerfile.cloudflare",
   ".github/workflows/ci.yml",
   ".github/workflows/react-doctor.yml",
-  ".github/workflows/supabase.yml",
   "README.md",
 ];
 
@@ -68,13 +65,11 @@ for (const path of files) {
       }
       break;
     }
-    case "Dockerfile":
-    case "dev.Dockerfile":
-    case "infra/supabase/Dockerfile.migrate":
+    case "Dockerfile.cloudflare":
       rejectVersionRegex(
         path,
         text,
-        /FROM node:(?<version>\d+\.\d+\.\d+)-alpine/g,
+        /FROM node:(?<version>\d+\.\d+\.\d+)-(?:alpine|bookworm-slim)/g,
         EXPECTED_NODE,
         "Node image",
       );
@@ -85,12 +80,13 @@ for (const path of files) {
         EXPECTED_PNPM,
         "pnpm install",
       );
-      assertIncludes(path, text, `node:${EXPECTED_NODE}-alpine`, "Node image pin");
-      assertIncludes(path, text, `pnpm@${EXPECTED_PNPM}`, "pnpm pin");
+      assertIncludes(path, text, `node:${EXPECTED_NODE}-bookworm-slim`, "Node image pin");
+      if (!text.includes(`pnpm@${EXPECTED_PNPM}`) && !text.includes(`pnpm-${EXPECTED_PNPM}.tgz`)) {
+        fail(path, `missing pnpm pin: pnpm@${EXPECTED_PNPM} or pnpm-${EXPECTED_PNPM}.tgz`);
+      }
       break;
     case ".github/workflows/ci.yml":
     case ".github/workflows/react-doctor.yml":
-    case ".github/workflows/supabase.yml":
       assertIncludes(path, text, `NODE_VERSION: "${EXPECTED_NODE}"`, "workflow Node pin");
       assertIncludes(path, text, `PNPM_VERSION: "${EXPECTED_PNPM}"`, "workflow pnpm pin");
       break;

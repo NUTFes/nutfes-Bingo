@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { AdminHeader, BingoResult } from "@/components/admin";
+import { AdminHeader, AdminLoading, BingoResult } from "@/components/admin";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion } from "@/components/ui/Toast";
 import { queue } from "@/components/ui/toastQueue";
@@ -18,6 +18,7 @@ import {
 } from "./dashboard-sections";
 import { useDashboardState } from "./hooks";
 import { parseBingoNumber } from "./utils";
+import { fetchAdminState } from "@/lib/admin-api";
 
 interface AdminDashboardPageProps {
   initialNumbers: NumberRow[];
@@ -58,10 +59,31 @@ const handleDecrementReach = async () => {
 
 export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
   const [bingoNumbers, setBingoNumbers] = useState(initialNumbers);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const dashboardState = useDashboardState({
     initialSurveyUrl: initialAppState.survey_url,
     bingoNumbers,
   });
+  const { setSurveyUrl } = dashboardState;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetchAdminState(controller.signal)
+      .then((state) => {
+        setBingoNumbers(state.numbers);
+        setSurveyUrl(state.appState.survey_url);
+        setIsLoaded(true);
+      })
+      .catch((error) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          console.error(error);
+          setLoadError("管理データを取得できませんでした。接続を確認して再読み込みしてください。");
+          showToast({ title: "読込失敗", description: "管理データを取得できませんでした。" });
+        }
+      });
+    return () => controller.abort();
+  }, [setSurveyUrl]);
   const parsedSubmitNumber = parseBingoNumber(dashboardState.submitNumberInput);
 
   const handleCreate = async () => {
@@ -73,7 +95,11 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
 
     const result = await dashboardActions.createNumber(nextNumber);
     if (!result.ok) {
-      if (result.error.includes("duplicate") || result.error.includes("numbers_number_unique")) {
+      if (
+        result.error.includes("duplicate") ||
+        result.error.includes("numbers_number_unique") ||
+        result.error.includes("同じ番号が既に登録")
+      ) {
         showToast({ title: "重複番号", description: `${nextNumber} は既に入力済みです。` });
         return;
       }
@@ -130,6 +156,10 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
     id: String(bingoNumber.number),
     label: `${bingoNumber.number}`,
   }));
+
+  if (!isLoaded) {
+    return <AdminLoading error={loadError} />;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-8 text-foreground sm:pb-10">

@@ -1,7 +1,5 @@
 import type { StampName } from "@/types/bingo/types";
 
-export const PRIZE_IMAGES_BUCKET = "prize-images";
-
 export const REACTION_IMAGES: ReadonlyArray<{ name: StampName; src: string; alt: string }> = [
   { name: "crap", src: "/ReactionIcon/crap.png", alt: "crap icon" },
   { name: "good", src: "/ReactionIcon/good.png", alt: "good icon" },

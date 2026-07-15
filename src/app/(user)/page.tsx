@@ -1,24 +1,19 @@
 import type { Metadata } from "next";
-import { connection } from "next/server";
 
 import { HomePage } from "@/features/user";
 import { DEFAULT_PUBLIC_PREFERENCES } from "@/types/bingo/public-preferences";
-import { getAppState, getNumbers } from "@/lib/queries";
+import { EMPTY_APP_STATE } from "@/types/bingo/types";
 
 export const metadata: Metadata = {
   title: "ホーム",
   description: "NUTFes Bingo の抽選番号をリアルタイムで確認できます。",
 };
 
-export default async function Page() {
-  await connection();
-
-  const [numbers, appState] = await Promise.all([getNumbers(), getAppState()]);
-
+export default function Page() {
   return (
     <HomePage
-      initialNumbers={numbers}
-      initialAppState={appState}
+      initialNumbers={[]}
+      initialAppState={EMPTY_APP_STATE}
       initialPreferences={DEFAULT_PUBLIC_PREFERENCES}
     />
   );

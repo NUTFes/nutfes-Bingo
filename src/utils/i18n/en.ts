@@ -1,8 +1,11 @@
 export const en = {
   reachModal: {
+    ariaLabel: "Declare reach",
     title: "Are you reaching?",
     yes: "Declare Reach",
     no: "Cancel",
+    verificationPending: "Preparing to send.",
+    verificationError: "Verification is taking longer than expected. Please try again.",
   },
   settingsModal: {
     languageSelection: "Language Selection",

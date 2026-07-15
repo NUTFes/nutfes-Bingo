@@ -1,46 +1,22 @@
 "use client";
 
-import { useActionState } from "react";
+import { Link } from "@/components/ui/Link";
+import { AuthFormCard } from "./components/AuthFormCard";
 
-import { Button } from "@/components/ui/Button";
-import { Form } from "@/components/ui/Form";
-import { TextField } from "@/components/ui/TextField";
-import { login, type AuthActionState } from "./actions";
-import { AuthFormCard, AuthFormError } from "./components/AuthFormCard";
-
-const initialState: AuthActionState = {
-  errorMessage: null,
-};
-
-export function LoginForm({ redirectTo }: { redirectTo?: string }) {
-  const [state, formAction, isPending] = useActionState(login.bind(null, redirectTo), initialState);
-
+export function LoginForm() {
   return (
     <AuthFormCard
       title="管理者ログイン"
-      description="登録済みのメールアドレスとパスワードを入力して、管理画面へアクセスします。"
+      description="管理画面は Cloudflare Access で保護されています。組織の認証画面でログインしてください。"
     >
-      <Form action={formAction} className="gap-4 sm:gap-5">
-        <TextField
-          name="email"
-          type="email"
-          label="メールアドレス"
-          placeholder="admin@example.com"
-          autoComplete="email"
-          isRequired
-        />
-        <TextField
-          name="password"
-          type="password"
-          label="パスワード"
-          autoComplete="current-password"
-          isRequired
-        />
-        <AuthFormError errorMessage={state.errorMessage} />
-        <Button type="submit" className="h-11 w-full font-medium" isPending={isPending}>
-          ログイン
-        </Button>
-      </Form>
+      <div className="space-y-4">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          認証画面が表示されない場合は、管理画面へ進むボタンを押してください。
+        </p>
+        <Link href="/admin" className="h-11 w-full justify-center font-medium">
+          管理画面へ進む
+        </Link>
+      </div>
     </AuthFormCard>
   );
 }

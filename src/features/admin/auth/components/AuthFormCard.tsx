@@ -24,19 +24,3 @@ export function AuthFormCard({ title, description, children }: AuthFormCardProps
     </div>
   );
 }
-
-export function AuthFormError({ errorMessage }: { errorMessage: string | null }) {
-  return (
-    <p
-      role="alert"
-      aria-live="polite"
-      className={
-        errorMessage
-          ? "rounded-md border border-red-500/40 bg-red-500/15 px-3 py-2 text-sm text-red-200"
-          : "min-h-6 text-sm leading-6 text-transparent"
-      }
-    >
-      {errorMessage ?? "\u00a0"}
-    </p>
-  );
-}

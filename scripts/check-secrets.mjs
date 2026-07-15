@@ -46,8 +46,13 @@ function isAllowedPlaceholder(value) {
   return value.startsWith("replace-with-") || value === "[]" || value === '{"keys":[]}';
 }
 
-function isEnvExample(path) {
-  return /(^|\/)\.env.*example$/.test(path);
+function isTurnstileTestSecret(value) {
+  return new Set([
+    "1x0000000000000000000000000000000AA",
+    "2x0000000000000000000000000000000AA",
+    "3x0000000000000000000000000000000AA",
+    "test-turnstile-secret",
+  ]).has(value);
 }
 
 function addFinding(findings, path, line, rule) {
@@ -56,7 +61,6 @@ function addFinding(findings, path, line, rule) {
 
 const findings = [];
 const jwtPattern = /eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g;
-const supabaseSecretPrefix = "sb_" + "secret_";
 
 for (const path of trackedFiles()) {
   let text = "";
@@ -69,60 +73,22 @@ for (const path of trackedFiles()) {
     continue;
   }
 
-  for (const match of text.matchAll(new RegExp(supabaseSecretPrefix, "g"))) {
-    addFinding(findings, path, lineNumberForIndex(text, match.index ?? 0), "sb_secret_key");
-  }
-
   for (const match of text.matchAll(jwtPattern)) {
     addFinding(findings, path, lineNumberForIndex(text, match.index ?? 0), "jwt_value");
-  }
-
-  if (path.startsWith("src/")) {
-    for (const match of text.matchAll(/createBrowserClient|NEXT_PUBLIC_SUPABASE_/g)) {
-      addFinding(
-        findings,
-        path,
-        lineNumberForIndex(text, match.index ?? 0),
-        "browser_supabase_boundary",
-      );
-    }
   }
 
   const lines = text.split(/\r?\n/);
   for (const [index, line] of lines.entries()) {
     const lineNo = index + 1;
 
-    const tunnelToken = envValue(line, "CLOUDFLARE_TUNNEL_TOKEN");
-    if (tunnelToken !== null && tunnelToken !== "" && !isAllowedPlaceholder(tunnelToken)) {
-      addFinding(findings, path, lineNo, "cloudflare_tunnel_token");
-    }
-
-    const jwtKeys = envValue(line, "JWT_KEYS");
-    if (jwtKeys !== null && jwtKeys !== "" && jwtKeys !== "[]") {
-      try {
-        const parsed = JSON.parse(jwtKeys);
-        const keys = Array.isArray(parsed) ? parsed : parsed?.keys;
-        if (
-          Array.isArray(keys) &&
-          keys.some((key) => key && typeof key === "object" && "d" in key)
-        ) {
-          addFinding(findings, path, lineNo, "jwt_private_key");
-        }
-      } catch {
-        if (/"d"\s*:/.test(jwtKeys)) {
-          addFinding(findings, path, lineNo, "jwt_private_key");
-        }
-      }
-    }
-
-    for (const name of ["SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEY"]) {
-      const value = envValue(line, name);
-      if (value === null || value === "") {
-        continue;
-      }
-      if (isEnvExample(path) && !isAllowedPlaceholder(value)) {
-        addFinding(findings, path, lineNo, `${name.toLowerCase()}_example_value`);
-      }
+    const turnstileSecret = envValue(line, "TURNSTILE_SECRET_KEY");
+    if (
+      turnstileSecret !== null &&
+      turnstileSecret !== "" &&
+      !isAllowedPlaceholder(turnstileSecret) &&
+      !isTurnstileTestSecret(turnstileSecret)
+    ) {
+      addFinding(findings, path, lineNo, "turnstile_secret_key");
     }
   }
 }
