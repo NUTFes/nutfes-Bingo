@@ -77,7 +77,10 @@ const prompts = [
     "observability",
     "Operator opened Access audit, Worker/DO Analytics, WAF Events, and today's snapshot",
   ],
-  ["breakGlass", "Named break-glass administrator completed MFA with the documented short session"],
+  [
+    "breakGlass",
+    "A distinct named break-glass administrator completed MFA in a private browser under a policy with a session duration of 30 minutes or less, and the successful event appeared in Access audit",
+  ],
 ];
 const readline = createInterface({ input: process.stdin, output: process.stdout });
 const manual = {};

@@ -43,13 +43,17 @@ bootstrapは既存bucketを再作成しません。R2作成時にWranglerへbind
 2. 景品R2 bucketへ環境別media custom domainを割り当てる。
 3. custom domainが`Active`になるまで待ち、実objectのGETが`200`になることを確認する。
 4. `/admin*`と`/screen*`へ環境別Access self-hosted applicationを作り、Cookie Pathを有効にする。
-5. 管理者と会場operatorのnamed human identityだけをexact emailで許可する。Everyone、domain全体、
-   Bypass、共有account、service tokenを人間向け画面に使わない。
-6. 管理と会場で異なるAUDをWorker環境変数へ登録する。
-7. environment別Managed Turnstile widgetを作り、対応するapplication hostnameだけを登録する。
-8. Turnstile secretをWrangler secretへ登録する。
-9. final Workerをdeployし、application custom domainを接続する。
-10. `workers.dev`、preview URL、`r2.dev`に迂回経路がないことを確認する。
+5. 管理者は`ADMIN_EMAILS`へ通常operatorと別identityのnamed break-glass管理者を最低1名ずつ、
+   会場operatorは`SCREEN_EMAILS`へ最低1名をexact emailで登録する。Everyone、domain全体、Bypass、
+   共有account、service tokenを人間向け画面に使わない。
+6. production/staging両方の管理Access applicationへbreak-glass専用Allow policyを作る。対象をその
+   exact emailだけにし、Independent MFAの`Custom MFA settings`を必須、MFA session durationを
+   30分以下にする。通常operatorと同じpolicyへ混在させない。
+7. 管理と会場で異なるAUDをWorker環境変数へ登録する。
+8. environment別Managed Turnstile widgetを作り、対応するapplication hostnameだけを登録する。
+9. Turnstile secretをWrangler secretへ登録する。
+10. final Workerをdeployし、application custom domainを接続する。
+11. `workers.dev`、preview URL、`r2.dev`に迂回経路がないことを確認する。
 
 Accessだけを認可境界にしません。Workerは`Cf-Access-Jwt-Assertion`の署名、issuer、AUD、
 expiryを検証し、さらに`ADMIN_EMAILS`または`SCREEN_EMAILS` allowlistを適用します。
@@ -291,7 +295,8 @@ productionへ進みません。
 7. screen socketが30分後に`1012`で閉じ、JWT再検証後だけ再接続する。
 8. backup bucketをpublic URLから読めない。
 9. Access audit、Worker/DO Analytics、WAF Events、当日snapshotをoperatorが閲覧できる。
-10. named break-glass管理者がMFAと短いsessionでloginできる。
+10. 通常operatorと別identityのnamed break-glass管理者がprivate browserでMFA loginできる。
+    専用policyのMFA session durationが30分以下で、Access auditに成功eventが残ることも確認する。
 
 Cloudflare Analyticsで確認した最大snapshot CPU p95を引数へ渡し、各質問へ実確認後だけ`yes`と入力します。
 
@@ -529,3 +534,4 @@ rollback経路です。
 - <https://developers.cloudflare.com/turnstile/plans/>
 - <https://developers.cloudflare.com/turnstile/get-started/server-side-validation/>
 - <https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/>
+- <https://developers.cloudflare.com/cloudflare-one/access-controls/policies/mfa-requirements/>

@@ -188,6 +188,11 @@ ADMIN_EMAILS="$ADMIN_EMAILS" SCREEN_EMAILS="$SCREEN_EMAILS" node - <<'NODE'
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 for (const name of ["ADMIN_EMAILS", "SCREEN_EMAILS"]) {
+  const minimumEmails = name === "ADMIN_EMAILS" ? 2 : 1;
+  const purpose =
+    name === "ADMIN_EMAILS"
+      ? "a primary and a distinct named break-glass administrator"
+      : "named venue operators";
   let value;
   try {
     value = JSON.parse(process.env[name]);
@@ -197,7 +202,7 @@ for (const name of ["ADMIN_EMAILS", "SCREEN_EMAILS"]) {
   }
   if (
     !Array.isArray(value) ||
-    value.length === 0 ||
+    value.length < minimumEmails ||
     value.length > 10 ||
     value.some(
       (entry) =>
@@ -210,7 +215,7 @@ for (const name of ["ADMIN_EMAILS", "SCREEN_EMAILS"]) {
     new Set(value).size !== value.length
   ) {
     console.error(
-      `${name} must contain 1-10 unique lowercase operator emails and no example-domain placeholders`,
+      `${name} must contain ${minimumEmails}-10 unique lowercase emails for ${purpose} and no example-domain placeholders`,
     );
     process.exit(2);
   }
