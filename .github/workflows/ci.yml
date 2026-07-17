@@ -111,11 +111,20 @@ jobs:
       - name: Wrangler Dry Run
         run: pnpm run worker:dry-run
 
+      - name: Wrangler Staging Dry Run
+        run: pnpm run worker:dry-run:staging
+
       - name: Worker Tests Against Built Assets
         run: pnpm run test
 
       - name: Enforce Free-plan Worker Bundle Limit
         run: pnpm run worker:bundle:check
 
+      - name: Enforce Staging Free-plan Worker Bundle Limit
+        run: pnpm run worker:bundle:check:staging
+
       - name: Worker Startup Profile
         run: pnpm exec wrangler check startup --env='' --outfile .wrangler-dist/worker-startup.cpuprofile
+
+      - name: Staging Worker Startup Profile
+        run: pnpm exec wrangler check startup --env staging --outfile .wrangler-dist-staging/worker-startup.cpuprofile

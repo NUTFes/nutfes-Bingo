@@ -4,6 +4,8 @@ set -eu
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$repo_root"
 
+./scripts/check-cloudflare-operator.sh --require-r2
+
 target=production
 if [ "${1:-}" = "--env" ] && [ -n "${2:-}" ]; then
   target=$2
@@ -16,14 +18,14 @@ fi
 
 ensure_bucket() {
   bucket=$1
-  if pnpm exec wrangler r2 bucket info "$bucket" >/dev/null 2>&1; then
+  if ./scripts/cloudflare-wrangler.sh r2 bucket info "$bucket" >/dev/null 2>&1; then
     echo "R2 bucket already exists: $bucket"
     return
   fi
 
   # Bindings are already declared in wrangler.jsonc. Prevent Wrangler from
   # prompting to append a second binding after creating the remote bucket.
-  pnpm exec wrangler r2 bucket create "$bucket" --update-config=false
+  ./scripts/cloudflare-wrangler.sh r2 bucket create "$bucket" --update-config=false
 }
 
 case "$target" in

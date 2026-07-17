@@ -20,6 +20,8 @@ snapshots
 # env / logs
 .env*
 .dev.vars*
+.cloudflare
+.cloudflare.deploy.*.env
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

@@ -58,19 +58,21 @@ pnpm test
 pnpm doctor
 pnpm knip
 mise run cloudflare:check
+mise run cloudflare:check:staging
 ```
 
 `pnpm test`はCloudflare Workers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。ブラウザE2E suiteは未構成です。
 
-`mise run cloudflare:check`はDocker static build、binding type freshness、Wrangler dry-run、Free planの3 MiB compressed bundle上限、Worker startup profileを確認します。
+`mise run cloudflare:check`と`mise run cloudflare:check:staging`はDocker static build、binding type freshness、環境別Wrangler dry-run、Free planの3 MiB compressed bundle上限、Worker startup profileを確認します。
 
 ## Cloudflare resource初期化
 
-Wranglerへlogin済みのoperatorが環境別R2 bucketを作成します。既存bucketは再作成しません。
+固定Cloudflare accountへlogin済みで必要権限を持つoperatorが、stagingから環境別R2 bucketを作成します。既存bucketは再作成しません。
 
 ```bash
-mise run cloudflare:bootstrap
+mise run cloudflare:whoami
 mise run cloudflare:bootstrap:staging
+mise run cloudflare:bootstrap
 ```
 
 bucket作成後に次をCloudflare dashboard/APIで設定します。
@@ -82,21 +84,21 @@ bucket作成後に次をCloudflare dashboard/APIで設定します。
 - WAF rate limitと緊急block rule
 - backup bucketの`snapshots/` 400日lifecycle
 
-secretやAccess AUDをGitへ保存しません。
+credentialとsecretはGitへ保存しません。account ID、Access AUD、domain、Turnstile sitekeyは公開設定として`cloudflare.project.env`へ固定します。
 
 ## Deploy
 
-環境値はshell履歴へ直接書かず、権限制限した環境ファイルまたはCI secretからexportします。Turnstile secretはWrangler secretとして環境別に登録します。
+デプロイ手順の正本は[Cloudflare本番運用runbookの「通常の再デプロイ」](docs/cloudflare-operations.md#通常の再デプロイ)だけです。READMEのコマンドを抜粋して実行せず、runbookのchecklistを上から完了してください。
 
-```bash
-pnpm exec wrangler secret put TURNSTILE_SECRET_KEY
-pnpm exec wrangler secret put TURNSTILE_SECRET_KEY --env staging
+同一のreview済みrelease commitを必ず`staging deploy → staging smoke・負荷・snapshot証跡 → production deploy → production smoke`の順で昇格します。deploy taskは次をfail closedで検査します。
 
-mise run cloudflare:deploy
-mise run cloudflare:deploy:staging
-```
+- `cloudflare.project.env`に固定したCloudflare accountとrelease branch
+- cleanかつpush済みで、`origin/<release branch>`と一致するHEAD
+- 環境別のAccess AUD、hostname、media origin、Turnstile sitekey
+- active staging versionのGit SHAと24時間以内の完全なsmoke記録
+- production確認用Git SHA
 
-deploy taskは`LOCAL_ADMIN_BYPASS`、`LOCAL_SCREEN_BYPASS`、`LOCAL_TURNSTILE_TEST_MODE`を常に無効化し、Access設定が空または不正なら失敗します。
+Access AUD、account ID、hostname、Turnstile sitekeyは公開設定として`cloudflare.project.env`へ固定しています。operator emailはactive Workerからmode `600`のGit管理外ファイルへ取得し、Turnstile secretはWrangler secretとして保持します。placeholderや空allowlistはdeployできません。
 
 ## データとロールバック
 

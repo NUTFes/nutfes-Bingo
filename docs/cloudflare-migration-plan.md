@@ -270,7 +270,7 @@ Next.js の `headers()` は static export 非対応なので、静的 response �
 
 - 旧Supabaseが未運用であることを確認し、one-shot export/importを不要として削除する。
 - CI に static build、Workers tests、dry-run deploy、bundle size check を追加する。
-- production deploy workflow、secret/resource bootstrap、Access/R2 custom domain、monitoring runbook を文書化する。
+- named operatorによるstaging-first production昇格、secret/resource bootstrap、Access/R2 custom domain、monitoring runbookを文書化する。
 - WebSocket 接続/reconnect、state update、stamp overload の負荷 test script を追加する。
 - legacy Supabase/Proxmox/Cloudflared構成と専用CI/依存を削除し、Cloudflare専用repositoryにする。
 
@@ -287,7 +287,7 @@ Next.js の `headers()` は static export 非対応なので、静的 response �
 - `src/features/user/**`、`src/features/admin/**`: WebSocket/API client 化
 - `src/lib/**`、`src/types/**`: protocol、API client、image URL
 - `scripts/**`: resource bootstrap、deploy、load test、secret scanner 修正
-- `.github/workflows/**`: Cloudflare quality/deploy
+- `.github/workflows/**`: Cloudflare quality/build/production・staging dry-run
 
 実運用データがないことを確認後、Supabase/legacy Dockerファイルは削除した。
 

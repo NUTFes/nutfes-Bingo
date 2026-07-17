@@ -4,6 +4,10 @@ set -eu
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$repo_root"
 
+set -a
+. ./cloudflare.project.env
+set +a
+
 usage() {
   echo "Usage: ACCESS_TEAM_DOMAIN=... ACCESS_AUD=... ADMIN_EMAILS='[...]' SCREEN_ACCESS_AUD=... SCREEN_EMAILS='[...]' MEDIA_ORIGIN=... NEXT_PUBLIC_SITE_URL=... NEXT_PUBLIC_TURNSTILE_SITE_KEY=... $0 --env production|staging"
 }
@@ -26,10 +30,63 @@ if [ -n "$worktree_status" ]; then
   exit 2
 fi
 
-release_sha=$(git rev-parse HEAD)
-if [ "$target" = "production" ] && [ "${CONFIRM_PRODUCTION_DEPLOY:-}" != "$release_sha" ]; then
-  echo "Production deploy requires CONFIRM_PRODUCTION_DEPLOY=$release_sha" >&2
+current_branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)
+if [ "$current_branch" != "$CLOUDFLARE_RELEASE_BRANCH" ]; then
+  echo "Deploys must run from the configured release branch: $CLOUDFLARE_RELEASE_BRANCH" >&2
   exit 2
+fi
+
+upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
+expected_upstream=origin/$CLOUDFLARE_RELEASE_BRANCH
+if [ "$upstream" != "$expected_upstream" ]; then
+  echo "Release branch must track $expected_upstream" >&2
+  exit 2
+fi
+
+git fetch --quiet origin "$CLOUDFLARE_RELEASE_BRANCH"
+release_sha=$(git rev-parse HEAD)
+remote_sha=$(git rev-parse "refs/remotes/$expected_upstream")
+if [ "$release_sha" != "$remote_sha" ]; then
+  echo "Release HEAD must be pushed and exactly match $expected_upstream" >&2
+  exit 2
+fi
+
+./scripts/check-cloudflare-operator.sh
+
+if [ "$target" = "production" ]; then
+  if [ "${CONFIRM_PRODUCTION_DEPLOY:-}" != "$release_sha" ]; then
+    echo "Production deploy requires CONFIRM_PRODUCTION_DEPLOY=$release_sha" >&2
+    exit 2
+  fi
+
+  staging_deployments=$(./scripts/cloudflare-wrangler.sh deployments list --env staging --json)
+  staging_version_id=$(
+    DEPLOYMENTS_JSON=$staging_deployments RELEASE_SHA=$release_sha node - <<'NODE'
+const deployments = JSON.parse(process.env.DEPLOYMENTS_JSON);
+const latest = deployments
+  .filter((deployment) => typeof deployment?.created_on === "string")
+  .toSorted((left, right) => Date.parse(left.created_on) - Date.parse(right.created_on))
+  .at(-1);
+const expectedMessage = `git:${process.env.RELEASE_SHA}`;
+if (latest?.annotations?.["workers/message"] !== expectedMessage) {
+  console.error(`Active staging deployment must have message ${expectedMessage}`);
+  process.exit(2);
+}
+const activeVersions = Array.isArray(latest.versions)
+  ? latest.versions.filter((version) => version?.percentage === 100)
+  : [];
+if (activeVersions.length !== 1 || typeof activeVersions[0].version_id !== "string") {
+  console.error("Active staging deployment must contain exactly one 100% version");
+  process.exit(2);
+}
+process.stdout.write(activeVersions[0].version_id);
+NODE
+  )
+  staging_smoke_record=${STAGING_SMOKE_RECORD:-.cloudflare/deployments/staging-$release_sha.json}
+  node scripts/verify-cloudflare-smoke-record.mjs \
+    "$staging_smoke_record" \
+    "$release_sha" \
+    "$staging_version_id"
 fi
 
 : "${ACCESS_TEAM_DOMAIN:?Set ACCESS_TEAM_DOMAIN to the Cloudflare Access team domain}"
@@ -40,6 +97,42 @@ fi
 : "${MEDIA_ORIGIN:?Set MEDIA_ORIGIN to the HTTPS R2 custom-domain origin}"
 : "${NEXT_PUBLIC_SITE_URL:?Set NEXT_PUBLIC_SITE_URL to the target application URL}"
 : "${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?Set NEXT_PUBLIC_TURNSTILE_SITE_KEY to the environment-specific Turnstile sitekey}"
+
+case "$target" in
+  production)
+    expected_site_url=$CLOUDFLARE_PRODUCTION_SITE_URL
+    expected_media_origin=$CLOUDFLARE_PRODUCTION_MEDIA_ORIGIN
+    expected_access_aud=$CLOUDFLARE_PRODUCTION_ADMIN_AUD
+    expected_screen_aud=$CLOUDFLARE_PRODUCTION_SCREEN_AUD
+    expected_turnstile_site_key=$CLOUDFLARE_PRODUCTION_TURNSTILE_SITE_KEY
+    ;;
+  staging)
+    expected_site_url=$CLOUDFLARE_STAGING_SITE_URL
+    expected_media_origin=$CLOUDFLARE_STAGING_MEDIA_ORIGIN
+    expected_access_aud=$CLOUDFLARE_STAGING_ADMIN_AUD
+    expected_screen_aud=$CLOUDFLARE_STAGING_SCREEN_AUD
+    expected_turnstile_site_key=$CLOUDFLARE_STAGING_TURNSTILE_SITE_KEY
+    ;;
+esac
+
+require_expected() {
+  label=$1
+  actual=$2
+  expected=$3
+  if [ "$actual" != "$expected" ]; then
+    echo "$label does not match the reviewed $target value in cloudflare.project.env" >&2
+    exit 2
+  fi
+}
+
+require_expected ACCESS_TEAM_DOMAIN "$ACCESS_TEAM_DOMAIN" "$CLOUDFLARE_ACCESS_TEAM_DOMAIN"
+require_expected ACCESS_AUD "$ACCESS_AUD" "$expected_access_aud"
+require_expected SCREEN_ACCESS_AUD "$SCREEN_ACCESS_AUD" "$expected_screen_aud"
+require_expected MEDIA_ORIGIN "$MEDIA_ORIGIN" "$expected_media_origin"
+require_expected NEXT_PUBLIC_SITE_URL "$NEXT_PUBLIC_SITE_URL" "$expected_site_url"
+require_expected NEXT_PUBLIC_TURNSTILE_SITE_KEY \
+  "$NEXT_PUBLIC_TURNSTILE_SITE_KEY" \
+  "$expected_turnstile_site_key"
 
 if [ "$ACCESS_AUD" = "$SCREEN_ACCESS_AUD" ]; then
   echo "ACCESS_AUD and SCREEN_ACCESS_AUD must belong to different Access applications" >&2
@@ -91,48 +184,47 @@ validate_https_origin ACCESS_TEAM_DOMAIN "$ACCESS_TEAM_DOMAIN" access
 validate_https_origin MEDIA_ORIGIN "$MEDIA_ORIGIN" origin
 validate_https_origin NEXT_PUBLIC_SITE_URL "$NEXT_PUBLIC_SITE_URL" origin
 
-node -e '
-  const value = JSON.parse(process.env.ADMIN_EMAILS);
-  const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (
-    !Array.isArray(value) ||
-    value.length === 0 ||
-    value.length > 10 ||
-    value.some((entry) =>
-      typeof entry !== "string" ||
-      entry !== entry.trim().toLowerCase() ||
-      entry.length > 320 ||
-      !email.test(entry)
-    ) ||
-    new Set(value).size !== value.length
-  ) process.exit(1);
-'
+ADMIN_EMAILS="$ADMIN_EMAILS" SCREEN_EMAILS="$SCREEN_EMAILS" node - <<'NODE'
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-SCREEN_EMAILS="$SCREEN_EMAILS" node -e '
-  const value = JSON.parse(process.env.SCREEN_EMAILS);
-  const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+for (const name of ["ADMIN_EMAILS", "SCREEN_EMAILS"]) {
+  let value;
+  try {
+    value = JSON.parse(process.env[name]);
+  } catch {
+    console.error(`${name} must be a JSON array`);
+    process.exit(2);
+  }
   if (
     !Array.isArray(value) ||
     value.length === 0 ||
     value.length > 10 ||
-    value.some((entry) =>
-      typeof entry !== "string" ||
-      entry !== entry.trim().toLowerCase() ||
-      entry.length > 320 ||
-      !email.test(entry)
+    value.some(
+      (entry) =>
+        typeof entry !== "string" ||
+        entry !== entry.trim().toLowerCase() ||
+        entry.length > 320 ||
+        !emailPattern.test(entry) ||
+        /@example\.(com|net|org)$/i.test(entry),
     ) ||
     new Set(value).size !== value.length
-  ) process.exit(1);
-'
+  ) {
+    console.error(
+      `${name} must contain 1-10 unique lowercase operator emails and no example-domain placeholders`,
+    );
+    process.exit(2);
+  }
+}
+NODE
 
 turnstile_hostname=$(URL_VALUE="$NEXT_PUBLIC_SITE_URL" node -e '
   process.stdout.write(new URL(process.env.URL_VALUE).hostname.toLowerCase());
 ')
 
 if [ "$target" = "staging" ]; then
-  turnstile_secrets=$(pnpm exec wrangler secret list --env staging --format json)
+  turnstile_secrets=$(./scripts/cloudflare-wrangler.sh secret list --env staging --format json)
 else
-  turnstile_secrets=$(pnpm exec wrangler secret list --env='' --format json)
+  turnstile_secrets=$(./scripts/cloudflare-wrangler.sh secret list --env='' --format json)
 fi
 SECRETS_JSON="$turnstile_secrets" node -e '
   const secrets = JSON.parse(process.env.SECRETS_JSON);
@@ -155,10 +247,10 @@ if [ "$stamp_daily_limit" -gt 25000 ]; then
 fi
 
 export NEXT_PUBLIC_MEDIA_ORIGIN=$MEDIA_ORIGIN
-./scripts/check-cloudflare-worker.sh
+./scripts/check-cloudflare-worker.sh --env "$target"
 
 if [ "$target" = "staging" ]; then
-  pnpm exec wrangler deploy \
+  ./scripts/cloudflare-wrangler.sh deploy \
     --env staging \
     --strict \
     --message "git:$release_sha" \
@@ -174,7 +266,7 @@ if [ "$target" = "staging" ]; then
     --var "STAMP_DAILY_LIMIT:$stamp_daily_limit" \
     --var "TURNSTILE_HOSTNAME:$turnstile_hostname"
 else
-  pnpm exec wrangler deploy \
+  ./scripts/cloudflare-wrangler.sh deploy \
     --env='' \
     --strict \
     --message "git:$release_sha" \

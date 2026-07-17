@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import process from "node:process";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
 const STAMP_NAMES = [
@@ -36,6 +38,7 @@ Options:
   --allow-edge-blocks  Treat stamp 403/429 responses from a rehearsed WAF rule as expected
   --ws-path <path>     WebSocket path (default: /api/bingo/socket)
   --ws-ready-type <t>  Expected initial payload: state or ready (inferred from path)
+  --output <path>      Write the final JSON result to a mode-600 file
   --help               Show this message
 
 Example for the expected maximum audience:
@@ -62,6 +65,7 @@ function parseArgs(argv) {
     "stamp-burst",
     "state-reads",
     "state-ws",
+    "output",
     "ws-path",
     "ws-ready-type",
   ]);
@@ -424,6 +428,15 @@ const requestWork = [
 ];
 
 let sockets = await openSockets(baseUrl, wsPath, wsReadyType, stateWs, batchSize, counters);
+if (expectBroadcasts > 0) {
+  console.error(
+    JSON.stringify({
+      event: "sockets-ready",
+      ready: counters.ready,
+      expectedBroadcasts: expectBroadcasts,
+    }),
+  );
+}
 for (let round = 0; round <= reconnects; round += 1) {
   await delay(duration * 1000);
   await closeSockets(sockets);
@@ -461,44 +474,55 @@ const broadcastResults = [...counters.broadcasts.entries()]
   .toSorted((a, b) => a.revision - b.revision);
 const completedBroadcasts = broadcastResults.filter((broadcast) => broadcast.complete).length;
 
-console.log(
-  JSON.stringify({
-    durationMs: Math.round(performance.now() - startedAt),
-    broadcastResults,
-    completedBroadcasts,
-    expectBroadcasts,
-    expectedDegradedResponses,
-    httpClientFailures,
-    httpErrorSamples: Object.fromEntries([...errorSamples].sort(([a], [b]) => a - b)),
-    httpServerFailures,
-    reconnects,
-    plannedDurableObjectRequests,
-    plannedWorkerRequests,
-    requestsByStatus: Object.fromEntries([...statuses].sort(([a], [b]) => a - b)),
-    stampBurst,
-    stateReads,
-    stateWs,
-    wsReadyType,
-    websocket: {
-      closed: counters.closed,
-      messages: counters.messages,
-      openFailures: counters.openFailures,
-      opened: counters.opened,
-      openLatencyP95Ms: openLatencyP95Ms === null ? null : Math.round(openLatencyP95Ms * 100) / 100,
-      ready: counters.ready,
-      readyFailures: counters.readyFailures,
-      readyLatencyP95Ms:
-        readyLatencyP95Ms === null ? null : Math.round(readyLatencyP95Ms * 100) / 100,
-    },
-  }),
-);
+const passed =
+  httpClientFailures === 0 &&
+  httpServerFailures === 0 &&
+  counters.openFailures === 0 &&
+  counters.readyFailures === 0 &&
+  completedBroadcasts >= expectBroadcasts;
+const result = {
+  passed,
+  baseUrl: baseUrl.origin,
+  completedAt: new Date().toISOString(),
+  durationMs: Math.round(performance.now() - startedAt),
+  broadcastResults,
+  completedBroadcasts,
+  expectBroadcasts,
+  expectedDegradedResponses,
+  httpClientFailures,
+  httpErrorSamples: Object.fromEntries([...errorSamples].sort(([a], [b]) => a - b)),
+  httpServerFailures,
+  reconnects,
+  plannedDurableObjectRequests,
+  plannedWorkerRequests,
+  requestsByStatus: Object.fromEntries([...statuses].sort(([a], [b]) => a - b)),
+  stampBurst,
+  stateReads,
+  stateWs,
+  wsReadyType,
+  websocket: {
+    closed: counters.closed,
+    messages: counters.messages,
+    openFailures: counters.openFailures,
+    opened: counters.opened,
+    openLatencyP95Ms: openLatencyP95Ms === null ? null : Math.round(openLatencyP95Ms * 100) / 100,
+    ready: counters.ready,
+    readyFailures: counters.readyFailures,
+    readyLatencyP95Ms:
+      readyLatencyP95Ms === null ? null : Math.round(readyLatencyP95Ms * 100) / 100,
+  },
+};
 
-if (
-  httpClientFailures > 0 ||
-  httpServerFailures > 0 ||
-  counters.openFailures > 0 ||
-  counters.readyFailures > 0 ||
-  completedBroadcasts < expectBroadcasts
-) {
+const outputPath = args.get("output");
+if (typeof outputPath === "string") {
+  await mkdir(dirname(outputPath), { recursive: true, mode: 0o700 });
+  await writeFile(outputPath, `${JSON.stringify(result, null, 2)}\n`, {
+    encoding: "utf8",
+    mode: 0o600,
+  });
+}
+console.log(JSON.stringify(result));
+
+if (!passed) {
   process.exitCode = 1;
 }

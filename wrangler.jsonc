@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
+  "account_id": "7bc1ed6d9b848da05da9416293ea351a",
   "name": "nutfes-bingo",
   "main": "./worker/index.ts",
   // Custom domains are configured out-of-band. Never expose an Access/WAF-bypassing workers.dev URL.

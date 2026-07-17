@@ -25,15 +25,17 @@ Assetですが、配信前にWorkerでもScreen Access JWTを検証します。
 
 ## 初回構築
 
-Wranglerへloginできるoperatorが環境別R2 bucketを作成します。
+`cloudflare.project.env`のaccountに所属し、Workers Scripts writeとR2 writeを持つoperatorが実行します。
+誤accountで同名resourceを作らないよう、bootstrap前に固定accountとcapabilityを検査します。
 
 ```bash
-mise run cloudflare:bootstrap
+mise run cloudflare:whoami
 mise run cloudflare:bootstrap:staging
+mise run cloudflare:bootstrap
 ```
 
 bootstrapは既存bucketを再作成しません。R2作成時にWranglerへbinding追加を委ねず、
-`wrangler.jsonc`を正本にします。
+`wrangler.jsonc`をbindingの正本、`cloudflare.project.env`をaccount・domain・AUD・sitekeyの正本にします。
 
 次の順で外部resourceを設定します。
 
@@ -58,45 +60,98 @@ JWTを再検証します。これはAccess applicationの対話的session期限�
 
 ## 通常の再デプロイ
 
-必ず同一commitをstagingへ先にdeployし、smoke確認後にproductionへdeployします。deploy taskは
-dirty working tree、環境指定の省略、production確認用Git SHAの不一致を拒否します。Cloudflareの
-version messageにも`git:<full SHA>`を記録するため、未コミット成果物からはdeployできません。
+この章だけをデプロイ手順の正本とします。同一のreview済みcommitを
+`staging deploy → staging smoke・負荷・snapshot証跡 → production deploy → production smoke`
+の順で昇格し、途中の失敗や未確認項目を飛ばしません。
 
-### 1. operatorと環境ファイルを準備する
+`cloudflare.project.env`はcredentialを含まない公開設定の正本です。Cloudflare account ID、現在の
+release branch、Worker名、URL、Access team/AUD、Turnstile sitekeyを固定しています。変更時は通常の
+code reviewを通し、stagingから検証し直します。
 
-Node/pnpmは`mise.toml`のversionを使用し、Wranglerへ対象accountのoperatorとしてloginします。
+GitHub Actionsはquality、build、production/staging dry-runだけを行います。remote deployはAccess、Turnstile、
+Analyticsを確認できるnamed operatorがこの章を対話的に実行し、CI secretからはdeployしません。
+
+### 1. tool、account、release branchを準備する
+
+必要条件:
+
+- `mise.toml`のNode/pnpm
+- Docker EngineとBuildx
+- `cloudflare.project.env`のaccountへ所属するnamed human operator
+- Workers Scripts write権限
+- R2 bucket list権限。初回構築担当者はR2 write、Access、Turnstile、DNS/WAF変更権限も持つ
 
 ```bash
+mise trust
 mise install
 mise run install
-pnpm exec wrangler whoami
+mise run cloudflare:whoami
+
+set -a
+. ./cloudflare.project.env
+set +a
+git fetch origin "$CLOUDFLARE_RELEASE_BRANCH"
 ```
 
-初回だけexampleをコピーし、環境ごとの実値へ置き換えます。実ファイルはGit管理外です。
-`TURNSTILE_SECRET_KEY`はファイルへ保存せず、Wrangler secretとして環境ごとに登録します。
+新規cloneでrelease branchを初めてcheckoutする場合:
 
 ```bash
-cp cloudflare.deploy.staging.env.example .cloudflare.deploy.staging.env
-cp cloudflare.deploy.production.env.example .cloudflare.deploy.production.env
-chmod 600 .cloudflare.deploy.staging.env .cloudflare.deploy.production.env
-
-pnpm exec wrangler secret put TURNSTILE_SECRET_KEY --env staging
-pnpm exec wrangler secret put TURNSTILE_SECRET_KEY
+git switch --track "origin/$CLOUDFLARE_RELEASE_BRANCH"
 ```
 
-通常の再デプロイではsecretを再登録しません。登録済みであることだけをdeploy taskが検査します。
-環境値はshell履歴へ直接書かず、上記ファイルまたはCI secretから読み込みます。Access team domainは
-完全なHTTPS URL、email allowlistは小文字のJSON配列です。
-
-### 2. release commitを検証する
-
-対象branchをpullし、未追跡ファイルを含めてcleanであることと、deploy対象のfull SHAを確認します。
+既にlocal branchがある場合:
 
 ```bash
+git switch "$CLOUDFLARE_RELEASE_BRANCH"
 git pull --ff-only
+```
+
+次がすべて成功し、2つのSHAが同一でなければ進みません。deploy taskも同じ条件を再検査します。
+
+```bash
 git status --short
 git rev-parse HEAD
+git rev-parse "origin/$CLOUDFLARE_RELEASE_BRANCH"
+```
 
+`git status --short`は空である必要があります。detached HEAD、別branch、upstreamなし、未push、
+remote tipより古いcommitからのdeployは拒否されます。
+
+### 2. mode 600の環境ファイルを生成する
+
+既存Workerのactive versionからemail allowlistを取得し、review済み公開設定と照合してGit管理外の
+環境ファイルを作ります。値はterminalへ表示されません。
+
+```bash
+mise run cloudflare:env:init:staging
+mise run cloudflare:env:init
+stat -c '%a %n' .cloudflare.deploy.staging.env .cloudflare.deploy.production.env
+```
+
+期待値は両方とも`600`です。既存ファイルがある場合は停止するため、内容をreviewしてから明示的に更新します。
+
+```bash
+node scripts/init-cloudflare-deploy-env.mjs --env staging --force
+node scripts/init-cloudflare-deploy-env.mjs --env production --force
+```
+
+初回Worker構築前だけは`cloudflare.deploy.*.env.example`をコピーし、`ADMIN_EMAILS`と
+`SCREEN_EMAILS`を1〜10件の小文字email JSON配列へ置換します。空配列、example domain、
+review済み公開設定と異なる値はdeploy taskが拒否します。
+
+Turnstile secretはファイルへ保存しません。次で登録名を確認し、存在しない環境だけ対話的に登録します。
+
+```bash
+./scripts/cloudflare-wrangler.sh secret list --env staging
+./scripts/cloudflare-wrangler.sh secret list --env=''
+
+./scripts/cloudflare-wrangler.sh secret put TURNSTILE_SECRET_KEY --env staging
+./scripts/cloudflare-wrangler.sh secret put TURNSTILE_SECRET_KEY --env=''
+```
+
+### 3. release commitを検証してrollback元を記録する
+
+```bash
 pnpm secrets:check
 pnpm fmt:check
 pnpm lint
@@ -105,22 +160,21 @@ pnpm test
 pnpm doctor
 pnpm knip
 mise run cloudflare:check
+mise run cloudflare:check:staging
+
+./scripts/cloudflare-wrangler.sh deployments list --env staging
+./scripts/cloudflare-wrangler.sh deployments list --env=''
 ```
 
-frontend変更がない場合だけ`pnpm doctor`を省略できます。依存、export、entry point、削除がない場合だけ
-`pnpm knip`を省略できます。Worker、routing、binding、Docker、Next.js設定、依存解決に変更がない場合だけ
-`mise run cloudflare:check`を省略できます。
+すべてexit `0`が必要です。React Doctorがwarningを出した場合、各項目をfalse positive、修正済み、
+またはrelease ownerが承認した既知issueのいずれかへ分類してchange recordへ残します。exit codeだけで
+warningを承認済みとみなしません。
 
-rollback対象を取り違えないよう、deploy前のversion IDを作業記録へ残します。
+deploy前のproduction/staging version ID、Git SHA、実施者、開始時刻をchange recordへ残します。
 
-```bash
-pnpm exec wrangler versions list --env staging
-pnpm exec wrangler versions list
-```
+### 4. stagingへdeployする
 
-### 3. stagingへdeployしてsmoke確認する
-
-環境値が親shellへ残らないsubshell内でstagingへdeployします。
+環境値が親shellへ残らないsubshellで実行します。
 
 ```bash
 (
@@ -131,16 +185,81 @@ pnpm exec wrangler versions list
 )
 ```
 
-deploy後、`wrangler versions list --env staging`で最新versionのmessageが対象Git SHAであることを確認します。
-最低限、公開ページとstate API、未認証時のAccess拒否、画像取得を確認します。さらに実スマートフォンの
-browserでTurnstileをsolveし、reachが一度だけ増え、確認ボタンを押してから検証完了まで操作が保持される
-ことを確認します。管理画面の画像upload後は、別browserまたはprivate windowでもcache削除なしで画像が
-表示されることを確認します。
+deploy taskはDocker static export、binding type、**staging configのWrangler dry-run**、
+compressed bundle 3 MiB、startup profileを検査してからdeployし、version messageへ
+`git:<full SHA>`を記録します。
 
-### 4. 同一commitをproductionへdeployする
+### 5. staging自動smokeを記録する
 
-staging smokeに合格した同一commitかつcleanなworking treeで、full SHAを確認変数へ設定します。
-SHAが1文字でも異なる場合、production deployは停止します。
+```bash
+mise run cloudflare:smoke:staging
+```
+
+active staging versionが現在のGit SHAであることに加え、公開HTML、ready/state API、実景品画像、
+admin/screenのAccess redirectと別AUD、公開state WebSocketを検査します。成功時は
+`.cloudflare/deployments/staging-<SHA>.draft.json`をmode `600`で作ります。
+
+### 6. stagingで1000 socket broadcastを実行する
+
+terminal Aで次を実行します。
+
+```bash
+mise run cloudflare:load:staging
+```
+
+`{"event":"sockets-ready","ready":1000,...}`が表示された後、5分以内に許可済み管理画面で
+reachの`+1`と`-1`を3組実行します。6 revisionを発生させつつ最終値を元へ戻します。
+1000 clientすべてが5回以上のrevisionを受信し、5xx、open failure、ready failureが0の場合だけ
+`.cloudflare/deployments/staging-load.json`が`passed:true`になります。
+
+### 7. stagingで最大snapshotを3回検証する
+
+許可済みbrowserでstaging `/admin`へlogin後、DevToolsのApplication/Cookiesから
+`CF_Authorization`の**値だけ**を取得します。shell履歴へ値を残さずmode `600`で保存します。
+
+```bash
+mkdir -p -m 700 .cloudflare
+umask 077
+read -r -s CF_ACCESS_JWT
+printf '%s' "$CF_ACCESS_JWT" > .cloudflare/staging-access-jwt
+unset CF_ACCESS_JWT
+mise run cloudflare:snapshot:test:staging .cloudflare/staging-access-jwt
+```
+
+試験は上限件数の番号、景品、reach、dedupe、auditを持つlogical snapshotを、active pointerを変更しない
+新generationへ3回importします。各回でread-back checksum、R2保存、`activated:false`を確認し、
+`.cloudflare/deployments/staging-snapshot.json`へgenerationとobject keyを記録します。
+
+直後にCloudflare dashboardのstaging Worker Analyticsで試験時間帯の
+`POST /admin/api/import`を確認し、Worker CPU p95をms単位で記録します。Free planの10 msを超えた場合は
+productionへ進みません。
+
+### 8. 手動smokeを実施してstaging証跡を確定する
+
+次を実際に確認します。
+
+1. allowlist済み管理者が`/admin`を開き、戻せるmutationを1回実行できる。
+2. allowlist外または未認証identityが`/admin`を拒否される。
+3. allowlist済み会場operatorが`/screen`を開き、2本のWebSocketがreadyになる。
+4. allowlist外または未認証identityが`/screen`を拒否される。
+5. 実Turnstile solveでreachが一度だけ増え、retryでも重複しない。
+6. 新規画像upload後、別private browserでもmedia URLが`200 image/*`になる。
+7. screen socketが30分後に`1012`で閉じ、JWT再検証後だけ再接続する。
+8. backup bucketをpublic URLから読めない。
+9. Access audit、Worker/DO Analytics、WAF Events、当日snapshotをoperatorが閲覧できる。
+10. named break-glass管理者がMFAと短いsessionでloginできる。
+
+Cloudflare Analyticsで確認した最大snapshot CPU p95を引数へ渡し、各質問へ実確認後だけ`yes`と入力します。
+
+```bash
+mise run cloudflare:smoke:finalize:staging <cpu-ms-p95>
+```
+
+成功すると`.cloudflare/deployments/staging-<SHA>.json`が作られます。active staging version、
+Git SHA、24時間以内の自動・手動check、1000 socket、5 broadcast、最大snapshot 3回、CPU 10 ms以下を
+機械検証します。このrecordなしではproduction deployできません。
+
+### 9. 同一commitをproductionへdeployする
 
 ```bash
 (
@@ -152,14 +271,23 @@ SHAが1文字でも異なる場合、production deployは停止します。
 )
 ```
 
-deploy後、`wrangler versions list`のversion IDとGit SHAを作業記録へ残し、productionでも公開ページ、
-Access、state API、実browserのreach 1回、画像upload/表示を確認します。異常時は新しい管理操作を止め、
-下記のロールバック手順へ進みます。
+deploy taskはlocal SHA確認だけでなく、active staging deploymentの`git:<SHA>`と上記の完全なsmoke recordを
+照合します。異なるSHA、古いrecord、未完了項目が1つでもあれば停止します。
 
-deploy taskはDocker内でNext.js static exportを作り、binding type freshness、Wrangler dry-run、
-compressed Worker 3 MiB、startup profileを検査してからdeployします。公式dummy Turnstile sitekeyは
-remote deployで拒否し、`LOCAL_ADMIN_BYPASS`、`LOCAL_SCREEN_BYPASS`、
-`LOCAL_TURNSTILE_TEST_MODE`を常に`false`へ上書きします。
+### 10. production smokeとversion IDを記録する
+
+```bash
+mise run cloudflare:smoke
+mise run cloudflare:smoke:finalize
+./scripts/cloudflare-wrangler.sh deployments list --env=''
+```
+
+stagingと同じ手動10項目をproductionでも確認します。最終record
+`.cloudflare/deployments/production-<SHA>.json`にはactive production version ID、Git SHA、operator、
+実施時刻、自動・手動結果が入ります。staging/production recordとdeploy前後のversion IDをteamの
+change recordへ添付します。`.cloudflare/`はGit管理外であり、端末だけを恒久保管先にしません。
+
+異常時は新しい管理操作を止め、このrunbookのロールバック手順へ進みます。
 
 ## 初期データ
 
@@ -275,40 +403,24 @@ hard-stop条件:
 hard-stop時はstamp WAF ruleを有効化し、reorder、snapshot restore、generation切替などのbulk操作を
 停止します。番号、景品当選状態、authoritative reachの緊急操作用にrequest/write余裕を残します。
 
-## 負荷確認
+## 負荷・本番投入証跡
 
-引数なしではtrafficを送信しません。最初はlocalで実行します。
+通常releaseの必須手順、出力先、合格条件は「通常の再デプロイ」手順5〜10を正本とします。
+`scripts/cloudflare-load-test.mjs`は`--run`なしではtrafficを送らず、remoteは`--allow-remote`、
+30,000 request超はさらに`--allow-quota-risk`がないと停止します。
 
-```bash
-pnpm run load:cloudflare -- --run   --base-url http://127.0.0.1:8787   --state-ws 1013 --reconnects 3 --stamp-burst 20000 --duration 30
-```
+`mise run cloudflare:load:staging`は1000 state socket、5分、5回以上のcomplete broadcastを固定し、
+mode `600`のJSON evidenceを作ります。最大snapshot試験も3回、inactive generation、read-back checksum、
+R2保存を固定しています。production昇格時は次を満たす24時間以内のstaging recordが必要です。
 
-remoteは`--allow-remote`が必要です。planned Worker/DO requestsの大きい方が30,000を超える場合は
-`--allow-quota-risk`も必要です。
+- active staging versionとrelease Git SHAが一致
+- 公開HTTP、画像、Access redirect、WebSocketの自動smokeがすべて成功
+- 1000/1000 socket ready、complete broadcast 5回以上、HTTP/WS failure 0
+- 最大snapshot 3回、integrity一致、active pointer不変、R2保存、Worker CPU p95 10 ms以下
+- Access identity、Turnstile、画像upload、30分再認証、backup非公開、観測、break-glassの手動確認
 
-```bash
-pnpm run load:cloudflare -- --run --allow-remote   --base-url https://staging-bingo.example.com   --state-ws 1000 --duration 300 --expect-broadcasts 5
-```
-
-1000 socketを維持したまま管理画面で5回更新し、全clientへのrevision到達、p95、fan-out span、
-Worker/DO CPU、duration、errorを記録します。最大2 MiB snapshotの作成、restore、新generation activationも
-stagingで各3回測定します。
-
-2026-07-13のstaging smokeでは100 state WebSocket中100接続がready、失敗0、
-ready latency p95約2.99秒、5xx 0でした。1000接続broadcast試験と最大snapshot CPU試験は未完了です。
-
-## 本番投入直前の外部smoke
-
-- production/stagingの意図したcustom domainだけが到達可能
-- 許可済み、未許可、未認証identityで`/admin*`と`/screen*`が期待どおり
-- `/screen/api/state`と2本のWebSocketが成功
-- 30分後にscreen socketが1012で切れ、JWT再検証後に再接続
-- production Turnstileを実browserでsolveし、reachが一度だけ増える
-- 景品upload後、media custom domainと公開景品画面で画像が200
-- backup bucketがpublic URLから読めない
-- 03:00 JST snapshot、Access audit、Worker/DO Analytics、WAF Eventsをoperatorが閲覧可能
-- named break-glass管理者を追加してMFAと短いsessionを確認
-- 1000 socket broadcastと最大snapshot CPU試験を完了
+記録は`.cloudflare/deployments/`へ生成した後、staging/productionのversion ID、Git SHA、operator、
+時刻とともにteamのchange recordへ添付します。口頭確認やterminal scrollbackだけを証跡にしません。
 
 ## degraded mode
 
@@ -322,16 +434,26 @@ ready latency p95約2.99秒、5xx 0でした。1000接続broadcast試験と最�
 
 ## ロールバック
 
-Worker codeだけの問題:
+Worker codeだけの問題では、change recordのGit SHAとversion IDを照合し、対象環境を省略せずrollbackします。
+
+staging:
 
 ```bash
-pnpm exec wrangler versions list
-pnpm exec wrangler rollback
+./scripts/cloudflare-wrangler.sh deployments list --env staging
+./scripts/cloudflare-wrangler.sh rollback <staging-version-id> --env staging --message '<incident-id>: <reason>'
 ```
 
-rollback前に、対象versionが現在のAccess二重検証、screen専用endpoint、server-side Turnstileを含むことを
-確認します。それ以前へ戻す必要がある場合は、会場consumer旧routeと`/api/bingo/reach`を先にWAFで
-blockします。
+production:
+
+```bash
+./scripts/cloudflare-wrangler.sh deployments list --env=''
+./scripts/cloudflare-wrangler.sh rollback <production-version-id> --env='' --message '<incident-id>: <reason>'
+```
+
+rollback後のactive version ID、Git SHA、実施者、時刻、理由をchange recordへ追記し、自動・手動smokeを
+対象環境で再実行します。対象versionが現在のAccess二重検証、screen専用endpoint、server-side Turnstileを
+含むことを確認します。それ以前へ戻す必要がある場合は、会場consumer旧routeと`/api/bingo/reach`を先に
+WAFでblockします。
 
 データ問題:
 

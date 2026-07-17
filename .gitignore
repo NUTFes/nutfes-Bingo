@@ -52,3 +52,5 @@ next-env.d.ts
 temp
 .wrangler/
 .wrangler-dist/
+/.wrangler-dist-staging/
+/.cloudflare/

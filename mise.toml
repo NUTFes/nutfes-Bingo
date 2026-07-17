@@ -26,6 +26,59 @@ run = "pnpm test"
 description = "Check generated bindings, Worker bundle, and startup time"
 run = "./scripts/check-cloudflare-worker.sh"
 
+[tasks."cloudflare:check:staging"]
+description = "Check the staging bindings, Worker bundle, and startup time"
+run = "./scripts/check-cloudflare-worker.sh --env staging"
+
+[tasks."cloudflare:whoami"]
+description = "Verify the pinned Cloudflare account and deploy capability"
+run = "./scripts/check-cloudflare-operator.sh --require-r2"
+
+[tasks."cloudflare:env:init"]
+description = "Create the mode-600 production deploy environment from the active Worker"
+run = "node scripts/init-cloudflare-deploy-env.mjs --env production"
+
+[tasks."cloudflare:env:init:staging"]
+description = "Create the mode-600 staging deploy environment from the active Worker"
+run = "node scripts/init-cloudflare-deploy-env.mjs --env staging"
+
+[tasks."cloudflare:smoke"]
+description = "Run automated production smoke checks and write a draft record"
+run = "./scripts/run-cloudflare-smoke.sh --env production"
+
+[tasks."cloudflare:smoke:staging"]
+description = "Run automated staging smoke checks and write a draft record"
+run = "./scripts/run-cloudflare-smoke.sh --env staging"
+
+[tasks."cloudflare:load:staging"]
+description = "Hold 1000 staging sockets and require five complete broadcasts"
+run = "./scripts/run-staging-load-test.sh"
+
+[tasks."cloudflare:snapshot:test:staging"]
+description = "Import three inactive maximum snapshots into staging"
+usage = 'arg "<access-jwt-file>" help="Mode-600 file containing the staging CF_Authorization JWT"'
+run = './scripts/run-cloudflare-snapshot-load-test.sh --access-jwt-file "$usage_access_jwt_file" --output .cloudflare/deployments/staging-snapshot.json'
+
+[tasks."cloudflare:smoke:finalize:staging"]
+description = "Record manual staging checks and validate promotion evidence"
+usage = 'arg "<cpu-ms-p95>" help="Maximum-snapshot Worker CPU p95 from Cloudflare Analytics"'
+run = '''
+sha=$(git rev-parse HEAD)
+./scripts/finalize-cloudflare-smoke.sh \
+  --draft ".cloudflare/deployments/staging-$sha.draft.json" \
+  --load .cloudflare/deployments/staging-load.json \
+  --snapshot .cloudflare/deployments/staging-snapshot.json \
+  --cpu-ms-p95 "$usage_cpu_ms_p95"
+'''
+
+[tasks."cloudflare:smoke:finalize"]
+description = "Record manual production smoke checks"
+run = '''
+sha=$(git rev-parse HEAD)
+./scripts/finalize-cloudflare-smoke.sh \
+  --draft ".cloudflare/deployments/production-$sha.draft.json"
+'''
+
 [tasks."cloudflare:deploy"]
 description = "Build and deploy the production Worker (requires explicit Access settings)"
 run = "./scripts/deploy-cloudflare.sh --env production"
