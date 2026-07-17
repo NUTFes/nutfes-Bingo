@@ -1,5 +1,5 @@
 name: Staging Distributed Load
-run-name: Staging load ${{ inputs.release_sha }} @ ${{ inputs.start_epoch }}
+run-name: Staging load ${{ inputs.release_sha || github.sha }} @ ${{ inputs.start_epoch || 'automatic' }}
 
 on:
   workflow_dispatch:
@@ -17,6 +17,9 @@ on:
         required: true
         default: "300"
         type: string
+  push:
+    branches:
+      - release/cloudflare-native-20260716
 
 permissions:
   contents: read
@@ -30,8 +33,41 @@ env:
   STAGING_URL: https://staging-bingo.tkymhrt.dpdns.org
 
 jobs:
+  prepare:
+    name: Prepare synchronized start
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[staging-load]') }}
+    runs-on: ubuntu-latest
+    outputs:
+      release_sha: ${{ steps.metadata.outputs.release_sha }}
+      start_epoch: ${{ steps.metadata.outputs.start_epoch }}
+    steps:
+      - name: Set immutable test metadata
+        id: metadata
+        env:
+          INPUT_RELEASE_SHA: ${{ inputs.release_sha }}
+          INPUT_START_EPOCH: ${{ inputs.start_epoch }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            release_sha="$INPUT_RELEASE_SHA"
+            start_epoch="$INPUT_START_EPOCH"
+          else
+            release_sha="$GITHUB_SHA"
+            start_epoch=$(date -d '+5 minutes' +%s)
+          fi
+          test "$release_sha" = "$GITHUB_SHA"
+          delay=$((start_epoch - $(date +%s)))
+          test "$delay" -ge -60
+          test "$delay" -le 900
+          echo "release_sha=$release_sha"
+          echo "start_epoch=$start_epoch"
+          {
+            echo "release_sha=$release_sha"
+            echo "start_epoch=$start_epoch"
+          } >> "$GITHUB_OUTPUT"
+
   load:
     name: Load shard ${{ matrix.shard }}
+    needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -51,12 +87,12 @@ jobs:
 
       - name: Validate release SHA
         env:
-          RELEASE_SHA: ${{ inputs.release_sha }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.release_sha }}
         run: test "$GITHUB_SHA" = "$RELEASE_SHA"
 
       - name: Wait for synchronized start
         env:
-          START_EPOCH: ${{ inputs.start_epoch }}
+          START_EPOCH: ${{ needs.prepare.outputs.start_epoch }}
         run: |
           node -e '
             const start = Number(process.env.START_EPOCH) * 1000;
@@ -72,7 +108,7 @@ jobs:
         id: load
         continue-on-error: true
         env:
-          DURATION_SECONDS: ${{ inputs.duration_seconds }}
+          DURATION_SECONDS: ${{ inputs.duration_seconds || '300' }}
           SHARD: ${{ matrix.shard }}
         run: |
           node scripts/cloudflare-load-test.mjs \
@@ -100,8 +136,8 @@ jobs:
 
   aggregate:
     name: Aggregate 1000 sockets
-    if: ${{ always() }}
-    needs: load
+    if: ${{ always() && needs.prepare.result == 'success' }}
+    needs: [prepare, load]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -132,7 +168,7 @@ jobs:
             --expected-shards 4 \
             --expected-sockets 1000 \
             --expected-broadcasts 5 \
-            --release-sha "$GITHUB_SHA"
+            --release-sha "${{ needs.prepare.outputs.release_sha }}"
 
       - name: Upload aggregate evidence
         if: ${{ always() }}
