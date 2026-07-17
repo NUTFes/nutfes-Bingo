@@ -68,8 +68,9 @@ JWTを再検証します。これはAccess applicationの対話的session期限�
 release branch、Worker名、URL、Access team/AUD、Turnstile sitekeyを固定しています。変更時は通常の
 code reviewを通し、stagingから検証し直します。
 
-GitHub Actionsはquality、build、production/staging dry-runだけを行います。remote deployはAccess、Turnstile、
-Analyticsを確認できるnamed operatorがこの章を対話的に実行し、CI secretからはdeployしません。
+GitHub Actionsはquality、build、production/staging dry-runと、credentialを使わない明示起動のstaging分散
+負荷試験だけを行います。remote deployはAccess、Turnstile、Analyticsを確認できるnamed operatorがこの章を
+対話的に実行し、CI secretからはdeployしません。
 
 ### 1. tool、account、release branchを準備する
 
@@ -201,16 +202,59 @@ admin/screenのAccess redirectと別AUD、公開state WebSocketを検査しま�
 
 ### 6. stagingで1000 socket broadcastを実行する
 
-terminal Aで次を実行します。
+単一端末のegress制限を合格条件と混同しないよう、手動起動のGitHub Actions workflowで
+4 runner × 250 socketを同時に保持します。workflowはcredentialを持たず、公開staging WebSocketへだけ
+接続します。Actionsを実行できる`gh` loginと、許可済み管理画面を用意します。
+
+terminal Aで開始時刻を5分後に固定してworkflowを起動します。
 
 ```bash
-mise run cloudflare:load:staging
+set -a
+. ./cloudflare.project.env
+set +a
+sha=$(git rev-parse HEAD)
+start_epoch=$(date -d '+5 minutes' +%s)
+
+gh workflow run staging-load.yml \
+  --ref "$CLOUDFLARE_RELEASE_BRANCH" \
+  -f release_sha="$sha" \
+  -f start_epoch="$start_epoch" \
+  -f duration_seconds=300
+
+sleep 5
+run_id=$(
+  gh run list \
+    --workflow staging-load.yml \
+    --branch "$CLOUDFLARE_RELEASE_BRANCH" \
+    --event workflow_dispatch \
+    --limit 20 \
+    --json databaseId,displayTitle \
+    --jq ".[] | select(.displayTitle == \"Staging load $sha @ $start_epoch\") | .databaseId" |
+    sed -n '1p'
+)
+test -n "$run_id"
+date -d "@$start_epoch"
+gh run watch "$run_id" --exit-status
 ```
 
-`{"event":"sockets-ready","ready":1000,...}`が表示された後、5分以内に許可済み管理画面で
-reachの`+1`と`-1`を3組実行します。6 revisionを発生させつつ最終値を元へ戻します。
-1000 clientすべてが5回以上のrevisionを受信し、5xx、open failure、ready failureが0の場合だけ
-`.cloudflare/deployments/staging-load.json`が`passed:true`になります。
+terminal Bでは表示された開始時刻から30秒後、5分以内に許可済み管理画面でreachの`+1`と`-1`を
+3組実行します。6 revisionを発生させつつ最終値を元へ戻します。workflow成功後、terminal Aで
+集約済み証跡を取得します。
+
+```bash
+mkdir -p -m 700 ".cloudflare/load-$run_id" .cloudflare/deployments
+gh run download "$run_id" \
+  --name staging-load-distributed \
+  --dir ".cloudflare/load-$run_id"
+install -m 600 \
+  ".cloudflare/load-$run_id/staging-load-distributed.json" \
+  .cloudflare/deployments/staging-load.json
+```
+
+workflowは指定Git SHAとcheckout SHAの一致、4 shardすべての成功、合計1000/1000 ready、
+全1000 clientへのcomplete broadcast 5回以上、5xx、open failure、ready failureが0であることを
+機械検証します。`mise run cloudflare:load:staging`は単一egressからの診断用であり、昇格証跡には
+集約済みworkflow artifactだけを使用します。
 
 ### 7. stagingで最大snapshotを3回検証する
 
@@ -409,9 +453,10 @@ hard-stop時はstamp WAF ruleを有効化し、reorder、snapshot restore、gene
 `scripts/cloudflare-load-test.mjs`は`--run`なしではtrafficを送らず、remoteは`--allow-remote`、
 30,000 request超はさらに`--allow-quota-risk`がないと停止します。
 
-`mise run cloudflare:load:staging`は1000 state socket、5分、5回以上のcomplete broadcastを固定し、
-mode `600`のJSON evidenceを作ります。最大snapshot試験も3回、inactive generation、read-back checksum、
-R2保存を固定しています。production昇格時は次を満たす24時間以内のstaging recordが必要です。
+`.github/workflows/staging-load.yml`は4 runner × 250 state socket、5分、5回以上のcomplete broadcastを
+固定し、`scripts/merge-cloudflare-load-results.mjs`がmode `600`の1000 socket JSON evidenceへ
+集約します。最大snapshot試験も3回、inactive generation、read-back checksum、R2保存を固定しています。
+production昇格時は次を満たす24時間以内のstaging recordが必要です。
 
 - active staging versionとrelease Git SHAが一致
 - 公開HTTP、画像、Access redirect、WebSocketの自動smokeがすべて成功

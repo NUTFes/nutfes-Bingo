@@ -51,7 +51,7 @@ description = "Run automated staging smoke checks and write a draft record"
 run = "./scripts/run-cloudflare-smoke.sh --env staging"
 
 [tasks."cloudflare:load:staging"]
-description = "Hold 1000 staging sockets and require five complete broadcasts"
+description = "Diagnose 1000 staging sockets from one egress (promotion uses the distributed workflow)"
 run = "./scripts/run-staging-load-test.sh"
 
 [tasks."cloudflare:snapshot:test:staging"]

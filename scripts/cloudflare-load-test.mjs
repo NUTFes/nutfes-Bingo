@@ -166,6 +166,12 @@ function trackStateBroadcast(rawMessage, socketId, counters) {
   broadcast.arrivals.push(Date.now());
 }
 
+function recordWebSocketError(counters, message) {
+  if (counters.errorSamples.length < 10 && !counters.errorSamples.includes(message)) {
+    counters.errorSamples.push(message);
+  }
+}
+
 async function openSocket(url, expectedReadyType, counters) {
   return new Promise((resolve, reject) => {
     const startedAt = performance.now();
@@ -177,6 +183,10 @@ async function openSocket(url, expectedReadyType, counters) {
       settled = true;
       if (opened) counters.readyFailures += 1;
       else counters.openFailures += 1;
+      recordWebSocketError(
+        counters,
+        opened ? `ready-timeout:${url.pathname}` : `open-timeout:${url.pathname}`,
+      );
       socket.close();
       reject(
         new Error(
@@ -228,22 +238,29 @@ async function openSocket(url, expectedReadyType, counters) {
       counters.readyLatencyMs.push(performance.now() - startedAt);
       resolve(socket);
     });
-    socket.addEventListener("error", () => {
+    socket.addEventListener("error", (event) => {
       if (settled) return;
       settled = true;
       clearTimeout(timeout);
       if (opened) counters.readyFailures += 1;
       else counters.openFailures += 1;
-      reject(new Error(`WebSocket connection failed: ${url.pathname}`));
+      const detail =
+        event?.error instanceof Error
+          ? `${event.error.name}:${event.error.message}`
+          : String(event?.message ?? "unknown WebSocket error");
+      recordWebSocketError(counters, detail);
+      reject(new Error(`WebSocket connection failed: ${url.pathname}: ${detail}`));
     });
-    socket.addEventListener("close", () => {
+    socket.addEventListener("close", (event) => {
       counters.closed += 1;
       if (settled) return;
       settled = true;
       clearTimeout(timeout);
       if (opened) counters.readyFailures += 1;
       else counters.openFailures += 1;
-      reject(new Error(`WebSocket closed before becoming ready: ${url.pathname}`));
+      const detail = `close:${event.code}:${event.reason || "no-reason"}`;
+      recordWebSocketError(counters, detail);
+      reject(new Error(`WebSocket closed before becoming ready: ${url.pathname}: ${detail}`));
     });
   });
 }
@@ -350,6 +367,7 @@ if (expectBroadcasts > 0 && (wsReadyType !== "state" || reconnects !== 0 || stat
 }
 const counters = {
   broadcasts: new Map(),
+  errorSamples: [],
   closed: 0,
   messages: 0,
   opened: 0,
@@ -463,6 +481,8 @@ const broadcastResults = [...counters.broadcasts.entries()]
       ? serverTimestamp
       : broadcast.firstArrivalAt;
     return {
+      firstArrivalAtMs: sortedArrivals[0] ?? latencyBase,
+      lastArrivalAtMs: sortedArrivals.at(-1) ?? latencyBase,
       clients: broadcast.sockets.size,
       complete: broadcast.sockets.size === stateWs,
       fanoutSpanMs: (sortedArrivals.at(-1) ?? latencyBase) - (sortedArrivals[0] ?? latencyBase),
@@ -503,6 +523,7 @@ const result = {
   websocket: {
     closed: counters.closed,
     messages: counters.messages,
+    errorSamples: counters.errorSamples,
     openFailures: counters.openFailures,
     opened: counters.opened,
     openLatencyP95Ms: openLatencyP95Ms === null ? null : Math.round(openLatencyP95Ms * 100) / 100,

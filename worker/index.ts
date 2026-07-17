@@ -1,19 +1,12 @@
 import { requireAdmin, requireScreen, type AdminIdentity } from "./access";
 import {
-  assertGeneration,
   assertPrizeImagePath,
-  canonicalLogicalSnapshotJson,
-  type GameSnapshot,
   isClientId,
   isGeneration,
   isRecord,
-  MAX_SNAPSHOT_BYTES,
   parseOptionalText,
   parsePositiveInteger,
   parseRequiredText,
-  parseSnapshot,
-  snapshotIntegrityCounts,
-  type SnapshotIntegrity,
   type UnifiedGameState,
   validationProblem,
 } from "./domain";
@@ -38,7 +31,8 @@ import {
 } from "./http";
 import { servePrizeImage, uploadPrizeImage } from "./images";
 import { ReactionHub } from "./reaction-hub";
-import { assertSnapshotFits, createActiveSnapshot, listSnapshots, loadSnapshot } from "./snapshots";
+import { createActiveSnapshot, listSnapshots } from "./snapshots";
+import { SNAPSHOT_ADMIN_IDENTITY_HEADER } from "./snapshot-admin";
 import { parseTurnstileToken, verifyTurnstileToken } from "./turnstile";
 
 export { GameDirectory, GameState, ReactionHub };
@@ -341,15 +335,30 @@ async function handleAdminApi(
     }
     case "/admin/api/snapshots":
       return handleSnapshots(request, env);
-    case "/admin/api/snapshots/restore":
-      return handleRestore(request, env, identity);
     case "/admin/api/generations/activate":
       return handleActivate(request, env, identity);
+    case "/admin/api/snapshots/restore":
     case "/admin/api/import":
-      return handleImport(request, env, identity);
+      return handleSnapshotAdminMutation(request, env, identity);
     default:
       throw new ApiError(404, "管理APIが見つかりません。");
   }
+}
+
+async function handleSnapshotAdminMutation(
+  request: Request,
+  env: Env,
+  identity: AdminIdentity,
+): Promise<Response> {
+  assertMethod(request, ["POST"]);
+  assertSameOriginMutation(request);
+  const headers = new Headers(request.headers);
+  headers.delete("Authorization");
+  headers.delete("Cookie");
+  headers.delete("Cf-Access-Jwt-Assertion");
+  headers.delete("X-Local-Admin-Email");
+  headers.set(SNAPSHOT_ADMIN_IDENTITY_HEADER, identity.email);
+  return env.GAME_DIRECTORY.getByName("active").fetch(new Request(request, { headers }));
 }
 
 async function handleAdminCommand(
@@ -473,78 +482,6 @@ async function handleSnapshots(request: Request, env: Env): Promise<Response> {
   throw new ApiError(405, "許可されていないHTTPメソッドです。");
 }
 
-async function handleRestore(
-  request: Request,
-  env: Env,
-  identity: AdminIdentity,
-): Promise<Response> {
-  assertMethod(request, ["POST"]);
-  const origin = assertSameOriginMutation(request);
-  const body = await readJsonBody(request);
-  if (!isRecord(body) || typeof body.key !== "string") {
-    throw new ApiError(400, "snapshot restore body が不正です。");
-  }
-  const snapshot = await loadSnapshot(env, body.key);
-  const generation =
-    body.generation === undefined
-      ? makeGeneration("restore")
-      : readGeneration(body.generation, "generation");
-  assertSnapshotFits({ ...snapshot, source_generation: generation });
-  const target = env.GAME_STATE.getByName(`game:${generation}`);
-  const state = await target.initializeFromSnapshot(generation, snapshot, identity.email);
-  const { integrity } = await verifySnapshotImport(snapshot, generation, target);
-  const shouldActivate =
-    body.activate === undefined ? true : readBoolean(body.activate, "activate");
-  const activation = shouldActivate
-    ? await activateGeneration(env, generation, identity.email)
-    : null;
-  return jsonResponse(
-    { data: { generation, activated: shouldActivate, activation, integrity, state } },
-    { status: 201 },
-    { requestOrigin: origin },
-  );
-}
-
-async function handleImport(
-  request: Request,
-  env: Env,
-  identity: AdminIdentity,
-): Promise<Response> {
-  assertMethod(request, ["POST"]);
-  const origin = assertSameOriginMutation(request);
-  const body = await readJsonBody(request, MAX_SNAPSHOT_BYTES + 64 * 1024);
-  if (!isRecord(body)) throw new ApiError(400, "import body が不正です。");
-  const snapshot = parseSnapshot(body.snapshot);
-  const generation =
-    body.generation === undefined
-      ? makeGeneration("import")
-      : readGeneration(body.generation, "generation");
-  assertSnapshotFits({ ...snapshot, source_generation: generation });
-  const target = env.GAME_STATE.getByName(`game:${generation}`);
-  const state = await target.initializeFromSnapshot(generation, snapshot, identity.email);
-  const { integrity } = await verifySnapshotImport(snapshot, generation, target);
-  const backup = await target.storeImportedSnapshot(generation, snapshot);
-  const shouldActivate =
-    body.activate === undefined ? false : readBoolean(body.activate, "activate");
-  const activation = shouldActivate
-    ? await activateGeneration(env, generation, identity.email)
-    : null;
-  return jsonResponse(
-    {
-      data: {
-        generation,
-        activated: shouldActivate,
-        activation,
-        backup,
-        integrity,
-        state,
-      },
-    },
-    { status: 201 },
-    { requestOrigin: origin },
-  );
-}
-
 async function handleActivate(
   request: Request,
   env: Env,
@@ -599,59 +536,6 @@ async function activateGeneration(
   return result.activation;
 }
 
-async function verifySnapshotImport(
-  inputSnapshot: GameSnapshot,
-  generation: string,
-  target: DurableObjectStub<GameState>,
-): Promise<{ integrity: SnapshotIntegrity; verifiedSnapshot: GameSnapshot }> {
-  const verifiedSnapshot = await target.exportSnapshot(generation);
-  const [inputChecksum, verifiedChecksum, inputSnapshotChecksum, readbackSnapshotChecksum] =
-    await Promise.all([
-      sha256Hex(canonicalLogicalSnapshotJson(inputSnapshot)),
-      sha256Hex(canonicalLogicalSnapshotJson(verifiedSnapshot)),
-      sha256Hex(JSON.stringify(inputSnapshot)),
-      sha256Hex(JSON.stringify(verifiedSnapshot)),
-    ]);
-  const matches =
-    inputChecksum === verifiedChecksum &&
-    verifiedSnapshot.source_generation === generation &&
-    verifiedSnapshot.revision === inputSnapshot.revision;
-  if (!matches) {
-    throw new ApiError(500, "snapshot import 後の論理整合性検証に失敗しました。");
-  }
-
-  return {
-    integrity: {
-      generation,
-      revision: verifiedSnapshot.revision,
-      input_checksum_sha256: inputChecksum,
-      verified_checksum_sha256: verifiedChecksum,
-      input_snapshot_checksum_sha256: inputSnapshotChecksum,
-      readback_snapshot_checksum_sha256: readbackSnapshotChecksum,
-      matches,
-      counts: snapshotIntegrityCounts(verifiedSnapshot),
-      coverage: {
-        verified: [
-          "generation",
-          "revision",
-          "numbers",
-          "prizes",
-          "app_state",
-          "reach_logs",
-          "reach_submissions",
-          "audit_log",
-        ],
-        not_verified: [
-          "R2 image object existence and bytes",
-          "ephemeral reaction events and WebSocket connections",
-          "historical audit rows beyond the bounded 200-row snapshot",
-        ],
-      },
-    },
-    verifiedSnapshot,
-  };
-}
-
 async function getActiveGame(env: Env): Promise<ActiveGame> {
   const generation = await env.GAME_DIRECTORY.getByName("active").getActiveGeneration();
   return {
@@ -697,14 +581,4 @@ function readBoolean(value: unknown, label: string): boolean {
 function readGeneration(value: unknown, label: string): string {
   if (!isGeneration(value)) throw new ApiError(400, `${label} が不正です。`);
   return value;
-}
-
-function makeGeneration(prefix: "import" | "restore"): string {
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[-:TZ.]/g, "")
-    .slice(0, 14);
-  const generation = `${prefix}-${timestamp}-${crypto.randomUUID().slice(0, 8)}`;
-  assertGeneration(generation);
-  return generation;
 }

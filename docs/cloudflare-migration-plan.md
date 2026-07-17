@@ -287,7 +287,7 @@ Next.js の `headers()` は static export 非対応なので、静的 response �
 - `src/features/user/**`、`src/features/admin/**`: WebSocket/API client 化
 - `src/lib/**`、`src/types/**`: protocol、API client、image URL
 - `scripts/**`: resource bootstrap、deploy、load test、secret scanner 修正
-- `.github/workflows/**`: Cloudflare quality/build/production・staging dry-run
+- `.github/workflows/**`: Cloudflare quality/build/production・staging dry-run、手動staging分散負荷試験
 
 実運用データがないことを確認後、Supabase/legacy Dockerファイルは削除した。
 

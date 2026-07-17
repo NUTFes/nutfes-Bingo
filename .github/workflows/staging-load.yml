@@ -1,0 +1,148 @@
+name: Staging Distributed Load
+run-name: Staging load ${{ inputs.release_sha }} @ ${{ inputs.start_epoch }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: Full active staging Git SHA
+        required: true
+        type: string
+      start_epoch:
+        description: Unix epoch when all shards begin opening sockets (set at least five minutes ahead)
+        required: true
+        type: string
+      duration_seconds:
+        description: Seconds to hold all sockets open
+        required: true
+        default: "300"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-distributed-load
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "26.2.0"
+  STAGING_URL: https://staging-bingo.tkymhrt.dpdns.org
+
+jobs:
+  load:
+    name: Load shard ${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Validate release SHA
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+        run: test "$GITHUB_SHA" = "$RELEASE_SHA"
+
+      - name: Wait for synchronized start
+        env:
+          START_EPOCH: ${{ inputs.start_epoch }}
+        run: |
+          node -e '
+            const start = Number(process.env.START_EPOCH) * 1000;
+            const delay = start - Date.now();
+            if (!Number.isFinite(start) || delay < -60_000 || delay > 15 * 60_000) {
+              throw new Error("start_epoch must be between one minute ago and fifteen minutes ahead");
+            }
+            console.log(`Waiting ${Math.max(0, Math.ceil(delay / 1000))} seconds`);
+            setTimeout(() => {}, Math.max(0, delay));
+          '
+
+      - name: Hold 250 state WebSockets
+        id: load
+        continue-on-error: true
+        env:
+          DURATION_SECONDS: ${{ inputs.duration_seconds }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          node scripts/cloudflare-load-test.mjs \
+            --run \
+            --allow-remote \
+            --base-url "$STAGING_URL" \
+            --state-ws 250 \
+            --batch-size 50 \
+            --duration "$DURATION_SECONDS" \
+            --expect-broadcasts 5 \
+            --output ".cloudflare/load-shard-$SHARD.json"
+
+      - name: Upload shard evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: staging-load-shard-${{ matrix.shard }}
+          path: .cloudflare/load-shard-${{ matrix.shard }}.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Enforce shard result
+        if: ${{ steps.load.outcome != 'success' }}
+        run: exit 1
+
+  aggregate:
+    name: Aggregate 1000 sockets
+    if: ${{ always() }}
+    needs: load
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download shard evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: staging-load-shard-*
+          path: .cloudflare/load-shards
+          merge-multiple: true
+
+      - name: Merge shard evidence
+        id: merge
+        continue-on-error: true
+        run: |
+          node scripts/merge-cloudflare-load-results.mjs \
+            --input-dir .cloudflare/load-shards \
+            --output .cloudflare/staging-load-distributed.json \
+            --expected-shards 4 \
+            --expected-sockets 1000 \
+            --expected-broadcasts 5 \
+            --release-sha "$GITHUB_SHA"
+
+      - name: Upload aggregate evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: staging-load-distributed
+          path: .cloudflare/staging-load-distributed.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce aggregate result
+        if: ${{ steps.merge.outcome != 'success' }}
+        run: exit 1

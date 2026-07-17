@@ -6,6 +6,7 @@ import {
   type DirectoryActivation,
   validationProblem,
 } from "./domain";
+import { handleSnapshotAdminRequest } from "./snapshot-admin";
 
 type MetadataRow = { value: string };
 type VersionRow = { version: number };
@@ -40,6 +41,12 @@ export class GameDirectory extends DurableObject<Env> {
       this.migrate();
       await this.recoverInterruptedFreeze();
     });
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    return handleSnapshotAdminRequest(request, this.env, (generation, actor) =>
+      this.activateGeneration(generation, actor),
+    );
   }
 
   async getActiveGeneration(): Promise<string> {
