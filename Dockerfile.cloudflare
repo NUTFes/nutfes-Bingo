@@ -5,6 +5,7 @@ FROM node:26.2.0-bookworm-slim@sha256:e89172f5e6154ba212269866bf3fbadbca8eb7901e
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
 RUN apt-get update \
+  && apt-get upgrade --yes \
   && apt-get install --yes --no-install-recommends ca-certificates libc++1 \
   && rm -rf /var/lib/apt/lists/*
 
@@ -32,9 +33,13 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build
 
-FROM builder AS development
+FROM base AS development
+COPY --from=builder --chown=node:node /app /app
+RUN rm -rf /usr/local/lib/node_modules/npm \
+  && rm -f /usr/local/bin/npm /usr/local/bin/npx
+USER node
 EXPOSE 8787
-CMD ["pnpm", "exec", "wrangler", "dev", "--ip", "0.0.0.0", "--port", "8787"]
+CMD ["node", "node_modules/wrangler/bin/wrangler.js", "dev", "--ip", "0.0.0.0", "--port", "8787"]
 
 # Export with `docker buildx build --target export --output type=local,dest=. ...`.
 # The host receives only `out/`; Next.js itself never builds on the host.
