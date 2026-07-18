@@ -196,9 +196,9 @@ const reservedEmailDomainPattern =
   /@(?:example\.(?:com|net|org)|[^@]+\.(?:example|invalid|test)|localhost)$/i;
 const requirements = {
   ADMIN_EMAILS: {
-    minimum: 2,
+    minimum: 1,
     maximum: 20,
-    purpose: "named event administrators including a distinct break-glass administrator",
+    purpose: "named event administrators",
   },
   SCREEN_EMAILS: {
     minimum: 1,

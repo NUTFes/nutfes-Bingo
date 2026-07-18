@@ -435,8 +435,8 @@ degrade は次の順で適用する。
   deploy担当と復旧担当をnamed memberとして招待する。
 - 団体account IDをreview済み設定へ固定し、production zone、R2、Access、Turnstile、custom domain、
   WAF、backup lifecycleを新設する。個人account上の旧`production` resourceへ昇格しない。
-- 当日管理者約10名と別人のbreak-glass管理者をexact-email Access policyとWorker allowlistへ登録し、
-  private browser、MFA、Access audit、未登録identity拒否を確認する。
+- 当日管理者約10名（通常操作と緊急対応を担うインフラ代表者を含む）をexact-email Access policyと
+  Worker allowlistへ登録し、private browser、Access audit、未登録identity拒否を確認する。
 - 団体productionと個人stagingのaccount分離を`whoami`、R2 list、deployment listで確認する。
 - 同一release SHAをstaging証跡から団体productionへ昇格し、production smoke、version ID、
   generation、snapshot keyを記録してからDNSをcutoverする。

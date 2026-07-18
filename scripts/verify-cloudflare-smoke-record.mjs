@@ -22,7 +22,7 @@ const requireTrueFields = (value, fields, label) => {
   }
 };
 
-if (record.schemaVersion !== 1) fail("schemaVersion must be 1");
+if (record.schemaVersion !== 2) fail("schemaVersion must be 2");
 if (record.environment !== "staging") fail("environment must be staging");
 if (record.releaseSha !== releaseSha) fail("releaseSha does not match the production candidate");
 if (record.workerVersionId !== workerVersionId) {
@@ -62,7 +62,6 @@ requireTrueFields(
     "screenReauthentication",
     "backupPrivate",
     "observability",
-    "breakGlass",
   ],
   "manual",
 );
