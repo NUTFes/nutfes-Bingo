@@ -48,12 +48,12 @@ run = "node scripts/init-cloudflare-deploy-env.mjs --env staging"
 
 [tasks."cloudflare:admins:set"]
 description = "Validate a private production administrator roster and update the deploy environment"
-usage = 'arg "<roster>" help="Mode-600 JSON roster with named and break-glass administrators"'
+usage = 'arg "<roster>" help="Mode-600 JSON roster with named administrators"'
 run = 'node scripts/set-cloudflare-admins.mjs --env production --roster "$usage_roster"'
 
 [tasks."cloudflare:admins:set:staging"]
 description = "Validate a private staging administrator roster and update the deploy environment"
-usage = 'arg "<roster>" help="Mode-600 JSON roster with named and break-glass administrators"'
+usage = 'arg "<roster>" help="Mode-600 JSON roster with named administrators"'
 run = 'node scripts/set-cloudflare-admins.mjs --env staging --roster "$usage_roster"'
 
 [tasks."cloudflare:smoke"]

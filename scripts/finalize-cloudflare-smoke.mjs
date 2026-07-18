@@ -19,8 +19,8 @@ for (let index = 0; index < args.length; index += 2) {
 if (!options.has("draft")) throw new Error("--draft is required");
 
 const draft = JSON.parse(await readFile(options.get("draft"), "utf8"));
-if (draft.schemaVersion !== 1 || !new Set(["production", "staging"]).has(draft.environment)) {
-  throw new Error("Draft must be a production or staging schemaVersion 1 smoke record");
+if (draft.schemaVersion !== 2 || !new Set(["production", "staging"]).has(draft.environment)) {
+  throw new Error("Draft must be a production or staging schemaVersion 2 smoke record");
 }
 execFileSync("./scripts/check-cloudflare-operator.sh", ["--env", draft.environment], {
   stdio: "inherit",
@@ -79,10 +79,6 @@ const prompts = [
   [
     "observability",
     "Operator opened Access audit, Worker/DO Analytics, WAF Events, and today's snapshot",
-  ],
-  [
-    "breakGlass",
-    "A distinct named break-glass administrator completed MFA in a private browser under a policy with a session duration of 30 minutes or less, and the successful event appeared in Access audit",
   ],
 ];
 const readline = createInterface({ input: process.stdin, output: process.stdout });

@@ -174,7 +174,7 @@ const websocketEvidence = await new Promise((resolve, reject) => {
 
 const whoami = wranglerJson("whoami");
 const record = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   environment: target,
   releaseSha,
   workerVersionId,
@@ -205,7 +205,6 @@ const record = {
     screenReauthentication: false,
     backupPrivate: false,
     observability: false,
-    breakGlass: false,
   },
   load: null,
   snapshot: null,

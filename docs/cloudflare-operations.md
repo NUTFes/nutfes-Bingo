@@ -113,19 +113,18 @@ staging証跡から昇格します。
 ## 当日管理者の登録・変更
 
 当日管理者はCloudflare account memberではありません。各自のemailでAccessへloginし、Access policyと
-Worker `ADMIN_EMAILS`の二重allowlistを通過します。約10名の通常管理者に加え、通常担当者と別人の
-named break-glass管理者を1名指定します。共有address、mailing list、service token、domain全体、
-Everyone、Bypassは使用しません。
+Worker `ADMIN_EMAILS`の二重allowlistを通過します。約10名のnamed管理者を登録します。インフラ代表者は
+通常操作と緊急対応を同じ個人identityで担い、break-glass専用identity/policyは設けません。共有address、
+mailing list、service token、domain全体、Everyone、Bypassは使用しません。
 
 ### 名簿を準備してWorker allowlistへ反映する
 
 名簿は承認済みのteam secret storeを正本とし、作業端末ではmode `600`のGit管理外ファイルだけを
-一時利用します。`administrators`は1〜19名、`breakGlassAdministrator`は別emailの1名です。
+一時利用します。`administrators`は1〜20名のnamed管理者です。
 
 ```json
 {
-  "administrators": ["admin1@organization.example", "admin2@organization.example"],
-  "breakGlassAdministrator": "recovery-admin@organization.example"
+  "administrators": ["admin1@organization.example", "admin2@organization.example"]
 }
 ```
 
@@ -136,22 +135,18 @@ mise run cloudflare:admins:set .cloudflare/admin-roster.production.json
 stat -c '%a %n' .cloudflare/admin-roster.production.json .cloudflare.deploy.production.env
 ```
 
-taskは形式、小文字、重複、人数、placeholder、break-glassの分離、共有owner addressの混入、
+taskは形式、小文字、重複、人数、placeholder、共有owner addressの混入、
 両ファイルの権限を検査し、`.cloudflare.deploy.production.env`の`ADMIN_EMAILS`だけをatomicに
 更新します。emailはterminalへ出さず、人数と名簿SHA-256を出力します。SHA-256をchange recordへ
 記録し、名簿ファイルは作業後に削除します。
 
 ### Access policyを同じ名簿へ合わせる
 
-1. production `/admin*` applicationの通常Allow policyへ`administrators`の各emailをexact-emailで
-   登録する。
-2. `breakGlassAdministrator`だけの別Allow policyを作る。Independent MFAの
-   `Custom MFA settings`を必須にし、MFA session durationを30分以下にする。
-3. policy previewで対象email以外がmatchしないこと、Admin/Screen applicationのAUDが異なることを
+1. production `/admin*` applicationのAllow policyへ`administrators`の各emailをexact-emailで登録する。
+2. policy previewで対象email以外がmatchしないこと、Admin/Screen applicationのAUDが異なることを
    確認する。
-4. 各通常管理者がprivate browserで`/admin`を開き、少なくとも代表者1名が可逆mutationを行う。
-   break-glass担当者もprivate browserでMFAを完了し、Access auditに個人emailの成功eventが残ることを
-   確認する。未登録identityの拒否も記録する。
+3. 各管理者がprivate browserで`/admin`を開き、少なくとも代表者1名が可逆mutationを行う。
+   インフラ代表者の個人emailによる成功eventと未登録identityの拒否をAccess auditで確認する。
 
 初回構築ではAccess policyとWorker allowlistを公開前に同時設定します。運用中の追加は
 `Worker allowlistへ追加・deploy → Access exact-emailへ追加`、削除は
@@ -241,7 +236,7 @@ node scripts/init-cloudflare-deploy-env.mjs --env production --force
 ```
 
 初回Worker構築前のproductionは前章の`install -m 600`と管理者名簿taskを使います。stagingも
-exampleをmode `600`で導入します。`ADMIN_EMAILS`は2〜20件、`SCREEN_EMAILS`は1〜10件の
+exampleをmode `600`で導入します。`ADMIN_EMAILS`は1〜20件、`SCREEN_EMAILS`は1〜10件の
 一意な小文字email JSON配列です。空配列、予約済みplaceholder domain、共有owner address、
 review済み公開設定と異なる値はdeploy taskが拒否します。
 
@@ -396,8 +391,6 @@ productionへ進みません。
 7. screen socketが30分後に`1012`で閉じ、JWT再検証後だけ再接続する。
 8. backup bucketをpublic URLから読めない。
 9. Access audit、Worker/DO Analytics、WAF Events、当日snapshotをoperatorが閲覧できる。
-10. 通常operatorと別identityのnamed break-glass管理者がprivate browserでMFA loginできる。
-    専用policyのMFA session durationが30分以下で、Access auditに成功eventが残ることも確認する。
 
 Cloudflare Analyticsで確認した最大snapshot CPU p95を引数へ渡し、各質問へ実確認後だけ`yes`と入力します。
 
@@ -432,7 +425,7 @@ mise run cloudflare:smoke:finalize
 ./scripts/cloudflare-wrangler.sh --target production deployments list --env=''
 ```
 
-stagingと同じ手動10項目をproductionでも確認します。最終record
+stagingと同じ手動9項目をproductionでも確認します。最終record
 `.cloudflare/deployments/production-<SHA>.json`にはactive production version ID、Git SHA、operator、
 実施時刻、自動・手動結果が入ります。staging/production recordとdeploy前後のversion IDをteamの
 change recordへ添付します。`.cloudflare/`はGit管理外であり、端末だけを恒久保管先にしません。
@@ -568,7 +561,7 @@ production昇格時は次を満たす24時間以内のstaging recordが必要で
 - 公開HTTP、画像、Access redirect、WebSocketの自動smokeがすべて成功
 - 1000/1000 socket ready、complete broadcast 5回以上、HTTP/WS failure 0
 - 最大snapshot 3回、integrity一致、active pointer不変、R2保存、Worker CPU p95 10 ms以下
-- Access identity、Turnstile、画像upload、30分再認証、backup非公開、観測、break-glassの手動確認
+- Access identity、Turnstile、画像upload、30分再認証、backup非公開、観測の手動確認
 
 記録は`.cloudflare/deployments/`へ生成した後、staging/productionのversion ID、Git SHA、operator、
 時刻とともにteamのchange recordへ添付します。口頭確認やterminal scrollbackだけを証跡にしません。

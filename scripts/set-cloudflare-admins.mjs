@@ -54,24 +54,23 @@ const projectConfig = Object.fromEntries(
 );
 
 const roster = JSON.parse(await readFile(rosterPath, "utf8"));
-const expectedKeys = ["administrators", "breakGlassAdministrator"];
+const expectedKeys = ["administrators"];
 if (
   roster === null ||
   typeof roster !== "object" ||
   Array.isArray(roster) ||
   Object.keys(roster).toSorted().join("\n") !== expectedKeys.toSorted().join("\n") ||
-  !Array.isArray(roster.administrators) ||
-  typeof roster.breakGlassAdministrator !== "string"
+  !Array.isArray(roster.administrators)
 ) {
-  throw new Error('Roster must be {"administrators":["..."],"breakGlassAdministrator":"..."}');
+  throw new Error('Roster must be {"administrators":["..."]}');
 }
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const administrators = [...roster.administrators, roster.breakGlassAdministrator];
+const administrators = roster.administrators;
 const reservedEmailDomainPattern =
   /@(?:example\.(?:com|net|org)|[^@]+\.(?:example|invalid|test)|localhost)$/i;
 if (
-  administrators.length < 2 ||
+  administrators.length < 1 ||
   administrators.length > 20 ||
   administrators.some(
     (email) =>
@@ -83,9 +82,7 @@ if (
   ) ||
   new Set(administrators).size !== administrators.length
 ) {
-  throw new Error(
-    "Roster must contain 1-19 unique lowercase named administrators plus one distinct break-glass administrator",
-  );
+  throw new Error("Roster must contain 1-20 unique lowercase named administrators");
 }
 if (
   target === "production" &&
@@ -114,14 +111,7 @@ await chmod(temporaryPath, 0o600);
 await rename(temporaryPath, deployEnvPath);
 
 const rosterHash = createHash("sha256")
-  .update(
-    JSON.stringify({
-      administrators: canonicalAdministrators.filter(
-        (email) => email !== roster.breakGlassAdministrator,
-      ),
-      breakGlassAdministrator: roster.breakGlassAdministrator,
-    }),
-  )
+  .update(JSON.stringify({ administrators: canonicalAdministrators }))
   .digest("hex");
 console.log(
   `Updated ${deployEnvPath}: ${canonicalAdministrators.length} named administrators; roster SHA-256 ${rosterHash}. Email addresses were not printed.`,
