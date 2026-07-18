@@ -8,5 +8,4 @@ set -a
 . ./cloudflare.project.env
 set +a
 
-./scripts/check-cloudflare-operator.sh
 exec node scripts/finalize-cloudflare-smoke.mjs "$@"

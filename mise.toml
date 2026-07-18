@@ -31,8 +31,12 @@ description = "Check the staging bindings, Worker bundle, and startup time"
 run = "./scripts/check-cloudflare-worker.sh --env staging"
 
 [tasks."cloudflare:whoami"]
-description = "Verify the pinned Cloudflare account and deploy capability"
-run = "./scripts/check-cloudflare-operator.sh --require-r2"
+description = "Verify the organization production account and named deploy capability"
+run = "./scripts/check-cloudflare-operator.sh --env production --require-r2"
+
+[tasks."cloudflare:whoami:staging"]
+description = "Verify the isolated staging account and deploy capability"
+run = "./scripts/check-cloudflare-operator.sh --env staging --require-r2"
 
 [tasks."cloudflare:env:init"]
 description = "Create the mode-600 production deploy environment from the active Worker"
@@ -41,6 +45,16 @@ run = "node scripts/init-cloudflare-deploy-env.mjs --env production"
 [tasks."cloudflare:env:init:staging"]
 description = "Create the mode-600 staging deploy environment from the active Worker"
 run = "node scripts/init-cloudflare-deploy-env.mjs --env staging"
+
+[tasks."cloudflare:admins:set"]
+description = "Validate a private production administrator roster and update the deploy environment"
+usage = 'arg "<roster>" help="Mode-600 JSON roster with named and break-glass administrators"'
+run = 'node scripts/set-cloudflare-admins.mjs --env production --roster "$usage_roster"'
+
+[tasks."cloudflare:admins:set:staging"]
+description = "Validate a private staging administrator roster and update the deploy environment"
+usage = 'arg "<roster>" help="Mode-600 JSON roster with named and break-glass administrators"'
+run = 'node scripts/set-cloudflare-admins.mjs --env staging --roster "$usage_roster"'
 
 [tasks."cloudflare:smoke"]
 description = "Run automated production smoke checks and write a draft record"

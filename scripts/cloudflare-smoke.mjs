@@ -28,7 +28,7 @@ if (typeof WebSocket === "undefined") throw new Error("Node 26 WebSocket support
 
 const prefix = `CLOUDFLARE_${target.toUpperCase()}_`;
 const requiredEnvironment = [
-  "CLOUDFLARE_ACCESS_TEAM_DOMAIN",
+  `${prefix}ACCESS_TEAM_DOMAIN`,
   `${prefix}ADMIN_AUD`,
   `${prefix}MEDIA_ORIGIN`,
   `${prefix}SCREEN_AUD`,
@@ -42,10 +42,14 @@ const mediaOrigin = new URL(process.env[`${prefix}MEDIA_ORIGIN`]);
 const releaseSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 const wranglerJson = (...wranglerArgs) =>
   JSON.parse(
-    execFileSync("./scripts/cloudflare-wrangler.sh", [...wranglerArgs, "--json"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "inherit"],
-    }),
+    execFileSync(
+      "./scripts/cloudflare-wrangler.sh",
+      ["--target", target, ...wranglerArgs, "--json"],
+      {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "inherit"],
+      },
+    ),
   );
 const environmentArgs = target === "staging" ? ["--env", "staging"] : ["--env="];
 const deployments = wranglerJson("deployments", "list", ...environmentArgs);
@@ -122,7 +126,7 @@ const accessResult = async (path, expectedAudience) => {
     throw new Error(`${path} did not redirect to Cloudflare Access`);
   const location = new URL(locationValue);
   if (
-    location.origin !== process.env.CLOUDFLARE_ACCESS_TEAM_DOMAIN ||
+    location.origin !== process.env[`${prefix}ACCESS_TEAM_DOMAIN`] ||
     location.searchParams.get("kid") !== expectedAudience
   ) {
     throw new Error(`${path} redirected to an unexpected Access team or application`);

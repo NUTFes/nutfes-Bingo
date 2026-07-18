@@ -17,14 +17,18 @@ OpenNextは使用しません。静的画面と専用Workerを分離し、Worker
 
 詳細は[移行計画](docs/cloudflare-migration-plan.md)と[本番運用runbook](docs/cloudflare-operations.md)を参照してください。
 
-## 公開環境
+## Cloudflare環境境界
 
-| 環境       | Application                               | Prize images                              |
-| ---------- | ----------------------------------------- | ----------------------------------------- |
-| production | <https://bingo.tkymhrt.dpdns.org>         | <https://media.tkymhrt.dpdns.org>         |
-| staging    | <https://staging-bingo.tkymhrt.dpdns.org> | <https://staging-media.tkymhrt.dpdns.org> |
+| 環境       | Cloudflare account                                     | Application / Prize images                      |
+| ---------- | ------------------------------------------------------ | ----------------------------------------------- |
+| production | 団体account（owner/recovery: `nutfes.info@gmail.com`） | 未構築。review済み座標を設定してから公開        |
+| staging    | 現在の個人test account                                 | `staging-bingo` / `staging-media` custom domain |
 
-`workers.dev`、preview URL、R2の`r2.dev`は無効です。管理者と会場operatorはnamed human identityだけをAccess policyとWorker allowlistへ登録します。
+既存の個人account上の`bingo.tkymhrt.dpdns.org`は本番昇格先ではありません。
+`cloudflare.project.env`のproduction座標は意図的に空であり、団体account ID、Access、Turnstile、
+custom domainを設定するまでproduction操作はfail closedです。両環境とも`workers.dev`、preview URL、
+R2の`r2.dev`は無効にし、管理者と会場operatorはnamed human identityだけをAccess policyとWorker
+allowlistへ登録します。
 
 ## 開発環境
 
@@ -67,24 +71,21 @@ mise run cloudflare:check:staging
 
 ## Cloudflare resource初期化
 
-固定Cloudflare accountへlogin済みで必要権限を持つoperatorが、stagingから環境別R2 bucketを作成します。既存bucketは再作成しません。
+stagingは現在の個人test accountに固定されています。
 
 ```bash
-mise run cloudflare:whoami
+mise run cloudflare:whoami:staging
 mise run cloudflare:bootstrap:staging
-mise run cloudflare:bootstrap
 ```
 
-bucket作成後に次をCloudflare dashboard/APIで設定します。
+productionは`nutfes.info@gmail.com`をowner/recoveryとする団体Cloudflare accountへ新設します。
+共有owner loginで日常運用せず、招待された個人accountのnamed operatorだけがdeployします。
+account member招待、production account IDの固定、resource構築、当日管理者登録の正本は
+[本番運用runbookの「団体production accountの初回構築」](docs/cloudflare-operations.md#団体production-accountの初回構築)
+です。
 
-- application custom domain
-- 景品画像R2 custom domain
-- `/admin*`と`/screen*`のAccess application
-- environment別Managed Turnstile widget
-- WAF rate limitと緊急block rule
-- backup bucketの`snapshots/` 400日lifecycle
-
-credentialとsecretはGitへ保存しません。account ID、Access AUD、domain、Turnstile sitekeyは公開設定として`cloudflare.project.env`へ固定します。
+credentialとsecretはGitへ保存しません。account ID、Access AUD/team domain、custom domain、
+Turnstile sitekeyは公開設定として`cloudflare.project.env`へ固定します。
 
 ## Deploy
 
@@ -92,13 +93,13 @@ credentialとsecretはGitへ保存しません。account ID、Access AUD、domai
 
 同一のreview済みrelease commitを必ず`staging deploy → staging smoke・負荷・snapshot証跡 → production deploy → production smoke`の順で昇格します。deploy taskは次をfail closedで検査します。
 
-- `cloudflare.project.env`に固定したCloudflare accountとrelease branch
+- `cloudflare.project.env`に環境別に固定したCloudflare account、Access team、release branch
 - cleanかつpush済みで、`origin/<release branch>`と一致するHEAD
 - 環境別のAccess AUD、hostname、media origin、Turnstile sitekey
 - active staging versionのGit SHAと24時間以内の完全なsmoke記録
 - production確認用Git SHA
 
-Access AUD、account ID、hostname、Turnstile sitekeyは公開設定として`cloudflare.project.env`へ固定しています。operator emailはactive Workerからmode `600`のGit管理外ファイルへ取得し、Turnstile secretはWrangler secretとして保持します。placeholderや空allowlistはdeployできません。
+Access AUD、account ID、hostname、Turnstile sitekeyは公開設定として`cloudflare.project.env`へ固定しています。productionは共有owner loginを拒否し、招待されたnamed operatorだけが操作できます。app管理者名簿はmode `600`のGit管理外JSONからdeploy環境へ反映し、Turnstile secretはWrangler secretとして保持します。placeholder、空allowlist、共有owner addressはdeployできません。
 
 ## データとロールバック
 

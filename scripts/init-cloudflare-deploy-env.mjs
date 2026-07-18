@@ -36,9 +36,22 @@ const projectConfig = Object.fromEntries(
     }),
 );
 const prefix = `CLOUDFLARE_${target.toUpperCase()}_`;
+const requiredProjectConfig = [
+  `${prefix}ACCOUNT_ID`,
+  `${prefix}ACCESS_TEAM_DOMAIN`,
+  `${prefix}WORKER`,
+  `${prefix}SITE_URL`,
+  `${prefix}MEDIA_ORIGIN`,
+  `${prefix}ADMIN_AUD`,
+  `${prefix}SCREEN_AUD`,
+  `${prefix}TURNSTILE_SITE_KEY`,
+];
+for (const name of requiredProjectConfig) {
+  if (!projectConfig[name]) throw new Error(`${name} is required in cloudflare.project.env`);
+}
 const expected = {
   ACCESS_AUD: projectConfig[`${prefix}ADMIN_AUD`],
-  ACCESS_TEAM_DOMAIN: projectConfig.CLOUDFLARE_ACCESS_TEAM_DOMAIN,
+  ACCESS_TEAM_DOMAIN: projectConfig[`${prefix}ACCESS_TEAM_DOMAIN`],
   MEDIA_ORIGIN: projectConfig[`${prefix}MEDIA_ORIGIN`],
   SCREEN_ACCESS_AUD: projectConfig[`${prefix}SCREEN_AUD`],
   TURNSTILE_HOSTNAME: new URL(projectConfig[`${prefix}SITE_URL`]).hostname,
@@ -58,13 +71,19 @@ if (!force) {
   }
 }
 
-execFileSync("./scripts/check-cloudflare-operator.sh", { stdio: "inherit" });
+execFileSync("./scripts/check-cloudflare-operator.sh", ["--env", target], {
+  stdio: "inherit",
+});
 const wranglerJson = (...wranglerArgs) =>
   JSON.parse(
-    execFileSync("./scripts/cloudflare-wrangler.sh", [...wranglerArgs, "--json"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "inherit"],
-    }),
+    execFileSync(
+      "./scripts/cloudflare-wrangler.sh",
+      ["--target", target, ...wranglerArgs, "--json"],
+      {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "inherit"],
+      },
+    ),
   );
 const environmentArgs = target === "staging" ? ["--env", "staging"] : ["--env="];
 const deployments = wranglerJson("deployments", "list", ...environmentArgs);

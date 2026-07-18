@@ -21,16 +21,20 @@ else
 fi
 
 ./scripts/build-cloudflare-assets.sh
-./scripts/cloudflare-wrangler.sh types --strict-vars=false --check
+
+# These checks are local-only. Remote commands must use cloudflare-wrangler.sh
+# with an explicit target account.
+unset CLOUDFLARE_ACCOUNT_ID
+pnpm exec wrangler types --strict-vars=false --check
 
 rm -rf .wrangler-dist
-./scripts/cloudflare-wrangler.sh deploy \
+pnpm exec wrangler deploy \
   --env="$wrangler_env" \
   --dry-run \
   --minify \
   --outdir .wrangler-dist
 node scripts/check-worker-bundle-size.mjs .wrangler-dist
 
-./scripts/cloudflare-wrangler.sh check startup \
+pnpm exec wrangler check startup \
   --env="$wrangler_env" \
   --outfile .wrangler-dist/worker-startup.cpuprofile

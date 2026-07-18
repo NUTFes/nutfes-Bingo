@@ -8,5 +8,5 @@ set -a
 . ./cloudflare.project.env
 set +a
 
-./scripts/check-cloudflare-operator.sh
+./scripts/check-cloudflare-operator.sh --env staging
 exec node scripts/cloudflare-snapshot-load-test.mjs "$@"

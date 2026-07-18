@@ -420,19 +420,27 @@ degrade は次の順で適用する。
 
 完了済み:
 
-- account/zone、production/stagingのapplication/media custom domain、Worker、DO migration、環境別R2を作成した。
-- R2 image custom domainを有効化し、backup bucketと`r2.dev`を非公開にした。
-- 環境ごとに異なるAUDのAdmin/Screen Access application、Cookie Path、exact-email policyを設定した。
-- production/staging別Managed Turnstile widget、hostname、sitekey/secretを登録し、実browserで確認した。
-- production backupの`snapshots/`へ400日retentionを設定した。
-- Access/Worker config、DNS、observabilityを登録し、production/stagingへdeployした。
-- stagingで100 state WebSocketのready成功率100%、5xx 0を確認した。
+- 個人test account上でWorker、DO migration、環境別R2、application/media custom domainを構築し、
+  Cloudflare専用architectureの機能検証を完了した。
+- test環境でR2 image custom domainを有効化し、backup bucketと`r2.dev`を非公開にした。
+- 異なるAUDのAdmin/Screen Access application、Cookie Path、exact-email policyを検証した。
+- Managed Turnstile widget、hostname、sitekey/secretを登録し、実browserで確認した。
+- account IDとAccess team domainをproduction/staging別に固定し、remote Wrangler操作が対象accountを
+  明示しない限り実行できないfail-closed guardを実装した。
+- stagingで1,000 state WebSocket、5回broadcast、最大2 MiB snapshot 3回のpromotion証跡を取得した。
 
-残作業:
+団体production投入前の残作業:
 
+- `nutfes.info@gmail.com`をowner/recoveryとする団体Cloudflare accountでMFA/recoveryを設定し、
+  deploy担当と復旧担当をnamed memberとして招待する。
+- 団体account IDをreview済み設定へ固定し、production zone、R2、Access、Turnstile、custom domain、
+  WAF、backup lifecycleを新設する。個人account上の旧`production` resourceへ昇格しない。
+- 当日管理者約10名と別人のbreak-glass管理者をexact-email Access policyとWorker allowlistへ登録し、
+  private browser、MFA、Access audit、未登録identity拒否を確認する。
+- 団体productionと個人stagingのaccount分離を`whoami`、R2 list、deployment listで確認する。
+- 同一release SHAをstaging証跡から団体productionへ昇格し、production smoke、version ID、
+  generation、snapshot keyを記録してからDNSをcutoverする。
 - Free plan rate limiting rule、stamp/reach緊急block ruleを設定し、会場Wi-Fi NATでthresholdを調整する。
-- named break-glass管理者を追加し、MFA、短いsession、監査を確認する。
-- 1,000 socket broadcast、DO durationの8時間外挿、最大2 MiB snapshot CPU試験を完了する。
-- 30分後のscreen socket hard-close/reconnectをremoteで確認する。
 - 景品画像GC手順、当日監視runbook、operator training、復旧担当者を確定する。
-- productionイベントデータ登録後に手動snapshotを作り、Worker version、active/previous generation、snapshot keyを記録する。
+- productionイベントデータ登録後に手動snapshotを作り、Worker version、active/previous generation、
+  snapshot keyを記録する。

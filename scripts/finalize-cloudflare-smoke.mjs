@@ -22,6 +22,9 @@ const draft = JSON.parse(await readFile(options.get("draft"), "utf8"));
 if (draft.schemaVersion !== 1 || !new Set(["production", "staging"]).has(draft.environment)) {
   throw new Error("Draft must be a production or staging schemaVersion 1 smoke record");
 }
+execFileSync("./scripts/check-cloudflare-operator.sh", ["--env", draft.environment], {
+  stdio: "inherit",
+});
 
 let loadResult = null;
 let snapshotResult = null;
@@ -111,10 +114,14 @@ if (
 }
 
 const whoami = JSON.parse(
-  execFileSync("./scripts/cloudflare-wrangler.sh", ["whoami", "--json"], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "inherit"],
-  }),
+  execFileSync(
+    "./scripts/cloudflare-wrangler.sh",
+    ["--target", draft.environment, "whoami", "--json"],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "inherit"],
+    },
+  ),
 );
 const record = {
   ...draft,

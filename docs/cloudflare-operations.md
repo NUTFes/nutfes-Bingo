@@ -1,66 +1,162 @@
 # Cloudflare本番運用
 
-更新日: 2026-07-16
+更新日: 2026-07-17
 
-## 現在の公開境界
+## Cloudflare account境界
 
-| 環境       | Application Worker custom domain          | R2 prize image custom domain              |
-| ---------- | ----------------------------------------- | ----------------------------------------- |
-| production | `https://bingo.tkymhrt.dpdns.org`         | `https://media.tkymhrt.dpdns.org`         |
-| staging    | `https://staging-bingo.tkymhrt.dpdns.org` | `https://staging-media.tkymhrt.dpdns.org` |
+| 環境       | Cloudflare account                                     | Application / Prize images                                                            |
+| ---------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| production | 団体account（owner/recovery: `nutfes.info@gmail.com`） | 未構築                                                                                |
+| staging    | 現在の個人test account                                 | `https://staging-bingo.tkymhrt.dpdns.org` / `https://staging-media.tkymhrt.dpdns.org` |
 
-- production Worker: `nutfes-bingo`
-- staging Worker: `nutfes-bingo-staging`
-- Access: 環境ごとに`/admin*`と`/screen*`を別application/AUDで保護
-- 公開API: `/api/*`
-- 管理API: `/admin/api/*`
-- 会場API: `/screen/api/*`
-- R2: 環境ごとに景品画像bucketと非公開snapshot bucketを分離
-- production snapshot lifecycle: `snapshots/`を400日でexpire
-- production/stagingとも`workers.dev`、preview URL、R2 `r2.dev`は無効
+- production Worker名は`nutfes-bingo`、staging Worker名は`nutfes-bingo-staging`
+- stagingの公開APIは`/api/*`、管理APIは`/admin/api/*`、会場APIは`/screen/api/*`
+- staging R2は景品画像bucketと非公開snapshot bucketを分離
+- production/stagingとも`workers.dev`、preview URL、R2 `r2.dev`を無効にする
+- Accessは環境ごとに`/admin*`と`/screen*`を別application/AUDで保護する
+
+既存の個人account上の`bingo.tkymhrt.dpdns.org`、`media.tkymhrt.dpdns.org`、Worker
+`nutfes-bingo`は検証用の旧resourceであり、本番昇格先ではありません。団体accountでproduction
+smokeとDNS cutoverを完了するまで旧resourceを削除せず、完了後にchange record付きで廃止します。
 
 Static Assetsに一致する公開ページと`/_next/static/*`はWorkerを起動しません。`/api/*`、
 `/admin*`、`/screen`、`/screen/*`は`run_worker_first`に一致します。会場HTMLはStatic
 Assetですが、配信前にWorkerでもScreen Access JWTを検証します。
 
-## 初回構築
+## 団体production accountの初回構築
 
-`cloudflare.project.env`のaccountに所属し、Workers Scripts writeとR2 writeを持つoperatorが実行します。
-誤accountで同名resourceを作らないよう、bootstrap前に固定accountとcapabilityを検査します。
+productionは`nutfes.info@gmail.com`をowner/recoveryとする団体Cloudflare accountへ新設します。
+この共有addressはaccount所有権の復旧専用です。日常のdashboard操作、Wrangler login、Accessの
+app管理者には使用しません。
+
+### 1. account所有権とnamed memberを準備する
+
+1. 団体のpassword managerへowner passwordとrecovery codeを保管し、owner loginへMFAを設定する。
+   repository、shell history、個人のpassword managerへcredentialやAPI tokenを残さない。
+2. owner loginでCloudflare dashboardのaccount selectorを開き、団体accountのaccount IDを記録する。
+3. `Manage Account > Members`からdeploy担当者と復旧担当者を各自の個人emailで招待する。共有loginを
+   配らない。通常deploy担当者にはWorkers Scripts writeとR2 listに必要な最小権限を与える。初回構築
+   担当者だけにR2 write、Access、Turnstile、DNS/WAF変更権限を追加する。
+4. 少なくとも2名のnamed memberがMFAでloginでき、1名を削除しても復旧できることをowner以外の端末で
+   確認する。実施者と権限をchange recordへ記録する。
+5. named memberとしてWranglerへloginし、`cloudflare.project.env`の
+   `CLOUDFLARE_PRODUCTION_ACCOUNT_ID`へaccount IDを設定してreviewする。
 
 ```bash
+pnpm exec wrangler login
 mise run cloudflare:whoami
-mise run cloudflare:bootstrap:staging
+```
+
+`cloudflare:whoami`はproduction account IDへのmembership、Workers write、R2 listを検査し、
+共有owner loginなら拒否します。stagingは別accountなので次で独立に検査します。
+
+```bash
+mise run cloudflare:whoami:staging
+```
+
+### 2. production resourceを団体accountに作る
+
+production hostnameに使うzoneが個人accountにある場合は、先に団体accountへzoneを移管または追加し、
+DNS ownershipとcertificate発行経路を確認します。個人accountのzoneへproduction custom domainを
+残しません。
+
+```bash
 mise run cloudflare:bootstrap
 ```
 
-bootstrapは既存bucketを再作成しません。R2作成時にWranglerへbinding追加を委ねず、
-`wrangler.jsonc`をbindingの正本、`cloudflare.project.env`をaccount・domain・AUD・sitekeyの正本にします。
+bootstrapはproduction accountだけにR2 bucketを作成し、既存bucketを再作成しません。
+`wrangler.jsonc`をbindingの正本とし、Wranglerへbinding追加を委ねません。続けてdashboardで次を
+この順に設定します。
 
-次の順で外部resourceを設定します。
+1. 団体accountのZero Trust organizationを作成し、production Access team domainを確定する。
+2. production application hostnameとmedia hostnameを決め、景品R2 bucketへmedia custom domainを
+   接続する。`Active`後に実objectのGETが`200 image/*`になることを確認する。
+3. `/admin*`と`/screen*`へ別々のAccess self-hosted applicationを作り、Cookie Pathを有効にする。
+   AUDは相互に異なる値を使う。
+4. production Managed Turnstile widgetを作り、production application hostnameだけを許可する。
+5. backup bucketを非公開のままにし、`snapshots/`へ400日lifecycleを設定する。
+6. application custom domain、WAF rate limit、stamp/reach緊急block ruleを設定する。
+7. `cloudflare.project.env`のproduction用空欄へaccount ID、Access team domain、site/media URL、
+   Admin/Screen AUD、Turnstile sitekeyを記入し、通常のcode reviewを通す。
 
-1. production/stagingのapplication hostnameとmedia hostnameを決める。
-2. 景品R2 bucketへ環境別media custom domainを割り当てる。
-3. custom domainが`Active`になるまで待ち、実objectのGETが`200`になることを確認する。
-4. `/admin*`と`/screen*`へ環境別Access self-hosted applicationを作り、Cookie Pathを有効にする。
-5. 管理者は`ADMIN_EMAILS`へ通常operatorと別identityのnamed break-glass管理者を最低1名ずつ、
-   会場operatorは`SCREEN_EMAILS`へ最低1名をexact emailで登録する。Everyone、domain全体、Bypass、
-   共有account、service tokenを人間向け画面に使わない。
-6. production/staging両方の管理Access applicationへbreak-glass専用Allow policyを作る。対象をその
-   exact emailだけにし、Independent MFAの`Custom MFA settings`を必須、MFA session durationを
-   30分以下にする。通常operatorと同じpolicyへ混在させない。
-7. 管理と会場で異なるAUDをWorker環境変数へ登録する。
-8. environment別Managed Turnstile widgetを作り、対応するapplication hostnameだけを登録する。
-9. Turnstile secretをWrangler secretへ登録する。
-10. final Workerをdeployし、application custom domainを接続する。
-11. `workers.dev`、preview URL、`r2.dev`に迂回経路がないことを確認する。
+Turnstile secretは環境ファイルへ保存せず、production accountを明示して対話的に登録します。
 
-Accessだけを認可境界にしません。Workerは`Cf-Access-Jwt-Assertion`の署名、issuer、AUD、
-expiryを検証し、さらに`ADMIN_EMAILS`または`SCREEN_EMAILS` allowlistを適用します。
-設定が空、不正、または管理と会場のAUDが同一ならfail closedです。
+```bash
+./scripts/cloudflare-wrangler.sh --target production secret put TURNSTILE_SECRET_KEY --env=''
+./scripts/cloudflare-wrangler.sh --target production secret list --env=''
+```
 
-会場socketは30分ごとにDurable Object alarmでserver側からhard-closeし、再接続時にAccessとWorkerが
-JWTを再検証します。これはAccess applicationの対話的session期限とは別です。
+初回deploy環境はmode `600`で作り、公開設定と会場operatorの小文字email JSON配列を設定します。
+`ADMIN_EMAILS`は次章の名簿taskだけで設定します。
+
+```bash
+install -m 600 cloudflare.deploy.production.env.example .cloudflare.deploy.production.env
+$EDITOR .cloudflare.deploy.production.env
+```
+
+### 3. account分離を確認する
+
+同じWrangler loginが両accountのnamed memberでも、wrapperが対象accountを固定します。次がすべて成功し、
+productionとstagingで異なるaccount IDのresourceだけが列挙されることを確認します。
+
+```bash
+mise run cloudflare:whoami
+mise run cloudflare:whoami:staging
+./scripts/cloudflare-wrangler.sh --target production r2 bucket list
+./scripts/cloudflare-wrangler.sh --target staging r2 bucket list
+```
+
+`cloudflare.project.env`のproduction空欄、account不一致、共有owner loginのいずれかがあれば
+production操作はfail closedです。初回production deployも後述の通常手順を省略せず、同一Git SHAの
+staging証跡から昇格します。
+
+## 当日管理者の登録・変更
+
+当日管理者はCloudflare account memberではありません。各自のemailでAccessへloginし、Access policyと
+Worker `ADMIN_EMAILS`の二重allowlistを通過します。約10名の通常管理者に加え、通常担当者と別人の
+named break-glass管理者を1名指定します。共有address、mailing list、service token、domain全体、
+Everyone、Bypassは使用しません。
+
+### 名簿を準備してWorker allowlistへ反映する
+
+名簿は承認済みのteam secret storeを正本とし、作業端末ではmode `600`のGit管理外ファイルだけを
+一時利用します。`administrators`は1〜19名、`breakGlassAdministrator`は別emailの1名です。
+
+```json
+{
+  "administrators": ["admin1@organization.example", "admin2@organization.example"],
+  "breakGlassAdministrator": "recovery-admin@organization.example"
+}
+```
+
+```bash
+install -m 600 /dev/null .cloudflare/admin-roster.production.json
+$EDITOR .cloudflare/admin-roster.production.json
+mise run cloudflare:admins:set .cloudflare/admin-roster.production.json
+stat -c '%a %n' .cloudflare/admin-roster.production.json .cloudflare.deploy.production.env
+```
+
+taskは形式、小文字、重複、人数、placeholder、break-glassの分離、共有owner addressの混入、
+両ファイルの権限を検査し、`.cloudflare.deploy.production.env`の`ADMIN_EMAILS`だけをatomicに
+更新します。emailはterminalへ出さず、人数と名簿SHA-256を出力します。SHA-256をchange recordへ
+記録し、名簿ファイルは作業後に削除します。
+
+### Access policyを同じ名簿へ合わせる
+
+1. production `/admin*` applicationの通常Allow policyへ`administrators`の各emailをexact-emailで
+   登録する。
+2. `breakGlassAdministrator`だけの別Allow policyを作る。Independent MFAの
+   `Custom MFA settings`を必須にし、MFA session durationを30分以下にする。
+3. policy previewで対象email以外がmatchしないこと、Admin/Screen applicationのAUDが異なることを
+   確認する。
+4. 各通常管理者がprivate browserで`/admin`を開き、少なくとも代表者1名が可逆mutationを行う。
+   break-glass担当者もprivate browserでMFAを完了し、Access auditに個人emailの成功eventが残ることを
+   確認する。未登録identityの拒否も記録する。
+
+初回構築ではAccess policyとWorker allowlistを公開前に同時設定します。運用中の追加は
+`Worker allowlistへ追加・deploy → Access exact-emailへ追加`、削除は
+`Access exact-emailから削除 → Worker allowlistから削除・deploy`の順にし、片側だけの設定で権限が
+広がらないfail-closed状態を保ちます。変更後はproduction smoke recordを作成します。
 
 ## 通常の再デプロイ
 
@@ -82,14 +178,15 @@ GitHub Actionsはquality、build、production/staging dry-runと、credentialを
 
 - `mise.toml`のNode/pnpm
 - Docker EngineとBuildx
-- `cloudflare.project.env`のaccountへ所属するnamed human operator
-- Workers Scripts write権限
-- R2 bucket list権限。初回構築担当者はR2 write、Access、Turnstile、DNS/WAF変更権限も持つ
+- `cloudflare.project.env`のproduction/staging各accountへ所属するnamed human operator
+- Workers Scripts write権限とR2 bucket list権限
+- 初回構築担当者だけはR2 write、Access、Turnstile、DNS/WAF変更権限も持つ
 
 ```bash
 mise trust
 mise install
 mise run install
+mise run cloudflare:whoami:staging
 mise run cloudflare:whoami
 
 set -a
@@ -97,6 +194,9 @@ set -a
 set +a
 git fetch origin "$CLOUDFLARE_RELEASE_BRANCH"
 ```
+
+2つの`whoami`は対象accountを別々に固定します。productionで共有owner loginを使用している場合、
+またはいずれかのaccount IDとmembershipが一致しない場合は進みません。
 
 新規cloneでrelease branchを初めてcheckoutする場合:
 
@@ -140,18 +240,19 @@ node scripts/init-cloudflare-deploy-env.mjs --env staging --force
 node scripts/init-cloudflare-deploy-env.mjs --env production --force
 ```
 
-初回Worker構築前だけは`cloudflare.deploy.*.env.example`をコピーし、`ADMIN_EMAILS`と
-`SCREEN_EMAILS`を1〜10件の小文字email JSON配列へ置換します。空配列、example domain、
+初回Worker構築前のproductionは前章の`install -m 600`と管理者名簿taskを使います。stagingも
+exampleをmode `600`で導入します。`ADMIN_EMAILS`は2〜20件、`SCREEN_EMAILS`は1〜10件の
+一意な小文字email JSON配列です。空配列、予約済みplaceholder domain、共有owner address、
 review済み公開設定と異なる値はdeploy taskが拒否します。
 
 Turnstile secretはファイルへ保存しません。次で登録名を確認し、存在しない環境だけ対話的に登録します。
 
 ```bash
-./scripts/cloudflare-wrangler.sh secret list --env staging
-./scripts/cloudflare-wrangler.sh secret list --env=''
+./scripts/cloudflare-wrangler.sh --target staging secret list --env staging
+./scripts/cloudflare-wrangler.sh --target production secret list --env=''
 
-./scripts/cloudflare-wrangler.sh secret put TURNSTILE_SECRET_KEY --env staging
-./scripts/cloudflare-wrangler.sh secret put TURNSTILE_SECRET_KEY --env=''
+./scripts/cloudflare-wrangler.sh --target staging secret put TURNSTILE_SECRET_KEY --env staging
+./scripts/cloudflare-wrangler.sh --target production secret put TURNSTILE_SECRET_KEY --env=''
 ```
 
 ### 3. release commitを検証してrollback元を記録する
@@ -167,8 +268,8 @@ pnpm knip
 mise run cloudflare:check
 mise run cloudflare:check:staging
 
-./scripts/cloudflare-wrangler.sh deployments list --env staging
-./scripts/cloudflare-wrangler.sh deployments list --env=''
+./scripts/cloudflare-wrangler.sh --target staging deployments list --env staging
+./scripts/cloudflare-wrangler.sh --target production deployments list --env=''
 ```
 
 すべてexit `0`が必要です。React Doctorがwarningを出した場合、各項目をfalse positive、修正済み、
@@ -328,7 +429,7 @@ deploy taskはlocal SHA確認だけでなく、active staging deploymentの`git:
 ```bash
 mise run cloudflare:smoke
 mise run cloudflare:smoke:finalize
-./scripts/cloudflare-wrangler.sh deployments list --env=''
+./scripts/cloudflare-wrangler.sh --target production deployments list --env=''
 ```
 
 stagingと同じ手動10項目をproductionでも確認します。最終record
@@ -489,15 +590,15 @@ Worker codeだけの問題では、change recordのGit SHAとversion IDを照合
 staging:
 
 ```bash
-./scripts/cloudflare-wrangler.sh deployments list --env staging
-./scripts/cloudflare-wrangler.sh rollback <staging-version-id> --env staging --message '<incident-id>: <reason>'
+./scripts/cloudflare-wrangler.sh --target staging deployments list --env staging
+./scripts/cloudflare-wrangler.sh --target staging rollback <staging-version-id> --env staging --message '<incident-id>: <reason>'
 ```
 
 production:
 
 ```bash
-./scripts/cloudflare-wrangler.sh deployments list --env=''
-./scripts/cloudflare-wrangler.sh rollback <production-version-id> --env='' --message '<incident-id>: <reason>'
+./scripts/cloudflare-wrangler.sh --target production deployments list --env=''
+./scripts/cloudflare-wrangler.sh --target production rollback <production-version-id> --env='' --message '<incident-id>: <reason>'
 ```
 
 rollback後のactive version ID、Git SHA、実施者、時刻、理由をchange recordへ追記し、自動・手動smokeを
@@ -524,6 +625,12 @@ rollback経路です。
 
 ## 公式資料
 
+- <https://developers.cloudflare.com/fundamentals/manage-members/manage/>
+- <https://developers.cloudflare.com/fundamentals/manage-members/roles/>
+- <https://developers.cloudflare.com/fundamentals/user-profiles/2fa/>
+- <https://developers.cloudflare.com/fundamentals/reference/best-practices/>
+- <https://developers.cloudflare.com/fundamentals/manage-domains/move-domain/>
+- <https://developers.cloudflare.com/cloudflare-one/access-controls/policies/>
 - <https://developers.cloudflare.com/workers/platform/pricing/>
 - <https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/>
 - <https://developers.cloudflare.com/durable-objects/platform/pricing/>

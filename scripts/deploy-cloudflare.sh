@@ -51,7 +51,7 @@ if [ "$release_sha" != "$remote_sha" ]; then
   exit 2
 fi
 
-./scripts/check-cloudflare-operator.sh
+./scripts/check-cloudflare-operator.sh --env "$target"
 
 if [ "$target" = "production" ]; then
   if [ "${CONFIRM_PRODUCTION_DEPLOY:-}" != "$release_sha" ]; then
@@ -59,7 +59,7 @@ if [ "$target" = "production" ]; then
     exit 2
   fi
 
-  staging_deployments=$(./scripts/cloudflare-wrangler.sh deployments list --env staging --json)
+  staging_deployments=$(./scripts/cloudflare-wrangler.sh --target staging deployments list --env staging --json)
   staging_version_id=$(
     DEPLOYMENTS_JSON=$staging_deployments RELEASE_SHA=$release_sha node - <<'NODE'
 const deployments = JSON.parse(process.env.DEPLOYMENTS_JSON);
@@ -100,6 +100,7 @@ fi
 
 case "$target" in
   production)
+    expected_access_team_domain=$CLOUDFLARE_PRODUCTION_ACCESS_TEAM_DOMAIN
     expected_site_url=$CLOUDFLARE_PRODUCTION_SITE_URL
     expected_media_origin=$CLOUDFLARE_PRODUCTION_MEDIA_ORIGIN
     expected_access_aud=$CLOUDFLARE_PRODUCTION_ADMIN_AUD
@@ -107,6 +108,7 @@ case "$target" in
     expected_turnstile_site_key=$CLOUDFLARE_PRODUCTION_TURNSTILE_SITE_KEY
     ;;
   staging)
+    expected_access_team_domain=$CLOUDFLARE_STAGING_ACCESS_TEAM_DOMAIN
     expected_site_url=$CLOUDFLARE_STAGING_SITE_URL
     expected_media_origin=$CLOUDFLARE_STAGING_MEDIA_ORIGIN
     expected_access_aud=$CLOUDFLARE_STAGING_ADMIN_AUD
@@ -125,7 +127,7 @@ require_expected() {
   fi
 }
 
-require_expected ACCESS_TEAM_DOMAIN "$ACCESS_TEAM_DOMAIN" "$CLOUDFLARE_ACCESS_TEAM_DOMAIN"
+require_expected ACCESS_TEAM_DOMAIN "$ACCESS_TEAM_DOMAIN" "$expected_access_team_domain"
 require_expected ACCESS_AUD "$ACCESS_AUD" "$expected_access_aud"
 require_expected SCREEN_ACCESS_AUD "$SCREEN_ACCESS_AUD" "$expected_screen_aud"
 require_expected MEDIA_ORIGIN "$MEDIA_ORIGIN" "$expected_media_origin"
@@ -184,15 +186,28 @@ validate_https_origin ACCESS_TEAM_DOMAIN "$ACCESS_TEAM_DOMAIN" access
 validate_https_origin MEDIA_ORIGIN "$MEDIA_ORIGIN" origin
 validate_https_origin NEXT_PUBLIC_SITE_URL "$NEXT_PUBLIC_SITE_URL" origin
 
-ADMIN_EMAILS="$ADMIN_EMAILS" SCREEN_EMAILS="$SCREEN_EMAILS" node - <<'NODE'
+TARGET=$target \
+  PRODUCTION_ACCOUNT_OWNER_EMAIL=${CLOUDFLARE_PRODUCTION_ACCOUNT_OWNER_EMAIL:-} \
+  ADMIN_EMAILS="$ADMIN_EMAILS" \
+  SCREEN_EMAILS="$SCREEN_EMAILS" \
+  node - <<'NODE'
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const reservedEmailDomainPattern =
+  /@(?:example\.(?:com|net|org)|[^@]+\.(?:example|invalid|test)|localhost)$/i;
+const requirements = {
+  ADMIN_EMAILS: {
+    minimum: 2,
+    maximum: 20,
+    purpose: "named event administrators including a distinct break-glass administrator",
+  },
+  SCREEN_EMAILS: {
+    minimum: 1,
+    maximum: 10,
+    purpose: "named venue operators",
+  },
+};
 
-for (const name of ["ADMIN_EMAILS", "SCREEN_EMAILS"]) {
-  const minimumEmails = name === "ADMIN_EMAILS" ? 2 : 1;
-  const purpose =
-    name === "ADMIN_EMAILS"
-      ? "a primary and a distinct named break-glass administrator"
-      : "named venue operators";
+for (const [name, requirement] of Object.entries(requirements)) {
   let value;
   try {
     value = JSON.parse(process.env[name]);
@@ -202,20 +217,30 @@ for (const name of ["ADMIN_EMAILS", "SCREEN_EMAILS"]) {
   }
   if (
     !Array.isArray(value) ||
-    value.length < minimumEmails ||
-    value.length > 10 ||
+    value.length < requirement.minimum ||
+    value.length > requirement.maximum ||
     value.some(
       (entry) =>
         typeof entry !== "string" ||
         entry !== entry.trim().toLowerCase() ||
         entry.length > 320 ||
         !emailPattern.test(entry) ||
-        /@example\.(com|net|org)$/i.test(entry),
+        reservedEmailDomainPattern.test(entry),
     ) ||
     new Set(value).size !== value.length
   ) {
     console.error(
-      `${name} must contain ${minimumEmails}-10 unique lowercase emails for ${purpose} and no example-domain placeholders`,
+      `${name} must contain ${requirement.minimum}-${requirement.maximum} unique lowercase emails for ${requirement.purpose} and no reserved-domain placeholders`,
+    );
+    process.exit(2);
+  }
+  if (
+    name === "ADMIN_EMAILS" &&
+    process.env.TARGET === "production" &&
+    value.includes(process.env.PRODUCTION_ACCOUNT_OWNER_EMAIL?.toLowerCase())
+  ) {
+    console.error(
+      "ADMIN_EMAILS must not contain the shared production Cloudflare account owner address",
     );
     process.exit(2);
   }
@@ -227,9 +252,15 @@ turnstile_hostname=$(URL_VALUE="$NEXT_PUBLIC_SITE_URL" node -e '
 ')
 
 if [ "$target" = "staging" ]; then
-  turnstile_secrets=$(./scripts/cloudflare-wrangler.sh secret list --env staging --format json)
+  turnstile_secrets=$(
+    ./scripts/cloudflare-wrangler.sh --target staging \
+      secret list --env staging --format json
+  )
 else
-  turnstile_secrets=$(./scripts/cloudflare-wrangler.sh secret list --env='' --format json)
+  turnstile_secrets=$(
+    ./scripts/cloudflare-wrangler.sh --target production \
+      secret list --env='' --format json
+  )
 fi
 SECRETS_JSON="$turnstile_secrets" node -e '
   const secrets = JSON.parse(process.env.SECRETS_JSON);
@@ -255,7 +286,7 @@ export NEXT_PUBLIC_MEDIA_ORIGIN=$MEDIA_ORIGIN
 ./scripts/check-cloudflare-worker.sh --env "$target"
 
 if [ "$target" = "staging" ]; then
-  ./scripts/cloudflare-wrangler.sh deploy \
+  ./scripts/cloudflare-wrangler.sh --target staging deploy \
     --env staging \
     --strict \
     --message "git:$release_sha" \
@@ -271,7 +302,7 @@ if [ "$target" = "staging" ]; then
     --var "STAMP_DAILY_LIMIT:$stamp_daily_limit" \
     --var "TURNSTILE_HOSTNAME:$turnstile_hostname"
 else
-  ./scripts/cloudflare-wrangler.sh deploy \
+  ./scripts/cloudflare-wrangler.sh --target production deploy \
     --env='' \
     --strict \
     --message "git:$release_sha" \
