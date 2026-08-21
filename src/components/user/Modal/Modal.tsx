@@ -21,9 +21,6 @@ const Modal = ({
   const contentRef = useRef<HTMLDialogElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  const setIsOpenedRef = useRef(setIsOpened);
-  setIsOpenedRef.current = setIsOpened;
-
   useEffect(() => {
     if (!isOpened) {
       return undefined;
@@ -35,7 +32,7 @@ const Modal = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && canCloseByClickingBackground) {
         event.preventDefault();
-        setIsOpenedRef.current(false);
+        setIsOpened(false);
         return;
       }
 
@@ -70,7 +67,7 @@ const Modal = ({
       document.removeEventListener("keydown", handleKeyDown);
       previousFocusRef.current?.focus();
     };
-  }, [canCloseByClickingBackground, isOpened]);
+  }, [canCloseByClickingBackground, isOpened, setIsOpened]);
 
   return (
     <>

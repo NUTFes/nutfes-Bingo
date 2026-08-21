@@ -254,8 +254,10 @@ async function handlePublicReach(request: Request, env: Env): Promise<Response> 
   }
   const turnstileToken = parseTurnstileToken(body.turnstileToken);
   await verifyTurnstileToken(request, env, turnstileToken);
-  const clientHash = await sha256Hex(body.clientId.toLowerCase());
-  const active = await getActiveGame(env);
+  const [clientHash, active] = await Promise.all([
+    sha256Hex(body.clientId.toLowerCase()),
+    getActiveGame(env),
+  ]);
   const count = await active.state.recordPublicReach(active.generation, clientHash);
   return jsonResponse({ data: count }, { status: 200 }, { requestOrigin: origin });
 }

@@ -343,12 +343,9 @@ const PrizeReorderRow = ({
       {({ allowsDragging }) => (
         <m.div
           layout="position"
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 40,
-            duration: shouldReduceMotion ? 0 : undefined,
-          }}
+          transition={
+            shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 40 }
+          }
           className={`group flex items-center gap-3 rounded-md border border-border bg-card p-2 text-foreground transition-colors sm:gap-4 sm:p-3 ${
             isBusy
               ? "scale-[0.98] opacity-50 ring-2 ring-primary ring-offset-2 ring-offset-background"

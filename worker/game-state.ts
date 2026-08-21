@@ -402,10 +402,10 @@ export class GameState extends DurableObject<Env> {
         )
         .toArray();
       const requestedSet = new Set(orderedIds);
-      const nextIds = [
-        ...orderedIds,
-        ...group.map((prize) => prize.id).filter((id) => !requestedSet.has(id)),
-      ];
+      const nextIds = [...orderedIds];
+      for (const prize of group) {
+        if (!requestedSet.has(prize.id)) nextIds.push(prize.id);
+      }
       const now = new Date().toISOString();
       nextIds.forEach((id, index) => {
         this.ctx.storage.sql.exec(

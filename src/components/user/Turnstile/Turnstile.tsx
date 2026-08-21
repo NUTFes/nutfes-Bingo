@@ -53,7 +53,10 @@ export default function Turnstile({ language, onError, onTokenChange, ref }: Tur
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const callbacksRef = useRef({ language, onError, onTokenChange });
-  callbacksRef.current = { language, onError, onTokenChange };
+
+  useEffect(() => {
+    callbacksRef.current = { language, onError, onTokenChange };
+  }, [language, onError, onTokenChange]);
 
   const clearTokenWithError = useCallback(() => {
     callbacksRef.current.onTokenChange(null);

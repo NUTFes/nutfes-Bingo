@@ -17,11 +17,8 @@ function PrizeImage({ imageUrl, name }: { imageUrl: string | null; name: string 
 
   if (imageUrl === null || hasLoadError) {
     return (
-      <div
-        className={styles.imagePlaceholder}
-        role="img"
-        aria-label={`${name}の画像は表示できません`}
-      >
+      <div className={styles.imagePlaceholder}>
+        <span className="sr-only">{name}の画像は表示できません</span>
         <span aria-hidden="true">NO IMAGE</span>
       </div>
     );

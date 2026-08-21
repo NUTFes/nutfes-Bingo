@@ -213,6 +213,15 @@ function hasControlCharacters(value: string): boolean {
   });
 }
 
+function trimNonEmptyEntries(entries: string[]): string[] {
+  const result: string[] = [];
+  for (const entry of entries) {
+    const normalized = entry.trim();
+    if (normalized !== "") result.push(normalized);
+  }
+  return result;
+}
+
 function parseStringList(value: string): string[] {
   const trimmed = value.trim();
   if (trimmed === "") return [];
@@ -221,7 +230,7 @@ function parseStringList(value: string): string[] {
     try {
       const parsed = JSON.parse(trimmed) as unknown;
       if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === "string")) {
-        return parsed.map((entry) => entry.trim()).filter((entry) => entry !== "");
+        return trimNonEmptyEntries(parsed);
       }
     } catch {
       return [];
@@ -229,8 +238,5 @@ function parseStringList(value: string): string[] {
     return [];
   }
 
-  return trimmed
-    .split(/[\s,]+/)
-    .map((entry) => entry.trim())
-    .filter((entry) => entry !== "");
+  return trimNonEmptyEntries(trimmed.split(/[\s,]+/));
 }

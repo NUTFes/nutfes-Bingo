@@ -5,11 +5,10 @@ import { useState } from "react";
 import type { NumberRow } from "@/types/bingo/types";
 
 interface UseDashboardStateOptions {
-  initialSurveyUrl: string;
   bingoNumbers: NumberRow[];
 }
 
-export function useDashboardState({ initialSurveyUrl, bingoNumbers }: UseDashboardStateOptions) {
+export function useDashboardState({ bingoNumbers }: UseDashboardStateOptions) {
   const [isJudgementModalOpen, setIsJudgementModalOpen] = useState(false);
   const [isUpdateNumberModalOpen, setIsUpdateNumberModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number>();
@@ -18,7 +17,6 @@ export function useDashboardState({ initialSurveyUrl, bingoNumbers }: UseDashboa
   const [submitNumberFieldKey, setSubmitNumberFieldKey] = useState(0);
   const [deleteInput, setDeleteInput] = useState("");
   const [selectedDeleteNumber, setSelectedDeleteNumber] = useState<string | null>(null);
-  const [surveyUrl, setSurveyUrl] = useState(initialSurveyUrl);
 
   const openUpdateNumberModal = (id: number) => {
     const target = bingoNumbers.find((number) => number.id === id);
@@ -59,8 +57,6 @@ export function useDashboardState({ initialSurveyUrl, bingoNumbers }: UseDashboa
     submitNumberFieldKey,
     deleteInput,
     selectedDeleteNumber,
-    surveyUrl,
-    setSurveyUrl,
     openUpdateNumberModal,
     resetSubmitNumberInput,
     resetDeleteInput,

@@ -42,23 +42,31 @@ const PrizeEditModal = ({
   const [nameJp, setNameJp] = useState(() => initialNameJp || "");
   const [nameEn, setNameEn] = useState(() => initialNameEn || "");
   const newFile = useRef<File | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(() => initialImageUrl || "");
 
-  useEffect(() => {
-    return () => {
-      if (previewUrl && previewUrl !== initialImageUrl && previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
+  useEffect(
+    () => () => {
+      if (previewUrlRef.current !== null) {
+        URL.revokeObjectURL(previewUrlRef.current);
       }
-    };
-  }, [previewUrl, initialImageUrl]);
+    },
+    [],
+  );
 
   const handleFileSelected = useCallback(
     (file: File | null) => {
       newFile.current = file;
+      if (previewUrlRef.current !== null) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
       if (!file) {
         setPreviewUrl(initialImageUrl || "");
       } else {
-        setPreviewUrl(URL.createObjectURL(file));
+        const nextPreviewUrl = URL.createObjectURL(file);
+        previewUrlRef.current = nextPreviewUrl;
+        setPreviewUrl(nextPreviewUrl);
       }
     },
     [initialImageUrl],

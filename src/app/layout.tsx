@@ -19,8 +19,10 @@ const silom = localFont({
   display: "swap",
 });
 
+const metadataBase = URL.parse(defaultUrl) ?? new URL("http://localhost:3000");
+
 export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
+  metadataBase,
   title: {
     default: "NUTFes Bingo",
     template: "%s | NUTFes Bingo",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, type SetStateAction } from "react";
 
 import { AdminHeader, AdminLoading, BingoResult } from "@/components/admin";
 import { Button } from "@/components/ui/Button";
@@ -24,6 +24,49 @@ interface AdminDashboardPageProps {
   initialNumbers: NumberRow[];
   initialAppState: AppStateRow;
 }
+
+interface DashboardLoadState {
+  bingoNumbers: NumberRow[];
+  loadError: string | null;
+  isLoaded: boolean;
+  surveyUrl: string;
+}
+
+type DashboardLoadAction =
+  | { type: "sync-authoritative"; numbers: NumberRow[]; surveyUrl: string; markLoaded?: boolean }
+  | { type: "load-error"; message: string }
+  | { type: "set-numbers"; value: SetStateAction<NumberRow[]> }
+  | { type: "set-survey-url"; value: SetStateAction<string> };
+
+const dashboardLoadReducer = (
+  state: DashboardLoadState,
+  action: DashboardLoadAction,
+): DashboardLoadState => {
+  switch (action.type) {
+    case "sync-authoritative":
+      return {
+        ...state,
+        bingoNumbers: action.numbers,
+        surveyUrl: action.surveyUrl,
+        loadError: null,
+        isLoaded: action.markLoaded ? true : state.isLoaded,
+      };
+    case "load-error":
+      return { ...state, loadError: action.message };
+    case "set-numbers":
+      return {
+        ...state,
+        bingoNumbers:
+          typeof action.value === "function" ? action.value(state.bingoNumbers) : action.value,
+      };
+    case "set-survey-url":
+      return {
+        ...state,
+        surveyUrl:
+          typeof action.value === "function" ? action.value(state.surveyUrl) : action.value,
+      };
+  }
+};
 
 const TOAST_TIMEOUT = 5000;
 
@@ -57,20 +100,31 @@ const mutateReach = async (direction: "increment" | "decrement") => {
 };
 
 export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
-  const [bingoNumbers, setBingoNumbers] = useState(initialNumbers);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const dashboardState = useDashboardState({
-    initialSurveyUrl: initialAppState.survey_url,
-    bingoNumbers,
-  });
-  const { setSurveyUrl } = dashboardState;
+  const [{ bingoNumbers, loadError, isLoaded, surveyUrl }, dispatchLoadState] = useReducer(
+    dashboardLoadReducer,
+    {
+      bingoNumbers: initialNumbers,
+      loadError: null,
+      isLoaded: false,
+      surveyUrl: initialAppState.survey_url,
+    },
+  );
+  const setBingoNumbers = (value: SetStateAction<NumberRow[]>) => {
+    dispatchLoadState({ type: "set-numbers", value });
+  };
+  const setSurveyUrl = (value: SetStateAction<string>) => {
+    dispatchLoadState({ type: "set-survey-url", value });
+  };
+  const dashboardState = useDashboardState({ bingoNumbers });
 
   const refreshAuthoritativeState = async () => {
     try {
       const state = await fetchAdminState();
-      setBingoNumbers(state.numbers);
-      setSurveyUrl(state.appState.survey_url);
+      dispatchLoadState({
+        type: "sync-authoritative",
+        numbers: state.numbers,
+        surveyUrl: state.appState.survey_url,
+      });
       return state;
     } catch (error) {
       console.error(error);
@@ -89,19 +143,25 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
     const controller = new AbortController();
     void fetchAdminState(controller.signal)
       .then((state) => {
-        setBingoNumbers(state.numbers);
-        setSurveyUrl(state.appState.survey_url);
-        setIsLoaded(true);
+        dispatchLoadState({
+          type: "sync-authoritative",
+          numbers: state.numbers,
+          surveyUrl: state.appState.survey_url,
+          markLoaded: true,
+        });
       })
       .catch((error) => {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
           console.error(error);
-          setLoadError("管理データを取得できませんでした。接続を確認して再読み込みしてください。");
+          dispatchLoadState({
+            type: "load-error",
+            message: "管理データを取得できませんでした。接続を確認して再読み込みしてください。",
+          });
           showToast({ title: "読込失敗", description: "管理データを取得できませんでした。" });
         }
       });
     return () => controller.abort();
-  }, [setSurveyUrl]);
+  }, []);
   const parsedSubmitNumber = parseBingoNumber(dashboardState.submitNumberInput);
 
   const handleCreate = async () => {
@@ -167,7 +227,7 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
 
   const handleSurvey = async (isSurveyActive: boolean) => {
     const result = await dashboardActions.saveSurveyState({
-      surveyUrl: dashboardState.surveyUrl,
+      surveyUrl,
       isSurveyActive,
     });
     if (!result.ok) {
@@ -270,8 +330,8 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
                 onDecrement={() => runReachMutation("decrement")}
               />
               <SurveyControlSection
-                surveyUrl={dashboardState.surveyUrl}
-                onSurveyUrlChange={dashboardState.setSurveyUrl}
+                surveyUrl={surveyUrl}
+                onSurveyUrlChange={setSurveyUrl}
                 onActivate={() => handleSurvey(true)}
                 onDeactivate={() => handleSurvey(false)}
               />

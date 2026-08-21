@@ -57,8 +57,6 @@ const generateAllLines = (size = BOARD_SIZE): Line[] => {
 
 const ALL_LINES = generateAllLines();
 
-export const cloneCard = (card: BingoCard): BingoCard => card.map((row) => row.slice());
-
 export function getCompletedLines(card: BingoCard, drawnNumbers: number[]): LineId[] {
   const done: LineId[] = [];
   for (const line of ALL_LINES) {

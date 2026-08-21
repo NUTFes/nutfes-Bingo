@@ -23,12 +23,9 @@ const ToggleButton = ({ children, isActive, onClick }: ToggleButtonProps) => {
           className={styles.motionDiv}
           initial={false}
           animate={{ x: isActive ? "100%" : "0%" }}
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 30,
-            duration: shouldReduceMotion ? 0 : undefined,
-          }}
+          transition={
+            shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 30 }
+          }
         />
       </LazyMotion>
       <span className={`${styles.toggleText} ${!isActive ? styles.active : ""}`}>

@@ -49,10 +49,11 @@ async function postPublicAction<T>(url: string, body: Record<string, unknown>, f
   } catch {
     throw new Error(fallback);
   }
-  const result = (await response.json().catch(() => null)) as { data?: T; error?: unknown } | null;
   if (!response.ok) {
-    throw new Error(typeof result?.error === "string" ? result.error : fallback);
+    const errorResult = (await response.json().catch(() => null)) as { error?: unknown } | null;
+    throw new Error(typeof errorResult?.error === "string" ? errorResult.error : fallback);
   }
+  const result = (await response.json().catch(() => null)) as { data?: T } | null;
   return result?.data as T;
 }
 
