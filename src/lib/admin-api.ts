@@ -1,21 +1,11 @@
 "use client";
 
+import type { AdminCommand } from "../../shared/bingo-transport";
 import { normalizeBingoState } from "@/lib/realtime";
 import type { BingoUnifiedState } from "@/types/bingo/realtime";
 import { EMPTY_APP_STATE } from "@/types/bingo/types";
 
-export type AdminCommand =
-  | { type: "createNumber"; number: number }
-  | { type: "deleteNumber"; number: number }
-  | { type: "updateNumber"; id: number; number: number }
-  | { type: "incrementReach" }
-  | { type: "decrementReach" }
-  | { type: "saveSurveyState"; surveyUrl: string; isSurveyActive: boolean }
-  | { type: "createPrize"; nameJp: string; nameEn: string; imagePath?: string }
-  | { type: "updatePrize"; id: number; nameJp: string; nameEn: string; imagePath?: string }
-  | { type: "togglePrizeWon"; id: number; isWon: boolean }
-  | { type: "reorderPrizeGroup"; orderedIds: number[] }
-  | { type: "deletePrize"; id: number };
+export type { AdminCommand } from "../../shared/bingo-transport";
 
 type DataResponse<T> = { data: T };
 

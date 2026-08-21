@@ -23,6 +23,7 @@ import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { Button } from "@/components/ui/Button";
 import { Switch } from "@/components/ui/Switch";
 import { queue } from "@/components/ui/toastQueue";
+import { fetchAdminState } from "@/lib/admin-api";
 import PrizeDeleteModal from "./PrizeDeleteModal";
 import PrizeEditModal from "./PrizeEditModal";
 
@@ -474,6 +475,14 @@ function usePrizeResultController({
   onDelete,
   onUpdate,
 }: PrizeResultProps) {
+  const refreshAuthoritativePrizes = async () => {
+    try {
+      const current = await fetchAdminState();
+      setBingoPrize(current.prizes);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const [state, dispatch] = useReducer(prizeUiReducer, INITIAL_PRIZE_UI_STATE);
 
   const sortedPrizes = useMemo(() => prizeResult.toSorted(comparePrizeOrder), [prizeResult]);
@@ -554,9 +563,10 @@ function usePrizeResultController({
       if (rollbackPrizes) {
         setBingoPrize(rollbackPrizes);
       }
+      await refreshAuthoritativePrizes();
       showToast({
-        title: "並び替え失敗",
-        description: "元の順番に戻しました。再度お試しください。",
+        title: "並び替え結果を再確認しました",
+        description: "サーバーに保存された順番を表示しています。",
       });
     } finally {
       dispatch({ type: "finishMove" });
@@ -612,6 +622,7 @@ function usePrizeResultController({
       });
     } catch (error) {
       console.error(error);
+      await refreshAuthoritativePrizes();
       showToast({ title: "更新失敗", description: "景品状態の更新に失敗しました。" });
     }
   };
@@ -627,6 +638,7 @@ function usePrizeResultController({
       showToast({ title: "削除完了", description: "景品を削除しました。" });
     } catch (error) {
       console.error(error);
+      await refreshAuthoritativePrizes();
       showToast({ title: "削除失敗", description: "景品の削除に失敗しました。" });
     } finally {
       dispatch({ type: "setDeleteOpen", isOpen: false });
@@ -646,6 +658,7 @@ function usePrizeResultController({
       showToast({ title: "更新完了", description: "景品を更新しました。" });
     } catch (error) {
       console.error(error);
+      await refreshAuthoritativePrizes();
       showToast({ title: "更新失敗", description: "景品の更新に失敗しました。" });
     } finally {
       dispatch({ type: "setEditOpen", isOpen: false });

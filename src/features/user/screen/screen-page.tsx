@@ -39,7 +39,6 @@ const STAMP_LIFETIME_MS = 45000;
 
 export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps) {
   const scene = useRef<HTMLDivElement>(null);
-  const render = useRef<Matter.Render | null>(null);
   const engine = useRef<Matter.Engine | null>(null);
   const runner = useRef<Matter.Runner | null>(null);
   const boundariesRef = useRef<Matter.Body[] | null>(null);
@@ -163,7 +162,6 @@ export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps)
         background: "transparent",
       },
     });
-    render.current = currentRender;
 
     const createBoundaries = (width: number, height: number) => [
       Bodies.rectangle(width / 2, height + WALL_THICKNESS / 2, width, WALL_THICKNESS, {
@@ -226,7 +224,6 @@ export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps)
       Engine.clear(currentEngine);
       currentRender.canvas.remove();
       currentRender.textures = {};
-      render.current = null;
       engine.current = null;
     };
   }, [boundaries, isReady, removalTimers, stampBodies]);

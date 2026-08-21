@@ -10,7 +10,6 @@ const files = [
   "package.json",
   "Dockerfile.cloudflare",
   ".github/workflows/ci.yml",
-  ".github/workflows/react-doctor.yml",
   "README.md",
 ];
 
@@ -86,7 +85,6 @@ for (const path of files) {
       }
       break;
     case ".github/workflows/ci.yml":
-    case ".github/workflows/react-doctor.yml":
       assertIncludes(path, text, `NODE_VERSION: "${EXPECTED_NODE}"`, "workflow Node pin");
       assertIncludes(path, text, `PNPM_VERSION: "${EXPECTED_PNPM}"`, "workflow pnpm pin");
       break;

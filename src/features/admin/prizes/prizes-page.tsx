@@ -23,6 +23,21 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
+  const refreshAuthoritativePrizes = async () => {
+    try {
+      const state = await fetchAdminState();
+      setBingoPrize(state.prizes);
+    } catch (error) {
+      console.error(error);
+      queue.add(
+        {
+          title: "再読込失敗",
+          description: "サーバー状態を確認できません。ページを再読み込みしてください。",
+        },
+        { timeout: 5000 },
+      );
+    }
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -115,6 +130,7 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
           onToggle={async (id, isWon) => {
             const result = await prizeActions.togglePrizeWon(id, isWon);
             if (!result.ok) {
+              await refreshAuthoritativePrizes();
               throw new Error(result.error);
             }
             return result.data;
@@ -122,6 +138,7 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
           onDelete={async (prize) => {
             const result = await prizeActions.deletePrize(prize.id);
             if (!result.ok) {
+              await refreshAuthoritativePrizes();
               throw new Error(result.error);
             }
           }}
@@ -135,6 +152,7 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
             }
             const result = await prizeActions.updatePrize(formData);
             if (!result.ok) {
+              await refreshAuthoritativePrizes();
               throw new Error(result.error);
             }
             return result.data;
@@ -142,6 +160,7 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
           onReorder={async (orderedIds) => {
             const result = await prizeActions.reorderPrizeGroup(orderedIds);
             if (!result.ok) {
+              await refreshAuthoritativePrizes();
               throw new Error(result.error);
             }
             return result.data;

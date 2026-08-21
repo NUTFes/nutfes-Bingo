@@ -109,12 +109,16 @@ jobs:
         continue-on-error: true
         env:
           DURATION_SECONDS: ${{ inputs.duration_seconds || '300' }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.release_sha }}
           SHARD: ${{ matrix.shard }}
         run: |
           node scripts/cloudflare-load-test.mjs \
             --run \
             --allow-remote \
             --base-url "$STAGING_URL" \
+            --environment staging \
+            --source-release-sha "$RELEASE_SHA" \
+            --scenario distributed-broadcast-shard \
             --state-ws 250 \
             --batch-size 50 \
             --duration "$DURATION_SECONDS" \
@@ -164,6 +168,7 @@ jobs:
         run: |
           node scripts/merge-cloudflare-load-results.mjs \
             --input-dir .cloudflare/load-shards \
+            --release-sha "${{ needs.prepare.outputs.release_sha }}" \
             --output .cloudflare/staging-load-distributed.json \
             --expected-shards 4 \
             --expected-sockets 1000 \

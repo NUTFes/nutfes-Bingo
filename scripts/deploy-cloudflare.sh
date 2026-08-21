@@ -294,6 +294,7 @@ if [ "$target" = "staging" ]; then
     --var "ACCESS_AUD:$ACCESS_AUD" \
     --var "ADMIN_EMAILS:$ADMIN_EMAILS" \
     --var "SCREEN_ACCESS_AUD:$SCREEN_ACCESS_AUD" \
+    --var "RELEASE_SHA:$release_sha" \
     --var "SCREEN_EMAILS:$SCREEN_EMAILS" \
     --var "MEDIA_ORIGIN:$MEDIA_ORIGIN" \
     --var "LOCAL_ADMIN_BYPASS:false" \
@@ -310,6 +311,7 @@ else
     --var "ACCESS_AUD:$ACCESS_AUD" \
     --var "ADMIN_EMAILS:$ADMIN_EMAILS" \
     --var "SCREEN_ACCESS_AUD:$SCREEN_ACCESS_AUD" \
+    --var "RELEASE_SHA:$release_sha" \
     --var "SCREEN_EMAILS:$SCREEN_EMAILS" \
     --var "MEDIA_ORIGIN:$MEDIA_ORIGIN" \
     --var "LOCAL_ADMIN_BYPASS:false" \

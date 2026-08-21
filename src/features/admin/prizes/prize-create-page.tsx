@@ -111,11 +111,34 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
       const result = await prizeActions.createPrize(formData);
       if (!result.ok) {
         console.error(result.error);
-        showToast({ title: "登録失敗", description: "景品の登録に失敗しました。" });
+        try {
+          const state = await fetchAdminState();
+          setBingoPrize(state.prizes);
+          const matchingPrize = state.prizes.find(
+            (prize) => prize.name_jp === prizeNameJp && prize.name_en === (prizeNameEn || null),
+          );
+          showToast(
+            matchingPrize
+              ? {
+                  title: "登録済み",
+                  description: "サーバー上の景品一覧へ反映しました。",
+                }
+              : {
+                  title: "登録失敗",
+                  description: "サーバーの最新景品一覧を表示しています。",
+                },
+          );
+        } catch (refreshError) {
+          console.error(refreshError);
+          showToast({
+            title: "登録結果を確認できません",
+            description: "ページを再読み込みして景品一覧を確認してください。",
+          });
+        }
         return;
       }
       const prize = result.data;
-      setBingoPrize((prev) => [...prev, prize]);
+      setBingoPrize((prev) => [...prev.filter((item) => item.id !== prize.id), prize]);
       setFormState({
         prizeNameJp: "",
         prizeNameEn: "",

@@ -1,7 +1,5 @@
-const SCREEN_SOCKET_MAX_AGE_MS = 30 * 60 * 1_000;
-
 type SocketAttachment = {
-  connected_at?: unknown;
+  expires_at?: unknown;
 };
 
 export async function scheduleScreenSocketExpiration(
@@ -50,10 +48,14 @@ function findNextExpiration(sockets: WebSocket[]): number | null {
 function readExpiration(socket: WebSocket): number | null {
   try {
     const attachment = socket.deserializeAttachment() as SocketAttachment | null;
-    if (attachment === null || typeof attachment.connected_at !== "string") return null;
-    const connectedAt = Date.parse(attachment.connected_at);
-    if (!Number.isFinite(connectedAt)) return null;
-    return connectedAt + SCREEN_SOCKET_MAX_AGE_MS;
+    if (
+      attachment === null ||
+      typeof attachment.expires_at !== "number" ||
+      !Number.isFinite(attachment.expires_at)
+    ) {
+      return null;
+    }
+    return attachment.expires_at;
   } catch {
     return null;
   }

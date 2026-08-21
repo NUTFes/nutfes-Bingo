@@ -19,16 +19,16 @@ OpenNextは使用しません。静的画面と専用Workerを分離し、Worker
 
 ## Cloudflare環境境界
 
-| 環境       | Cloudflare account                                     | Application / Prize images                      |
-| ---------- | ------------------------------------------------------ | ----------------------------------------------- |
-| production | 団体account（owner/recovery: `nutfes.info@gmail.com`） | 未構築。review済み座標を設定してから公開        |
-| staging    | 現在の個人test account                                 | `staging-bingo` / `staging-media` custom domain |
+| 環境       | Cloudflare account                                     | Application / Prize images                                                            |
+| ---------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| production | 団体account（owner/recovery: `nutfes.info@gmail.com`） | `https://bingo.nutfes.net` / `https://bingo-media.nutfes.net`                         |
+| staging    | 個人test account                                       | `https://staging-bingo.tkymhrt.dpdns.org` / `https://staging-media.tkymhrt.dpdns.org` |
 
-既存の個人account上の`bingo.tkymhrt.dpdns.org`は本番昇格先ではありません。
-`cloudflare.project.env`のproduction座標は意図的に空であり、団体account ID、Access、Turnstile、
-custom domainを設定するまでproduction操作はfail closedです。両環境とも`workers.dev`、preview URL、
-R2の`r2.dev`は無効にし、管理者と会場operatorはnamed human identityだけをAccess policyとWorker
-allowlistへ登録します。
+`cloudflare.project.env`が、両環境のreview済みaccount ID、Worker名、Access team/AUD、
+site/media URL、Turnstile sitekeyの正本です。production account、R2 bucket、Worker deployment、
+公開座標は作成済みです。production URLは運用データ投入とrelease gate完了前の準備状態であり、
+一般公開済みとはみなしません。両環境とも`workers.dev`、preview URL、R2の`r2.dev`を無効にし、
+管理者と会場operatorはnamed human identityだけをAccess policyとWorker allowlistへ登録します。
 
 ## 開発環境
 
@@ -71,18 +71,10 @@ mise run cloudflare:check:staging
 
 ## Cloudflare resource初期化
 
-stagingは現在の個人test accountに固定されています。
-
-```bash
-mise run cloudflare:whoami:staging
-mise run cloudflare:bootstrap:staging
-```
-
-productionは`nutfes.info@gmail.com`をowner/recoveryとする団体Cloudflare accountへ新設します。
-共有owner loginで日常運用せず、招待された個人accountのnamed operatorだけがdeployします。
-account member招待、production account IDの固定、resource構築、当日管理者登録の正本は
-[本番運用runbookの「団体production accountの初回構築」](docs/cloudflare-operations.md#団体production-accountの初回構築)
-です。
+production/stagingの通常resourceは作成済みです。通常のreleaseや復旧でbootstrapを実行しません。
+R2 bucketが存在しないことを`r2 bucket list`で確認した初回構築・再構築時だけ、
+[本番運用runbookの「resourceが存在しない場合の初回構築」](docs/cloudflare-operations.md#resourceが存在しない場合の初回構築)
+に従って環境別bootstrapを使います。
 
 credentialとsecretはGitへ保存しません。account ID、Access AUD/team domain、custom domain、
 Turnstile sitekeyは公開設定として`cloudflare.project.env`へ固定します。

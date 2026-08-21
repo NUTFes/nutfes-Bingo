@@ -1,56 +1,21 @@
-const STAMP_NAMES = [
-  "angry",
-  "cracker",
-  "crap",
-  "good",
-  "heart",
-  "peace",
-  "sad",
-  "skull",
-  "smile",
-  "surprise",
-] as const;
+import {
+  STAMP_NAMES,
+  type AppStateRow,
+  type NumberRow,
+  type PrizeRow,
+  type ReachLogRow,
+  type StampName,
+} from "../shared/bingo-transport";
 
-export type StampName = (typeof STAMP_NAMES)[number];
+export type {
+  AppStateRow,
+  NumberRow,
+  PrizeRow,
+  ReachLogRow,
+  StampName,
+} from "../shared/bingo-transport";
 
-export type NumberRow = {
-  id: number;
-  number: number;
-  created_at: string;
-  updated_at: string;
-};
-
-export type StoredPrizeRow = {
-  id: number;
-  name_jp: string;
-  name_en: string | null;
-  image_path: string | null;
-  is_won: boolean;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-};
-
-export type PrizeRow = StoredPrizeRow & {
-  image_url: string | null;
-};
-
-export type AppStateRow = {
-  id: number;
-  survey_url: string;
-  is_survey_active: boolean;
-  reach_count: number;
-  updated_at: string;
-};
-
-export type ReachLogRow = {
-  id: number;
-  delta: number;
-  reach_num: number;
-  source: string;
-  created_at: string;
-};
-
+export type StoredPrizeRow = Omit<PrizeRow, "image_url">;
 export type ReachSubmissionRow = {
   client_hash: string;
   created_at: string;
@@ -70,17 +35,6 @@ export type StampTriggerRow = {
   name: StampName;
   created_at: string;
 };
-
-export type UnifiedGameState = {
-  generation: string;
-  revision: number;
-  numbers: NumberRow[];
-  prizes: PrizeRow[];
-  appState: AppStateRow;
-  latestReachLog: ReachLogRow | null;
-  serverTime: string;
-};
-
 export type GameSnapshot = {
   schema_version: 1;
   source_generation: string;
@@ -114,10 +68,7 @@ export type SnapshotIntegrityCounts = {
 export type SnapshotIntegrity = {
   generation: string;
   revision: number;
-  input_checksum_sha256: string;
-  verified_checksum_sha256: string;
-  input_snapshot_checksum_sha256: string;
-  readback_snapshot_checksum_sha256: string;
+  checksum_sha256: string;
   matches: boolean;
   counts: SnapshotIntegrityCounts;
   coverage: {

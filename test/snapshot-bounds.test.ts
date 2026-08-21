@@ -11,6 +11,7 @@ import {
   parseSnapshot,
   SNAPSHOT_FORMAT,
 } from "../worker/domain";
+import { buildSnapshotKey, parseSnapshotKey } from "../worker/snapshots";
 
 const TIMESTAMP = "2026-07-13T00:00:00.123456+00:00";
 
@@ -80,5 +81,39 @@ describe("logical snapshot bounds", () => {
     });
 
     expect(new TextEncoder().encode(envelope).byteLength).toBeLessThanOrEqual(MAX_SNAPSHOT_BYTES);
+  });
+});
+
+describe("snapshot key contract", () => {
+  it("canonicalizes valid ISO timestamps before building a restorable key", () => {
+    const key = buildSnapshotKey(
+      {
+        source_generation: "release..2026",
+        created_at: TIMESTAMP,
+        revision: 42,
+      },
+      "a".repeat(64),
+    );
+
+    expect(key).toBe("snapshots/release..2026/2026-07-13T00-00-00-123Z-r42-aaaaaaaaaaaa.json");
+    expect(parseSnapshotKey(key)).toEqual({
+      generation: "release..2026",
+      createdAt: "2026-07-13T00:00:00.123Z",
+      revision: 42,
+      checksumPrefix: "aaaaaaaaaaaa",
+    });
+  });
+
+  it("rejects malformed, non-canonical, and oversized keys", () => {
+    expect(
+      parseSnapshotKey("snapshots/import/2026-07-13T00-00-00-123456+00-00-r1-abcdef123456.json"),
+    ).toBeNull();
+    expect(
+      parseSnapshotKey("snapshots/import/extra/2026-07-13T00-00-00-123Z-r1-abcdef123456.json"),
+    ).toBeNull();
+    expect(
+      parseSnapshotKey("snapshots/import/2026-99-13T00-00-00-123Z-r1-abcdef123456.json"),
+    ).toBeNull();
+    expect(parseSnapshotKey(`snapshots/${"g".repeat(500)}.json`)).toBeNull();
   });
 });

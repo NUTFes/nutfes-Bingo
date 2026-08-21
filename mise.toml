@@ -101,6 +101,36 @@ run = "./scripts/deploy-cloudflare.sh --env production"
 description = "Build and deploy the staging Worker (requires explicit staging settings)"
 run = "./scripts/deploy-cloudflare.sh --env staging"
 
+[tasks."cloudflare:restore"]
+description = "Restore a snapshot into a verified inactive generation"
+usage = """
+arg "<environment>" help="production or staging"
+arg "<key>" help="Canonical snapshots/... R2 key"
+arg "<generation>" help="New inactive generation name"
+arg "<access-jwt-file>" help="Mode-600 file containing an Admin Access JWT"
+"""
+run = '''
+node scripts/cloudflare-generation.mjs restore \
+  --env "${usage_environment?}" \
+  --key "${usage_key?}" \
+  --generation "${usage_generation?}" \
+  --access-jwt-file "${usage_access_jwt_file?}"
+'''
+
+[tasks."cloudflare:activate"]
+description = "Guardedly activate a verified restore receipt"
+usage = """
+arg "<environment>" help="production or staging"
+arg "<restore-record>" help="Receipt written by cloudflare:restore"
+arg "<access-jwt-file>" help="Mode-600 file containing an Admin Access JWT"
+"""
+run = '''
+node scripts/cloudflare-generation.mjs activate \
+  --env "${usage_environment?}" \
+  --restore-record "${usage_restore_record?}" \
+  --access-jwt-file "${usage_access_jwt_file?}"
+'''
+
 [tasks."cloudflare:bootstrap"]
 description = "Create the production R2 buckets when absent"
 run = "./scripts/bootstrap-cloudflare.sh"

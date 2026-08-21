@@ -8,7 +8,7 @@ image=nutfes-bingo-cloudflare-dev
 site_url=${NEXT_PUBLIC_SITE_URL:-http://localhost:8787}
 media_origin=${NEXT_PUBLIC_MEDIA_ORIGIN:-}
 turnstile_site_key=${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
-set -- pnpm exec wrangler dev --ip 0.0.0.0 --port 8787 \
+set -- node node_modules/wrangler/bin/wrangler.js dev --ip 0.0.0.0 --port 8787 \
   --var LOCAL_ADMIN_BYPASS:true \
   --var LOCAL_SCREEN_BYPASS:true \
   --var LOCAL_TURNSTILE_TEST_MODE:true \

@@ -16,6 +16,7 @@ export default defineConfig({
           LOCAL_ADMIN_BYPASS: "true",
           LOCAL_SCREEN_BYPASS: "true",
           LOCAL_TURNSTILE_TEST_MODE: "false",
+          RELEASE_SHA: "test-release-sha",
           TURNSTILE_HOSTNAME: "example.com",
           TURNSTILE_SECRET_KEY: "test-turnstile-secret",
         },
@@ -24,7 +25,7 @@ export default defineConfig({
     }),
   ],
   test: {
-    include: ["worker/**/*.test.ts", "test/**/*.test.ts"],
+    include: ["worker/**/*.test.ts", "test/**/*.test.ts", "test/**/*.test.mjs"],
     testTimeout: 10_000,
   },
 });

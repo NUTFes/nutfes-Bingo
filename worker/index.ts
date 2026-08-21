@@ -1,4 +1,5 @@
 import { requireAdmin, requireScreen, type AdminIdentity } from "./access";
+import type { AdminCommand, BingoUnifiedState } from "../shared/bingo-transport";
 import {
   assertPrizeImagePath,
   isClientId,
@@ -7,7 +8,6 @@ import {
   parseOptionalText,
   parsePositiveInteger,
   parseRequiredText,
-  type UnifiedGameState,
   validationProblem,
 } from "./domain";
 import { GameDirectory } from "./game-directory";
@@ -139,6 +139,7 @@ async function handleHealth(request: Request, env: Env): Promise<Response> {
   return jsonResponse(
     {
       status: "ok",
+      releaseSha: env.RELEASE_SHA,
       generation: gameState.generation,
       revision: gameState.revision,
       directoryVersion: directoryStatus.version,
@@ -189,7 +190,7 @@ async function handlePublicState(
   );
 }
 
-function selectPublicView(state: UnifiedGameState, view: "state" | "prizes" | "screen"): unknown {
+function selectPublicView(state: BingoUnifiedState, view: "state" | "prizes" | "screen"): unknown {
   switch (view) {
     case "state":
       return state;
@@ -370,8 +371,10 @@ async function handleAdminCommand(
   const origin = assertSameOriginMutation(request);
   const body = await readJsonBody(request);
   if (!isRecord(body)) throw new ApiError(400, "command body が不正です。");
-  const discriminator = typeof body.type === "string" ? body.type : body.command;
-  if (typeof discriminator !== "string") throw new ApiError(400, "command type が不正です。");
+  const discriminator: AdminCommand["type"] =
+    typeof body.type === "string"
+      ? assertAdminCommandType(body.type)
+      : assertAdminCommandType(body.command);
 
   const active = await getActiveGame(env);
   let data: unknown;
@@ -461,7 +464,7 @@ async function handleAdminCommand(
       );
       break;
     default:
-      throw new ApiError(400, "未対応のcommandです。");
+      return assertNever(discriminator);
   }
   return jsonResponse({ data }, { status: 200 }, { requestOrigin: origin });
 }
@@ -581,4 +584,29 @@ function readBoolean(value: unknown, label: string): boolean {
 function readGeneration(value: unknown, label: string): string {
   if (!isGeneration(value)) throw new ApiError(400, `${label} が不正です。`);
   return value;
+}
+
+const ADMIN_COMMAND_TYPES = new Set<AdminCommand["type"]>([
+  "createNumber",
+  "deleteNumber",
+  "updateNumber",
+  "incrementReach",
+  "decrementReach",
+  "saveSurveyState",
+  "createPrize",
+  "updatePrize",
+  "togglePrizeWon",
+  "reorderPrizeGroup",
+  "deletePrize",
+]);
+
+function assertAdminCommandType(value: unknown): AdminCommand["type"] {
+  if (typeof value !== "string" || !ADMIN_COMMAND_TYPES.has(value as AdminCommand["type"])) {
+    throw new ApiError(400, "command type が不正です。");
+  }
+  return value as AdminCommand["type"];
+}
+
+function assertNever(value: never): never {
+  throw new ApiError(400, `未対応のcommandです: ${String(value)}`);
 }

@@ -1,4 +1,5 @@
 import {
+  isGeneration,
   MAX_SNAPSHOT_BYTES,
   parseSnapshotEnvelope,
   SNAPSHOT_FORMAT,
@@ -14,6 +15,13 @@ export type StoredSnapshot = {
   checksum_sha256: string;
   size: number;
   uploaded_at: string;
+};
+
+export type ParsedSnapshotKey = {
+  generation: string;
+  createdAt: string;
+  revision: number;
+  checksumPrefix: string;
 };
 
 export async function createActiveSnapshot(env: Env): Promise<StoredSnapshot> {
@@ -51,10 +59,7 @@ export async function storeSnapshot(env: Env, snapshot: GameSnapshot): Promise<S
     throw new ApiError(413, "snapshot が大きすぎます。");
   }
 
-  const timestamp = snapshot.created_at.replace(/[:.]/g, "-");
-  const key =
-    `snapshots/${snapshot.source_generation}/${timestamp}-r${snapshot.revision}-` +
-    `${checksum.slice(0, 12)}.json`;
+  const key = buildSnapshotKey(snapshot, checksum);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   const object = await env.GAME_BACKUPS.put(key, bytes, {
     httpMetadata: {
@@ -112,7 +117,7 @@ export async function listSnapshots(
 }
 
 export async function loadSnapshot(env: Env, key: string): Promise<GameSnapshot> {
-  if (!isSnapshotKey(key)) throw new ApiError(400, "snapshot key が不正です。");
+  if (parseSnapshotKey(key) === null) throw new ApiError(400, "snapshot key が不正です。");
   const head = await env.GAME_BACKUPS.head(key);
   if (head === null) throw new ApiError(404, "snapshot が見つかりません。");
   if (head.size > MAX_SNAPSHOT_BYTES) throw new ApiError(413, "snapshot が大きすぎます。");
@@ -134,12 +139,61 @@ export async function loadSnapshot(env: Env, key: string): Promise<GameSnapshot>
   return envelope.snapshot;
 }
 
-function isSnapshotKey(value: string): boolean {
-  return (
-    value.length <= 512 &&
-    !value.includes("..") &&
-    /^snapshots\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}\/[A-Za-z0-9._-]+\.json$/.test(value)
-  );
+export function buildSnapshotKey(
+  snapshot: Pick<GameSnapshot, "source_generation" | "created_at" | "revision">,
+  checksumSha256: string,
+): string {
+  if (!isGeneration(snapshot.source_generation)) {
+    throw new ApiError(422, "snapshot generation が不正です。");
+  }
+  if (!Number.isSafeInteger(snapshot.revision) || snapshot.revision < 0) {
+    throw new ApiError(422, "snapshot revision が不正です。");
+  }
+  if (!/^[a-f0-9]{64}$/.test(checksumSha256)) {
+    throw new ApiError(422, "snapshot checksum が不正です。");
+  }
+  const createdAtMs = Date.parse(snapshot.created_at);
+  if (!Number.isFinite(createdAtMs)) {
+    throw new ApiError(422, "snapshot created_at が不正です。");
+  }
+  const encodedCreatedAt = new Date(createdAtMs).toISOString().replace(/[:.]/g, "-");
+  const key =
+    `snapshots/${snapshot.source_generation}/${encodedCreatedAt}-r${snapshot.revision}-` +
+    `${checksumSha256.slice(0, 12)}.json`;
+  if (parseSnapshotKey(key) === null) {
+    throw new Error("generated snapshot key does not satisfy the read contract");
+  }
+  return key;
+}
+
+export function parseSnapshotKey(value: string): ParsedSnapshotKey | null {
+  if (value.length > 512) return null;
+  const match =
+    /^snapshots\/([A-Za-z0-9][A-Za-z0-9._-]{0,63})\/(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z)-r(0|[1-9]\d*)-([a-f0-9]{12})\.json$/.exec(
+      value,
+    );
+  if (match === null) return null;
+  const [, generation, encodedCreatedAt, revisionText, checksumPrefix] = match;
+  if (
+    generation === undefined ||
+    encodedCreatedAt === undefined ||
+    revisionText === undefined ||
+    checksumPrefix === undefined ||
+    !isGeneration(generation)
+  ) {
+    return null;
+  }
+  const createdAt =
+    `${encodedCreatedAt.slice(0, 13)}:${encodedCreatedAt.slice(14, 16)}:` +
+    `${encodedCreatedAt.slice(17, 19)}.${encodedCreatedAt.slice(20, 23)}Z`;
+  try {
+    if (new Date(createdAt).toISOString() !== createdAt) return null;
+  } catch {
+    return null;
+  }
+  const revision = Number(revisionText);
+  if (!Number.isSafeInteger(revision) || revision < 0) return null;
+  return { generation, createdAt, revision, checksumPrefix };
 }
 
 function parseMetadataInteger(value: string | undefined): number {

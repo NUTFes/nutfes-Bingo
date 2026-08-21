@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import type { StampSocketMessage } from "../shared/bingo-transport";
 
 import {
   isStampName,
@@ -17,7 +18,7 @@ type ReactionStateSqlRow = {
 
 type StampSocketAttachment = {
   kind: "stamps";
-  connected_at: string;
+  expires_at: number;
 };
 
 const CLIENT_INTERVAL_MS = 2_000;
@@ -94,7 +95,8 @@ export class ReactionHub extends DurableObject<Env> {
       name: stampName,
       created_at: new Date(nowMs).toISOString(),
     };
-    const message = JSON.stringify({ type: "stamp", stamp });
+    const socketMessage: StampSocketMessage = { type: "stamp", stamp };
+    const message = JSON.stringify(socketMessage);
     for (const socket of this.ctx.getWebSockets("stamps")) safeSend(socket, message);
     return { accepted: true, stamp, dailyCount: persisted.daily_count };
   }
@@ -128,11 +130,12 @@ export class ReactionHub extends DurableObject<Env> {
     this.ctx.acceptWebSocket(server, ["stamps"]);
     const attachment: StampSocketAttachment = {
       kind: "stamps",
-      connected_at: new Date().toISOString(),
+      expires_at: Date.now() + 30 * 60 * 1_000,
     };
     server.serializeAttachment(attachment);
     await scheduleScreenSocketExpiration(this.ctx, "stamps");
-    safeSend(server, JSON.stringify({ type: "ready" }));
+    const readyMessage: StampSocketMessage = { type: "ready" };
+    safeSend(server, JSON.stringify(readyMessage));
     return new Response(null, { status: 101, webSocket: client });
   }
 

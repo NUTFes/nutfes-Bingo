@@ -1,46 +1,47 @@
 # Cloudflare本番運用
 
-更新日: 2026-07-17
+更新日: 2026-08-13
 
 ## Cloudflare account境界
 
 | 環境       | Cloudflare account                                     | Application / Prize images                                                            |
 | ---------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| production | 団体account（owner/recovery: `nutfes.info@gmail.com`） | 未構築                                                                                |
-| staging    | 現在の個人test account                                 | `https://staging-bingo.tkymhrt.dpdns.org` / `https://staging-media.tkymhrt.dpdns.org` |
+| production | 団体account（owner/recovery: `nutfes.info@gmail.com`） | `https://bingo.nutfes.net` / `https://bingo-media.nutfes.net`                         |
+| staging    | 個人test account                                       | `https://staging-bingo.tkymhrt.dpdns.org` / `https://staging-media.tkymhrt.dpdns.org` |
 
 - production Worker名は`nutfes-bingo`、staging Worker名は`nutfes-bingo-staging`
-- stagingの公開APIは`/api/*`、管理APIは`/admin/api/*`、会場APIは`/screen/api/*`
-- staging R2は景品画像bucketと非公開snapshot bucketを分離
+- 両環境の公開APIは`/api/*`、管理APIは`/admin/api/*`、会場APIは`/screen/api/*`
+- 両環境とも景品画像bucketと非公開snapshot bucketを分離
 - production/stagingとも`workers.dev`、preview URL、R2 `r2.dev`を無効にする
 - Accessは環境ごとに`/admin*`と`/screen*`を別application/AUDで保護する
 
-既存の個人account上の`bingo.tkymhrt.dpdns.org`、`media.tkymhrt.dpdns.org`、Worker
-`nutfes-bingo`は検証用の旧resourceであり、本番昇格先ではありません。団体accountでproduction
-smokeとDNS cutoverを完了するまで旧resourceを削除せず、完了後にchange record付きで廃止します。
+`cloudflare.project.env`がreview済み公開座標の正本です。production account、R2 bucket、
+Worker deployment、Access/Turnstile/custom-domain座標は作成済みです。production URLは
+運用データ投入と後述のrelease gate完了前の準備状態であり、一般公開済みとはみなしません。
+既存resourceは通常releaseで再bootstrapせず、各commandのaccount pinningとnamed operator検査を通します。
 
 Static Assetsに一致する公開ページと`/_next/static/*`はWorkerを起動しません。`/api/*`、
 `/admin*`、`/screen`、`/screen/*`は`run_worker_first`に一致します。会場HTMLはStatic
 Assetですが、配信前にWorkerでもScreen Access JWTを検証します。
 
-## 団体production accountの初回構築
+## Resourceが存在しない場合の初回構築
 
-productionは`nutfes.info@gmail.com`をowner/recoveryとする団体Cloudflare accountへ新設します。
-この共有addressはaccount所有権の復旧専用です。日常のdashboard操作、Wrangler login、Accessの
-app管理者には使用しません。
+この章は、新規環境または削除済みresourceを再構築するときだけ使います。既存production/stagingの
+通常release、data restore、Worker rollbackでは実行しません。production owner/recoveryは
+`nutfes.info@gmail.com`です。この共有addressはaccount所有権の復旧専用で、日常のdashboard操作、
+Wrangler login、Accessのapp管理者には使用しません。
 
 ### 1. account所有権とnamed memberを準備する
 
-1. 団体のpassword managerへowner passwordとrecovery codeを保管し、owner loginへMFAを設定する。
+1. 新規accountでは、団体のpassword managerへowner passwordとrecovery codeを保管し、owner loginへMFAを設定する。
    repository、shell history、個人のpassword managerへcredentialやAPI tokenを残さない。
-2. owner loginでCloudflare dashboardのaccount selectorを開き、団体accountのaccount IDを記録する。
+2. owner loginでCloudflare dashboardのaccount selectorを開き、団体accountのaccount IDを確認する。
 3. `Manage Account > Members`からdeploy担当者と復旧担当者を各自の個人emailで招待する。共有loginを
-   配らない。通常deploy担当者にはWorkers Scripts writeとR2 listに必要な最小権限を与える。初回構築
-   担当者だけにR2 write、Access、Turnstile、DNS/WAF変更権限を追加する。
+   配らない。通常deploy担当者にはWorkers Scripts writeとR2 listに必要な最小権限を与える。resource
+   構築担当者だけにR2 write、Access、Turnstile、DNS/WAF変更権限を追加する。
 4. 少なくとも2名のnamed memberがMFAでloginでき、1名を削除しても復旧できることをowner以外の端末で
    確認する。実施者と権限をchange recordへ記録する。
-5. named memberとしてWranglerへloginし、`cloudflare.project.env`の
-   `CLOUDFLARE_PRODUCTION_ACCOUNT_ID`へaccount IDを設定してreviewする。
+5. named memberとしてWranglerへloginし、`cloudflare.project.env`のaccount IDと実accountが一致することを確認する。
 
 ```bash
 pnpm exec wrangler login
@@ -54,30 +55,31 @@ mise run cloudflare:whoami
 mise run cloudflare:whoami:staging
 ```
 
-### 2. production resourceを団体accountに作る
+### 2. 欠損resourceだけを作る
 
-production hostnameに使うzoneが個人accountにある場合は、先に団体accountへzoneを移管または追加し、
-DNS ownershipとcertificate発行経路を確認します。個人accountのzoneへproduction custom domainを
-残しません。
+production hostnameに使うzoneが別accountにある場合は、先に団体accountへzoneを移管または追加し、
+DNS ownershipとcertificate発行経路を確認します。別accountのzoneへproduction custom domainを残しません。
+まず対象accountのR2 bucket list、Worker deployment、Access application、Turnstile、custom domainを
+inventoryし、欠損しているresourceをchange recordへ列挙します。R2 bucketが不足する場合だけ実行します。
 
 ```bash
 mise run cloudflare:bootstrap
+# stagingのbucketが不足する場合だけ:
+mise run cloudflare:bootstrap:staging
 ```
 
-bootstrapはproduction accountだけにR2 bucketを作成し、既存bucketを再作成しません。
-`wrangler.jsonc`をbindingの正本とし、Wranglerへbinding追加を委ねません。続けてdashboardで次を
-この順に設定します。
+bootstrapは環境別accountだけに不足R2 bucketを作成し、既存bucketを再作成しません。
+`wrangler.jsonc`をbindingの正本とし、Wranglerへbinding追加を委ねません。欠損している場合だけ
+dashboardで次を設定します。
 
-1. 団体accountのZero Trust organizationを作成し、production Access team domainを確定する。
-2. production application hostnameとmedia hostnameを決め、景品R2 bucketへmedia custom domainを
-   接続する。`Active`後に実objectのGETが`200 image/*`になることを確認する。
-3. `/admin*`と`/screen*`へ別々のAccess self-hosted applicationを作り、Cookie Pathを有効にする。
-   AUDは相互に異なる値を使う。
-4. production Managed Turnstile widgetを作り、production application hostnameだけを許可する。
-5. backup bucketを非公開のままにし、`snapshots/`へ400日lifecycleを設定する。
-6. application custom domain、WAF rate limit、stamp/reach緊急block ruleを設定する。
-7. `cloudflare.project.env`のproduction用空欄へaccount ID、Access team domain、site/media URL、
-   Admin/Screen AUD、Turnstile sitekeyを記入し、通常のcode reviewを通す。
+1. Zero Trust organizationと環境別Access team domain。
+2. application/media hostnameと、景品R2 bucketのmedia custom domain。
+3. `/admin*`と`/screen*`の別Access self-hosted application、Cookie Path、相互に異なるAUD。
+4. application hostnameだけを許可するManaged Turnstile widget。
+5. private backup bucketの`snapshots/` 400日lifecycle。
+6. application custom domain、WAF rate limit、stamp/reach緊急block rule。
+7. 変更したaccount ID、Access team domain、site/media URL、AUD、Turnstile sitekeyを
+   `cloudflare.project.env`へ反映し、通常のcode reviewを通す。
 
 Turnstile secretは環境ファイルへ保存せず、production accountを明示して対話的に登録します。
 
@@ -87,7 +89,7 @@ Turnstile secretは環境ファイルへ保存せず、production accountを明�
 ```
 
 初回deploy環境はmode `600`で作り、公開設定と会場operatorの小文字email JSON配列を設定します。
-`ADMIN_EMAILS`は次章の名簿taskだけで設定します。
+`ADMIN_EMAILS`は次章の名簿taskだけで設定します。既存fileがある場合は上書きしません。
 
 ```bash
 install -m 600 cloudflare.deploy.production.env.example .cloudflare.deploy.production.env
@@ -106,7 +108,7 @@ mise run cloudflare:whoami:staging
 ./scripts/cloudflare-wrangler.sh --target staging r2 bucket list
 ```
 
-`cloudflare.project.env`のproduction空欄、account不一致、共有owner loginのいずれかがあれば
+`cloudflare.project.env`の必須座標欠損、account不一致、共有owner loginのいずれかがあれば
 production操作はfail closedです。初回production deployも後述の通常手順を省略せず、同一Git SHAの
 staging証跡から昇格します。
 

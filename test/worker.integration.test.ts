@@ -94,6 +94,7 @@ describe("public Worker routes", () => {
     expect(health.status).toBe(200);
     await expect(health.json()).resolves.toMatchObject({
       status: "ok",
+      releaseSha: "test-release-sha",
       generation: "initial",
       revision: 0,
     });
@@ -221,6 +222,143 @@ describe("Durable Object state", () => {
     expect((await directory.getStatus()).generation).toBe("initial");
   });
 
+  it("keeps a same-generation activation as a no-op", async () => {
+    const generation = "same-generation";
+    const directory = env.GAME_DIRECTORY.getByName("same-generation-directory");
+    const state = env.GAME_STATE.getByName(`game:${generation}`);
+    await state.getState(generation);
+    await state.prepareActivation(generation, "same-generation-token");
+    await runInDurableObject(directory, async (_instance, ctx) => {
+      ctx.storage.sql.exec(
+        "UPDATE directory_metadata SET value = ? WHERE key = 'active_generation'",
+        generation,
+      );
+      ctx.storage.sql.exec(
+        "UPDATE directory_metadata SET value = ? WHERE key = 'active_token'",
+        "same-generation-token",
+      );
+    });
+
+    const beforeToken = await runInDurableObject(
+      state,
+      async (_instance, ctx) =>
+        ctx.storage.sql
+          .exec<{ value: string }>(
+            "SELECT value FROM game_metadata WHERE key = 'activation_token' LIMIT 1",
+          )
+          .one().value,
+    );
+    const activation = await directory.activateGeneration(generation, "admin@example.com");
+    const afterToken = await runInDurableObject(
+      state,
+      async (_instance, ctx) =>
+        ctx.storage.sql
+          .exec<{ value: string }>(
+            "SELECT value FROM game_metadata WHERE key = 'activation_token' LIMIT 1",
+          )
+          .one().value,
+    );
+
+    expect(activation).toMatchObject({
+      generation,
+      previousGeneration: generation,
+      version: 1,
+      redirectQueued: false,
+    });
+    expect(afterToken).toBe(beforeToken);
+  });
+
+  it("recovers an interrupted activation before serving the source generation", async () => {
+    const sourceGeneration = "activation-recovery-source";
+    const targetGeneration = "activation-recovery-target";
+    const sourceToken = "activation-recovery-source-token";
+    const targetToken = "activation-recovery-target-token";
+    const directory = env.GAME_DIRECTORY.getByName("activation-recovery-directory");
+    const source = env.GAME_STATE.getByName(`game:${sourceGeneration}`);
+    const target = env.GAME_STATE.getByName(`game:${targetGeneration}`);
+    await source.getState(sourceGeneration);
+    await source.prepareActivation(sourceGeneration, sourceToken);
+    await target.getState(targetGeneration);
+    await target.prepareActivation(targetGeneration, targetToken);
+    await source.freezeWrites(sourceGeneration, targetGeneration, sourceToken);
+
+    await runInDurableObject(directory, async (_instance, ctx) => {
+      ctx.storage.sql.exec(
+        "UPDATE directory_metadata SET value = ? WHERE key = 'active_generation'",
+        sourceGeneration,
+      );
+      ctx.storage.sql.exec(
+        "UPDATE directory_metadata SET value = ? WHERE key = 'active_token'",
+        sourceToken,
+      );
+      ctx.storage.sql.exec(
+        "INSERT INTO directory_metadata (key, value) VALUES " +
+          "('activation_transition_source_generation', ?), " +
+          "('activation_transition_source_token', ?), " +
+          "('activation_transition_target_generation', ?), " +
+          "('activation_transition_target_token', ?), " +
+          "('activation_transition_actor', ?), " +
+          "('activation_transition_phase', 'freezing_source')",
+        sourceGeneration,
+        sourceToken,
+        targetGeneration,
+        targetToken,
+        "admin@example.com",
+      );
+    });
+
+    await expect(directory.getActiveGeneration()).resolves.toBe(sourceGeneration);
+    await expect(
+      source.createNumber(sourceGeneration, "admin@example.com", 41),
+    ).resolves.toMatchObject({ number: 41 });
+    const targetError = await runInDurableObject(target, async (instance) => {
+      try {
+        await instance.getState(targetGeneration);
+        return null;
+      } catch (error) {
+        return error instanceof Error ? error.message : String(error);
+      }
+    });
+    expect(targetError).toMatch(/切り替え済み/);
+    const transitionRows = await runInDurableObject(directory, async (_instance, ctx) =>
+      ctx.storage.sql
+        .exec<{ key: string }>(
+          "SELECT key FROM directory_metadata WHERE key LIKE 'activation_transition_%'",
+        )
+        .toArray(),
+    );
+    expect(transitionRows).toEqual([]);
+  });
+
+  it("re-arms a durable redirect row when status recovery finds no alarm", async () => {
+    const directory = env.GAME_DIRECTORY.getByName("redirect-alarm-recovery-directory");
+    const nextAt = Date.now() + 60_000;
+    await runInDurableObject(directory, async (_instance, ctx) => {
+      await ctx.storage.deleteAlarm();
+      const now = new Date().toISOString();
+      ctx.storage.sql.exec(
+        "INSERT INTO pending_redirects " +
+          "(previous_generation, next_generation, previous_token, attempts, next_at, " +
+          "expires_at, status, created_at, updated_at) " +
+          "VALUES (?, ?, ?, 0, ?, ?, 'pending', ?, ?)",
+        "redirect-alarm-source",
+        "redirect-alarm-target",
+        "redirect-alarm-token",
+        nextAt,
+        nextAt + 60_000,
+        now,
+        now,
+      );
+    });
+
+    await directory.getStatus();
+    const alarm = await runInDurableObject(directory, async (_instance, ctx) =>
+      ctx.storage.getAlarm(),
+    );
+    expect(alarm).not.toBeNull();
+    expect(alarm).toBeGreaterThanOrEqual(nextAt);
+  });
+
   it("ignores a stale redirect after a generation is reactivated", async () => {
     const generation = "activation-race";
     const state = env.GAME_STATE.getByName(`game:${generation}`);
@@ -345,6 +483,50 @@ describe("R2 images and logical snapshots", () => {
     expect(cached.status).toBe(304);
   });
 
+  it("resumes an interrupted snapshot install and rejects a different retry", async () => {
+    const source = env.GAME_STATE.getByName("game:initial");
+    const snapshot = await source.exportSnapshot("initial");
+    const generation = "resumable-import";
+    const target = env.GAME_STATE.getByName(`game:${generation}`);
+
+    // Simulate a request ending after the SQLite transaction but before the R2 backup.
+    await target.initializeFromSnapshot(generation, snapshot, "admin@example.com");
+    const prematureActivation = await SELF.fetch(
+      "http://localhost/admin/api/generations/activate",
+      {
+        method: "POST",
+        headers: { ...LOCAL_ADMIN_HEADERS, "Content-Type": "application/json" },
+        body: JSON.stringify({ generation }),
+      },
+    );
+    expect(prematureActivation.status).toBe(409);
+
+    const importSnapshot = (input: typeof snapshot) =>
+      SELF.fetch("http://localhost/admin/api/import", {
+        method: "POST",
+        headers: { ...LOCAL_ADMIN_HEADERS, "Content-Type": "application/json" },
+        body: JSON.stringify({ generation, snapshot: input, activate: false }),
+      });
+    const resumed = await importSnapshot(snapshot);
+    expect(resumed.status).toBe(201);
+    const resumedBody =
+      await resumed.json<
+        DataEnvelope<{ backup: { key: string }; integrity: { matches: boolean } }>
+      >();
+    expect(resumedBody.data.integrity.matches).toBe(true);
+    expect(await env.GAME_BACKUPS.head(resumedBody.data.backup.key)).not.toBeNull();
+
+    const repeated = await importSnapshot(snapshot);
+    expect(repeated.status).toBe(201);
+    await expect(repeated.json()).resolves.toMatchObject({
+      data: { backup: { key: resumedBody.data.backup.key } },
+    });
+
+    const changedSnapshot = { ...snapshot, revision: snapshot.revision + 1 };
+    const conflicting = await importSnapshot(changedSnapshot);
+    expect(conflicting.status).toBe(409);
+  });
+
   it("creates an R2 snapshot, restores a new generation, and rolls back by pointer", async () => {
     const command = await adminCommand({ type: "createNumber", number: 73 });
     expect(command.response.status).toBe(200);
@@ -364,9 +546,22 @@ describe("R2 images and logical snapshots", () => {
     });
     expect(restore.status).toBe(201);
     await expect(restore.json()).resolves.toMatchObject({
-      data: { activated: true, generation: "restored-test" },
+      data: { activated: false, activation: null, generation: "restored-test" },
     });
+    const beforeActivation = await SELF.fetch("http://example.com/api/health");
+    const active = await beforeActivation.json<{ directoryVersion: number; generation: string }>();
+    expect(active.generation).toBe("initial");
 
+    const activate = await SELF.fetch("http://localhost/admin/api/generations/activate", {
+      method: "POST",
+      headers: { ...LOCAL_ADMIN_HEADERS, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        generation: "restored-test",
+        expectedGeneration: active.generation,
+        expectedVersion: active.directoryVersion,
+      }),
+    });
+    expect(activate.status).toBe(200);
     const restoredState = await SELF.fetch("http://example.com/api/bingo/state");
     await expect(restoredState.json()).resolves.toMatchObject({
       generation: "restored-test",
@@ -545,7 +740,7 @@ describe("Hibernation WebSockets", () => {
 
     const stateClose = nextClose(stateSocket);
     const reactionClose = nextClose(reactionSocket);
-    const expiredAt = new Date(Date.now() - 31 * 60 * 1_000).toISOString();
+    const expiredAt = Date.now() - 1;
     const generation = (stateMessage.state as { generation: string }).generation;
     const state = env.GAME_STATE.getByName(`game:${generation}`);
     const reactions = env.REACTION_HUB.getByName("reactions");
@@ -554,14 +749,14 @@ describe("Hibernation WebSockets", () => {
       expect(await ctx.storage.getAlarm()).not.toBeNull();
       for (const socket of ctx.getWebSockets("screen")) {
         const attachment = socket.deserializeAttachment() as Record<string, unknown>;
-        socket.serializeAttachment({ ...attachment, connected_at: expiredAt });
+        socket.serializeAttachment({ ...attachment, expires_at: expiredAt });
       }
     });
     await runInDurableObject(reactions, async (_instance, ctx) => {
       expect(await ctx.storage.getAlarm()).not.toBeNull();
       for (const socket of ctx.getWebSockets("stamps")) {
         const attachment = socket.deserializeAttachment() as Record<string, unknown>;
-        socket.serializeAttachment({ ...attachment, connected_at: expiredAt });
+        socket.serializeAttachment({ ...attachment, expires_at: expiredAt });
       }
     });
 

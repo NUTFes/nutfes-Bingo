@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState, type SetStateAction } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -27,7 +27,6 @@ import {
 import { REACTION_IMAGES } from "@/types/bingo/constants";
 import type { AppStateRow } from "@/types/bingo/types";
 import { BingoLanguageProvider, useBingoLanguage } from "@/utils/i18n/provider";
-import { sendReactionStamp } from "@/features/user/actions/bingo-public";
 import { openHttpsUrl } from "@/utils/url";
 import ReachConfirmationModal from "@/components/user/ReachConfirmationModal";
 
@@ -36,6 +35,7 @@ import {
   persistBooleanPreference,
   usePublicPreferences,
 } from "@/components/user/Layout/usePublicPreferences";
+import { usePublicInteractions } from "@/components/user/Layout/usePublicInteractions";
 import {
   DEFAULT_PUBLIC_PREFERENCES,
   PUBLIC_PREFERENCE_KEYS,
@@ -50,17 +50,6 @@ interface InnerLayoutProps {
   setIsSortedAscending?: (value: boolean) => void;
 }
 
-type ModalState = {
-  isReactionModalOpen: boolean;
-  isSettingsModalOpen: boolean;
-  isReachModalOpen: boolean;
-  isSurveyModalOpen: boolean;
-};
-
-type ModalToggleKey = keyof ModalState;
-
-const STAMP_COOLDOWN_MS = 2_100;
-
 function InnerLayout({
   children,
   appState,
@@ -71,36 +60,34 @@ function InnerLayout({
   const pathname = usePathname();
   const { language, setLanguage, t } = useBingoLanguage();
 
-  const [modalState, setModalState] = useState<ModalState>({
-    isReactionModalOpen: false,
-    isSettingsModalOpen: false,
-    isReachModalOpen: false,
-    isSurveyModalOpen: false,
-  });
+  const interactions = usePublicInteractions(appState);
   const { preferences, setPreferences } = usePublicPreferences(
     initialPreferences,
     setIsSortedAscending,
   );
   const [navBarHeight, setNavBarHeight] = useState<string>();
-  const [stampState, setStampState] = useState({
-    isSending: false,
-    activeName: null as string | null,
-  });
+  const { modalState, stampState } = interactions;
   const navRef = useRef<HTMLDivElement>(null);
   const { isReactionModalOpen, isSettingsModalOpen, isReachModalOpen, isSurveyModalOpen } =
     modalState;
   const { isReachIconVisible, isSortOrderActive, isDarkMode } = preferences;
   const { isSending: isStampSending, activeName: activeStampName } = stampState;
-  const setModalOpen = (key: ModalToggleKey) => (value: SetStateAction<boolean>) => {
-    setModalState((prev) => ({
-      ...prev,
-      [key]: typeof value === "function" ? value(prev[key]) : value,
-    }));
-  };
-  const setIsReactionModalOpen = setModalOpen("isReactionModalOpen");
-  const setIsSettingsModalOpen = setModalOpen("isSettingsModalOpen");
-  const setIsReachModalOpen = setModalOpen("isReachModalOpen");
-  const setIsSurveyModalOpen = setModalOpen("isSurveyModalOpen");
+  const setIsReactionModalOpen = (value: React.SetStateAction<boolean>) =>
+    interactions.setReactionModalOpen(
+      typeof value === "function" ? value(modalState.isReactionModalOpen) : value,
+    );
+  const setIsSettingsModalOpen = (value: React.SetStateAction<boolean>) =>
+    interactions.setSettingsModalOpen(
+      typeof value === "function" ? value(modalState.isSettingsModalOpen) : value,
+    );
+  const setIsReachModalOpen = (value: React.SetStateAction<boolean>) =>
+    interactions.setReachModalOpen(
+      typeof value === "function" ? value(modalState.isReachModalOpen) : value,
+    );
+  const setIsSurveyModalOpen = (value: React.SetStateAction<boolean>) =>
+    interactions.setSurveyModalOpen(
+      typeof value === "function" ? value(modalState.isSurveyModalOpen) : value,
+    );
   const position = isReachIconVisible ? "29%" : "50%";
 
   useLayoutEffect(() => {
@@ -110,42 +97,7 @@ function InnerLayout({
     }
   }, []);
 
-  const prevSurveyActiveRef = useRef(appState.is_survey_active);
-  if (appState.is_survey_active !== prevSurveyActiveRef.current) {
-    prevSurveyActiveRef.current = appState.is_survey_active;
-    const nextSurveyModalOpen = appState.is_survey_active && Boolean(appState.survey_url);
-    setModalState((prev) =>
-      prev.isSurveyModalOpen === nextSurveyModalOpen
-        ? prev
-        : { ...prev, isSurveyModalOpen: nextSurveyModalOpen },
-    );
-  }
-
-  const handleReactionClick = async (name: string) => {
-    if (isStampSending) {
-      return;
-    }
-
-    const startedAt = performance.now();
-    try {
-      setStampState({
-        isSending: true,
-        activeName: name,
-      });
-      await sendReactionStamp(name as (typeof REACTION_IMAGES)[number]["name"]);
-    } catch (error) {
-      // Reactions are loss-tolerant. Keep the UI responsive while retaining a diagnostic signal.
-      console.error("リアクション送信に失敗しました。", error);
-    } finally {
-      const remainingCooldown = Math.max(0, STAMP_COOLDOWN_MS - (performance.now() - startedAt));
-      window.setTimeout(() => {
-        setStampState({
-          isSending: false,
-          activeName: null,
-        });
-      }, remainingCooldown);
-    }
-  };
+  const handleReactionClick = interactions.sendStamp;
 
   const toggleSortOrder = () => {
     if (!setIsSortedAscending) {

@@ -33,6 +33,10 @@ Options:
   --batch-size <n>     WebSocket connection batch size (default: 50)
   --expect-broadcasts <n>
                        Require n state revisions to reach every live socket (default: 0)
+  --environment <name> Evidence environment; remote runs require staging
+  --source-release-sha <sha>
+                       Full checkout SHA; required for remote evidence
+  --scenario <name>    Evidence scenario; required for remote evidence
   --allow-remote       Permit a non-loopback target
   --allow-quota-risk   Permit a remote plan above the 30,000 request safety budget
   --allow-edge-blocks  Treat stamp 403/429 responses from a rehearsed WAF rule as expected
@@ -49,26 +53,29 @@ Example for the expected maximum audience:
 
 function parseArgs(argv) {
   const result = new Map();
-  const booleanOptions = new Set([
-    "allow-edge-blocks",
-    "allow-quota-risk",
-    "allow-remote",
-    "help",
-    "run",
-  ]);
-  const valueOptions = new Set([
-    "base-url",
-    "batch-size",
-    "duration",
-    "expect-broadcasts",
-    "reconnects",
-    "stamp-burst",
-    "state-reads",
-    "state-ws",
-    "output",
-    "ws-path",
-    "ws-ready-type",
-  ]);
+  const booleanOptions = {
+    "allow-edge-blocks": true,
+    "allow-quota-risk": true,
+    "allow-remote": true,
+    help: true,
+    run: true,
+  };
+  const valueOptions = {
+    "base-url": true,
+    "batch-size": true,
+    duration: true,
+    environment: true,
+    "expect-broadcasts": true,
+    output: true,
+    reconnects: true,
+    scenario: true,
+    "source-release-sha": true,
+    "stamp-burst": true,
+    "state-reads": true,
+    "state-ws": true,
+    "ws-path": true,
+    "ws-ready-type": true,
+  };
   const setOption = (name, value) => {
     if (result.has(name)) throw new Error(`Duplicate option: --${name}`);
     result.set(name, value);
@@ -83,18 +90,18 @@ function parseArgs(argv) {
     if (equal !== -1) {
       const name = arg.slice(2, equal);
       const value = arg.slice(equal + 1);
-      if (!valueOptions.has(name) || value === "") {
+      if (valueOptions[name] !== true || value === "") {
         throw new Error(`--${name} does not accept this value form`);
       }
       setOption(name, value);
       continue;
     }
     const name = arg.slice(2);
-    if (booleanOptions.has(name)) {
+    if (booleanOptions[name] === true) {
       setOption(name, true);
       continue;
     }
-    if (!valueOptions.has(name)) throw new Error(`Unknown option: --${name}`);
+    if (valueOptions[name] !== true) throw new Error(`Unknown option: --${name}`);
     const next = argv[index + 1];
     if (next && !next.startsWith("--")) {
       setOption(name, next);
@@ -116,6 +123,20 @@ function integerOption(args, name, fallback, maximum) {
 
 function isLoopback(hostname) {
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
+
+async function assertTargetRelease(baseUrl, expectedReleaseSha) {
+  const response = await fetch(new URL("/api/ready", baseUrl), {
+    cache: "no-store",
+    redirect: "error",
+    signal: AbortSignal.timeout(10_000),
+  });
+  const body = await response.json().catch(() => null);
+  if (response.status !== 200 || body?.status !== "ok" || body?.releaseSha !== expectedReleaseSha) {
+    throw new Error(
+      `Remote target is not the requested release ${expectedReleaseSha}: ${response.status} ${JSON.stringify(body)}`,
+    );
+  }
 }
 
 function websocketUrl(baseUrl, path, clientId) {
@@ -335,15 +356,31 @@ if (typeof rawBaseUrl !== "string") {
 
 const baseUrl = new URL(rawBaseUrl);
 if (
-  !new Set(["http:", "https:"]).has(baseUrl.protocol) ||
+  (baseUrl.protocol !== "http:" && baseUrl.protocol !== "https:") ||
   baseUrl.username !== "" ||
   baseUrl.password !== ""
 ) {
   throw new Error("--base-url must be an HTTP(S) URL without credentials");
 }
-if (!args.has("allow-remote") && !isLoopback(baseUrl.hostname)) {
+const isRemote = !isLoopback(baseUrl.hostname);
+if (!args.has("allow-remote") && isRemote) {
   throw new Error("Refusing a remote load test without --allow-remote");
 }
+const evidenceEnvironment = String(args.get("environment") ?? (isRemote ? "" : "local"));
+const sourceReleaseSha = args.get("source-release-sha") ?? null;
+const scenario = String(args.get("scenario") ?? (isRemote ? "" : "local-diagnostic"));
+if (
+  isRemote &&
+  (evidenceEnvironment !== "staging" ||
+    typeof sourceReleaseSha !== "string" ||
+    !/^[a-f0-9]{40}$/.test(sourceReleaseSha) ||
+    scenario === "")
+) {
+  throw new Error(
+    "Remote evidence requires --environment staging, --source-release-sha, and --scenario",
+  );
+}
+if (isRemote) await assertTargetRelease(baseUrl, sourceReleaseSha);
 
 const stateWs = integerOption(args, "state-ws", 1000, 20_000);
 const reconnects = integerOption(args, "reconnects", 0, 20);
@@ -359,7 +396,7 @@ if (!wsPath.startsWith("/") || new URL(wsPath, baseUrl).origin !== baseUrl.origi
 const wsReadyType = String(
   args.get("ws-ready-type") ?? (wsPath.includes("/stamps/") ? "ready" : "state"),
 );
-if (!new Set(["ready", "state"]).has(wsReadyType)) {
+if (wsReadyType !== "ready" && wsReadyType !== "state") {
   throw new Error("--ws-ready-type must be state or ready");
 }
 if (expectBroadcasts > 0 && (wsReadyType !== "state" || reconnects !== 0 || stateWs === 0)) {
@@ -382,6 +419,7 @@ const errorSamples = new Map();
 let expectedDegradedResponses = 0;
 let httpClientFailures = 0;
 let httpServerFailures = 0;
+const startedAtIso = new Date().toISOString();
 const startedAt = performance.now();
 
 const plannedWorkerRequests = stateWs * (reconnects + 1) + stampBurst + stateReads;
@@ -464,6 +502,7 @@ for (let round = 0; round <= reconnects; round += 1) {
 }
 
 await Promise.all(requestWork);
+if (isRemote) await assertTargetRelease(baseUrl, sourceReleaseSha);
 
 const sortedOpenLatency = counters.openLatencyMs.toSorted((a, b) => a - b);
 const p95Index = Math.max(0, Math.ceil(sortedOpenLatency.length * 0.95) - 1);
@@ -501,8 +540,16 @@ const passed =
   counters.readyFailures === 0 &&
   completedBroadcasts >= expectBroadcasts;
 const result = {
+  schemaVersion: 2,
+  distributed: false,
+  environment: evidenceEnvironment,
+  sourceReleaseSha,
+  scenario,
   passed,
+  targetReleaseSha: isRemote ? sourceReleaseSha : null,
+  releaseStable: true,
   baseUrl: baseUrl.origin,
+  startedAt: startedAtIso,
   completedAt: new Date().toISOString(),
   durationMs: Math.round(performance.now() - startedAt),
   broadcastResults,

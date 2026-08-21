@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { cn } from "@/utils/utils";
 
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
@@ -9,6 +10,33 @@ import styles from "./PrizeCard.module.css";
 
 interface PrizeCardProps {
   prize: PrizeWithImageUrl;
+}
+
+function PrizeImage({ imageUrl, name }: { imageUrl: string | null; name: string }) {
+  const [hasLoadError, setHasLoadError] = useState(false);
+
+  if (imageUrl === null || hasLoadError) {
+    return (
+      <div
+        className={styles.imagePlaceholder}
+        role="img"
+        aria-label={`${name}の画像は表示できません`}
+      >
+        <span aria-hidden="true">NO IMAGE</span>
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={imageUrl}
+      alt={name}
+      fill
+      className={styles.prizeImage}
+      sizes="(max-width: 768px) 50vw, 20vw"
+      onError={() => setHasLoadError(true)}
+    />
+  );
 }
 
 const PrizeCard = ({ prize }: PrizeCardProps) => {
@@ -24,15 +52,11 @@ const PrizeCard = ({ prize }: PrizeCardProps) => {
               [styles.wonImage]: prize.is_won,
             })}
           >
-            {prize.image_url && (
-              <Image
-                src={prize.image_url}
-                alt={prize.name_jp}
-                fill
-                className={styles.prizeImage}
-                sizes="(max-width: 768px) 50vw, 20vw"
-              />
-            )}
+            <PrizeImage
+              key={prize.image_url ?? "no-image"}
+              imageUrl={prize.image_url}
+              name={prize.name_jp}
+            />
           </div>
         </div>
         {prize.is_won && (

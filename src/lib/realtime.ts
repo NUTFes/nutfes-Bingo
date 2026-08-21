@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type {
   BingoUnifiedState,
@@ -18,6 +18,7 @@ import {
   type StampName,
 } from "@/types/bingo/types";
 import { resolvePrizeImageUrl } from "@/utils/image";
+import { startVenueSocketLifecycle } from "@/lib/venue-socket-lifecycle";
 
 const PUBLIC_STATE_URL = "/api/bingo/state";
 const PUBLIC_STATE_SOCKET_PATH = "/api/bingo/socket";
@@ -29,7 +30,10 @@ const FALLBACK_HIDDEN_MS = 30_000;
 const MAX_RECONNECT_MS = 30_000;
 const MAX_FALLBACK_MS = 5 * 60_000;
 const STABLE_CONNECTION_MS = 60_000;
+const SOCKET_READY_TIMEOUT_MS = 10_000;
 const SCREEN_RECOVERY_MS = 5 * 60_000;
+const SCREEN_STATE_VERIFY_MS = 5 * 60_000;
+const SCREEN_SOCKET_REPLACEMENT_MS = 5 * 60_000;
 const MAX_RECONNECT_ATTEMPTS = 8;
 const MAX_FALLBACK_ATTEMPTS = 6;
 const FETCH_TIMEOUT_MS = 8_000;
@@ -188,10 +192,13 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
   useEffect(() => {
     let active = true;
     let socket: WebSocket | null = null;
+    let socketReady = false;
     let reconnectTimer: number | null = null;
     let fallbackTimer: number | null = null;
     let stableTimer: number | null = null;
+    let readyTimer: number | null = null;
     let screenAccessTimer: number | null = null;
+    let screenVerifyTimer: number | null = null;
     let fetchController: AbortController | null = null;
     let reconnectAttempt = 0;
     let fallbackAttempt = 0;
@@ -244,9 +251,37 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
       }
     };
 
+    const scheduleScreenVerification = () => {
+      clearTimer(screenVerifyTimer);
+      screenVerifyTimer = null;
+      if (!active || view !== "screen" || !socketReady) return;
+      screenVerifyTimer = window.setTimeout(async () => {
+        screenVerifyTimer = null;
+        await requestSnapshot();
+        scheduleScreenVerification();
+      }, SCREEN_STATE_VERIFY_MS);
+    };
+
+    const markSocketReady = (candidate: WebSocket) => {
+      if (socket !== candidate || socketReady) return;
+      socketReady = true;
+      clearTimer(readyTimer);
+      readyTimer = null;
+      clearTimer(fallbackTimer);
+      fallbackTimer = null;
+      clearTimer(stableTimer);
+      stableTimer = window.setTimeout(() => {
+        if (socket === candidate && candidate.readyState === WebSocket.OPEN && socketReady) {
+          reconnectAttempt = 0;
+          fallbackAttempt = 0;
+        }
+      }, STABLE_CONNECTION_MS);
+      scheduleScreenVerification();
+    };
+
     const scheduleFallback = () => {
       if (fallbackTimer !== null) return;
-      if (!active || socket?.readyState === WebSocket.OPEN) {
+      if (!active || (socket?.readyState === WebSocket.OPEN && socketReady)) {
         fallbackTimer = null;
         return;
       }
@@ -273,6 +308,7 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
 
     const connect = () => {
       clearTimer(reconnectTimer);
+      reconnectTimer = null;
       if (
         !active ||
         socket?.readyState === WebSocket.CONNECTING ||
@@ -288,17 +324,16 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
         socketUrl(view === "screen" ? SCREEN_STATE_SOCKET_PATH : PUBLIC_STATE_SOCKET_PATH),
       );
       socket = candidate;
+      socketReady = false;
       candidate.addEventListener("open", () => {
         if (socket !== candidate) return;
-        clearTimer(fallbackTimer);
-        fallbackTimer = null;
-        clearTimer(stableTimer);
-        stableTimer = window.setTimeout(() => {
-          if (socket === candidate && candidate.readyState === WebSocket.OPEN) {
-            reconnectAttempt = 0;
-            fallbackAttempt = 0;
+        clearTimer(readyTimer);
+        readyTimer = window.setTimeout(() => {
+          if (socket === candidate && !socketReady) {
+            candidate.close(4001, "state socket ready timeout");
           }
-        }, STABLE_CONNECTION_MS);
+        }, SOCKET_READY_TIMEOUT_MS);
+        scheduleFallback();
         clearTimer(screenAccessTimer);
         if (view === "screen") {
           screenAccessTimer = window.setTimeout(
@@ -312,8 +347,13 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
         try {
           const message = JSON.parse(String(event.data)) as StateSocketMessage;
           if (message.type === "state") {
+            const nextState = normalizeBingoState(message.state, stateRef.current);
+            if (nextState.generation === "") {
+              throw new Error("state frame has no generation");
+            }
             socketStateSequence += 1;
-            applyState(normalizeBingoState(message.state, stateRef.current));
+            applyState(nextState);
+            markSocketReady(candidate);
             return;
           }
           if (
@@ -350,11 +390,16 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
       });
       candidate.addEventListener("close", () => {
         if (socket !== candidate) return;
+        clearTimer(readyTimer);
+        readyTimer = null;
         clearTimer(stableTimer);
         stableTimer = null;
         clearTimer(screenAccessTimer);
         screenAccessTimer = null;
+        clearTimer(screenVerifyTimer);
+        screenVerifyTimer = null;
         socket = null;
+        socketReady = false;
         if (!active) {
           return;
         }
@@ -376,11 +421,17 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
       reconnectAttempt = 0;
       fallbackAttempt = 0;
       await requestSnapshot();
+      if (socket?.readyState === WebSocket.OPEN && !socketReady) {
+        socket.close(4001, "state socket recovery");
+        return;
+      }
       connect();
     };
     const handleOnline = () => void restartRecovery();
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && socket?.readyState !== WebSocket.OPEN) {
+      if (document.visibilityState !== "visible") return;
+      if (view === "screen") void requestSnapshot();
+      if (socket?.readyState !== WebSocket.OPEN || !socketReady) {
         void restartRecovery();
       }
     };
@@ -394,7 +445,9 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
       clearTimer(reconnectTimer);
       clearTimer(fallbackTimer);
       clearTimer(stableTimer);
+      clearTimer(readyTimer);
       clearTimer(screenAccessTimer);
+      clearTimer(screenVerifyTimer);
       fetchController?.abort();
       socket?.close(1000, "page closed");
       window.removeEventListener("online", handleOnline);
@@ -449,6 +502,19 @@ function isStampName(value: unknown): value is StampName {
   return typeof value === "string" && (STAMP_NAMES as readonly string[]).includes(value);
 }
 
+function parseStampSocketMessage(event: MessageEvent): StampSocketMessage | null {
+  try {
+    const message = JSON.parse(String(event.data)) as StampSocketMessage;
+    if (message.type === "ready") return message;
+    if (message.type === "stamp" && isRecord(message.stamp) && isStampName(message.stamp.name)) {
+      return message;
+    }
+  } catch (error) {
+    console.error("スタンプメッセージの解析に失敗しました。", error);
+  }
+  return null;
+}
+
 export function useStampStream(onInsert: (stamp: StampEvent) => void) {
   const onInsertRef = useRef(onInsert);
 
@@ -456,105 +522,20 @@ export function useStampStream(onInsert: (stamp: StampEvent) => void) {
     onInsertRef.current = onInsert;
   }, [onInsert]);
 
-  const handleMessage = useCallback((event: MessageEvent) => {
-    try {
-      const message = JSON.parse(String(event.data)) as StampSocketMessage;
-      if (message.type === "stamp" && isRecord(message.stamp) && isStampName(message.stamp.name)) {
-        onInsertRef.current(message.stamp);
-      }
-    } catch (error) {
-      console.error("スタンプメッセージの解析に失敗しました。", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    let socket: WebSocket | null = null;
-    let reconnectTimer: number | null = null;
-    let stableTimer: number | null = null;
-    let screenAccessTimer: number | null = null;
-    let reconnectAttempt = 0;
-
-    const connect = () => {
-      if (
-        !active ||
-        socket?.readyState === WebSocket.CONNECTING ||
-        socket?.readyState === WebSocket.OPEN ||
-        navigator.onLine === false
-      ) {
-        return;
-      }
-      const candidate = new WebSocket(socketUrl(SCREEN_STAMP_SOCKET_PATH));
-      socket = candidate;
-      candidate.addEventListener("open", () => {
-        if (socket !== candidate) return;
-        if (stableTimer !== null) window.clearTimeout(stableTimer);
-        stableTimer = window.setTimeout(() => {
-          if (socket === candidate && candidate.readyState === WebSocket.OPEN) {
-            reconnectAttempt = 0;
-          }
-        }, STABLE_CONNECTION_MS);
-        if (screenAccessTimer !== null) window.clearTimeout(screenAccessTimer);
-        screenAccessTimer = window.setTimeout(
-          () => candidate.close(1000, "refresh access session"),
-          SCREEN_ACCESS_RECHECK_MS,
-        );
-      });
-      candidate.addEventListener("message", handleMessage);
-      candidate.addEventListener("close", () => {
-        if (socket !== candidate) return;
-        if (stableTimer !== null) {
-          window.clearTimeout(stableTimer);
-          stableTimer = null;
-        }
-        if (screenAccessTimer !== null) {
-          window.clearTimeout(screenAccessTimer);
-          screenAccessTimer = null;
-        }
-        socket = null;
-        if (!active) {
-          return;
-        }
-        const isLongTailRecovery = reconnectAttempt >= MAX_RECONNECT_ATTEMPTS;
-        const delay = isLongTailRecovery
-          ? SCREEN_RECOVERY_MS
-          : Math.min(1_000 * 2 ** reconnectAttempt, MAX_RECONNECT_MS);
-        if (!isLongTailRecovery) {
-          reconnectAttempt += 1;
-        }
-        reconnectTimer = window.setTimeout(connect, jitter(delay));
-      });
-      candidate.addEventListener("error", () => candidate.close());
-    };
-
-    const restartRecovery = () => {
-      reconnectAttempt = 0;
-      connect();
-    };
-    const handleOnline = () => restartRecovery();
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && socket?.readyState !== WebSocket.OPEN) {
-        restartRecovery();
-      }
-    };
-
-    connect();
-    window.addEventListener("online", handleOnline);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      active = false;
-      if (reconnectTimer !== null) {
-        window.clearTimeout(reconnectTimer);
-      }
-      if (stableTimer !== null) {
-        window.clearTimeout(stableTimer);
-      }
-      if (screenAccessTimer !== null) {
-        window.clearTimeout(screenAccessTimer);
-      }
-      socket?.close(1000, "page closed");
-      window.removeEventListener("online", handleOnline);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [handleMessage]);
+  useEffect(
+    () =>
+      startVenueSocketLifecycle({
+        url: socketUrl(SCREEN_STAMP_SOCKET_PATH),
+        replacementIntervalMs: SCREEN_SOCKET_REPLACEMENT_MS,
+        replaceHealthySocketOnWake: true,
+        onMessage: (event, _candidate, isActiveSocket) => {
+          const message = parseStampSocketMessage(event);
+          if (message === null) return "ignored";
+          if (message.type === "ready") return "ready";
+          if (isActiveSocket) onInsertRef.current(message.stamp);
+          return "handled";
+        },
+      }),
+    [],
+  );
 }

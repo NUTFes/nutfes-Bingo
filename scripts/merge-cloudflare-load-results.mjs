@@ -9,7 +9,7 @@ const options = new Map();
 for (let index = 0; index < args.length; index += 2) {
   if (!args[index]?.startsWith("--") || !args[index + 1]) {
     throw new Error(
-      "Usage: node scripts/merge-cloudflare-load-results.mjs --input-dir path --output path [--expected-shards 4 --expected-sockets 1000 --expected-broadcasts 5]",
+      "Usage: node scripts/merge-cloudflare-load-results.mjs --input-dir path --output path --release-sha full-sha [--expected-shards 4 --expected-sockets 1000 --expected-broadcasts 5]",
     );
   }
   options.set(args[index].slice(2), args[index + 1]);
@@ -17,7 +17,10 @@ for (let index = 0; index < args.length; index += 2) {
 
 const inputDirectory = options.get("input-dir");
 const outputPath = options.get("output");
-if (!inputDirectory || !outputPath) throw new Error("--input-dir and --output are required");
+const sourceReleaseSha = options.get("release-sha");
+if (!inputDirectory || !outputPath || !/^[a-f0-9]{40}$/.test(sourceReleaseSha ?? "")) {
+  throw new Error("--input-dir, --output, and a full --release-sha are required");
+}
 
 const expectedShards = readPositiveInteger(
   options.get("expected-shards") ?? "4",
@@ -41,6 +44,22 @@ const shards = await Promise.all(
     return { path: relativePath, result: JSON.parse(await readFile(path, "utf8")) };
   }),
 );
+for (const { path, result } of shards) {
+  if (
+    result.schemaVersion !== 2 ||
+    result.distributed !== false ||
+    result.environment !== "staging" ||
+    result.sourceReleaseSha !== sourceReleaseSha ||
+    result.targetReleaseSha !== sourceReleaseSha ||
+    result.releaseStable !== true ||
+    result.scenario !== "distributed-broadcast-shard" ||
+    !Number.isFinite(Date.parse(result.startedAt)) ||
+    !Number.isFinite(Date.parse(result.completedAt)) ||
+    Date.parse(result.completedAt) < Date.parse(result.startedAt)
+  ) {
+    throw new Error(`Shard evidence ${path} has invalid provenance`);
+  }
+}
 
 const baseUrls = new Set(shards.map(({ result }) => result.baseUrl));
 const ready = sum(shards, ({ result }) => result.websocket?.ready);
@@ -111,11 +130,21 @@ const passed =
   completedBroadcasts >= expectedBroadcasts;
 
 const result = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   distributed: true,
+  environment: "staging",
+  sourceReleaseSha,
+  scenario: "distributed-broadcast",
+  targetReleaseSha: sourceReleaseSha,
+  releaseStable: true,
+  shardCount: shards.length,
   passed,
   baseUrl: baseUrls.size === 1 ? [...baseUrls][0] : null,
-  sourceReleaseSha: options.get("release-sha") ?? null,
+  startedAt:
+    shards
+      .map(({ result }) => result.startedAt)
+      .toSorted()
+      .at(0) ?? null,
   completedAt:
     shards
       .map(({ result }) => result.completedAt)
@@ -162,6 +191,8 @@ const result = {
   shards: shards.map(({ path, result: shard }) => ({
     path,
     passed: shard.passed === true,
+    startedAt: shard.startedAt,
+    completedAt: shard.completedAt,
     stateWs: numberOrZero(shard.stateWs),
     ready: numberOrZero(shard.websocket?.ready),
     completedBroadcasts: numberOrZero(shard.completedBroadcasts),

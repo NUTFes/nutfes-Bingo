@@ -72,6 +72,7 @@ async function importSnapshot(
   const state = await target.initializeFromSnapshot(generation, snapshot, actor);
   const { integrity } = await verifySnapshotImport(snapshot, generation, target);
   const backup = await target.storeImportedSnapshot(generation, snapshot);
+  await target.completeSnapshotInstallation(generation);
   const shouldActivate =
     body.activate === undefined ? false : readBoolean(body.activate, "activate");
   const activation = shouldActivate ? await activateGeneration(generation, actor) : null;
@@ -112,8 +113,9 @@ async function restoreSnapshot(
   const target = env.GAME_STATE.getByName(`game:${generation}`);
   const state = await target.initializeFromSnapshot(generation, snapshot, actor);
   const { integrity } = await verifySnapshotImport(snapshot, generation, target);
+  await target.completeSnapshotInstallation(generation);
   const shouldActivate =
-    body.activate === undefined ? true : readBoolean(body.activate, "activate");
+    body.activate === undefined ? false : readBoolean(body.activate, "activate");
   const activation = shouldActivate ? await activateGeneration(generation, actor) : null;
 
   return jsonResponse(
@@ -129,13 +131,10 @@ async function verifySnapshotImport(
   target: DurableObjectStub<GameState>,
 ): Promise<{ integrity: SnapshotIntegrity; verifiedSnapshot: GameSnapshot }> {
   const verifiedSnapshot = await target.exportSnapshot(generation);
-  const [inputChecksum, verifiedChecksum, inputSnapshotChecksum, readbackSnapshotChecksum] =
-    await Promise.all([
-      sha256Hex(canonicalLogicalSnapshotJson(inputSnapshot)),
-      sha256Hex(canonicalLogicalSnapshotJson(verifiedSnapshot)),
-      sha256Hex(JSON.stringify(inputSnapshot)),
-      sha256Hex(JSON.stringify(verifiedSnapshot)),
-    ]);
+  const [inputChecksum, verifiedChecksum] = await Promise.all([
+    sha256Hex(canonicalLogicalSnapshotJson(inputSnapshot)),
+    sha256Hex(canonicalLogicalSnapshotJson(verifiedSnapshot)),
+  ]);
   const matches =
     inputChecksum === verifiedChecksum &&
     verifiedSnapshot.source_generation === generation &&
@@ -148,10 +147,7 @@ async function verifySnapshotImport(
     integrity: {
       generation,
       revision: verifiedSnapshot.revision,
-      input_checksum_sha256: inputChecksum,
-      verified_checksum_sha256: verifiedChecksum,
-      input_snapshot_checksum_sha256: inputSnapshotChecksum,
-      readback_snapshot_checksum_sha256: readbackSnapshotChecksum,
+      checksum_sha256: verifiedChecksum,
       matches,
       counts: snapshotIntegrityCounts(verifiedSnapshot),
       coverage: {

@@ -25,6 +25,19 @@ type GuardedActivationResult =
   | { ok: true; activation: DirectoryActivation }
   | { ok: false; generation: string; version: number };
 
+type ActivationTransitionPhase =
+  | "preparing_target"
+  | "target_prepared"
+  | "freezing_source"
+  | "source_frozen";
+type ActivationTransition = {
+  sourceGeneration: string;
+  sourceToken: string;
+  targetGeneration: string;
+  targetToken: string;
+  actor: string;
+  phase: ActivationTransitionPhase;
+};
 const INITIAL_ACTIVATION_TOKEN = "initial";
 const REDIRECT_MAX_ATTEMPTS = 300;
 const REDIRECT_LIFETIME_MS = 24 * 60 * 60 * 1_000;
@@ -39,7 +52,9 @@ export class GameDirectory extends DurableObject<Env> {
     super(ctx, env);
     ctx.blockConcurrencyWhile(async () => {
       this.migrate();
+      await this.recoverInterruptedActivation();
       await this.recoverInterruptedFreeze();
+      await this.scheduleNextRedirectAlarm();
     });
   }
 
@@ -50,7 +65,10 @@ export class GameDirectory extends DurableObject<Env> {
   }
 
   async getActiveGeneration(): Promise<string> {
-    if (!this.freezeTransitionInProgress) await this.recoverInterruptedFreeze();
+    if (!this.freezeTransitionInProgress) {
+      await this.recoverInterruptedActivation();
+      await this.recoverInterruptedFreeze();
+    }
     const cached = this.activeGenerationCache;
     if (cached !== null) return cached;
     const generation = this.readMetadata("active_generation") ?? DEFAULT_GENERATION;
@@ -59,8 +77,10 @@ export class GameDirectory extends DurableObject<Env> {
   }
 
   async getStatus(): Promise<{ generation: string; version: number; pendingRedirects: number }> {
+    const generation = await this.getActiveGeneration();
+    await this.scheduleNextRedirectAlarm();
     return {
-      generation: await this.getActiveGeneration(),
+      generation,
       version: this.readVersion(),
       pendingRedirects: this.countPendingRedirects(),
     };
@@ -137,27 +157,45 @@ export class GameDirectory extends DurableObject<Env> {
   ): Promise<DirectoryActivation> {
     const previousGeneration = this.readMetadata("active_generation") ?? DEFAULT_GENERATION;
     const previousToken = this.readMetadata("active_token") ?? INITIAL_ACTIVATION_TOKEN;
+    if (previousGeneration === generation) {
+      this.activeGenerationCache = generation;
+      return {
+        generation,
+        previousGeneration,
+        version: this.readVersion(),
+        redirectQueued: false,
+        pendingRedirects: this.countPendingRedirects(),
+      };
+    }
+
     const activationToken = crypto.randomUUID();
+    const transition: ActivationTransition = {
+      sourceGeneration: previousGeneration,
+      sourceToken: previousToken,
+      targetGeneration: generation,
+      targetToken: activationToken,
+      actor,
+      phase: "preparing_target",
+    };
     const target = this.env.GAME_STATE.getByName(`game:${generation}`);
-    await target.prepareActivation(generation, activationToken);
     const previousState = this.env.GAME_STATE.getByName(`game:${previousGeneration}`);
-    let previousFreezeAttempted = false;
+    this.freezeTransitionInProgress = true;
+    this.persistActivationTransition(transition);
 
     let committed:
       | {
           generation: string;
           previousGeneration: string;
           version: number;
-          redirectId: number | null;
+          redirectId: number;
         }
       | undefined;
     try {
-      if (previousGeneration !== generation) {
-        this.freezeTransitionInProgress = true;
-        this.persistPendingFreeze(previousGeneration, previousToken);
-        previousFreezeAttempted = true;
-        await previousState.freezeWrites(previousGeneration, generation, previousToken);
-      }
+      await target.prepareActivation(generation, activationToken);
+      this.updateActivationTransitionPhase("target_prepared");
+      this.updateActivationTransitionPhase("freezing_source");
+      await previousState.freezeWrites(previousGeneration, generation, previousToken);
+      this.updateActivationTransitionPhase("source_frozen");
 
       committed = this.ctx.storage.transactionSync(() => {
         const currentGeneration = this.readMetadata("active_generation") ?? DEFAULT_GENERATION;
@@ -170,19 +208,7 @@ export class GameDirectory extends DurableObject<Env> {
           generation,
         );
         this.clearPendingFreeze();
-
-        if (previousGeneration === generation) {
-          this.ctx.storage.sql.exec(
-            "UPDATE directory_metadata SET value = ? WHERE key = 'active_token'",
-            activationToken,
-          );
-          return {
-            generation,
-            previousGeneration,
-            version: this.readVersion(),
-            redirectId: null,
-          };
-        }
+        this.clearActivationTransition();
 
         const changedAt = new Date().toISOString();
         const changedAtMs = Date.now();
@@ -231,64 +257,160 @@ export class GameDirectory extends DurableObject<Env> {
         return { generation, previousGeneration, version, redirectId };
       });
     } catch (error) {
-      const activeGeneration = this.readMetadata("active_generation") ?? DEFAULT_GENERATION;
-      if (previousFreezeAttempted && activeGeneration === previousGeneration) {
-        try {
-          await previousState.unfreezeWrites(previousGeneration, previousToken);
-          this.clearPendingFreeze();
-        } catch (unfreezeError) {
-          console.error(
-            JSON.stringify({
-              message: "failed to unfreeze previous generation after activation failure",
-              previousGeneration,
-              error: errorMessage(unfreezeError),
-            }),
-          );
-        }
-      }
-      if (activeGeneration !== generation) {
-        try {
-          await target.redirectClients(generation, activeGeneration, activationToken);
-        } catch (retireError) {
-          console.error(
-            JSON.stringify({
-              message: "failed to compensate target preparation",
-              generation,
-              activeGeneration,
-              error: errorMessage(retireError),
-            }),
-          );
-        }
-      } else if (previousGeneration === generation) {
-        try {
-          await target.prepareActivation(generation, previousToken);
-        } catch (resetError) {
-          console.error(
-            JSON.stringify({
-              message: "failed to reset activation token after activation failure",
-              generation,
-              error: errorMessage(resetError),
-            }),
-          );
-        }
-      }
       this.freezeTransitionInProgress = false;
+      try {
+        await this.recoverInterruptedActivation();
+        await this.recoverInterruptedFreeze();
+      } catch (recoveryError) {
+        console.error(
+          JSON.stringify({
+            message: "failed to recover interrupted generation activation",
+            previousGeneration,
+            generation,
+            error: errorMessage(recoveryError),
+          }),
+        );
+      }
       throw error;
     }
 
     this.freezeTransitionInProgress = false;
     this.activeGenerationCache = committed.generation;
-    if (committed.redirectId !== null) {
-      await this.processRedirect(committed.redirectId);
-      await this.scheduleNextRedirectAlarm();
-    }
+    await this.processRedirect(committed.redirectId);
+    await this.scheduleNextRedirectAlarm();
     return {
       generation: committed.generation,
       previousGeneration: committed.previousGeneration,
       version: committed.version,
-      redirectQueued: committed.redirectId !== null,
+      redirectQueued: true,
       pendingRedirects: this.countPendingRedirects(),
     };
+  }
+
+  private persistActivationTransition(transition: ActivationTransition): void {
+    this.ctx.storage.transactionSync(() => {
+      this.ctx.storage.sql.exec(
+        "INSERT INTO directory_metadata (key, value) VALUES " +
+          "('activation_transition_source_generation', ?), " +
+          "('activation_transition_source_token', ?), " +
+          "('activation_transition_target_generation', ?), " +
+          "('activation_transition_target_token', ?), " +
+          "('activation_transition_actor', ?), " +
+          "('activation_transition_phase', ?) " +
+          "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        transition.sourceGeneration,
+        transition.sourceToken,
+        transition.targetGeneration,
+        transition.targetToken,
+        transition.actor,
+        transition.phase,
+      );
+    });
+  }
+
+  private updateActivationTransitionPhase(phase: ActivationTransitionPhase): void {
+    const updated = this.ctx.storage.sql
+      .exec<{ value: string }>(
+        "UPDATE directory_metadata SET value = ? " +
+          "WHERE key = 'activation_transition_phase' RETURNING value",
+        phase,
+      )
+      .toArray();
+    if (updated.length !== 1) throw new Error("activation transition metadata is missing");
+  }
+
+  private readActivationTransition(): ActivationTransition | null {
+    const rows = this.ctx.storage.sql
+      .exec<{ key: string; value: string }>(
+        "SELECT key, value FROM directory_metadata WHERE key LIKE 'activation_transition_%'",
+      )
+      .toArray();
+    if (rows.length === 0) return null;
+    const metadata = Object.fromEntries(rows.map((row) => [row.key, row.value])) as Record<
+      string,
+      string
+    >;
+    const sourceGeneration = metadata.activation_transition_source_generation;
+    const sourceToken = metadata.activation_transition_source_token;
+    const targetGeneration = metadata.activation_transition_target_generation;
+    const targetToken = metadata.activation_transition_target_token;
+    const actor = metadata.activation_transition_actor;
+    const phase = metadata.activation_transition_phase;
+    if (
+      sourceGeneration === undefined ||
+      sourceToken === undefined ||
+      targetGeneration === undefined ||
+      targetToken === undefined ||
+      actor === undefined ||
+      phase === undefined
+    ) {
+      throw new Error("activation transition metadata is incomplete");
+    }
+    assertGeneration(sourceGeneration);
+    assertGeneration(targetGeneration);
+    if (!/^[a-zA-Z0-9-]{1,64}$/.test(sourceToken) || !/^[a-zA-Z0-9-]{1,64}$/.test(targetToken)) {
+      throw new Error("activation transition token is invalid");
+    }
+    if (
+      phase !== "preparing_target" &&
+      phase !== "target_prepared" &&
+      phase !== "freezing_source" &&
+      phase !== "source_frozen"
+    ) {
+      throw new Error("activation transition phase is invalid");
+    }
+    return {
+      sourceGeneration,
+      sourceToken,
+      targetGeneration,
+      targetToken,
+      actor,
+      phase,
+    };
+  }
+
+  private clearActivationTransition(): void {
+    this.ctx.storage.sql.exec(
+      "DELETE FROM directory_metadata WHERE key LIKE 'activation_transition_%'",
+    );
+  }
+
+  private async recoverInterruptedActivation(): Promise<void> {
+    const transition = this.readActivationTransition();
+    if (transition === null) return;
+    const activeGeneration = this.readMetadata("active_generation") ?? DEFAULT_GENERATION;
+    const activeToken = this.readMetadata("active_token") ?? INITIAL_ACTIVATION_TOKEN;
+    if (
+      activeGeneration !== transition.sourceGeneration ||
+      activeToken !== transition.sourceToken
+    ) {
+      throw new Error("active generation does not match interrupted activation source");
+    }
+
+    if (transition.phase === "freezing_source" || transition.phase === "source_frozen") {
+      const source = this.env.GAME_STATE.getByName(`game:${transition.sourceGeneration}`);
+      await source.unfreezeWrites(transition.sourceGeneration, transition.sourceToken);
+    }
+    const target = this.env.GAME_STATE.getByName(`game:${transition.targetGeneration}`);
+    await target.redirectClients(
+      transition.targetGeneration,
+      transition.sourceGeneration,
+      transition.targetToken,
+    );
+    this.ctx.storage.transactionSync(() => {
+      this.clearActivationTransition();
+      this.clearPendingFreeze();
+    });
+    this.activeGenerationCache = transition.sourceGeneration;
+    console.warn(
+      JSON.stringify({
+        message: "recovered interrupted generation activation",
+        sourceGeneration: transition.sourceGeneration,
+        targetGeneration: transition.targetGeneration,
+        phase: transition.phase,
+        actor: transition.actor,
+      }),
+    );
   }
 
   private migrate(): void {
@@ -500,18 +622,6 @@ export class GameDirectory extends DurableObject<Env> {
         "SELECT CAST(value AS INTEGER) AS version FROM directory_metadata WHERE key = 'version'",
       )
       .one().version;
-  }
-
-  private persistPendingFreeze(generation: string, token: string): void {
-    this.ctx.storage.transactionSync(() => {
-      this.ctx.storage.sql.exec(
-        "INSERT INTO directory_metadata (key, value) VALUES " +
-          "('pending_freeze_generation', ?), ('pending_freeze_token', ?) " +
-          "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-        generation,
-        token,
-      );
-    });
   }
 
   private clearPendingFreeze(): void {

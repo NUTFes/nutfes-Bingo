@@ -35,26 +35,25 @@ const handleLogout = async () => {
   await dashboardActions.logout();
 };
 
-const handleIncrementReach = async () => {
-  const result = await dashboardActions.incrementReach();
+const mutateReach = async (direction: "increment" | "decrement") => {
+  const result =
+    direction === "increment"
+      ? await dashboardActions.incrementReach()
+      : await dashboardActions.decrementReach();
   if (!result.ok) {
     console.error(result.error);
-    showToast({ title: "更新失敗", description: "リーチ数の増加に失敗しました。" });
-    return;
+    showToast({
+      title: "更新結果を確認できません",
+      description: "サーバーの最新状態を再取得します。",
+    });
+  } else {
+    showToast({
+      title: "更新完了",
+      description:
+        direction === "increment" ? "リーチ数を 1 増加しました。" : "リーチ数を 1 減少しました。",
+    });
   }
-
-  showToast({ title: "更新完了", description: "リーチ数を 1 増加しました。" });
-};
-
-const handleDecrementReach = async () => {
-  const result = await dashboardActions.decrementReach();
-  if (!result.ok) {
-    console.error(result.error);
-    showToast({ title: "更新失敗", description: "リーチ数の減少に失敗しました。" });
-    return;
-  }
-
-  showToast({ title: "更新完了", description: "リーチ数を 1 減少しました。" });
+  return result;
 };
 
 export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
@@ -67,6 +66,25 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
   });
   const { setSurveyUrl } = dashboardState;
 
+  const refreshAuthoritativeState = async () => {
+    try {
+      const state = await fetchAdminState();
+      setBingoNumbers(state.numbers);
+      setSurveyUrl(state.appState.survey_url);
+      return state;
+    } catch (error) {
+      console.error(error);
+      showToast({
+        title: "再読込失敗",
+        description: "サーバー状態を確認できません。ページを再読み込みしてください。",
+      });
+      return null;
+    }
+  };
+  const runReachMutation = async (direction: "increment" | "decrement") => {
+    await mutateReach(direction);
+    await refreshAuthoritativeState();
+  };
   useEffect(() => {
     const controller = new AbortController();
     void fetchAdminState(controller.signal)
@@ -92,9 +110,18 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       showToast({ title: "入力エラー", description: "番号は 1〜99 の範囲で入力してください。" });
       return;
     }
-
     const result = await dashboardActions.createNumber(nextNumber);
     if (!result.ok) {
+      console.error(result.error);
+      const state = await refreshAuthoritativeState();
+      if (state?.numbers.some((number) => number.number === nextNumber)) {
+        dashboardState.resetSubmitNumberInput();
+        showToast({
+          title: "登録済み",
+          description: `${nextNumber} はサーバーへ登録されています。`,
+        });
+        return;
+      }
       if (
         result.error.includes("duplicate") ||
         result.error.includes("numbers_number_unique") ||
@@ -103,10 +130,9 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
         showToast({ title: "重複番号", description: `${nextNumber} は既に入力済みです。` });
         return;
       }
-      showToast({ title: "登録失敗", description: "番号の登録に失敗しました。" });
+      showToast({ title: "登録失敗", description: "番号の登録結果を確認できませんでした。" });
       return;
     }
-
     setBingoNumbers((prev) =>
       [...prev.filter((bingoNumber) => bingoNumber.id !== result.data.id), result.data].sort(
         (a, b) => a.id - b.id,
@@ -122,14 +148,18 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       showToast({ title: "入力エラー", description: "番号は 1〜99 の範囲で入力してください。" });
       return;
     }
-
     const result = await dashboardActions.deleteNumber(target);
     if (!result.ok) {
       console.error(result.error);
-      showToast({ title: "削除失敗", description: "番号の削除に失敗しました。" });
+      const state = await refreshAuthoritativeState();
+      if (state && !state.numbers.some((number) => number.number === target)) {
+        dashboardState.resetDeleteInput();
+        showToast({ title: "削除済み", description: `${target} はサーバーから削除されています。` });
+        return;
+      }
+      showToast({ title: "削除失敗", description: "番号の削除結果を確認できませんでした。" });
       return;
     }
-
     setBingoNumbers((prev) => prev.filter((bingoNumber) => bingoNumber.id !== result.data.id));
     dashboardState.resetDeleteInput();
     showToast({ title: "削除完了", description: `${target} を削除しました。` });
@@ -142,10 +172,14 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
     });
     if (!result.ok) {
       console.error(result.error);
-      showToast({ title: "更新失敗", description: "アンケート設定の更新に失敗しました。" });
+      await refreshAuthoritativeState();
+      showToast({
+        title: "更新結果を再確認しました",
+        description: "サーバーの最新アンケート設定を表示しています。",
+      });
       return;
     }
-
+    setSurveyUrl(result.data.survey_url);
     showToast({
       title: isSurveyActive ? "アンケート配信" : "アンケート停止",
       description: isSurveyActive ? "アンケートを送信しました。" : "アンケートを停止しました。",
@@ -167,7 +201,7 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       <JudgementModal
         isOpened={dashboardState.isJudgementModalOpen}
         setIsOpened={dashboardState.setIsJudgementModalOpen}
-        bingoNumbers={bingoNumbers}
+        onNumbersRefresh={setBingoNumbers}
       />
       <UpdateNumberModal
         isOpened={dashboardState.isUpdateNumberModalOpen}
@@ -178,10 +212,13 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
           const result = await dashboardActions.updateNumber(id, number);
           if (!result.ok) {
             console.error(result.error);
-            showToast({ title: "更新失敗", description: "番号の更新に失敗しました。" });
+            await refreshAuthoritativeState();
+            showToast({
+              title: "更新結果を再確認しました",
+              description: "サーバーの最新番号一覧を表示しています。",
+            });
             throw new Error(result.error);
           }
-
           setBingoNumbers((prev) =>
             prev
               .map((bingoNumber) => (bingoNumber.id === result.data.id ? result.data : bingoNumber))
@@ -229,8 +266,8 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
           <div className="flex flex-col gap-8 lg:col-span-4">
             <div className="rounded-2xl border border-border bg-card/50 p-5 sm:p-6 flex flex-col gap-8">
               <ReachControlSection
-                onIncrement={handleIncrementReach}
-                onDecrement={handleDecrementReach}
+                onIncrement={() => runReachMutation("increment")}
+                onDecrement={() => runReachMutation("decrement")}
               />
               <SurveyControlSection
                 surveyUrl={dashboardState.surveyUrl}

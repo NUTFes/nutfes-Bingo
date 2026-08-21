@@ -5,6 +5,8 @@ import { chmod, mkdir, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import process from "node:process";
 
+import { EVIDENCE_SCHEMA_VERSION } from "./cloudflare-evidence.mjs";
+
 const args = process.argv.slice(2);
 let target;
 let outputPath;
@@ -22,8 +24,9 @@ for (let index = 0; index < args.length; index += 1) {
     );
   }
 }
-if (!new Set(["production", "staging"]).has(target))
+if (target !== "production" && target !== "staging") {
   throw new Error("--env must be production or staging");
+}
 if (typeof WebSocket === "undefined") throw new Error("Node 26 WebSocket support is required");
 
 const prefix = `CLOUDFLARE_${target.toUpperCase()}_`;
@@ -67,6 +70,7 @@ if (activeVersions.length !== 1 || typeof activeVersions[0].version_id !== "stri
   throw new Error(`Active ${target} deployment must contain exactly one 100% version`);
 }
 const workerVersionId = activeVersions[0].version_id;
+const smokeStartedAt = new Date().toISOString();
 
 const fetchChecked = async (path, expectedStatus, expectedType) => {
   const response = await fetch(new URL(path, siteUrl), {
@@ -87,10 +91,11 @@ const readyResponse = await fetchChecked("/api/ready", 200, "application/json");
 const ready = await readyResponse.json();
 if (
   ready?.status !== "ok" ||
+  ready?.releaseSha !== releaseSha ||
   typeof ready?.generation !== "string" ||
   !Number.isSafeInteger(ready?.revision)
 ) {
-  throw new Error("/api/ready returned an invalid readiness envelope");
+  throw new Error("/api/ready returned readiness for a different or invalid release");
 }
 const stateResponse = await fetchChecked("/api/bingo/state", 200, "application/json");
 const state = await stateResponse.json();
@@ -174,14 +179,18 @@ const websocketEvidence = await new Promise((resolve, reject) => {
 
 const whoami = wranglerJson("whoami");
 const record = {
-  schemaVersion: 2,
+  schemaVersion: EVIDENCE_SCHEMA_VERSION,
   environment: target,
-  releaseSha,
+  sourceReleaseSha: releaseSha,
   workerVersionId,
   deploymentCreatedAt: latest.created_on,
   operator: whoami.email,
-  checkedAt: new Date().toISOString(),
   automated: {
+    environment: target,
+    sourceReleaseSha: releaseSha,
+    scenario: "automated-smoke",
+    startedAt: smokeStartedAt,
+    completedAt: new Date().toISOString(),
     publicPage: true,
     stateApi: true,
     prizeImage: true,
@@ -190,6 +199,7 @@ const record = {
     publicWebSocket: true,
   },
   evidence: {
+    siteOrigin: siteUrl.origin,
     imageOrigin: mediaOrigin.origin,
     stateGeneration: state.generation,
     stateRevision: state.revision,
@@ -206,8 +216,10 @@ const record = {
     backupPrivate: false,
     observability: false,
   },
+  browser: null,
   load: null,
   snapshot: null,
+  finalizedAt: null,
 };
 outputPath ??= `.cloudflare/deployments/${target}-${releaseSha}.draft.json`;
 const temporaryPath = `${outputPath}.${process.pid}.tmp`;

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { execFileSync } from "node:child_process";
 import { chmod, mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import process from "node:process";
@@ -107,6 +108,14 @@ const envelopeBytes = new TextEncoder().encode(
 ).byteLength;
 if (envelopeBytes > MAX_SNAPSHOT_BYTES) throw new Error("Generated maximum snapshot exceeds 2 MiB");
 
+const sourceReleaseSha = execFileSync("git", ["rev-parse", "HEAD"], {
+  encoding: "utf8",
+}).trim();
+if (!/^[a-f0-9]{40}$/.test(sourceReleaseSha)) {
+  throw new Error("The current Git HEAD is not a full release SHA");
+}
+const evidenceStartedAt = new Date().toISOString();
+
 const results = [];
 for (let index = 0; index < attempts; index += 1) {
   const generation = `loadtest-${Date.now().toString(36)}-${index}`;
@@ -156,9 +165,13 @@ const sortedLatencies = results
   .toSorted((left, right) => left - right);
 const p95Index = Math.max(0, Math.ceil(sortedLatencies.length * 0.95) - 1);
 const result = {
-  requestPassed: true,
+  schemaVersion: 2,
   environment: "staging",
+  sourceReleaseSha,
+  scenario: "maximum-snapshot-import",
+  startedAt: evidenceStartedAt,
   completedAt: new Date().toISOString(),
+  passed: true,
   attempts,
   payloadBytes: envelopeBytes,
   latencyMsP95: sortedLatencies[p95Index],

@@ -5,6 +5,11 @@ import { chmod, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import process from "node:process";
 import { createInterface } from "node:readline/promises";
+import {
+  assertEvidenceWindow,
+  EVIDENCE_SCHEMA_VERSION,
+  parseEvidenceTimestamp,
+} from "./cloudflare-evidence.mjs";
 
 const args = process.argv.slice(2);
 const options = new Map();
@@ -19,9 +24,18 @@ for (let index = 0; index < args.length; index += 2) {
 if (!options.has("draft")) throw new Error("--draft is required");
 
 const draft = JSON.parse(await readFile(options.get("draft"), "utf8"));
-if (draft.schemaVersion !== 2 || !new Set(["production", "staging"]).has(draft.environment)) {
-  throw new Error("Draft must be a production or staging schemaVersion 2 smoke record");
+if (
+  draft.schemaVersion !== EVIDENCE_SCHEMA_VERSION ||
+  (draft.environment !== "production" && draft.environment !== "staging")
+) {
+  throw new Error(
+    `Draft must be a production or staging schemaVersion ${EVIDENCE_SCHEMA_VERSION} smoke record`,
+  );
 }
+if (!/^[a-f0-9]{40}$/.test(draft.sourceReleaseSha ?? "")) {
+  throw new Error("Draft sourceReleaseSha must be a full Git SHA");
+}
+parseEvidenceTimestamp(draft.deploymentCreatedAt, "deploymentCreatedAt");
 execFileSync("./scripts/check-cloudflare-operator.sh", ["--env", draft.environment], {
   stdio: "inherit",
 });
@@ -35,63 +49,92 @@ if (draft.environment === "staging") {
   loadResult = JSON.parse(await readFile(options.get("load"), "utf8"));
   snapshotResult = JSON.parse(await readFile(options.get("snapshot"), "utf8"));
   if (
+    loadResult.schemaVersion !== 2 ||
+    loadResult.distributed !== true ||
+    loadResult.environment !== "staging" ||
+    loadResult.sourceReleaseSha !== draft.sourceReleaseSha ||
+    loadResult.scenario !== "distributed-broadcast" ||
+    loadResult.shardCount !== 4 ||
+    loadResult.targetReleaseSha !== draft.sourceReleaseSha ||
+    loadResult.releaseStable !== true ||
     loadResult.passed !== true ||
-    loadResult.baseUrl !== process.env.CLOUDFLARE_STAGING_SITE_URL ||
+    loadResult.baseUrl !== draft.evidence?.siteOrigin ||
     loadResult.stateWs < 1000 ||
     loadResult.websocket?.ready !== loadResult.stateWs ||
     loadResult.completedBroadcasts < 5
   ) {
-    throw new Error("Load result must show 1000 ready sockets and at least 5 complete broadcasts");
+    throw new Error("Load result must be the candidate's 4-shard distributed 1000-socket evidence");
   }
   if (
-    snapshotResult.requestPassed !== true ||
+    snapshotResult.schemaVersion !== 2 ||
+    snapshotResult.passed !== true ||
     snapshotResult.environment !== "staging" ||
+    snapshotResult.sourceReleaseSha !== draft.sourceReleaseSha ||
+    snapshotResult.scenario !== "maximum-snapshot-import" ||
     snapshotResult.attempts < 3 ||
     snapshotResult.integrity !== true ||
     snapshotResult.inactiveGeneration !== true ||
     snapshotResult.r2Stored !== true
   ) {
-    throw new Error("Snapshot result must show at least 3 successful inactive maximum imports");
+    throw new Error("Snapshot result must belong to this candidate and show 3 maximum imports");
   }
 }
 
 const prompts = [
+  ["publicHome", null, "Public Home rendered the current number and reach state"],
+  ["prizesPage", null, "Prizes rendered prize names and images without a broken image"],
   [
+    "adminMutation",
     "allowedAdminIdentity",
-    "Allowed administrator opened /admin and completed one reversible mutation",
+    "Allowed administrator completed one reversible mutation that reached Home and Screen",
   ],
-  ["deniedAdminIdentity", "Unlisted or unauthenticated identity was denied at /admin"],
+  [null, "deniedAdminIdentity", "Unlisted or unauthenticated identity was denied at /admin"],
   [
+    "screenRealtime",
     "allowedScreenIdentity",
-    "Allowed venue operator opened /screen and both screen WebSockets became ready",
+    "Allowed venue operator opened /screen; both sockets became ready and recovered after reconnect",
   ],
-  ["deniedScreenIdentity", "Unlisted or unauthenticated identity was denied at /screen"],
+  [null, "deniedScreenIdentity", "Unlisted or unauthenticated identity was denied at /screen"],
   [
+    "turnstileReach",
     "turnstileSingleReach",
     "A real Turnstile solve increased reach exactly once, including retry verification",
   ],
-  ["imageUpload", "A new image was uploaded and returned 200 in a separate private browser"],
+  [null, "imageUpload", "A new image was uploaded and returned 200 in a private browser"],
+  [null, "screenReauthentication", "Screen sockets reconnected only after JWT revalidation"],
+  [null, "backupPrivate", "The backup bucket could not be read from a public URL"],
   [
-    "screenReauthentication",
-    "Screen sockets closed after 30 minutes and reconnected only after JWT revalidation",
-  ],
-  ["backupPrivate", "The backup bucket could not be read from a public URL"],
-  [
+    null,
     "observability",
     "Operator opened Access audit, Worker/DO Analytics, WAF Events, and today's snapshot",
   ],
 ];
 const readline = createInterface({ input: process.stdin, output: process.stdout });
 const manual = {};
+const browserChecks = {};
+const browserStartedAt = new Date().toISOString();
+let browserGeneration;
+let browserRevision;
+let browserCompletedAt;
 let cpuMsP95 = Number(options.get("cpu-ms-p95"));
 try {
-  for (const [field, question] of prompts) {
+  for (const [browserField, manualField, question] of prompts) {
     const answer = (await readline.question(`${question}\nType yes to attest: `))
       .trim()
       .toLowerCase();
-    if (answer !== "yes") throw new Error(`Manual attestation stopped at ${field}`);
-    manual[field] = true;
+    if (answer !== "yes") throw new Error(`Manual attestation stopped at ${question}`);
+    if (browserField !== null) browserChecks[browserField] = true;
+    if (manualField !== null) manual[manualField] = true;
   }
+  browserChecks.deniedAccess =
+    manual.deniedAdminIdentity === true && manual.deniedScreenIdentity === true;
+  browserGeneration = (
+    await readline.question("Enter the generation displayed by Home and Screen: ")
+  ).trim();
+  browserRevision = Number(
+    await readline.question("Enter the revision displayed or observed during browser smoke: "),
+  );
+  browserCompletedAt = new Date().toISOString();
   if (draft.environment === "staging" && !Number.isFinite(cpuMsP95)) {
     cpuMsP95 = Number(
       await readline.question(
@@ -102,11 +145,47 @@ try {
 } finally {
   readline.close();
 }
+if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(browserGeneration ?? "")) {
+  throw new Error("Browser smoke generation is invalid");
+}
+if (!Number.isSafeInteger(browserRevision) || browserRevision < 0) {
+  throw new Error("Browser smoke revision must be a non-negative safe integer");
+}
 if (
   draft.environment === "staging" &&
   (!Number.isFinite(cpuMsP95) || cpuMsP95 < 0 || cpuMsP95 > 10)
 ) {
   throw new Error("Maximum-snapshot Worker CPU p95 must be between 0 and 10 ms");
+}
+
+const finalizedAt = new Date().toISOString();
+const finalizedAtMs = Date.parse(finalizedAt);
+const deploymentCreatedAtMs = Date.parse(draft.deploymentCreatedAt);
+assertEvidenceWindow(draft.automated, {
+  label: "automated",
+  environment: draft.environment,
+  sourceReleaseSha: draft.sourceReleaseSha,
+  deploymentCreatedAt: deploymentCreatedAtMs,
+  finalizedAt: finalizedAtMs,
+  scenario: "automated-smoke",
+});
+if (draft.environment === "staging") {
+  assertEvidenceWindow(loadResult, {
+    label: "load",
+    environment: "staging",
+    sourceReleaseSha: draft.sourceReleaseSha,
+    deploymentCreatedAt: deploymentCreatedAtMs,
+    finalizedAt: finalizedAtMs,
+    scenario: "distributed-broadcast",
+  });
+  assertEvidenceWindow(snapshotResult, {
+    label: "snapshot",
+    environment: "staging",
+    sourceReleaseSha: draft.sourceReleaseSha,
+    deploymentCreatedAt: deploymentCreatedAtMs,
+    finalizedAt: finalizedAtMs,
+    scenario: "maximum-snapshot-import",
+  });
 }
 
 const whoami = JSON.parse(
@@ -119,49 +198,49 @@ const whoami = JSON.parse(
     },
   ),
 );
+const browser = {
+  ...browserChecks,
+  environment: draft.environment,
+  sourceReleaseSha: draft.sourceReleaseSha,
+  scenario: "browser-smoke",
+  siteOrigin: draft.evidence.siteOrigin,
+  generation: browserGeneration,
+  revision: browserRevision,
+  startedAt: browserStartedAt,
+  completedAt: browserCompletedAt,
+};
+assertEvidenceWindow(browser, {
+  label: "browser",
+  environment: draft.environment,
+  sourceReleaseSha: draft.sourceReleaseSha,
+  deploymentCreatedAt: deploymentCreatedAtMs,
+  finalizedAt: finalizedAtMs,
+  scenario: "browser-smoke",
+});
 const record = {
   ...draft,
   operator: whoami.email,
-  checkedAt: new Date().toISOString(),
   manual,
-  load:
-    draft.environment === "staging"
-      ? {
-          passed: true,
-          stateWs: loadResult.stateWs,
-          ready: loadResult.websocket.ready,
-          completedBroadcasts: loadResult.completedBroadcasts,
-          httpClientFailures: loadResult.httpClientFailures,
-          httpServerFailures: loadResult.httpServerFailures,
-          openFailures: loadResult.websocket.openFailures,
-          readyFailures: loadResult.websocket.readyFailures,
-          openLatencyP95Ms: loadResult.websocket.openLatencyP95Ms,
-          readyLatencyP95Ms: loadResult.websocket.readyLatencyP95Ms,
-          broadcasts: loadResult.broadcastResults,
-          completedAt: loadResult.completedAt,
-        }
-      : null,
+  browser,
+  load: loadResult,
   snapshot:
     draft.environment === "staging"
       ? {
-          passed: true,
-          attempts: snapshotResult.attempts,
-          payloadBytes: snapshotResult.payloadBytes,
+          ...snapshotResult,
           cpuMsP95,
-          latencyMsP95: snapshotResult.latencyMsP95,
-          integrity: true,
-          inactiveGeneration: true,
-          r2Stored: true,
-          results: snapshotResult.results,
-          completedAt: snapshotResult.completedAt,
         }
       : null,
+  finalizedAt,
 };
 const outputPath =
-  options.get("output") ?? `.cloudflare/deployments/${draft.environment}-${draft.releaseSha}.json`;
+  options.get("output") ??
+  `.cloudflare/deployments/${draft.environment}-${draft.sourceReleaseSha}.json`;
 const temporaryPath = `${outputPath}.${process.pid}.tmp`;
 await mkdir(dirname(outputPath), { recursive: true, mode: 0o700 });
-await writeFile(temporaryPath, `${JSON.stringify(record, null, 2)}\n`, { mode: 0o600, flag: "wx" });
+await writeFile(temporaryPath, `${JSON.stringify(record, null, 2)}\n`, {
+  mode: 0o600,
+  flag: "wx",
+});
 await chmod(temporaryPath, 0o600);
 await rename(temporaryPath, outputPath);
 if (draft.environment === "staging") {
@@ -170,7 +249,7 @@ if (draft.environment === "staging") {
     [
       "scripts/verify-cloudflare-smoke-record.mjs",
       outputPath,
-      draft.releaseSha,
+      draft.sourceReleaseSha,
       draft.workerVersionId,
     ],
     { stdio: "inherit" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GiPartyPopper } from "react-icons/gi";
 import { RxCross1 } from "react-icons/rx";
 
@@ -8,6 +8,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Separator } from "@/components/ui/Separator";
+import { fetchAdminState } from "@/lib/admin-api";
 import {
   BOARD_SIZE,
   MAX_BINGO_NUMBER,
@@ -34,7 +35,7 @@ interface JudgementModalProps {
   isOpened: boolean;
   canCloseByClickingBackground?: boolean;
   setIsOpened: (isOpened: boolean) => void;
-  bingoNumbers: NumberRow[];
+  onNumbersRefresh: (numbers: NumberRow[]) => void;
 }
 
 interface JudgementState {
@@ -42,6 +43,8 @@ interface JudgementState {
   inputValue: string;
   hasJudged: boolean;
   completedLines: LineId[];
+  judgedRevision: number | null;
+  error: string | null;
 }
 
 const createInitialJudgementState = (): JudgementState => ({
@@ -49,19 +52,29 @@ const createInitialJudgementState = (): JudgementState => ({
   inputValue: "",
   hasJudged: false,
   completedLines: [],
+  judgedRevision: null,
+  error: null,
 });
 
 const JudgementModal = ({
   isOpened,
   canCloseByClickingBackground = true,
   setIsOpened,
-  bingoNumbers,
+  onNumbersRefresh,
 }: JudgementModalProps) => {
   const [bingoCard, setBingoCard] = useState<BingoCard>(() => createEmptyBingoCard());
   const [judgementState, setJudgementState] = useState<JudgementState>(createInitialJudgementState);
-  const { selectedCell, inputValue, hasJudged, completedLines } = judgementState;
+  const [isJudging, setIsJudging] = useState(false);
+  const judgeControllerRef = useRef<AbortController | null>(null);
+  const { selectedCell, inputValue, hasJudged, completedLines, judgedRevision, error } =
+    judgementState;
 
-  const drawnNumbers = useMemo(() => bingoNumbers.map((number) => number.number), [bingoNumbers]);
+  useEffect(
+    () => () => {
+      judgeControllerRef.current?.abort();
+    },
+    [],
+  );
 
   const finalizePendingInput = (commitState: boolean): BingoCard => {
     let working = bingoCard;
@@ -77,6 +90,8 @@ const JudgementModal = ({
   };
 
   const resetAll = () => {
+    judgeControllerRef.current?.abort();
+    setIsJudging(false);
     setBingoCard(createEmptyBingoCard());
     setJudgementState(createInitialJudgementState());
   };
@@ -96,17 +111,42 @@ const JudgementModal = ({
   };
 
   const handleJudge = async () => {
-    const workingCard = finalizePendingInput(false);
-    const done = getCompletedLines(workingCard, drawnNumbers);
-
-    setBingoCard(workingCard);
-    setJudgementState((prev) => ({
-      ...prev,
-      completedLines: done,
-      hasJudged: true,
-      selectedCell: null,
-      inputValue: "",
-    }));
+    if (isJudging) return;
+    const controller = new AbortController();
+    judgeControllerRef.current?.abort();
+    judgeControllerRef.current = controller;
+    setIsJudging(true);
+    setJudgementState((previous) => ({ ...previous, error: null }));
+    try {
+      const authoritativeState = await fetchAdminState(controller.signal);
+      const workingCard = finalizePendingInput(false);
+      const drawnNumbers = authoritativeState.numbers.map((number) => number.number);
+      const done = getCompletedLines(workingCard, drawnNumbers);
+      onNumbersRefresh(authoritativeState.numbers);
+      setBingoCard(workingCard);
+      setJudgementState((previous) => ({
+        ...previous,
+        completedLines: done,
+        hasJudged: true,
+        selectedCell: null,
+        inputValue: "",
+        judgedRevision: authoritativeState.revision,
+        error: null,
+      }));
+    } catch (requestError) {
+      if (!(requestError instanceof DOMException && requestError.name === "AbortError")) {
+        console.error(requestError);
+        setJudgementState((previous) => ({
+          ...previous,
+          error: "抽選番号を確認できませんでした。接続を確認して、もう一度判定してください。",
+        }));
+      }
+    } finally {
+      if (judgeControllerRef.current === controller) {
+        judgeControllerRef.current = null;
+        setIsJudging(false);
+      }
+    }
   };
 
   const handleCellClick = (row: number, col: number) => {
@@ -245,11 +285,29 @@ const JudgementModal = ({
                   ))}
                 </div>
 
+                {error && (
+                  <p role="alert" className="mb-3 w-full max-w-sm text-sm text-destructive">
+                    {error}
+                  </p>
+                )}
                 <div className="grid w-full max-w-sm grid-cols-1 gap-3 sm:grid-cols-2">
-                  <Button type="button" variant="primary" onPress={handleJudge} className="w-full">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onPress={handleJudge}
+                    isDisabled={isJudging}
+                    isPending={isJudging}
+                    className="w-full"
+                  >
                     ビンゴ判定
                   </Button>
-                  <Button type="button" variant="secondary" onPress={resetAll} className="w-full">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onPress={resetAll}
+                    isDisabled={isJudging}
+                    className="w-full"
+                  >
                     リセット
                   </Button>
                 </div>
@@ -266,6 +324,11 @@ const JudgementModal = ({
                       <RxCross1 className="text-3xl sm:text-4xl" />
                       ビンゴはありません
                     </div>
+                  )}
+                  {judgedRevision !== null && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      抽選状態 revision {judgedRevision} で判定
+                    </p>
                   )}
                 </div>
                 <Button

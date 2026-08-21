@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import type { BingoUnifiedState, StateSocketMessage } from "../shared/bingo-transport";
 
 import {
   assertGeneration,
@@ -25,11 +26,10 @@ import {
   type ReachSubmissionRow,
   resolveImageUrl,
   type StoredPrizeRow,
-  type UnifiedGameState,
   validationProblem,
   normalizeHttpsUrl,
 } from "./domain";
-import { capacityResponse } from "./http";
+import { capacityResponse, sha256Hex } from "./http";
 import { expireScreenSockets, scheduleScreenSocketExpiration } from "./screen-socket-expiration";
 import { storeSnapshot } from "./snapshots";
 
@@ -41,19 +41,23 @@ type AppStateSqlRow = Omit<AppStateRow, "is_survey_active"> & { is_survey_active
 type ReachLogSqlRow = ReachLogRow;
 type ReachSubmissionSqlRow = ReachSubmissionRow;
 type AuditLogSqlRow = AuditLogRow;
-type CachedGameState = Omit<UnifiedGameState, "serverTime">;
+type CachedGameState = Omit<BingoUnifiedState, "serverTime">;
 
 type StateSocketAttachment = {
   kind: "state";
   generation: string;
   view: "public" | "screen";
-  connected_at: string;
+  expires_at: number;
 };
 
 const MAX_STATE_SOCKETS = 2_000;
 const MAX_SCREEN_STATE_SOCKETS = 16;
 const MAX_PUBLIC_STATE_SOCKETS = MAX_STATE_SOCKETS - MAX_SCREEN_STATE_SOCKETS;
 const INITIAL_ACTIVATION_TOKEN = "initial";
+const SNAPSHOT_INSTALL_CHECKSUM_KEY = "snapshot_install_checksum";
+const SNAPSHOT_INSTALL_STATUS_KEY = "snapshot_install_status";
+const SNAPSHOT_INSTALL_INSTALLED = "installed";
+const SNAPSHOT_INSTALL_READY = "ready";
 
 export class GameState extends DurableObject<Env> {
   private cachedState: CachedGameState | null = null;
@@ -64,7 +68,7 @@ export class GameState extends DurableObject<Env> {
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
   }
 
-  async getState(generation: string): Promise<UnifiedGameState> {
+  async getState(generation: string): Promise<BingoUnifiedState> {
     this.ensureActiveGeneration(generation);
     return this.readState(generation);
   }
@@ -198,15 +202,19 @@ export class GameState extends DurableObject<Env> {
     if (!mutation.changed) return mutation.count;
 
     const latestReachLog = this.readLatestReachLog();
-    const message = JSON.stringify({
+    if (latestReachLog === null) {
+      throw new Error("public reach mutation did not create a reach log");
+    }
+    const message: StateSocketMessage = {
       type: "reach",
       generation,
       revision: mutation.revision,
       reachCount: mutation.count,
       latestReachLog,
       serverTime: new Date().toISOString(),
-    });
-    for (const socket of this.ctx.getWebSockets("screen")) safeSend(socket, message);
+    };
+    const serializedMessage = JSON.stringify(message);
+    for (const socket of this.ctx.getWebSockets("screen")) safeSend(socket, serializedMessage);
     return mutation.count;
   }
 
@@ -459,12 +467,22 @@ export class GameState extends DurableObject<Env> {
     generation: string,
     snapshotInput: GameSnapshot,
     actor: string,
-  ): Promise<UnifiedGameState> {
+  ): Promise<BingoUnifiedState> {
     assertGeneration(generation);
     this.assertActor(actor);
     const snapshot = parseSnapshot(snapshotInput);
-    if (this.readMetadata("generation") !== null) {
-      conflictProblem("復元先generationは既に初期化されています。");
+    const installChecksum = await sha256Hex(JSON.stringify(snapshot));
+    const existingGeneration = this.readMetadata("generation");
+    if (existingGeneration !== null) {
+      const installStatus = this.readMetadata(SNAPSHOT_INSTALL_STATUS_KEY);
+      if (
+        existingGeneration === generation &&
+        this.readMetadata(SNAPSHOT_INSTALL_CHECKSUM_KEY) === installChecksum &&
+        (installStatus === SNAPSHOT_INSTALL_INSTALLED || installStatus === SNAPSHOT_INSTALL_READY)
+      ) {
+        return this.readState(generation);
+      }
+      conflictProblem("復元先generationは既に別の状態で初期化されています。");
     }
 
     this.ctx.storage.transactionSync(() => {
@@ -472,7 +490,7 @@ export class GameState extends DurableObject<Env> {
         "INSERT INTO game_metadata (key, value) VALUES " +
           "('generation', ?), ('revision', ?), ('initialized_by', ?), " +
           "('initialized_at', ?), ('source_generation', ?), ('reach_submission_count', ?), " +
-          "('activation_token', ?)",
+          "('activation_token', ?), (?, ?), (?, ?)",
         generation,
         String(snapshot.revision),
         actor,
@@ -480,6 +498,10 @@ export class GameState extends DurableObject<Env> {
         snapshot.source_generation,
         String(snapshot.reach_submissions.length),
         INITIAL_ACTIVATION_TOKEN,
+        SNAPSHOT_INSTALL_CHECKSUM_KEY,
+        installChecksum,
+        SNAPSHOT_INSTALL_STATUS_KEY,
+        SNAPSHOT_INSTALL_INSTALLED,
       );
       this.ctx.storage.sql.exec(
         "INSERT INTO app_state " +
@@ -546,8 +568,28 @@ export class GameState extends DurableObject<Env> {
     return this.readState(generation);
   }
 
+  async completeSnapshotInstallation(generation: string): Promise<void> {
+    this.ensureGeneration(generation);
+    const status = this.readMetadata(SNAPSHOT_INSTALL_STATUS_KEY);
+    if (status === SNAPSHOT_INSTALL_READY) return;
+    if (
+      status !== SNAPSHOT_INSTALL_INSTALLED ||
+      this.readMetadata(SNAPSHOT_INSTALL_CHECKSUM_KEY) === null
+    ) {
+      conflictProblem("snapshot installation marker が不正です。");
+    }
+    this.ctx.storage.sql.exec(
+      "UPDATE game_metadata SET value = ? WHERE key = ?",
+      SNAPSHOT_INSTALL_READY,
+      SNAPSHOT_INSTALL_STATUS_KEY,
+    );
+  }
+
   async prepareActivation(generation: string, activationToken: string): Promise<void> {
     this.ensureGeneration(generation);
+    if (this.readMetadata(SNAPSHOT_INSTALL_STATUS_KEY) === SNAPSHOT_INSTALL_INSTALLED) {
+      conflictProblem("snapshot installation が完了していません。");
+    }
     assertActivationToken(activationToken);
     this.ctx.storage.transactionSync(() => {
       this.ctx.storage.sql.exec(
@@ -601,7 +643,8 @@ export class GameState extends DurableObject<Env> {
       nextGeneration,
     );
     const sockets = this.ctx.getWebSockets("state");
-    const message = JSON.stringify({ type: "generation", generation: nextGeneration });
+    const socketMessage: StateSocketMessage = { type: "generation", generation: nextGeneration };
+    const message = JSON.stringify(socketMessage);
     for (const socket of sockets) {
       safeSend(socket, message);
       safeClose(socket, 1012, "game generation changed");
@@ -634,11 +677,15 @@ export class GameState extends DurableObject<Env> {
       kind: "state",
       generation,
       view,
-      connected_at: new Date().toISOString(),
+      expires_at: Date.now() + 30 * 60 * 1_000,
     };
     server.serializeAttachment(attachment);
     if (view === "screen") await scheduleScreenSocketExpiration(this.ctx, "screen");
-    safeSend(server, JSON.stringify({ type: "state", state: this.readState(generation) }));
+    const initialMessage: StateSocketMessage = {
+      type: "state",
+      state: this.readState(generation),
+    };
+    safeSend(server, JSON.stringify(initialMessage));
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -868,7 +915,7 @@ export class GameState extends DurableObject<Env> {
     );
   }
 
-  private readState(generation: string): UnifiedGameState {
+  private readState(generation: string): BingoUnifiedState {
     const revision = this.readRevision();
     if (this.cachedState?.generation === generation && this.cachedState.revision === revision) {
       return { ...this.cachedState, serverTime: new Date().toISOString() };
@@ -999,7 +1046,11 @@ export class GameState extends DurableObject<Env> {
   }
 
   private broadcastState(generation: string): void {
-    const message = JSON.stringify({ type: "state", state: this.readState(generation) });
+    const socketMessage: StateSocketMessage = {
+      type: "state",
+      state: this.readState(generation),
+    };
+    const message = JSON.stringify(socketMessage);
     for (const socket of this.ctx.getWebSockets("state")) safeSend(socket, message);
   }
 
