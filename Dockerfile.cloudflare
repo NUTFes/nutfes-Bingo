@@ -39,6 +39,8 @@ RUN rm -rf /usr/local/lib/node_modules/npm \
   && rm -f /usr/local/bin/npm /usr/local/bin/npx
 USER node
 EXPOSE 8787
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:8787/api/ready').then(response=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))"]
 CMD ["node", "node_modules/wrangler/bin/wrangler.js", "dev", "--ip", "0.0.0.0", "--port", "8787"]
 
 # Export with `docker buildx build --target export --output type=local,dest=. ...`.
