@@ -176,13 +176,13 @@ export function ifNoneMatch(request: Request, etag: string): boolean {
   return value
     .split(",")
     .map((entry) => entry.trim())
-    .some((entry) => entry === etag || entry === "*");
+    .some((entry) => entry === "*" || entry === etag || entry === `W/${etag}`);
 }
 
 export function notModifiedResponse(etag: string): Response {
   const headers = new Headers({
     ETag: etag,
-    "Cache-Control": "no-cache",
+    "Cache-Control": "no-cache, no-transform",
   });
   applySecurityHeaders(headers);
   return new Response(null, { status: 304, headers });
