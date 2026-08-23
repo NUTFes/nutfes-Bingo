@@ -93,10 +93,8 @@ describe("public Worker routes", () => {
 
     const health = await SELF.fetch("http://example.com/api/health");
     expect(health.status).toBe(200);
-    for (const response of [asset, health]) {
-      expect(response.headers.get("strict-transport-security")).toBe("max-age=31536000");
-      expect(response.headers.get("cross-origin-opener-policy")).toBe("same-origin");
-    }
+    expect(health.headers.get("strict-transport-security")).toBe("max-age=31536000");
+    expect(health.headers.get("cross-origin-opener-policy")).toBe("same-origin");
     await expect(health.json()).resolves.toMatchObject({
       status: "ok",
       releaseSha: "test-release-sha",

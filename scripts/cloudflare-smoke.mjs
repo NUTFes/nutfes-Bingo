@@ -48,9 +48,23 @@ const fetchChecked = async (path, expectedStatus, expectedType) => {
   }
   return response;
 };
+const assertSecurityHeaders = (path, response) => {
+  for (const [name, expected] of [
+    ["strict-transport-security", "max-age=31536000"],
+    ["cross-origin-opener-policy", "same-origin"],
+  ]) {
+    const actual = response.headers.get(name);
+    if (actual !== expected) {
+      throw new Error(`${path} returned ${name}: ${actual ?? "<missing>"}; expected ${expected}`);
+    }
+  }
+};
 
-await fetchChecked("/", 200, "text/html");
-const ready = await (await fetchChecked("/api/ready", 200, "application/json")).json();
+const home = await fetchChecked("/", 200, "text/html");
+assertSecurityHeaders("/", home);
+const readyResponse = await fetchChecked("/api/ready", 200, "application/json");
+assertSecurityHeaders("/api/ready", readyResponse);
+const ready = await readyResponse.json();
 if (
   ready?.status !== "ok" ||
   ready?.releaseSha !== releaseSha ||
