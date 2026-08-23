@@ -7,10 +7,9 @@ const defaultUrl =
 
 const rajdhani = Rajdhani({
   variable: "--font-rajdhani",
-  display: "optional",
+  display: "swap",
   subsets: ["latin"],
   weight: "700",
-  preload: false,
 });
 
 const metadataBase = URL.parse(defaultUrl) ?? new URL("http://localhost:3000");
