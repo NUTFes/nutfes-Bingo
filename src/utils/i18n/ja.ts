@@ -1,0 +1,51 @@
+export const ja = {
+  reachModal: {
+    ariaLabel: "リーチ申告",
+    title: "リーチですか？",
+    yes: "リーチする",
+    no: "キャンセル",
+    verificationPending: "送信の準備をしています。",
+    verificationError: "確認に時間がかかっています。もう一度お試しください。",
+  },
+  settingsModal: {
+    languageSelection: "言語の選択",
+    sortOrder: "番号の並び順",
+    japanese: "日本語",
+    english: "English",
+    drawOrder: "抽選順",
+    ascending: "昇順",
+    survey: "アンケート",
+    answerSurvey: "アンケートに回答する",
+    theme: "テーマ",
+    light: "ライト",
+    dark: "ダーク",
+  },
+  helpCarousel: {
+    open: "ヘルプ",
+    close: "閉じる",
+    back: "戻る",
+    next: "次へ",
+    progress: "{{current}} / {{total}}",
+  },
+  helpDescription: {
+    page1_title: "ようこそ！！",
+    page1_txt: "このアプリの使い方を説明します！！ <br> ビンゴ大会で当選した番号を確認できます。",
+    page2_title: "景品ボタン",
+    page2_txt:
+      "このボタンを押すと景品が確認できます！<br>当選状況が随時更新されるのでほしい景品を確認してみてください！",
+    page2_title_back: "戻るボタン",
+    page2_txt_back:
+      "このボタンを押すと前の画面に戻れます！<br>ホームに戻って他の機能を使ってみましょう。",
+    page3_title: "リアクションボタン",
+    page3_txt:
+      "このボタンを押すとリアクションスタンプがステージ上のスクリーンに表示されます！! <br> リアルタイムで楽しいを共有しましょう！",
+    page4_title: "リーチボタン",
+    page4_txt:
+      "リーチしたらこのボタンを押してください！<br>みんなのリーチ数がスクリーン上に表示されます！",
+    page5_title: "設定ボタン",
+    page5_txt: "このボタンを押すと番号の表示順や言語を変更できます！",
+    next: "次へ",
+    back: "戻る",
+    close: "閉じる",
+  },
+};

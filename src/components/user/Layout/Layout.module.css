@@ -1,0 +1,136 @@
+.layoutWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: clamp(14px, 7vw, 26px) 0 clamp(20px, 10vw, 40px);
+}
+
+.content:focus-visible {
+  outline: 3px solid var(--main-color);
+  outline-offset: -3px;
+}
+
+.settingsModal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(24px, 6vw, 32px);
+  width: 100%;
+}
+
+.settingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 12px);
+}
+
+.headerIcon {
+  width: clamp(24px, 6.5vw, 28px);
+  height: clamp(24px, 6.5vw, 28px);
+  color: var(--main-color);
+  margin-top: -2px;
+}
+
+.modalTitle {
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-size: clamp(24px, 7.5vw, 30px);
+  font-weight: 900;
+  color: var(--main-color);
+  margin: 0;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.settingsList {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0;
+}
+
+.settingsRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: clamp(12px, 4vw, 16px);
+  padding: clamp(16px, 4vw, 20px) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--main-color) 30%, transparent);
+}
+.settingsRow:last-child {
+  border-bottom: none;
+}
+
+.settingsRowLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2.5vw, 12px);
+  width: 100%;
+}
+
+.settingsRowLabel span {
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: clamp(15px, 4.2vw, 18px);
+  font-weight: 700;
+  color: var(--main-color);
+  margin: 0;
+  text-align: center;
+}
+
+.rowIcon {
+  width: clamp(18px, 4.5vw, 22px);
+  height: clamp(18px, 4.5vw, 22px);
+  color: var(--main-color);
+}
+
+.settingsRowControl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.settingsRowControl button {
+  width: clamp(180px, 50vw, 220px);
+  height: clamp(40px, 10vw, 48px);
+  border-width: 2px;
+  border-radius: 99px;
+}
+
+.settingsRowControl button span {
+  font-size: clamp(13px, 3.5vw, 15px);
+}
+
+.settingsRowControl .surveyButton {
+  min-width: 0;
+  width: auto !important;
+  padding: 0 clamp(20px, 6vw, 32px) !important;
+}
+
+@media (min-width: 640px) {
+  .layoutWrapper {
+    width: min(100%, 430px);
+    margin: 0 auto;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.18);
+  }
+
+  .content {
+    padding: 26px 0 40px;
+  }
+
+  .surveyButton {
+    min-width: 260px;
+    padding: 0 24px !important;
+  }
+}

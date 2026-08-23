@@ -1,0 +1,84 @@
+name: Trivy
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "Dockerfile.cloudflare"
+      - "scripts/**"
+      - "src/**"
+      - "worker/**"
+      - "public/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "next.config.ts"
+      - "wrangler.jsonc"
+      - ".github/workflows/trivy.yml"
+  push:
+    branches: [develop]
+    paths:
+      - "Dockerfile.cloudflare"
+      - "scripts/**"
+      - "src/**"
+      - "worker/**"
+      - "public/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "next.config.ts"
+      - "wrangler.jsonc"
+      - ".github/workflows/trivy.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trivy-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository:
+    name: Repository scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Generate SARIF
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-repository.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          vuln-type: os,library
+          scanners: vuln,secret,misconfig
+          exit-code: "0"
+
+      - name: Upload SARIF
+        if: github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@f52b05f4acaaa234e44466e66d29050e135ea9ef # v4.36.0
+        with:
+          sarif_file: trivy-repository.sarif
+          category: trivy-repository
+
+      - name: Enforce severity gate
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          vuln-type: os,library
+          scanners: vuln,secret,misconfig
+          exit-code: "1"
+          skip-setup-trivy: true

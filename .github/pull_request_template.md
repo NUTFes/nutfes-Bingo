@@ -18,15 +18,16 @@
 
 <!-- URLとともに貼る（なければ空欄でよい） -->
 
-# テスト項目
+# チェックリスト
 
-<!-- テストしてほしい内容を記載 -->
-<!-- ex) コンポーネントのデザインが崩れないか -->
-<!-- ex) データが表示できてるか・反映されてるか -->
-
-- [ ]
-- [ ]
-- [ ]
+- [ ] pnpmだけを使用した
+- [ ] lockfile変更は意図したものだけである
+- [ ] Node/pnpm pinを確認した
+- [ ] Cloudflare static build / Worker deploy pathへの影響を確認した
+- [ ] Durable Objects / R2 / Access / Turnstile bindingsへの影響を確認した
+- [ ] `wrangler.jsonc` / `.dev.vars.example` への影響を確認した
+- [ ] Worker変更では`mise run cloudflare:check`を実行した
+- [ ] PITR / Worker rollbackへの影響を説明した
 
 # 備考
 

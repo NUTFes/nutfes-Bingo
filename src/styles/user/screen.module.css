@@ -1,0 +1,43 @@
+.scene {
+  position: fixed;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+}
+
+.layout {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(40px, 8vw, 120px);
+  width: 100%;
+  max-width: 1600px;
+  padding: 0 clamp(20px, 4vw, 80px);
+  box-sizing: border-box;
+}
+
+.mainContent {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.sideContent {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(32px, 6vw, 80px);
+}

@@ -1,0 +1,396 @@
+"use client";
+
+import { useEffect, useReducer, type SetStateAction } from "react";
+
+import { AdminHeader, AdminLoading, BingoResult } from "@/components/admin";
+import { Button } from "@/components/ui/Button";
+import { MyToastRegion } from "@/components/ui/Toast";
+import { queue } from "@/components/ui/toastQueue";
+import type { AppStateRow, NumberRow } from "@/types/bingo/types";
+import JudgementModal from "./components/JudgementModal";
+import UpdateNumberModal from "./components/UpdateNumberModal";
+import { dashboardActions } from "./actions-client";
+import {
+  AnnualEventSection,
+  CreateNumberSection,
+  DeleteNumberSection,
+  ReachControlSection,
+  SurveyControlSection,
+} from "./dashboard-sections";
+import { useDashboardState } from "./hooks";
+import { parseBingoNumber } from "./utils";
+import { fetchAdminState } from "@/lib/admin-api";
+
+interface AdminDashboardPageProps {
+  initialNumbers: NumberRow[];
+  initialAppState: AppStateRow;
+}
+
+interface DashboardLoadState {
+  bingoNumbers: NumberRow[];
+  eventId: string;
+  revision: number;
+  loadError: string | null;
+  isLoaded: boolean;
+  surveyUrl: string;
+}
+
+type DashboardLoadAction =
+  | {
+      type: "sync-authoritative";
+      numbers: NumberRow[];
+      appState: AppStateRow;
+      revision: number;
+      markLoaded?: boolean;
+    }
+  | { type: "load-error"; message: string }
+  | { type: "set-numbers"; value: SetStateAction<NumberRow[]> }
+  | { type: "set-survey-url"; value: SetStateAction<string> };
+
+const dashboardLoadReducer = (
+  state: DashboardLoadState,
+  action: DashboardLoadAction,
+): DashboardLoadState => {
+  switch (action.type) {
+    case "sync-authoritative":
+      return {
+        ...state,
+        bingoNumbers: action.numbers,
+        eventId: action.appState.event_id,
+        revision: action.revision,
+        surveyUrl: action.appState.survey_url,
+        loadError: null,
+        isLoaded: action.markLoaded ? true : state.isLoaded,
+      };
+    case "load-error":
+      return { ...state, loadError: action.message };
+    case "set-numbers":
+      return {
+        ...state,
+        bingoNumbers:
+          typeof action.value === "function" ? action.value(state.bingoNumbers) : action.value,
+      };
+    case "set-survey-url":
+      return {
+        ...state,
+        surveyUrl:
+          typeof action.value === "function" ? action.value(state.surveyUrl) : action.value,
+      };
+  }
+};
+
+const TOAST_TIMEOUT = 5000;
+
+const showToast = (content: { title: string; description?: string }) => {
+  queue.add(content, { timeout: TOAST_TIMEOUT });
+};
+
+const handleLogout = async () => {
+  await dashboardActions.logout();
+};
+
+const mutateReach = async (direction: "increment" | "decrement") => {
+  const result =
+    direction === "increment"
+      ? await dashboardActions.incrementReach()
+      : await dashboardActions.decrementReach();
+  if (!result.ok) {
+    console.error(result.error);
+    showToast({
+      title: "更新結果を確認できません",
+      description: "サーバーの最新状態を再取得します。",
+    });
+  } else {
+    showToast({
+      title: "更新完了",
+      description:
+        direction === "increment" ? "リーチ数を 1 増加しました。" : "リーチ数を 1 減少しました。",
+    });
+  }
+  return result;
+};
+
+export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
+  const [{ bingoNumbers, eventId, revision, loadError, isLoaded, surveyUrl }, dispatchLoadState] =
+    useReducer(dashboardLoadReducer, {
+      bingoNumbers: initialNumbers,
+      eventId: initialAppState.event_id,
+      revision: 0,
+      loadError: null,
+      isLoaded: false,
+      surveyUrl: initialAppState.survey_url,
+    });
+  const setBingoNumbers = (value: SetStateAction<NumberRow[]>) => {
+    dispatchLoadState({ type: "set-numbers", value });
+  };
+  const setSurveyUrl = (value: SetStateAction<string>) => {
+    dispatchLoadState({ type: "set-survey-url", value });
+  };
+  const dashboardState = useDashboardState({ bingoNumbers });
+
+  const refreshAuthoritativeState = async () => {
+    try {
+      const state = await fetchAdminState();
+      dispatchLoadState({
+        type: "sync-authoritative",
+        numbers: state.numbers,
+        appState: state.appState,
+        revision: state.revision,
+      });
+      return state;
+    } catch (error) {
+      console.error(error);
+      showToast({
+        title: "再読込失敗",
+        description: "サーバー状態を確認できません。ページを再読み込みしてください。",
+      });
+      return null;
+    }
+  };
+  const runReachMutation = async (direction: "increment" | "decrement") => {
+    await mutateReach(direction);
+    await refreshAuthoritativeState();
+  };
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetchAdminState(controller.signal)
+      .then((state) => {
+        dispatchLoadState({
+          type: "sync-authoritative",
+          numbers: state.numbers,
+          appState: state.appState,
+          revision: state.revision,
+          markLoaded: true,
+        });
+      })
+      .catch((error) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          console.error(error);
+          dispatchLoadState({
+            type: "load-error",
+            message: "管理データを取得できませんでした。接続を確認して再読み込みしてください。",
+          });
+          showToast({ title: "読込失敗", description: "管理データを取得できませんでした。" });
+        }
+      });
+    return () => controller.abort();
+  }, []);
+  const parsedSubmitNumber = parseBingoNumber(dashboardState.submitNumberInput);
+
+  const handleCreate = async () => {
+    const nextNumber = parseBingoNumber(dashboardState.submitNumberInput);
+    if (nextNumber === undefined) {
+      showToast({ title: "入力エラー", description: "番号は 1〜99 の範囲で入力してください。" });
+      return;
+    }
+    const result = await dashboardActions.createNumber(nextNumber);
+    if (!result.ok) {
+      console.error(result.error);
+      const state = await refreshAuthoritativeState();
+      if (state?.numbers.some((number) => number.number === nextNumber)) {
+        dashboardState.resetSubmitNumberInput();
+        showToast({
+          title: "登録済み",
+          description: `${nextNumber} はサーバーへ登録されています。`,
+        });
+        return;
+      }
+      if (
+        result.error.includes("duplicate") ||
+        result.error.includes("numbers_number_unique") ||
+        result.error.includes("同じ番号が既に登録")
+      ) {
+        showToast({ title: "重複番号", description: `${nextNumber} は既に入力済みです。` });
+        return;
+      }
+      showToast({ title: "登録失敗", description: "番号の登録結果を確認できませんでした。" });
+      return;
+    }
+    setBingoNumbers((prev) =>
+      [...prev.filter((bingoNumber) => bingoNumber.id !== result.data.id), result.data].sort(
+        (a, b) => a.id - b.id,
+      ),
+    );
+    dashboardState.resetSubmitNumberInput();
+    showToast({ title: "登録完了", description: `${nextNumber} を追加しました。` });
+  };
+
+  const handleDelete = async () => {
+    const target = parseBingoNumber(dashboardState.deleteInput);
+    if (target === undefined) {
+      showToast({ title: "入力エラー", description: "番号は 1〜99 の範囲で入力してください。" });
+      return;
+    }
+    const result = await dashboardActions.deleteNumber(target);
+    if (!result.ok) {
+      console.error(result.error);
+      const state = await refreshAuthoritativeState();
+      if (state && !state.numbers.some((number) => number.number === target)) {
+        dashboardState.resetDeleteInput();
+        showToast({ title: "削除済み", description: `${target} はサーバーから削除されています。` });
+        return;
+      }
+      showToast({ title: "削除失敗", description: "番号の削除結果を確認できませんでした。" });
+      return;
+    }
+    setBingoNumbers((prev) => prev.filter((bingoNumber) => bingoNumber.id !== result.data.id));
+    dashboardState.resetDeleteInput();
+    showToast({ title: "削除完了", description: `${target} を削除しました。` });
+  };
+
+  const handleSurvey = async (isSurveyActive: boolean) => {
+    const result = await dashboardActions.saveSurveyState({
+      surveyUrl,
+      isSurveyActive,
+    });
+    if (!result.ok) {
+      console.error(result.error);
+      await refreshAuthoritativeState();
+      showToast({
+        title: "更新結果を再確認しました",
+        description: "サーバーの最新アンケート設定を表示しています。",
+      });
+      return;
+    }
+    setSurveyUrl(result.data.survey_url);
+    showToast({
+      title: isSurveyActive ? "アンケート配信" : "アンケート停止",
+      description: isSurveyActive ? "アンケートを送信しました。" : "アンケートを停止しました。",
+    });
+  };
+
+  const handleStartAnnualEvent = async (newEventId: string) => {
+    const stateBeforeReset = await refreshAuthoritativeState();
+    if (stateBeforeReset === null) return false;
+    if (stateBeforeReset.appState.event_id !== eventId) {
+      showToast({
+        title: "イベントが切り替わっています",
+        description: "最新のイベントIDを表示しました。内容を確認してから再実行してください。",
+      });
+      return false;
+    }
+
+    const result = await dashboardActions.startAnnualEvent({
+      expectedRevision: stateBeforeReset.revision,
+      expectedEventId: stateBeforeReset.appState.event_id,
+      newEventId,
+    });
+    const stateAfterReset = await refreshAuthoritativeState();
+    if (!result.ok) {
+      console.error(result.error);
+      showToast({
+        title: "年次切替を完了できませんでした",
+        description: stateAfterReset
+          ? "サーバーの最新状態を表示しています。内容を確認して再実行してください。"
+          : "サーバー状態を確認できません。ページを再読み込みしてください。",
+      });
+      return false;
+    }
+    showToast({
+      title: "新年度を開始しました",
+      description: `イベントIDを ${result.data.eventId} に切り替えました。`,
+    });
+    return stateAfterReset?.appState.event_id === result.data.eventId;
+  };
+
+  const deleteNumberOptions = [...bingoNumbers].reverse().map((bingoNumber) => ({
+    id: String(bingoNumber.number),
+    label: `${bingoNumber.number}`,
+  }));
+
+  if (!isLoaded) {
+    return <AdminLoading error={loadError} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-background pb-8 text-foreground sm:pb-10">
+      <MyToastRegion />
+      <JudgementModal
+        isOpened={dashboardState.isJudgementModalOpen}
+        setIsOpened={dashboardState.setIsJudgementModalOpen}
+        onNumbersRefresh={setBingoNumbers}
+      />
+      <UpdateNumberModal
+        isOpened={dashboardState.isUpdateNumberModalOpen}
+        setIsOpened={dashboardState.setIsUpdateNumberModalOpen}
+        id={dashboardState.selectedId}
+        initialNumber={dashboardState.selectedNumber}
+        onSubmit={async ({ id, number }) => {
+          const result = await dashboardActions.updateNumber(id, number);
+          if (!result.ok) {
+            console.error(result.error);
+            await refreshAuthoritativeState();
+            showToast({
+              title: "更新結果を再確認しました",
+              description: "サーバーの最新番号一覧を表示しています。",
+            });
+            throw new Error(result.error);
+          }
+          setBingoNumbers((prev) =>
+            prev
+              .map((bingoNumber) => (bingoNumber.id === result.data.id ? result.data : bingoNumber))
+              .sort((a, b) => a.id - b.id),
+          );
+          showToast({ title: "更新完了", description: "番号を更新しました。" });
+        }}
+      />
+      <AdminHeader>
+        <div className="flex items-center gap-1.5">
+          <Button onPress={() => dashboardState.setIsJudgementModalOpen(true)}>正誤判定</Button>
+          <Button onPress={handleLogout} variant="secondary">
+            ログアウト
+          </Button>
+        </div>
+      </AdminHeader>
+
+      <div className="mx-auto mt-8 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12 xl:gap-16">
+          <div className="flex flex-col gap-10 lg:col-span-8 lg:gap-12">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:gap-10">
+              <CreateNumberSection
+                submitNumberFieldKey={dashboardState.submitNumberFieldKey}
+                parsedSubmitNumber={parsedSubmitNumber}
+                onSubmitNumberInputChange={dashboardState.setSubmitNumberInput}
+                onCreate={handleCreate}
+              />
+
+              <DeleteNumberSection
+                deleteInput={dashboardState.deleteInput}
+                selectedDeleteNumber={dashboardState.selectedDeleteNumber}
+                deleteNumberOptions={deleteNumberOptions}
+                onDeleteInputChange={dashboardState.handleDeleteInputChange}
+                onDeleteSelectionChange={dashboardState.handleDeleteSelectionChange}
+                onDelete={handleDelete}
+              />
+            </div>
+
+            <BingoResult
+              bingoResultNumber={bingoNumbers}
+              onClick={dashboardState.openUpdateNumberModal}
+            />
+          </div>
+
+          <div className="flex flex-col gap-8 lg:col-span-4">
+            <div className="rounded-2xl border border-border bg-card/50 p-5 sm:p-6 flex flex-col gap-8">
+              <ReachControlSection
+                onIncrement={() => runReachMutation("increment")}
+                onDecrement={() => runReachMutation("decrement")}
+              />
+              <SurveyControlSection
+                surveyUrl={surveyUrl}
+                onSurveyUrlChange={setSurveyUrl}
+                onActivate={() => handleSurvey(true)}
+                onDeactivate={() => handleSurvey(false)}
+              />
+              <AnnualEventSection
+                currentEventId={eventId}
+                revision={revision}
+                onStart={handleStartAnnualEvent}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

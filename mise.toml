@@ -1,0 +1,78 @@
+[tools]
+node = "26.2.0"
+pnpm = "11.2.2"
+
+[tasks.install]
+description = "Install dependencies"
+run = "pnpm install --frozen-lockfile"
+
+[tasks.check]
+description = "Run format, lint, and TypeScript checks"
+run = "pnpm check"
+
+[tasks."cloudflare:build"]
+description = "Build the static Next.js artifact in Docker and export it to out/"
+run = "./scripts/build-cloudflare-assets.sh"
+
+[tasks."cloudflare:dev"]
+description = "Build and run the complete Worker locally in Docker"
+run = "./scripts/cloudflare-dev.sh"
+
+[tasks."cloudflare:test"]
+description = "Run Worker and Durable Object tests in workerd"
+run = "pnpm test"
+
+[tasks."cloudflare:check"]
+description = "Check generated bindings, Worker bundle, and startup time"
+run = "./scripts/check-cloudflare-worker.sh"
+
+[tasks.preflight]
+description = "Validate the release, production target, build, and tests"
+run = "./scripts/preflight-cloudflare.sh"
+
+[tasks.deploy]
+description = "Deploy develop HEAD to the pinned production Worker"
+run = "./scripts/deploy-cloudflare.sh"
+
+[tasks.smoke]
+description = "Smoke-test the active production deployment"
+run = "./scripts/run-cloudflare-smoke.sh"
+
+[tasks.recover]
+description = "Prepare or execute guarded SQLite Durable Object PITR"
+run = "node scripts/cloudflare-pitr.mjs"
+
+[tasks.capacity]
+description = "Run the explicit capacity-sensitive WebSocket scenario"
+usage = 'arg "<base-url>" help="Loopback origin from mise run cloudflare:dev"'
+run = '''
+node scripts/cloudflare-load-test.mjs \
+  --run \
+  --base-url "${usage_base_url?}" \
+  --state-ws 1000 \
+  --duration 300 \
+  --expect-broadcasts 0
+'''
+
+[tasks."add"]
+description = "Add dependency with pnpm (use -D for devDependency)"
+usage = """
+arg "<package>" help="Package name to add"
+flag "-D --dev" help="Package is a development dependency"
+"""
+run = """
+if [ "${usage_dev:-false}" = "true" ]; then
+  pnpm add -D "${usage_package?}"
+else
+  pnpm add "${usage_package?}"
+fi
+"""
+
+[tasks."remove"]
+description = "Remove dependency with pnpm"
+usage = 'arg "<package>" help="Package name to remove"'
+run = 'pnpm remove "${usage_package?}"'
+
+[tasks."deps:update"]
+description = "Refresh pnpm lockfile intentionally"
+run = "pnpm install"

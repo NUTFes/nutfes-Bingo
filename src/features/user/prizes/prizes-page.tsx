@@ -1,0 +1,31 @@
+"use client";
+
+import { Layout, PrizeCardList } from "@/components/user";
+import Loading from "@/components/user/Loading";
+import { usePrizesRealtimeState } from "@/lib/realtime";
+import type { PublicPreferences } from "@/types/bingo/public-preferences";
+import type { AppStateRow, PrizeWithImageUrl } from "@/types/bingo/types";
+
+interface PrizesPageProps {
+  initialPrizes: PrizeWithImageUrl[];
+  initialAppState: AppStateRow;
+  initialPreferences: PublicPreferences;
+}
+
+export function PrizesPage({
+  initialPrizes,
+  initialAppState,
+  initialPreferences,
+}: PrizesPageProps) {
+  const { prizes, appState, isReady } = usePrizesRealtimeState(initialPrizes, initialAppState);
+
+  if (!isReady) {
+    return <Loading />;
+  }
+
+  return (
+    <Layout appState={appState} initialPreferences={initialPreferences}>
+      <PrizeCardList prizes={prizes} />
+    </Layout>
+  );
+}

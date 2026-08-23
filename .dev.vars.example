@@ -1,0 +1,4 @@
+# Wrangler loads only required secrets from this file when wrangler.jsonc declares secrets.required.
+# scripts/cloudflare-dev.sh injects loopback-only non-secret local variables explicitly.
+# Official Cloudflare test secret. Never place a production secret in this example file.
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA

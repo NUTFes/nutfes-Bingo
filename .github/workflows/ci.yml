@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "26.2.0"
+  PNPM_VERSION: "11.2.2"
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Takumi Guard
+        uses: flatt-security/setup-takumi-guard-npm@8f53b50568e4466f2d92504f349c05b9ffcb8b59 # v1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Dependency security gate
+        run: |
+          pnpm audit --prod --audit-level high
+          pnpm audit --audit-level high
+
+      - name: Static checks
+        run: |
+          pnpm run secrets:check
+          pnpm run check
+          pnpm run worker:types:check
+          pnpm run doctor
+          pnpm run knip
+          sh -n scripts/*.sh
+
+      - name: Worker and Durable Object tests
+        run: pnpm run test
+
+      - name: Build and validate production artifact
+        env:
+          NEXT_PUBLIC_MEDIA_ORIGIN: https://media.example.test
+          NEXT_PUBLIC_SITE_URL: https://app.example.test
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+        run: ./scripts/check-cloudflare-worker.sh

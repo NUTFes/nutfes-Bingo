@@ -1,0 +1,44 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 62.5vw;
+  height: 62.5vw;
+  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  border: 2vw solid var(--main-color);
+  background: linear-gradient(135deg, var(--background-color) 50%, var(--number-accent-color) 51%);
+  border-radius: 7vw;
+  box-sizing: border-box;
+  box-shadow: 1vw 1vw 0vw 0.9vw var(--main-color);
+  font-size: 31.25vw;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  color: var(--main-color);
+}
+
+.number {
+  color: var(--main-color);
+}
+
+@media (min-width: 1024px) {
+  .container {
+    width: 30vw;
+    height: 30vw;
+    border: 1rem solid var(--main-color);
+    border-radius: 1.25rem;
+    box-shadow: 0.5rem 0.5rem 0rem var(--main-color);
+    font-size: 15vw;
+  }
+}
+
+@media (min-width: 640px) {
+  .container {
+    width: 269px;
+    height: 269px;
+    border: 9px solid var(--main-color);
+    border-radius: 30px;
+    box-shadow: 4px 4px 0 4px var(--main-color);
+    font-size: 134px;
+  }
+}

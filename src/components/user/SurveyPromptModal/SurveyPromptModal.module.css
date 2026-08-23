@@ -1,0 +1,30 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.title {
+  font-weight: 700;
+  color: var(--main-color);
+  text-align: center;
+  font-size: 6vw;
+}
+
+.actions {
+  display: flex;
+  gap: 3vw;
+  margin-top: 3vw;
+}
+
+@media (min-width: 640px) {
+  .title {
+    font-size: 24px;
+  }
+  .actions {
+    gap: 16px;
+    margin-top: 16px;
+  }
+}

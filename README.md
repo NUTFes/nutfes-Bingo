@@ -1,101 +1,87 @@
 # nutfes-Bingo
 
-技大祭当日に使うビンゴアプリです。
+技大祭当日に使うCloudflare上のリアルタイム・ビンゴアプリです。完成後は原則freezeし、年1回だけ起動・deployします。
 
-## 制作背景
+## アーキテクチャ
 
-### 課題
+- Next.js App Router UIをstatic exportし、Workers Static Assetsから配信する。公開HTML、JavaScript、CSSは原則Workerを起動しない。
+- same-origin WorkerがHTTP API、Cloudflare Access認可、Turnstile検証、景品画像R2、Durable Object routingを担当する。
+- 固定名`game`のSQLite `GameState` Durable Object 1個が、番号、景品、当選状態、reach、survey、bounded audit logの正本になる。
+- `ReactionHub` Durable Objectが消失許容のstampを正本から分離する。
+- public stateはHibernation WebSocketで配信し、接続障害時は回数制限付きHTTP fallbackを使う。
+- public reachはTurnstileをserver-side検証する。reachとstampは同じedge kill switchでWorker到達前に停止できる。
+- `/admin*`と`/screen*`は別Cloudflare Access applicationで保護し、WorkerもJWT issuer、AUD、email allowlistを検証する。
+- 景品画像は2 MiB/type/signatureを検証し、content-hash keyで専用R2へ保存する。
+- data recoveryはSQLite Durable Object PITRだけを使う。`GameDirectory`、generation切替、logical snapshot、backup R2、daily Cronはない。
 
-従来の学園祭ビンゴ大会では、抽選機で排出された番号をホワイトボードに手書きで掲示していました。この運用には以下の課題がありました。
+詳細と年次手順は[Cloudflare本番運用runbook](docs/cloudflare-operations.md)を参照してください。
 
-- **視認性の問題**：後方の参加者には文字が見えづらい
-- **人員コスト**：板書担当として人員を別途確保する必要がある
+## Cloudflare環境境界
 
-### 目的
+productionは団体Cloudflare accountの`nutfes-bingo` Workerと、団体管理のapp/media custom domainを使います。通常deployに常設stagingや個人accountを使いません。DO/auth/bindingを再び変更する場合だけ、団体account内に一時的な検証環境を作ります。
 
-抽選番号や景品の当選状況を Web 上でリアルタイムに確認できるアプリを作成し、参加者体験の向上と運営の効率化を両立させることを目的としました。
+`cloudflare.project.env`がaccount ID、Worker名、Access team/AUD、site/media URL、Turnstile sitekeyの公開正本です。credential、Access JWT、allowlist、secretはGitへ保存しません。`workers.dev`、preview URL、R2 `r2.dev`は無効です。
 
-参加者（600〜1000人規模）が自身のスマートフォンから番号を確認できるようにするとともに、会場の大型ディスプレイへの表示、管理者向けの運営機能も提供しています。
+## 開発環境
 
----
-
-## 技術選定
-
-### 技術スタック
-
-| レイヤー | 技術 |
-|------|------|
-| フロントエンド | Next.js / TypeScript |
-| バックエンド | Hasura Engine (GraphQL) |
-| データベース | PostgreSQL |
-| ストレージ | MinIO |
-| インフラ | オンプレサーバ（Proxmox VM） + Cloudflare Tunnel |
-| 開発環境 | Docker / Docker Compose |
-
-### 選定理由
-
-**Hasura (GraphQL)**
-
-このアプリの主要要件は「複数ユーザーへのリアルタイム配信」でした。Hasura の GraphQL Subscription を使うことで WebSocket 通信を容易に実装できること、また GUI 上でスキーマ作成からCRUD API・Subscription クエリの生成まで行えるため、バックエンドの実装コストを大幅に削減できると判断し採用しました。
-
-開発期間が3か月、チームのほとんどが Web 開発未経験という状況で、当日リリースを最優先にするためバックエンドに時間を割かずフロントの UI に注力できる構成を選びました。
-
-**Next.js / TypeScript**
-
-nutmeg（所属サークル）内の複数プロジェクトで採用されており、技術的な質問・知見の共有がしやすい環境にあったため採用しました。
-
-**インフラ（オンプレ + Cloudflare Tunnel）**
-
-Proxmox 上の VM にサービスを構築し、Cloudflare Tunnel 経由で外部公開しています。
-
-## Branch 命名規則
-
-新機能の Branch 名：feature/issue○○/title[isuue の簡単な説明]
-
-修正の Branch 名：fix/issue○○/title[issue の簡単な説明]
-
-## PR 命名規則
-
-新機能：[add] title
-
-編集・修正：[fix] title
-
-削除：[del] title
-
-## セットアップ
-
-### 基本的なセットアップ
+Node `26.2.0`、pnpm `11.2.2`、Docker Engine、miseを使用します。package managerはpnpmだけを使い、Next.js buildとCloudflare開発runtimeはDocker内で実行します。ホストで`pnpm dev`や`pnpm build`を実行しないでください。
 
 ```bash
-make setup
+mise trust
+mise install
+mise run install
+cp .dev.vars.example .dev.vars
+mise run cloudflare:dev
 ```
 
-### MinIO 認証情報を新規生成してセットアップ
+ローカルURLは`http://localhost:8787`です。local buildはCloudflare公式dummy Turnstile keyを使用し、明示的test modeはloopbackでだけ有効です。
+
+依存関係は`mise run add <package>`、`mise run add -D <package>`、`mise run remove <package>`で変更します。
+
+## 品質チェック
 
 ```bash
-make setup-with-new-keys
+pnpm fmt:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm doctor
+pnpm knip
+mise run cloudflare:check
 ```
 
-### MinIO 認証情報のみ生成
+`pnpm test`はWorkers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。ブラウザE2E suiteは未構成です。`mise run cloudflare:check`はDocker static build、binding type freshness、Wrangler dry-run、Free plan bundle上限、Worker startup profileを確認します。
+
+## Deploy
+
+通常deployは`develop`のcleanかつpush済みHEADから次の3 commandだけを実行します。
 
 ```bash
-make generate-minio-keys
+mise run preflight
+mise run deploy
+mise run smoke
 ```
 
-## 実装メモ
+`preflight`と`deploy`はGit HEAD、`origin/develop`、organization account、Worker、R2、Access座標、Turnstile sitekey/secretをfail closedで照合します。private `.cloudflare.deploy.production.env`はmode `600`で、named Admin/Screen allowlistだけを保持します。
 
-- `next: permission denied`が出る時の対処法
-  - `docker compose run --rm [コンテナ名] bash` でそのコンテナに入る
-  - `chown +x -R .`　で実行権限を与える
-  - `exit`でそのコンテナから出る
+1000 socket試験は通常release gateではありません。完成時またはrealtime/DO/capacityに影響する変更時だけ、local Workerに対して`mise run capacity http://127.0.0.1:8787`を実行します。
 
-### MinIO 認証情報について
+## Rollbackとdata recovery
 
-- MinIO のアクセスキーとシークレットキーは `api/seeds/generate_minio_credentials.sh` で自動生成可能
-- GUI 操作不要で、mc コマンドを使用して認証情報を生成・更新
-- 環境変数ファイル (`settings/bingo.env`, `settings/admin.env`) は自動的にバックアップ・更新される
-- **バケット作成も認証情報生成時に自動実行される**
+- 通常のcode/assets/config regression: DO class/schemaを変えていない場合だけ、直前のGit SHAとWorker version IDを確認してrollbackし、そのSHAを指定してsmokeする。
+- DO class/schemaを変えたrelease: 古いversionへ戻さずfix-forwardする。
+- data誤操作: まずAdminで逆操作し、紙master logを正とする。
+- 30日以内のstate破損: `mise run recover -- prepare ...`でplanを作り、二者確認後にPITRをscheduleする。commandはrestart前にundo bookmarkをmode `600` receiptへ保存する。
+- Cloudflare全体または復旧長期化: optional reaction/reachを止め、紙master logと`offline/projector.html`でイベントを継続する。
 
-### スクリプトの役割分担
-- `generate_minio_credentials.sh`: MinIO 環境セットアップ（認証情報生成 + バケット作成）
-- `seed_with_existing_images.sh`: データ投入のみ（画像アップロード + DB 登録）
+PITRはlocal runtimeで実行できません。イベント前にproduction相当のremote dummy stateでrestoreとundoを1回rehearseします。
+
+## Free planとdegraded mode
+
+通常500人、capacity確認1000 page instanceを想定します。Static Assets bypass、heartbeatなしHibernation WebSocket、単一`GameState`により、1000 page instanceの保守ケースは約16,000 Worker request / 16,000 DO requestです。
+
+異常時は番号・景品・当選状態・survey・Admin更新を優先し、次の順にoptional trafficを止めます。
+
+1. `optional-public-mutations` edge ruleでstampとpublic reachをWorker到達前に同時停止する。
+2. 会場進行を紙master logへ切り替える。reactionとpublic reachの停止をイベント停止理由にしない。
+3. Worker/Access障害はbypassせずfail closedにし、復旧見込みが短い場合だけrollback/PITRを行う。

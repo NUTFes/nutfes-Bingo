@@ -1,8 +1,0 @@
-# アンケート配信状態の継続取得(Subscription)
-subscription SubscribeLatestEventSurvey {
-  events(orderBy: { id: DESC }, limit: 1) {
-    id
-    surveyUrl
-    isSurveyActive
-  }
-}

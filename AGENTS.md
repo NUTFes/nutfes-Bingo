@@ -1,45 +1,67 @@
-# Repository Guidelines
+# Project agent guide
 
-## Language / Output（日本語方針）
-- 以降の**説明・設計コメント・コードコメント・レビュー指摘・PR/Issue本文・ドキュメント**は、特段の指定がない限り **日本語で記述**してください。
-- **識別子（変数名・関数名・型名・GraphQLスキーマ・APIスキーマ・DBスキーマ）**は一貫性のため **英語** を用います。
-- **ユーザー向け文言（UIテキスト、バリデーション/エラーメッセージ、トースト等）**は日本語で書き、関連する `i18n` / ロケールファイルを更新してください。
-- 例外：外部公開API仕様やOSSへのコントリビューションなど、英語が望ましい場面では英語を用いて問題ありません（その場合でもリポジトリ内の補助説明は日本語可）。
-- Codex CLI / エディタ支援ツールを使う場合も、**出力は日本語**になるようプロンプト/AGENTS.mdにこの方針を明記してください。
+## Environment
 
-## Project Structure & Module Organization
-- `view-user/`: Next.js app for attendees (user UI). Source in `src/`, pages in `src/pages/`, shared UI in `src/components/`.
-- `view-admin/`: Next.js app for admins. Similar structure to user.
-- `api/`: Hasura project (GraphQL) with `metadata/`, `migrations/`, and seeds/scripts in `seeds/`.
-- `settings/`: Environment files for local and prod (e.g., `bingo.env`, `admin.env`).
-- Root: `docker-compose*.yml`, `Makefile`, deployment and utility scripts.
+- Use Node `26.2.0` and pnpm `11.2.2`, as defined in `mise.toml` and CI.
+- Use pnpm only. Do not use npm or yarn.
+- Add or remove dependencies with `mise run add <pkg>`, `mise run add -D <pkg>`, or `mise run remove <pkg>`.
+- Dependency changes must update `pnpm-lock.yaml`.
 
-## Build, Test, and Development Commands
-- Launch stack: `make run` (builds/starts containers, applies Hasura metadata/migrations).
-- Stop stack: `make down`.
-- One-shot setup + seed: `make setup` (runs, generates MinIO keys, restarts, seeds).
-- Codegen (GraphQL): `make codegen` or `make codegen/user`, `make codegen/admin`.
-- Frontend dev: `cd view-user && npm run dev`, `cd view-admin && npm run dev`.
-- Frontend build: `npm run build` (in each app). Lint: `npm run lint` or `npm run lint:fix`.
+## Runtime assumptions
 
-## Coding Style & Naming Conventions
-- Language: TypeScript for Next.js apps; GraphQL for data layer via Hasura.
-- Style: ESLint + Prettier (2-space indent, semver-compatible configs). Run `npm run lint` before PRs.
-- Components: PascalCase for React components and file names. Hooks/atoms: camelCase.
-- Branches: `feature/issueNN/title`, `fix/issueNN/title` (see README).
+- The supported Cloudflare development runtime and Next.js static build run through Docker.
+- Do not run `pnpm dev` or `pnpm build` directly on the host.
+- Wrangler CLI operations and static checks may run on the host: tests, format, lint,
+  typecheck, React Doctor, and knip.
 
-## Testing Guidelines
-- No dedicated test suite in this repo yet. Validate via TypeScript checks and `npm run build` in both apps.
-- Prefer adding small unit tests colocated with components if introducing logic (e.g., `Component.test.tsx`).
+## Commands
 
-## Commit & Pull Request Guidelines
-- Commits: concise, imperative. Prefix style aligns with PR naming: `[add] ...`, `[fix] ...`, `[del] ...` when appropriate.
-- PRs: include summary, linked issues, before/after screenshots for UI changes, and steps to verify.
-- Keep changes scoped; update locale files and GraphQL codegen when touching UI/data contracts.
+- Install: `mise install && mise run install`
+- Cloudflare dev: `mise run cloudflare:dev`
+- Static artifact build: `mise run cloudflare:build`
+- Worker/DO tests: `pnpm test`
+- Worker validation: `mise run cloudflare:check`
+- Format check: `pnpm fmt:check`
+- Lint: `pnpm lint`
+- Typecheck: `pnpm typecheck`
 
-## Security & Configuration Tips
-- Manage secrets via `settings/*.env`. For MinIO credentials, run `make generate-minio-keys` (updates envs and creates buckets).
-- After schema changes, run `make db-apply` to apply Hasura metadata/migrations.
+- React Doctor: `pnpm doctor`（React/Next.js/frontend changes only）
+- Unused code/dependency check: `pnpm knip`
 
-## Architecture Overview
-- Two Next.js frontends (admin/user) talk to Hasura GraphQL. Real-time features use Apollo subscriptions. Assets (e.g., prize images) are stored via MinIO.
+## Tests
+
+- Run `pnpm test` for Worker and Durable Object tests in the Workers Vitest runtime.
+- No browser end-to-end test suite is configured. Do not invent an E2E test command.
+
+## Validation
+
+- For most code changes, run at least:
+  - `pnpm fmt:check`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+- Run `pnpm doctor` when changing React, Next.js, routing, UI components, hooks, Server Actions, or frontend-facing behavior.
+- Run `pnpm knip` when changing dependencies, exports, entry points, or deleting code.
+- Run `mise run cloudflare:check` when changes affect Worker runtime behavior, routing,
+  bindings, Docker config, Next.js config, or dependency resolution.
+- If a check cannot be run, report which check was skipped and why.
+
+## Architecture boundaries
+
+- Public pages are static exports. Dynamic access must go through the same-origin Worker API.
+- One fixed-name SQLite `GameState` Durable Object owns authoritative event state; the separate
+  `ReactionHub` contains only loss-tolerant reactions.
+- Admin pages and `/admin/api/*` require Cloudflare Access and Worker-side JWT validation.
+- Prize images belong in R2. Short-term data recovery uses SQLite Durable Object PITR.
+- Annual rollover uses the atomic event reset command; it does not create generations or databases.
+- No legacy database, container origin, logical snapshot, backup bucket, or generation directory is
+  available. Use Worker version rollback for code-only regressions, PITR for recent data recovery,
+  and fix-forward after Durable Object class or schema changes.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+
+<!-- END:nextjs-agent-rules -->
