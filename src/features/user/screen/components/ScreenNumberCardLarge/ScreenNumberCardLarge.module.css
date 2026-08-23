@@ -6,14 +6,14 @@
   width: clamp(240px, 32vw, 640px);
   aspect-ratio: 1;
   border: clamp(12px, 1.75vw, 36px) solid var(--main-color);
-  background-color: var(--background-color);
+  background-color: var(--number-surface-color);
   border-radius: clamp(8px, 1vw, 16px);
   box-sizing: border-box;
   font-size: clamp(100px, 14vw, 280px);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  color: var(--main-color);
+  color: var(--number-text-color);
   animation: cardPop 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 

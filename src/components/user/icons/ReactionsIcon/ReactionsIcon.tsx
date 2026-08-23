@@ -15,7 +15,7 @@ const ReactionsIcon = ({ isOpen, id, setIsReactionModalOpen }: ReactionsIconProp
     <IconFramework
       icon={<FaRegFaceSmile />}
       text="Reactions"
-      inversion={isOpen}
+      inversion
       onClick={() => setIsReactionModalOpen(!isOpen)}
       id={id}
     />

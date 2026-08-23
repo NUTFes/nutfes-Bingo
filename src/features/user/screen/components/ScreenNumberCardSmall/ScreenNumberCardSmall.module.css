@@ -5,13 +5,13 @@
   width: clamp(70px, 9vw, 160px);
   aspect-ratio: 1;
   border: clamp(4px, 0.5vw, 8px) solid var(--main-color);
-  background-color: var(--background-color);
+  background-color: var(--number-surface-color);
   border-radius: clamp(8px, 0.8vw, 16px);
   box-sizing: border-box;
   font-size: clamp(32px, 4vw, 80px);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  color: var(--main-color);
+  color: var(--number-text-color);
   user-select: none;
 }

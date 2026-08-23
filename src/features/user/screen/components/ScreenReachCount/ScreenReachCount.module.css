@@ -40,14 +40,14 @@
   justify-content: center;
   align-items: center;
   min-width: clamp(100px, 10vw, 160px);
-  background-color: var(--background-color);
+  background-color: var(--number-surface-color);
   border-radius: 9999px;
   padding: clamp(4px, 0.5vw, 8px) clamp(20px, 2.5vw, 36px);
   margin-right: clamp(-12px, -1vw, -8px);
 }
 
 .count {
-  color: var(--main-color);
+  color: var(--number-text-color);
   font-size: clamp(48px, 6vw, 96px);
   font-weight: 700;
   font-variant-numeric: tabular-nums;

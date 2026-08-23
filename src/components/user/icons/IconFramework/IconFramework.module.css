@@ -1,16 +1,18 @@
 .iconContainer {
   display: inline-flex;
+  flex-shrink: 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--background-color);
-  padding: 3.125vw;
-  border-radius: 3.125vw;
-  width: 16.875vw;
-  height: 16.875vw;
-  font-size: 16.875vw;
-  border: none;
-  outline: none;
+  box-sizing: border-box;
+  width: var(--navigation-control-size);
+  height: var(--navigation-control-size);
+  padding: clamp(4px, 1.25vw, 5px);
+  gap: clamp(1px, 0.3125vw, 1.5px);
+  border: clamp(2px, 0.625vw, 3px) solid transparent;
+  border-radius: clamp(5px, 1.5625vw, 7px);
+  background-color: var(--navigation-item-background-color);
+  font-size: var(--navigation-control-size);
   cursor: pointer;
   transition:
     transform 0.12s ease,
@@ -21,22 +23,25 @@
 }
 
 .icon {
-  font-size: 0.5555555555555556em;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--main-color);
+  font-size: 0.4489795918em;
+  line-height: 1;
 }
 
 .text {
-  font-size: 0.1666666666666667em;
-  font-weight: 700;
-  font-family: var(--font-rajdhani), var(--font-sans);
   color: var(--main-color);
+  font-family: var(--font-rajdhani), var(--font-sans);
+  font-size: 0.2040816327em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
 }
 
 .iconContainer:active {
-  transform: translateY(1px) scale(0.98);
+  transform: scale(0.98);
 }
 
 .iconContainer:focus-visible {
@@ -45,42 +50,19 @@
 }
 
 .wide {
-  width: 33.75vw;
-  height: 18vw;
-  font-size: 18vw;
-  padding: 2.5vw;
+  width: clamp(111px, 34.6875vw, 149px);
 }
 
 .outline {
-  border: 1.25vw solid var(--main-color);
+  border-color: var(--main-color);
 }
 
 .iconContainer.color_inversion {
+  border-color: var(--main-color);
   background-color: var(--main-color);
 }
 
 .iconContainer.color_inversion .icon,
 .iconContainer.color_inversion .text {
-  color: var(--background-color);
-}
-
-@media (min-width: 640px) {
-  .iconContainer {
-    width: 73px;
-    height: 73px;
-    padding: 13px;
-    border-radius: 13px;
-    font-size: 73px;
-  }
-
-  .wide {
-    width: 145px;
-    height: 77px;
-    padding: 11px;
-    font-size: 77px;
-  }
-
-  .outline {
-    border-width: 5px;
-  }
+  color: var(--navigation-active-foreground-color);
 }

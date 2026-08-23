@@ -11,7 +11,8 @@
   border: 1.25vw solid var(--main-color);
   border-radius: 3.125vw;
   box-sizing: border-box;
-  box-shadow: 0.9375vw 0.9375vw 0px var(--main-color);
+  box-shadow: 0.9375vw 0.9375vw 0.625vw
+    color-mix(in srgb, var(--card-shadow-color) 72%, transparent);
   margin-bottom: 1.5vw;
 }
 
@@ -62,7 +63,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: color-mix(in srgb, var(--main-color) 8%, white);
+  background: color-mix(in srgb, var(--main-color) 8%, var(--background-color));
   color: var(--main-color);
   font-family: var(--font-rajdhani), var(--font-sans);
   font-size: clamp(9px, 2.2vw, 12px);
@@ -109,7 +110,7 @@
     margin-bottom: 6px;
     border-width: 5px;
     border-radius: 13px;
-    box-shadow: 4px 4px 0 var(--main-color);
+    box-shadow: 4px 4px 3px color-mix(in srgb, var(--card-shadow-color) 72%, transparent);
   }
 
   .image {

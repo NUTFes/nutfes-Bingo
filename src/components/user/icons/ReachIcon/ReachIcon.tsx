@@ -1,7 +1,5 @@
 "use client";
 
-import { cn } from "@/utils/utils";
-
 import styles from "./ReachIcon.module.css";
 
 interface ReachIconProps {
@@ -14,9 +12,7 @@ const ReachIcon = ({ isOpen, id, setIsReachModalOpen }: ReachIconProps) => {
   return (
     <button
       type="button"
-      className={cn(styles.reachButton, {
-        [styles.inverted]: isOpen,
-      })}
+      className={styles.reachButton}
       onClick={() => setIsReachModalOpen(!isOpen)}
       id={id}
       aria-label="REACH"
