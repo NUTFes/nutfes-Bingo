@@ -112,7 +112,7 @@ describe("public Worker routes", () => {
         headers: { "If-None-Match": candidate },
       });
       expect(unchanged.status).toBe(304);
-      expect(unchanged.headers.get("cache-control")).toBe("no-cache, no-transform");
+      expect(unchanged.headers.get("cache-control")).toBe("no-cache");
     }
   });
 

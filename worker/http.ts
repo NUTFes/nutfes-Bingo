@@ -182,7 +182,7 @@ export function ifNoneMatch(request: Request, etag: string): boolean {
 export function notModifiedResponse(etag: string): Response {
   const headers = new Headers({
     ETag: etag,
-    "Cache-Control": "no-cache, no-transform",
+    "Cache-Control": "no-cache",
   });
   applySecurityHeaders(headers);
   return new Response(null, { status: 304, headers });
