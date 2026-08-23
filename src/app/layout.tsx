@@ -1,22 +1,16 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
-import { Noto_Sans_JP } from "next/font/google";
+import { Rajdhani } from "next/font/google";
 
 const defaultUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
-const notoSansJp = Noto_Sans_JP({
-  variable: "--font-noto-sans-jp",
-  display: "swap",
+const rajdhani = Rajdhani({
+  variable: "--font-rajdhani",
+  display: "optional",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
-});
-
-const silom = localFont({
-  src: "../../public/fonts/Silom.ttf",
-  variable: "--font-silom",
-  display: "swap",
+  weight: "700",
+  preload: false,
 });
 
 const metadataBase = URL.parse(defaultUrl) ?? new URL("http://localhost:3000");
@@ -46,7 +40,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className={`${notoSansJp.variable} ${silom.variable}`}>{children}</body>
+      <body className={rajdhani.variable}>{children}</body>
     </html>
   );
 }

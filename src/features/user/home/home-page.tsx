@@ -3,7 +3,9 @@
 import { useState } from "react";
 
 import { getHomeDisplayBingoNumbers } from "./view-model";
-import { Layout, NumberCardLarge, NumberCardList } from "@/components/user";
+import Layout from "@/components/user/Layout/Layout";
+import NumberCardLarge from "@/components/user/NumberCardLarge";
+import NumberCardList from "@/components/user/cards/NumberCardList";
 import Loading from "@/components/user/Loading";
 import { useHomeRealtimeState } from "@/lib/realtime";
 import type { PublicPreferences } from "@/types/bingo/public-preferences";

@@ -2,10 +2,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  width: clamp(160px, 30vw, 220px);
+  gap: 6px;
+  width: clamp(142px, 41vw, 180px);
   height: clamp(64px, 12vw, 76px);
-  padding: 0 24px;
+  padding: 0 8px;
   border: 2px solid var(--main-color);
   border-radius: 999px;
   background-color: var(--main-color);
@@ -45,36 +45,39 @@
 }
 
 .text {
-  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
-  font-size: clamp(20px, 4vw, 28px);
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  font-family: var(--font-rajdhani), var(--font-sans);
+  font-size: clamp(22px, 6.15vw, 28px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .icon {
-  width: clamp(28px, 6vw, 40px);
-  height: clamp(28px, 6vw, 40px);
+  width: clamp(28px, 8vw, 40px);
+  height: clamp(28px, 8vw, 40px);
   display: block;
+  flex-shrink: 0;
   background-color: currentColor;
   mask: url("/icon_reach.svg") no-repeat center / contain;
   -webkit-mask: url("/icon_reach.svg") no-repeat center / contain;
-  transform: translateY(-2px);
+  /* 装飾部分を除いたビンゴカードの中心をボタン中央に合わせる */
+  transform: translate(14%, -14%);
 }
 
 @media (min-width: 640px) {
   .reachButton {
     width: 180px;
     height: 72px;
-    gap: 12px;
+    gap: 6px;
   }
 
   .text {
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .icon {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
   }
 }

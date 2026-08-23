@@ -1,7 +1,6 @@
 import Script from "next/script";
 import { ThemeProvider } from "next-themes";
 
-import { TurnstileScript } from "@/components/user/Turnstile";
 import {
   DEFAULT_PUBLIC_PREFERENCES,
   publicThemeBootstrapScript,
@@ -15,7 +14,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       <Script id="public-theme-bootstrap" strategy="beforeInteractive">
         {publicThemeBootstrapScript(DEFAULT_PUBLIC_PREFERENCES.isDarkMode)}
       </Script>
-      <TurnstileScript />
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
         {children}
       </ThemeProvider>

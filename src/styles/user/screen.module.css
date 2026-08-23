@@ -14,7 +14,8 @@
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-family: var(--font-rajdhani), var(--font-sans);
+  font-weight: 700;
 }
 
 .layout {

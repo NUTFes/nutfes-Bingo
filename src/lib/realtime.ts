@@ -8,6 +8,7 @@ import type {
   StampSocketMessage,
   StateSocketMessage,
 } from "@/types/bingo/realtime";
+import { makeStateEtag, weaklyMatchesEntityTag } from "../../shared/state-etag";
 import {
   EMPTY_APP_STATE,
   STAMP_NAMES,
@@ -177,7 +178,7 @@ async function fetchState(
 }
 
 function stateEtag(state: BingoUnifiedState) {
-  return state.appState.event_id === "" ? null : `"state:${state.revision}"`;
+  return state.appState.event_id === "" ? null : makeStateEtag(state.revision);
 }
 
 function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen" = "public") {
@@ -233,7 +234,7 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
             etag = snapshot.etag ?? etag;
           } else {
             const expectedEtag = stateEtag(snapshot.state);
-            if (expectedEtag === null || snapshot.etag !== expectedEtag) {
+            if (expectedEtag === null || !weaklyMatchesEntityTag(snapshot.etag, expectedEtag)) {
               throw new Error("ビンゴ状態のETagが内容と一致しません。");
             }
             applyState(snapshot.state, "authoritative");
@@ -445,7 +446,8 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
       }
     };
 
-    void requestSnapshot().finally(connect);
+    void requestSnapshot();
+    connect();
     window.addEventListener("online", handleOnline);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 

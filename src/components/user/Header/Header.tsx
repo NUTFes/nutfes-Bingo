@@ -1,6 +1,6 @@
 "use client";
 
-import { driver, type DriveStep, type Driver } from "driver.js";
+import type { DriveStep, Driver } from "driver.js";
 import { usePathname, useRouter } from "next/navigation";
 import { IoHelpCircleOutline } from "react-icons/io5";
 import { useCallback, useEffect, useRef } from "react";
@@ -8,14 +8,12 @@ import { useCallback, useEffect, useRef } from "react";
 import { useBingoLanguage } from "@/utils/i18n/provider";
 import styles from "./Header.module.css";
 
-const HELP_SHOWN_KEY = "isHelpTourShown";
-const LEGACY_HELP_SHOWN_KEY = "isStartIntrojs";
-
 const Header = () => {
   const { push } = useRouter();
   const pathname = usePathname() ?? "/";
   const { t } = useBingoLanguage();
   const driverRef = useRef<Driver | null>(null);
+  const isLoadingTourRef = useRef(false);
 
   const buildSteps = useCallback((): DriveStep[] => {
     const isPrizePage = pathname === "/prizes";
@@ -75,43 +73,42 @@ const Header = () => {
     });
   }, [pathname, t]);
 
-  const startTour = useCallback(() => {
+  const startTour = useCallback(async () => {
+    if (isLoadingTourRef.current) return;
     const steps = buildSteps();
     if (steps.length === 0) return;
 
-    driverRef.current?.destroy();
-    const instance = driver({
-      steps,
-      showProgress: true,
-      progressText: t.helpCarousel.progress,
-      showButtons: ["previous", "next"],
-      nextBtnText: t.helpCarousel.next,
-      prevBtnText: t.helpCarousel.back,
-      doneBtnText: t.helpCarousel.close,
-      popoverClass: "help-tour-popover",
-      overlayColor: "#000",
-      overlayOpacity: 0.6,
-      stagePadding: 10,
-      stageRadius: 12,
-      allowClose: true,
-      overlayClickBehavior: "close",
-      smoothScroll: false,
-      disableActiveInteraction: true,
-    });
+    isLoadingTourRef.current = true;
+    try {
+      const [{ driver }] = await Promise.all([import("driver.js"), import("./help-tour.css")]);
+      driverRef.current?.destroy();
+      const instance = driver({
+        steps,
+        showProgress: true,
+        progressText: t.helpCarousel.progress,
+        showButtons: ["previous", "next"],
+        nextBtnText: t.helpCarousel.next,
+        prevBtnText: t.helpCarousel.back,
+        doneBtnText: t.helpCarousel.close,
+        popoverClass: "help-tour-popover",
+        overlayColor: "#000",
+        overlayOpacity: 0.6,
+        stagePadding: 10,
+        stageRadius: 12,
+        allowClose: true,
+        overlayClickBehavior: "close",
+        smoothScroll: false,
+        disableActiveInteraction: true,
+      });
 
-    driverRef.current = instance;
-    instance.drive();
-  }, [buildSteps, t]);
-
-  useEffect(() => {
-    const isHelpShown =
-      window.localStorage.getItem(HELP_SHOWN_KEY) ??
-      window.localStorage.getItem(LEGACY_HELP_SHOWN_KEY);
-    if (isHelpShown === null) {
-      window.localStorage.setItem(HELP_SHOWN_KEY, JSON.stringify(true));
-      startTour();
+      driverRef.current = instance;
+      instance.drive();
+    } catch (error) {
+      console.error("ヘルプの読み込みに失敗しました。", error);
+    } finally {
+      isLoadingTourRef.current = false;
     }
-  }, [startTour]);
+  }, [buildSteps, t]);
 
   useEffect(() => {
     const driver = driverRef.current;
@@ -134,7 +131,7 @@ const Header = () => {
         <button
           type="button"
           className={styles.icon}
-          onClick={startTour}
+          onClick={() => void startTour()}
           aria-label={t.helpCarousel.open}
           title={t.helpCarousel.open}
         >

@@ -1,5 +1,3 @@
-import React from "react";
-import { LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
 import styles from "./ToggleButton.module.css";
 
 interface ToggleButtonProps {
@@ -8,32 +6,20 @@ interface ToggleButtonProps {
   onClick: () => void;
 }
 
-const ToggleButton = ({ children, isActive, onClick }: ToggleButtonProps) => {
-  const shouldReduceMotion = useReducedMotion();
-
-  return (
-    <button
-      type="button"
-      className={styles.toggleContainer}
-      onClick={onClick}
-      aria-pressed={isActive}
-    >
-      <LazyMotion features={domAnimation}>
-        <m.div
-          className={styles.motionDiv}
-          initial={false}
-          animate={{ x: isActive ? "100%" : "0%" }}
-          transition={
-            shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 30 }
-          }
-        />
-      </LazyMotion>
-      <span className={`${styles.toggleText} ${!isActive ? styles.active : ""}`}>
-        {children[0]}
-      </span>
-      <span className={`${styles.toggleText} ${isActive ? styles.active : ""}`}>{children[1]}</span>
-    </button>
-  );
-};
+const ToggleButton = ({ children, isActive, onClick }: ToggleButtonProps) => (
+  <button
+    type="button"
+    className={styles.toggleContainer}
+    onClick={onClick}
+    aria-pressed={isActive}
+  >
+    <div
+      className={`${styles.motionDiv} ${isActive ? styles.motionDivActive : ""}`}
+      aria-hidden="true"
+    />
+    <span className={`${styles.toggleText} ${!isActive ? styles.active : ""}`}>{children[0]}</span>
+    <span className={`${styles.toggleText} ${isActive ? styles.active : ""}`}>{children[1]}</span>
+  </button>
+);
 
 export default ToggleButton;

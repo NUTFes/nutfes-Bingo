@@ -1,5 +1,6 @@
 import { requireAdmin, requireScreen, type AdminIdentity } from "./access";
 import type { AdminCommand, BingoUnifiedState } from "../shared/bingo-transport";
+import { makeStateEtag } from "../shared/state-etag";
 import {
   assertPrizeImagePath,
   isClientId,
@@ -20,7 +21,6 @@ import {
   getSameOrigin,
   ifNoneMatch,
   jsonResponse,
-  makeStateEtag,
   normalizeError,
   notModifiedResponse,
   preflightResponse,

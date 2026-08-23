@@ -30,8 +30,8 @@
 
 .text {
   font-size: 0.1666666666666667em;
-  font-weight: 400;
-  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-weight: 700;
+  font-family: var(--font-rajdhani), var(--font-sans);
   color: var(--main-color);
 }
 

@@ -26,8 +26,9 @@
 }
 
 .brand {
-  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-family: var(--font-rajdhani), var(--font-sans);
   font-size: clamp(20px, 6vw, 32px);
+  font-weight: 700;
   color: var(--main-color);
   letter-spacing: 0.06em;
   text-align: center;
@@ -43,8 +44,9 @@
 }
 
 .message {
-  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-family: var(--font-rajdhani), var(--font-sans);
   font-size: clamp(14px, 4vw, 18px);
+  font-weight: 700;
   color: var(--main-color);
   letter-spacing: 0.04em;
   text-align: center;
