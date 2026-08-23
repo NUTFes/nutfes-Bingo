@@ -1,24 +1,23 @@
 .reachButton {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: clamp(142px, 41vw, 180px);
-  height: clamp(64px, 12vw, 76px);
-  padding: 0 8px;
-  border: 2px solid var(--main-color);
-  border-radius: 999px;
+  box-sizing: border-box;
+  width: clamp(111px, 34.6875vw, 149px);
+  height: var(--navigation-control-size);
+  padding: 0 clamp(6px, 1.875vw, 8px);
+  gap: clamp(4px, 1.25vw, 6px);
+  border: clamp(2px, 0.625vw, 3px) solid var(--main-color);
+  border-radius: clamp(5px, 1.5625vw, 7px);
   background-color: var(--main-color);
-  color: var(--background-color);
+  color: var(--navigation-active-foreground-color);
   cursor: pointer;
-  box-shadow: 0 6px 0 0 color-mix(in srgb, var(--main-color) 85%, #000);
   transition:
-    transform 0.1s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.12s ease,
     background-color 0.2s ease,
     color 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-  transform: translateY(0);
 }
 
 .reachButton:focus-visible {
@@ -27,35 +26,21 @@
 }
 
 .reachButton:active {
-  transform: translateY(4px);
-  box-shadow: 0 2px 0 0 color-mix(in srgb, var(--main-color) 85%, #000);
-  filter: brightness(0.96);
-}
-
-.inverted {
-  background-color: var(--background-color);
-  color: var(--main-color);
-  box-shadow: 0 6px 0 0 color-mix(in srgb, var(--main-color) 20%, transparent);
-}
-
-.inverted:active {
-  transform: translateY(4px);
-  box-shadow: 0 2px 0 0 color-mix(in srgb, var(--main-color) 20%, transparent);
-  filter: brightness(0.96);
+  transform: scale(0.98);
 }
 
 .text {
   font-family: var(--font-rajdhani), var(--font-sans);
-  font-size: clamp(22px, 6.15vw, 28px);
+  font-size: clamp(20px, 6.25vw, 27px);
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
   line-height: 1;
   white-space: nowrap;
 }
 
 .icon {
-  width: clamp(28px, 8vw, 40px);
-  height: clamp(28px, 8vw, 40px);
+  width: clamp(29px, 9.0625vw, 39px);
+  height: clamp(29px, 9.0625vw, 39px);
   display: block;
   flex-shrink: 0;
   background-color: currentColor;
@@ -63,21 +48,4 @@
   -webkit-mask: url("/icon_reach.svg") no-repeat center / contain;
   /* 装飾部分を除いたビンゴカードの中心をボタン中央に合わせる */
   transform: translate(14%, -14%);
-}
-
-@media (min-width: 640px) {
-  .reachButton {
-    width: 180px;
-    height: 72px;
-    gap: 6px;
-  }
-
-  .text {
-    font-size: 28px;
-  }
-
-  .icon {
-    width: 40px;
-    height: 40px;
-  }
 }
