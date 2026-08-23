@@ -10,7 +10,7 @@
   width: 25vw;
   height: 5.6vh;
   padding: 1vw;
-  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-family: var(--font-rajdhani), var(--font-sans);
 }
 
 .inversion {

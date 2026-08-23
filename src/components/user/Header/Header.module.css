@@ -21,10 +21,11 @@
   border: none;
   background: none;
   color: var(--main-color);
-  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
-  font-size: clamp(20px, 5.5vw, 26px);
-  font-weight: 800;
+  font-family: var(--font-rajdhani), var(--font-sans);
+  font-size: clamp(24px, 7vw, 32px);
+  font-weight: 700;
   letter-spacing: 0.02em;
+  line-height: 1;
   padding: 8px 12px;
   margin: -8px -12px;
   cursor: pointer;

@@ -1,6 +1,7 @@
 "use client";
 
-import { Layout, PrizeCardList } from "@/components/user";
+import Layout from "@/components/user/Layout/Layout";
+import PrizeCardList from "@/components/user/cards/PrizeCardList/PrizeCardList";
 import Loading from "@/components/user/Loading";
 import { usePrizesRealtimeState } from "@/lib/realtime";
 import type { PublicPreferences } from "@/types/bingo/public-preferences";

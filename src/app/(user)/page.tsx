@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { HomePage } from "@/features/user";
+import { HomePage } from "@/features/user/home";
 import { DEFAULT_PUBLIC_PREFERENCES } from "@/types/bingo/public-preferences";
 import { EMPTY_APP_STATE } from "@/types/bingo/types";
 

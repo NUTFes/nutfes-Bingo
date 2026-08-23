@@ -93,6 +93,10 @@ describe("public Worker routes", () => {
 
     const health = await SELF.fetch("http://example.com/api/health");
     expect(health.status).toBe(200);
+    for (const response of [asset, health]) {
+      expect(response.headers.get("strict-transport-security")).toBe("max-age=31536000");
+      expect(response.headers.get("cross-origin-opener-policy")).toBe("same-origin");
+    }
     await expect(health.json()).resolves.toMatchObject({
       status: "ok",
       releaseSha: "test-release-sha",
@@ -101,17 +105,17 @@ describe("public Worker routes", () => {
     });
   });
 
-  it("returns an ETag and a 304 for an unchanged state", async () => {
+  it("returns a weak ETag and a 304 for an unchanged state", async () => {
     const initial = await SELF.fetch("http://example.com/api/bingo/state");
     expect(initial.status).toBe(200);
-    const etag = initial.headers.get("etag");
-    expect(etag).toBe('"state:0"');
+    expect(initial.headers.get("etag")).toBe('W/"state:0"');
 
-    for (const candidate of [etag ?? "", `W/${etag}`]) {
+    for (const candidate of ['"state:0"', 'W/"state:0"']) {
       const unchanged = await SELF.fetch("http://example.com/api/bingo/state", {
         headers: { "If-None-Match": candidate },
       });
       expect(unchanged.status).toBe(304);
+      expect(unchanged.headers.get("etag")).toBe('W/"state:0"');
       expect(unchanged.headers.get("cache-control")).toBe("no-cache");
     }
   });

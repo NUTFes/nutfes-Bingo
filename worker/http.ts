@@ -1,4 +1,5 @@
 import { DomainProblem } from "./domain";
+import { weaklyMatchesEntityTag } from "../shared/state-etag";
 
 const JSON_BODY_LIMIT = 64 * 1024;
 
@@ -64,6 +65,8 @@ export function normalizeError(error: unknown): ApiError {
 export function applySecurityHeaders(headers: Headers): void {
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("X-Frame-Options", "DENY");
+  headers.set("Strict-Transport-Security", "max-age=31536000");
+  headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
   headers.set(
@@ -166,17 +169,13 @@ export async function sha256Hex(value: string | Uint8Array): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export function makeStateEtag(revision: number): string {
-  return `"state:${revision}"`;
-}
-
 export function ifNoneMatch(request: Request, etag: string): boolean {
   const value = request.headers.get("If-None-Match");
   if (value === null) return false;
   return value
     .split(",")
     .map((entry) => entry.trim())
-    .some((entry) => entry === "*" || entry === etag || entry === `W/${etag}`);
+    .some((entry) => entry === "*" || weaklyMatchesEntityTag(entry, etag));
 }
 
 export function notModifiedResponse(etag: string): Response {

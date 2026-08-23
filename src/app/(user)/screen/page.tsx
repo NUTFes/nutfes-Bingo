@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ScreenPage } from "@/features/user";
+import { ScreenPage } from "@/features/user/screen";
 
 export const metadata: Metadata = {
   title: "スクリーン",

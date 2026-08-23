@@ -41,9 +41,9 @@
 }
 
 .modalTitle {
-  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-family: var(--font-rajdhani), var(--font-sans);
   font-size: clamp(24px, 7.5vw, 30px);
-  font-weight: 900;
+  font-weight: 700;
   color: var(--main-color);
   margin: 0;
   text-align: center;
@@ -80,7 +80,7 @@
 }
 
 .settingsRowLabel span {
-  font-family: "Noto Sans JP", sans-serif;
+  font-family: var(--font-sans);
   font-size: clamp(15px, 4.2vw, 18px);
   font-weight: 700;
   color: var(--main-color);

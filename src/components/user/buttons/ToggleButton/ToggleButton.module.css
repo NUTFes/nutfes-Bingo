@@ -21,7 +21,7 @@
   height: 100%;
   line-height: 1;
   text-align: center;
-  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-family: var(--font-rajdhani), var(--font-sans);
   font-weight: 700;
   color: var(--main-color);
   background-color: transparent;
@@ -43,4 +43,16 @@
   border-radius: 99px;
   z-index: 0;
   pointer-events: none;
+  transform: translateX(0);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.motionDivActive {
+  transform: translateX(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motionDiv {
+    transition: none;
+  }
 }

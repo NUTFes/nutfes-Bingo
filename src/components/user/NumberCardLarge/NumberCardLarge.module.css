@@ -4,7 +4,7 @@
   align-items: center;
   width: 62.5vw;
   height: 62.5vw;
-  font-family: var(--font-silom), "Noto Sans JP", sans-serif;
+  font-family: var(--font-rajdhani), var(--font-sans);
   border: 2vw solid var(--main-color);
   background: linear-gradient(135deg, var(--background-color) 50%, var(--number-accent-color) 51%);
   border-radius: 7vw;
@@ -12,7 +12,7 @@
   box-shadow: 1vw 1vw 0vw 0.9vw var(--main-color);
   font-size: 31.25vw;
   font-style: normal;
-  font-weight: 400;
+  font-weight: 700;
   line-height: normal;
   color: var(--main-color);
 }

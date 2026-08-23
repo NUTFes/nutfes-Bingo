@@ -1,22 +1,19 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 
-import {
-  BackIcon,
-  Button,
-  Header,
-  Modal,
-  NavigationBar,
-  PrizesIcon,
-  ReactionStampModal,
-  ReachIcon,
-  ReactionsIcon,
-  SettingsIcon,
-  SurveyPromptModal,
-  ToggleButton,
-} from "@/components/user/common";
+import BackIcon from "@/components/user/icons/BackIcon";
+import Button from "@/components/user/buttons/Button";
+import Header from "@/components/user/Header";
+import Modal from "@/components/user/Modal";
+import NavigationBar from "@/components/user/NavigationBar";
+import PrizesIcon from "@/components/user/icons/PrizesIcon";
+import ReachIcon from "@/components/user/icons/ReachIcon";
+import ReactionsIcon from "@/components/user/icons/ReactionsIcon";
+import SettingsIcon from "@/components/user/icons/SettingsIcon";
+import ToggleButton from "@/components/user/buttons/ToggleButton";
 import {
   Globe,
   ArrowUpDown,
@@ -28,7 +25,6 @@ import { REACTION_IMAGES } from "@/types/bingo/constants";
 import type { AppStateRow } from "@/types/bingo/types";
 import { BingoLanguageProvider, useBingoLanguage } from "@/utils/i18n/provider";
 import { openHttpsUrl } from "@/utils/url";
-import ReachConfirmationModal from "@/components/user/ReachConfirmationModal";
 
 import styles from "./Layout.module.css";
 import {
@@ -41,6 +37,16 @@ import {
   PUBLIC_PREFERENCE_KEYS,
   type PublicPreferences,
 } from "@/types/bingo/public-preferences";
+
+const ReactionStampModal = dynamic(
+  () => import("@/components/user/ReactionStampModal/ReactionStampModal"),
+);
+const ReachConfirmationModal = dynamic(
+  () => import("@/components/user/ReachConfirmationModal/ReachConfirmationModal"),
+);
+const SurveyPromptModal = dynamic(
+  () => import("@/components/user/SurveyPromptModal/SurveyPromptModal"),
+);
 
 interface InnerLayoutProps {
   children: React.ReactNode;
@@ -167,11 +173,13 @@ function InnerLayout({
           onClick={handleReactionClick}
         />
       )}
-      <SurveyPromptModal
-        isOpened={isSurveyModalOpen}
-        setIsOpened={setIsSurveyModalOpen}
-        surveyUrl={appState.survey_url}
-      />
+      {isSurveyModalOpen && (
+        <SurveyPromptModal
+          isOpened
+          setIsOpened={setIsSurveyModalOpen}
+          surveyUrl={appState.survey_url}
+        />
+      )}
       {isReachModalOpen && (
         <ReachConfirmationModal
           copy={t.reachModal}
