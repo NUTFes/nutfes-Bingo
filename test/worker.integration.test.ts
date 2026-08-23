@@ -107,11 +107,13 @@ describe("public Worker routes", () => {
     const etag = initial.headers.get("etag");
     expect(etag).toBe('"state:0"');
 
-    const unchanged = await SELF.fetch("http://example.com/api/bingo/state", {
-      headers: { "If-None-Match": etag ?? "" },
-    });
-    expect(unchanged.status).toBe(304);
-    expect(unchanged.headers.get("cache-control")).toBe("no-cache");
+    for (const candidate of [etag ?? "", `W/${etag}`]) {
+      const unchanged = await SELF.fetch("http://example.com/api/bingo/state", {
+        headers: { "If-None-Match": candidate },
+      });
+      expect(unchanged.status).toBe(304);
+      expect(unchanged.headers.get("cache-control")).toBe("no-cache, no-transform");
+    }
   });
 
   it("deduplicates public reach submissions and rejects cross-origin mutation", async () => {

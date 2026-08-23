@@ -152,7 +152,7 @@ async function handlePublicState(
   return jsonResponse(
     selectPublicView(state, view),
     { headers: { ETag: etag } },
-    { cacheControl: "no-cache", requestOrigin: safeRequestOrigin(request) },
+    { cacheControl: "no-cache, no-transform", requestOrigin: safeRequestOrigin(request) },
   );
 }
 
