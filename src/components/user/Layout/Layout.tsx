@@ -61,7 +61,8 @@ function InnerLayout({
   const { language, setLanguage, t } = useBingoLanguage();
 
   const interactions = usePublicInteractions(appState);
-  const { preferences, setPreferences } = usePublicPreferences(
+  const { preferences, setPreferences, markReachConfirmed } = usePublicPreferences(
+    appState.event_id,
     initialPreferences,
     setIsSortedAscending,
   );
@@ -176,10 +177,7 @@ function InnerLayout({
           copy={t.reachModal}
           language={language}
           onClose={() => setIsReachModalOpen(false)}
-          onConfirmed={() => {
-            setPreferences((previous) => ({ ...previous, isReachIconVisible: false }));
-            persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, false);
-          }}
+          onConfirmed={markReachConfirmed}
         />
       )}
       <Modal isOpened={isSettingsModalOpen} setIsOpened={setIsSettingsModalOpen}>
@@ -244,7 +242,9 @@ function InnerLayout({
         </div>
       </Modal>
       <Header />
-      <main className={styles.content}>{children}</main>
+      <main className={styles.content} tabIndex={0} aria-label="ビンゴコンテンツ">
+        {children}
+      </main>
       <NavigationBar ref={navRef} isCentered={iconElements.length <= 3}>
         {iconElements}
       </NavigationBar>

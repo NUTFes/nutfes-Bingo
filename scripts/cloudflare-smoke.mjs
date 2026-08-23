@@ -1,79 +1,42 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
-import { chmod, mkdir, rename, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
 import process from "node:process";
 
-import { EVIDENCE_SCHEMA_VERSION } from "./cloudflare-evidence.mjs";
-
-const args = process.argv.slice(2);
-let target;
-let outputPath;
-for (let index = 0; index < args.length; index += 1) {
-  const argument = args[index];
-  if (argument === "--env" && args[index + 1]) {
-    target = args[index + 1];
-    index += 1;
-  } else if (argument === "--output" && args[index + 1]) {
-    outputPath = args[index + 1];
-    index += 1;
-  } else {
-    throw new Error(
-      "Usage: node scripts/cloudflare-smoke.mjs --env production|staging [--output path]",
-    );
-  }
-}
-if (target !== "production" && target !== "staging") {
-  throw new Error("--env must be production or staging");
-}
+if (process.argv.length !== 2) throw new Error("Usage: node scripts/cloudflare-smoke.mjs");
 if (typeof WebSocket === "undefined") throw new Error("Node 26 WebSocket support is required");
+process.loadEnvFile("./cloudflare.project.env");
 
-const prefix = `CLOUDFLARE_${target.toUpperCase()}_`;
-const requiredEnvironment = [
-  `${prefix}ACCESS_TEAM_DOMAIN`,
-  `${prefix}ADMIN_AUD`,
-  `${prefix}MEDIA_ORIGIN`,
-  `${prefix}SCREEN_AUD`,
-  `${prefix}SITE_URL`,
-];
-for (const name of requiredEnvironment) {
-  if (!process.env[name]) throw new Error(`${name} is required from cloudflare.project.env`);
+const site = new URL(process.env.CLOUDFLARE_PRODUCTION_SITE_URL);
+const mediaOrigin = new URL(process.env.CLOUDFLARE_PRODUCTION_MEDIA_ORIGIN);
+const releaseSha =
+  process.env.SMOKE_RELEASE_SHA ??
+  execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+if (!/^[a-f0-9]{40}$/.test(releaseSha)) {
+  throw new Error("SMOKE_RELEASE_SHA must be a full lowercase Git SHA");
 }
-const siteUrl = new URL(process.env[`${prefix}SITE_URL`]);
-const mediaOrigin = new URL(process.env[`${prefix}MEDIA_ORIGIN`]);
-const releaseSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-const wranglerJson = (...wranglerArgs) =>
-  JSON.parse(
-    execFileSync(
-      "./scripts/cloudflare-wrangler.sh",
-      ["--target", target, ...wranglerArgs, "--json"],
-      {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "inherit"],
-      },
-    ),
-  );
-const environmentArgs = target === "staging" ? ["--env", "staging"] : ["--env="];
-const deployments = wranglerJson("deployments", "list", ...environmentArgs);
+const deployments = JSON.parse(
+  execFileSync("./scripts/cloudflare-wrangler.sh", ["deployments", "list", "--env=", "--json"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "inherit"],
+  }),
+);
 const latest = deployments
   .filter((deployment) => typeof deployment?.created_on === "string")
   .toSorted((left, right) => Date.parse(left.created_on) - Date.parse(right.created_on))
   .at(-1);
 if (latest?.annotations?.["workers/message"] !== `git:${releaseSha}`) {
-  throw new Error(`Active ${target} deployment is not git:${releaseSha}`);
+  throw new Error(`Active production deployment is not git:${releaseSha}`);
 }
 const activeVersions = Array.isArray(latest.versions)
   ? latest.versions.filter((version) => version?.percentage === 100)
   : [];
 if (activeVersions.length !== 1 || typeof activeVersions[0].version_id !== "string") {
-  throw new Error(`Active ${target} deployment must contain exactly one 100% version`);
+  throw new Error("Production must have exactly one 100% active version");
 }
-const workerVersionId = activeVersions[0].version_id;
-const smokeStartedAt = new Date().toISOString();
 
 const fetchChecked = async (path, expectedStatus, expectedType) => {
-  const response = await fetch(new URL(path, siteUrl), {
+  const response = await fetch(new URL(path, site), {
     redirect: "manual",
     signal: AbortSignal.timeout(15_000),
   });
@@ -87,66 +50,88 @@ const fetchChecked = async (path, expectedStatus, expectedType) => {
 };
 
 await fetchChecked("/", 200, "text/html");
-const readyResponse = await fetchChecked("/api/ready", 200, "application/json");
-const ready = await readyResponse.json();
+const ready = await (await fetchChecked("/api/ready", 200, "application/json")).json();
 if (
   ready?.status !== "ok" ||
   ready?.releaseSha !== releaseSha ||
-  typeof ready?.generation !== "string" ||
-  !Number.isSafeInteger(ready?.revision)
+  typeof ready?.eventId !== "string" ||
+  !Number.isSafeInteger(ready?.revision) ||
+  ready?.recoveryPending !== false
 ) {
-  throw new Error("/api/ready returned readiness for a different or invalid release");
-}
-const stateResponse = await fetchChecked("/api/bingo/state", 200, "application/json");
-const state = await stateResponse.json();
-if (typeof state?.generation !== "string" || !Number.isSafeInteger(state?.revision)) {
-  throw new Error("/api/bingo/state returned an invalid state envelope");
-}
-const prizesResponse = await fetchChecked("/api/bingo/prizes", 200, "application/json");
-const prizes = await prizesResponse.json();
-const imageUrl = prizes?.prizes?.find((prize) => typeof prize?.image_url === "string")?.image_url;
-if (!imageUrl || new URL(imageUrl).origin !== mediaOrigin.origin) {
-  throw new Error("No prize image on the reviewed media origin is available for smoke testing");
-}
-const imageResponse = await fetch(imageUrl, {
-  redirect: "error",
-  signal: AbortSignal.timeout(15_000),
-});
-if (
-  imageResponse.status !== 200 ||
-  !(imageResponse.headers.get("content-type") ?? "").startsWith("image/")
-) {
-  throw new Error(
-    `Prize image returned ${imageResponse.status} ${imageResponse.headers.get("content-type") ?? ""}`,
-  );
+  throw new Error("/api/ready is not the deployed singleton GameState");
 }
 
-const accessResult = async (path, expectedAudience) => {
-  const response = await fetch(new URL(path, siteUrl), {
+const stateResponse = await fetchChecked("/api/bingo/state", 200, "application/json");
+const state = await stateResponse.json();
+if (
+  !Number.isSafeInteger(state?.revision) ||
+  state?.appState?.event_id !== ready.eventId ||
+  !Array.isArray(state?.numbers) ||
+  !Array.isArray(state?.prizes)
+) {
+  throw new Error("/api/bingo/state returned an invalid state");
+}
+const etag = stateResponse.headers.get("etag");
+if (etag !== `"state:${state.revision}"`) {
+  throw new Error("/api/bingo/state returned an inconsistent ETag");
+}
+const unchanged = await fetch(new URL("/api/bingo/state", site), {
+  headers: { "If-None-Match": etag },
+  redirect: "manual",
+  signal: AbortSignal.timeout(15_000),
+});
+if (unchanged.status !== 304)
+  throw new Error("HTTP fallback conditional state read did not return 304");
+
+const prizes = await (await fetchChecked("/api/bingo/prizes", 200, "application/json")).json();
+const imageUrl = prizes?.prizes?.find((prize) => typeof prize?.image_url === "string")?.image_url;
+if (imageUrl) {
+  if (new URL(imageUrl).origin !== mediaOrigin.origin) {
+    throw new Error("A prize image points outside the pinned media origin");
+  }
+  const image = await fetch(imageUrl, { redirect: "error", signal: AbortSignal.timeout(15_000) });
+  if (image.status !== 200 || !(image.headers.get("content-type") ?? "").startsWith("image/")) {
+    throw new Error(`Prize image returned ${image.status}`);
+  }
+} else {
+  const missingImage = await fetch(new URL("/__nutfes-bingo-missing-probe__", mediaOrigin), {
+    redirect: "error",
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (missingImage.status !== 404) {
+    throw new Error(`Empty media origin probe returned ${missingImage.status}; expected 404`);
+  }
+}
+
+const checkAccess = async (path, audience) => {
+  const response = await fetch(new URL(path, site), {
     redirect: "manual",
     signal: AbortSignal.timeout(15_000),
   });
   const locationValue = response.headers.get("location");
-  if (response.status !== 302 || !locationValue)
+  if (response.status !== 302 || !locationValue) {
     throw new Error(`${path} did not redirect to Cloudflare Access`);
+  }
   const location = new URL(locationValue);
   if (
-    location.origin !== process.env[`${prefix}ACCESS_TEAM_DOMAIN`] ||
-    location.searchParams.get("kid") !== expectedAudience
+    location.origin !== process.env.CLOUDFLARE_PRODUCTION_ACCESS_TEAM_DOMAIN ||
+    location.searchParams.get("kid") !== audience
   ) {
-    throw new Error(`${path} redirected to an unexpected Access team or application`);
+    throw new Error(`${path} redirected to the wrong Access application`);
   }
-  return location.searchParams.get("kid");
 };
-const adminApplication = await accessResult("/admin", process.env[`${prefix}ADMIN_AUD`]);
-const screenApplication = await accessResult("/screen", process.env[`${prefix}SCREEN_AUD`]);
-if (adminApplication === screenApplication)
-  throw new Error("Admin and screen must use separate Access applications");
+for (const [path, audience] of [
+  ["/admin", process.env.CLOUDFLARE_PRODUCTION_ADMIN_AUD],
+  ["/admin/prizes", process.env.CLOUDFLARE_PRODUCTION_ADMIN_AUD],
+  ["/screen", process.env.CLOUDFLARE_PRODUCTION_SCREEN_AUD],
+  ["/screen/", process.env.CLOUDFLARE_PRODUCTION_SCREEN_AUD],
+]) {
+  await checkAccess(path, audience);
+}
 
-const websocketEvidence = await new Promise((resolve, reject) => {
-  const url = new URL("/api/bingo/socket", siteUrl);
-  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-  url.searchParams.set("clientId", crypto.randomUUID());
+const websocket = await new Promise((resolve, reject) => {
+  const url = new URL("/api/bingo/socket", site);
+  url.protocol = "wss:";
   const socket = new WebSocket(url);
   const startedAt = performance.now();
   const timeout = setTimeout(() => {
@@ -156,13 +141,17 @@ const websocketEvidence = await new Promise((resolve, reject) => {
   socket.addEventListener("message", (event) => {
     try {
       const message = JSON.parse(String(event.data));
-      if (message?.type !== "state" || typeof message?.state?.generation !== "string") return;
+      if (
+        message?.type !== "state" ||
+        message?.state?.appState?.event_id !== ready.eventId ||
+        !Number.isSafeInteger(message?.state?.revision)
+      ) {
+        return;
+      }
       clearTimeout(timeout);
-      const latencyMs = Math.round((performance.now() - startedAt) * 100) / 100;
       socket.close(1000, "smoke complete");
       resolve({
-        latencyMs,
-        generation: message.state.generation,
+        latencyMs: Math.round((performance.now() - startedAt) * 100) / 100,
         revision: message.state.revision,
       });
     } catch (error) {
@@ -177,54 +166,21 @@ const websocketEvidence = await new Promise((resolve, reject) => {
   });
 });
 
-const whoami = wranglerJson("whoami");
-const record = {
-  schemaVersion: EVIDENCE_SCHEMA_VERSION,
-  environment: target,
-  sourceReleaseSha: releaseSha,
-  workerVersionId,
-  deploymentCreatedAt: latest.created_on,
-  operator: whoami.email,
-  automated: {
-    environment: target,
-    sourceReleaseSha: releaseSha,
-    scenario: "automated-smoke",
-    startedAt: smokeStartedAt,
-    completedAt: new Date().toISOString(),
-    publicPage: true,
-    stateApi: true,
-    prizeImage: true,
-    accessRedirects: true,
-    separateAccessApplications: true,
-    publicWebSocket: true,
-  },
-  evidence: {
-    siteOrigin: siteUrl.origin,
-    imageOrigin: mediaOrigin.origin,
-    stateGeneration: state.generation,
-    stateRevision: state.revision,
-    websocket: websocketEvidence,
-  },
-  manual: {
-    allowedAdminIdentity: false,
-    deniedAdminIdentity: false,
-    allowedScreenIdentity: false,
-    deniedScreenIdentity: false,
-    turnstileSingleReach: false,
-    imageUpload: false,
-    screenReauthentication: false,
-    backupPrivate: false,
-    observability: false,
-  },
-  browser: null,
-  load: null,
-  snapshot: null,
-  finalizedAt: null,
-};
-outputPath ??= `.cloudflare/deployments/${target}-${releaseSha}.draft.json`;
-const temporaryPath = `${outputPath}.${process.pid}.tmp`;
-await mkdir(dirname(outputPath), { recursive: true, mode: 0o700 });
-await writeFile(temporaryPath, `${JSON.stringify(record, null, 2)}\n`, { mode: 0o600, flag: "wx" });
-await chmod(temporaryPath, 0o600);
-await rename(temporaryPath, outputPath);
-console.log(`Automated ${target} smoke passed for git:${releaseSha}; wrote ${outputPath}.`);
+console.log(
+  JSON.stringify({
+    status: "passed",
+    releaseSha,
+    workerVersionId: activeVersions[0].version_id,
+    revision: state.revision,
+    websocket,
+    checked: [
+      "public-static-page",
+      "singleton-readiness",
+      "http-state-fallback",
+      "prize-image",
+      "admin-access-boundary",
+      "screen-access-boundary",
+      "public-websocket",
+    ],
+  }),
+);

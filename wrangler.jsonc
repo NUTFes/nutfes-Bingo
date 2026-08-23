@@ -1,17 +1,17 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  // scripts/cloudflare-wrangler.sh selects the reviewed account for each environment.
+  // scripts/cloudflare-wrangler.sh pins every CLI call to the organization account.
   "name": "nutfes-bingo",
   "main": "./worker/index.ts",
   // Custom domains are configured out-of-band. Never expose an Access/WAF-bypassing workers.dev URL.
   "workers_dev": false,
   "preview_urls": false,
   // Latest compatibility date supported by the pinned workerd in the test pool.
-  "compatibility_date": "2026-07-07",
+  "compatibility_date": "2026-08-11",
   "compatibility_flags": ["nodejs_compat"],
 
-  // Public pages and framework assets bypass the Worker and are served from
-  // Workers Static Assets. Only APIs and the Access-protected admin/screen trees invoke it.
+  // Public pages and framework assets bypass the Worker. Only dynamic APIs and the
+  // Access-protected admin/screen trees invoke it.
   "assets": {
     "directory": "./out",
     "binding": "ASSETS",
@@ -22,7 +22,6 @@
 
   "durable_objects": {
     "bindings": [
-      { "name": "GAME_DIRECTORY", "class_name": "GameDirectory" },
       { "name": "GAME_STATE", "class_name": "GameState" },
       { "name": "REACTION_HUB", "class_name": "ReactionHub" },
     ],
@@ -30,7 +29,7 @@
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": ["GameDirectory", "GameState", "ReactionHub"],
+      "new_sqlite_classes": ["GameState", "ReactionHub"],
     },
   ],
 
@@ -39,16 +38,9 @@
       "binding": "PRIZE_IMAGES",
       "bucket_name": "nutfes-bingo-prize-images",
     },
-    {
-      "binding": "GAME_BACKUPS",
-      "bucket_name": "nutfes-bingo-backups",
-    },
   ],
 
-  // 18:00 UTC is 03:00 JST. The scheduled handler writes a logical snapshot to R2.
-  "triggers": { "crons": ["0 18 * * *"] },
-
-  // Empty Access settings deliberately fail closed. Supply real values before deploy.
+  // Empty Access settings deliberately fail closed. Supply reviewed values at deploy.
   // None of these values are secrets; authentication still requires a signed Access JWT.
   "vars": {
     "ACCESS_TEAM_DOMAIN": "",
@@ -74,47 +66,5 @@
       "invocation_logs": false,
     },
     "traces": { "enabled": true, "head_sampling_rate": 0.01 },
-  },
-
-  // Named staging Worker. Non-inheritable bindings and vars are repeated on purpose.
-  "env": {
-    "staging": {
-      "name": "nutfes-bingo-staging",
-      "workers_dev": false,
-      "preview_urls": false,
-      "durable_objects": {
-        "bindings": [
-          { "name": "GAME_DIRECTORY", "class_name": "GameDirectory" },
-          { "name": "GAME_STATE", "class_name": "GameState" },
-          { "name": "REACTION_HUB", "class_name": "ReactionHub" },
-        ],
-      },
-      "r2_buckets": [
-        {
-          "binding": "PRIZE_IMAGES",
-          "bucket_name": "nutfes-bingo-prize-images-staging",
-        },
-        {
-          "binding": "GAME_BACKUPS",
-          "bucket_name": "nutfes-bingo-backups-staging",
-        },
-      ],
-      "triggers": { "crons": [] },
-      "vars": {
-        "ACCESS_TEAM_DOMAIN": "",
-        "ACCESS_AUD": "",
-        "ADMIN_EMAILS": "[]",
-        "SCREEN_ACCESS_AUD": "",
-        "RELEASE_SHA": "",
-        "SCREEN_EMAILS": "[]",
-        "MEDIA_ORIGIN": "",
-        "LOCAL_ADMIN_BYPASS": "false",
-        "LOCAL_SCREEN_BYPASS": "false",
-        "LOCAL_TURNSTILE_TEST_MODE": "false",
-        "STAMP_DAILY_LIMIT": "25000",
-        "TURNSTILE_HOSTNAME": "",
-      },
-      "secrets": { "required": ["TURNSTILE_SECRET_KEY"] },
-    },
   },
 }

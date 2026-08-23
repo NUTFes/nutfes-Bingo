@@ -3,14 +3,12 @@ import type { AdminCommand, BingoUnifiedState } from "../shared/bingo-transport"
 import {
   assertPrizeImagePath,
   isClientId,
-  isGeneration,
   isRecord,
   parseOptionalText,
   parsePositiveInteger,
   parseRequiredText,
   validationProblem,
 } from "./domain";
-import { GameDirectory } from "./game-directory";
 import { GameState } from "./game-state";
 import {
   ApiError,
@@ -31,16 +29,11 @@ import {
 } from "./http";
 import { servePrizeImage, uploadPrizeImage } from "./images";
 import { ReactionHub } from "./reaction-hub";
-import { createActiveSnapshot, listSnapshots } from "./snapshots";
-import { SNAPSHOT_ADMIN_IDENTITY_HEADER } from "./snapshot-admin";
 import { parseTurnstileToken, verifyTurnstileToken } from "./turnstile";
 
-export { GameDirectory, GameState, ReactionHub };
+export { GameState, ReactionHub };
 
-type ActiveGame = {
-  generation: string;
-  state: DurableObjectStub<GameState>;
-};
+const GAME_STATE_NAME = "game";
 
 const worker = {
   async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
@@ -108,42 +101,20 @@ const worker = {
       return errorResponse(normalized, safeRequestOrigin(request));
     }
   },
-
-  async scheduled(
-    controller: ScheduledController,
-    env: Env,
-    _ctx: ExecutionContext,
-  ): Promise<void> {
-    const snapshot = await createActiveSnapshot(env);
-    console.log(
-      JSON.stringify({
-        message: "scheduled game snapshot created",
-        cron: controller.cron,
-        scheduledTime: controller.scheduledTime,
-        key: snapshot.key,
-        generation: snapshot.generation,
-        revision: snapshot.revision,
-      }),
-    );
-  },
 } satisfies ExportedHandler<Env>;
 
 export default worker;
 
 async function handleHealth(request: Request, env: Env): Promise<Response> {
   assertMethod(request, ["GET", "HEAD"]);
-  const directory = env.GAME_DIRECTORY.getByName("active");
-  const directoryStatus = await directory.getStatus();
-  const state = env.GAME_STATE.getByName(`game:${directoryStatus.generation}`);
-  const gameState = await state.getStatus(directoryStatus.generation);
+  const gameState = await getGameState(env).getStatus();
   return jsonResponse(
     {
       status: "ok",
       releaseSha: env.RELEASE_SHA,
-      generation: gameState.generation,
+      eventId: gameState.eventId,
       revision: gameState.revision,
-      directoryVersion: directoryStatus.version,
-      pendingRedirects: directoryStatus.pendingRedirects,
+      recoveryPending: gameState.recoveryPending,
       serverTime: new Date().toISOString(),
     },
     { status: 200 },
@@ -175,17 +146,12 @@ async function handlePublicState(
   view: "state" | "prizes" | "screen",
 ): Promise<Response> {
   assertMethod(request, ["GET", "HEAD"]);
-  const active = await getActiveGame(env);
-  const status = await active.state.getStatus(active.generation);
-  const etag = makeStateEtag(status.generation, status.revision);
+  const state = await getGameState(env).getState();
+  const etag = makeStateEtag(state.revision);
   if (ifNoneMatch(request, etag)) return notModifiedResponse(etag);
-
-  const state = await active.state.getState(active.generation);
-  const currentEtag = makeStateEtag(state.generation, state.revision);
-  const body = selectPublicView(state, view);
   return jsonResponse(
-    body,
-    { headers: { ETag: currentEtag } },
+    selectPublicView(state, view),
+    { headers: { ETag: etag } },
     { cacheControl: "no-cache", requestOrigin: safeRequestOrigin(request) },
   );
 }
@@ -196,7 +162,6 @@ function selectPublicView(state: BingoUnifiedState, view: "state" | "prizes" | "
       return state;
     case "prizes":
       return {
-        generation: state.generation,
         revision: state.revision,
         prizes: state.prizes,
         appState: state.appState,
@@ -204,9 +169,9 @@ function selectPublicView(state: BingoUnifiedState, view: "state" | "prizes" | "
       };
     case "screen":
       return {
-        generation: state.generation,
         revision: state.revision,
         numbers: state.numbers,
+        appState: state.appState,
         latestReachLog: state.latestReachLog,
         serverTime: state.serverTime,
       };
@@ -219,11 +184,9 @@ async function handleStateSocket(
   view: "public" | "screen",
 ): Promise<Response> {
   assertWebSocketRequest(request);
-  const active = await getActiveGame(env);
   const headers = internalWebSocketHeaders(request);
-  headers.set("X-Bingo-Generation", active.generation);
   headers.set("X-Bingo-View", view);
-  return active.state.fetch(new Request(request.url, { method: "GET", headers }));
+  return getGameState(env).fetch(new Request(request.url, { method: "GET", headers }));
 }
 
 async function handleStampSocket(request: Request, env: Env): Promise<Response> {
@@ -254,11 +217,8 @@ async function handlePublicReach(request: Request, env: Env): Promise<Response> 
   }
   const turnstileToken = parseTurnstileToken(body.turnstileToken);
   await verifyTurnstileToken(request, env, turnstileToken);
-  const [clientHash, active] = await Promise.all([
-    sha256Hex(body.clientId.toLowerCase()),
-    getActiveGame(env),
-  ]);
-  const count = await active.state.recordPublicReach(active.generation, clientHash);
+  const clientHash = await sha256Hex(body.clientId.toLowerCase());
+  const count = await getGameState(env).recordPublicReach(clientHash);
   return jsonResponse({ data: count }, { status: 200 }, { requestOrigin: origin });
 }
 
@@ -324,8 +284,7 @@ async function handleAdminApi(
   switch (url.pathname) {
     case "/admin/api/state": {
       assertMethod(request, ["GET"]);
-      const active = await getActiveGame(env);
-      const state = await active.state.getState(active.generation);
+      const state = await getGameState(env).getState();
       return jsonResponse({ data: state });
     }
     case "/admin/api/command":
@@ -336,32 +295,64 @@ async function handleAdminApi(
       const image = await uploadPrizeImage(request, env);
       return jsonResponse({ data: image }, { status: 201 }, { requestOrigin: origin });
     }
-    case "/admin/api/snapshots":
-      return handleSnapshots(request, env);
-    case "/admin/api/generations/activate":
-      return handleActivate(request, env, identity);
-    case "/admin/api/snapshots/restore":
-    case "/admin/api/import":
-      return handleSnapshotAdminMutation(request, env, identity);
+    case "/admin/api/recovery":
+    case "/admin/api/recovery/prepare":
+    case "/admin/api/recovery/schedule":
+    case "/admin/api/recovery/restart":
+      return handleRecovery(request, env, identity);
     default:
       throw new ApiError(404, "管理APIが見つかりません。");
   }
 }
 
-async function handleSnapshotAdminMutation(
+async function handleRecovery(
   request: Request,
   env: Env,
   identity: AdminIdentity,
 ): Promise<Response> {
+  const pathname = new URL(request.url).pathname;
+  const game = getGameState(env);
+  if (pathname === "/admin/api/recovery") {
+    assertMethod(request, ["GET"]);
+    return jsonResponse({ data: await game.getRecoveryStatus() });
+  }
+
   assertMethod(request, ["POST"]);
-  assertSameOriginMutation(request);
-  const headers = new Headers(request.headers);
-  headers.delete("Authorization");
-  headers.delete("Cookie");
-  headers.delete("Cf-Access-Jwt-Assertion");
-  headers.delete("X-Local-Admin-Email");
-  headers.set(SNAPSHOT_ADMIN_IDENTITY_HEADER, identity.email);
-  return env.GAME_DIRECTORY.getByName("active").fetch(new Request(request, { headers }));
+  const origin = assertSameOriginMutation(request);
+  const body = await readJsonBody(request);
+  if (!isRecord(body)) throw new ApiError(400, "recovery body が不正です。");
+
+  switch (pathname) {
+    case "/admin/api/recovery/prepare":
+      return jsonResponse(
+        {
+          data: await game.prepareRecovery(
+            readString(body.targetTime, "targetTime"),
+            readNonNegativeInteger(body.expectedRevision, "expectedRevision"),
+          ),
+        },
+        { status: 200 },
+        { requestOrigin: origin },
+      );
+    case "/admin/api/recovery/schedule":
+      return jsonResponse(
+        {
+          data: await game.scheduleRecovery(
+            identity.email,
+            readString(body.targetBookmark, "targetBookmark"),
+            readString(body.currentBookmark, "currentBookmark"),
+            readNonNegativeInteger(body.expectedRevision, "expectedRevision"),
+          ),
+        },
+        { status: 202 },
+        { requestOrigin: origin },
+      );
+    case "/admin/api/recovery/restart":
+      await game.restartForRecovery(readString(body.targetBookmark, "targetBookmark"));
+      throw new Error("Durable Object restart unexpectedly returned");
+    default:
+      throw new ApiError(404, "recovery APIが見つかりません。");
+  }
 }
 
 async function handleAdminCommand(
@@ -378,50 +369,53 @@ async function handleAdminCommand(
       ? assertAdminCommandType(body.type)
       : assertAdminCommandType(body.command);
 
-  const active = await getActiveGame(env);
+  const game = getGameState(env);
   let data: unknown;
   switch (discriminator) {
     case "createNumber":
-      data = await active.state.createNumber(
-        active.generation,
+      data = await game.createNumber(
         identity.email,
         parsePositiveInteger(body.number, "番号", { max: 99 }),
       );
       break;
     case "deleteNumber":
-      data = await active.state.deleteNumber(
-        active.generation,
+      data = await game.deleteNumber(
         identity.email,
         parsePositiveInteger(body.number, "番号", { max: 99 }),
       );
       break;
     case "updateNumber":
-      data = await active.state.updateNumber(
-        active.generation,
+      data = await game.updateNumber(
         identity.email,
         parsePositiveInteger(body.id, "番号ID"),
         parsePositiveInteger(body.number, "番号", { max: 99 }),
       );
       break;
     case "incrementReach":
-      data = await active.state.incrementReach(active.generation, identity.email);
+      data = await game.incrementReach(identity.email);
       break;
     case "decrementReach":
-      data = await active.state.decrementReach(active.generation, identity.email);
+      data = await game.decrementReach(identity.email);
       break;
     case "saveSurveyState":
-      data = await active.state.saveSurveyState(
-        active.generation,
+      data = await game.saveSurveyState(
         identity.email,
         readString(body.surveyUrl, "surveyUrl"),
         readBoolean(body.isSurveyActive, "isSurveyActive"),
       );
       break;
+    case "startAnnualEvent":
+      data = await game.startAnnualEvent(
+        identity.email,
+        readNonNegativeInteger(body.expectedRevision, "expectedRevision"),
+        readString(body.expectedEventId, "expectedEventId"),
+        readString(body.newEventId, "newEventId"),
+      );
+      break;
     case "createPrize": {
       const imagePath = body.imagePath;
       if (imagePath !== undefined) assertPrizeImagePath(imagePath);
-      data = await active.state.createPrize(
-        active.generation,
+      data = await game.createPrize(
         identity.email,
         parseRequiredText(body.nameJp, "景品名", 120),
         parseOptionalText(body.nameEn, "英語景品名", 160),
@@ -432,8 +426,7 @@ async function handleAdminCommand(
     case "updatePrize": {
       const imagePath = body.imagePath;
       if (imagePath !== undefined) assertPrizeImagePath(imagePath);
-      data = await active.state.updatePrize(
-        active.generation,
+      data = await game.updatePrize(
         identity.email,
         parsePositiveInteger(body.id, "景品ID"),
         parseRequiredText(body.nameJp, "景品名", 120),
@@ -443,8 +436,7 @@ async function handleAdminCommand(
       break;
     }
     case "togglePrizeWon":
-      data = await active.state.togglePrizeWon(
-        active.generation,
+      data = await game.togglePrizeWon(
         identity.email,
         parsePositiveInteger(body.id, "景品ID"),
         readBoolean(body.isWon, "isWon"),
@@ -452,18 +444,13 @@ async function handleAdminCommand(
       break;
     case "reorderPrizeGroup":
       if (!Array.isArray(body.orderedIds)) validationProblem("orderedIds が不正です。");
-      data = await active.state.reorderPrizeGroup(
-        active.generation,
+      data = await game.reorderPrizeGroup(
         identity.email,
         body.orderedIds.map((id) => parsePositiveInteger(id, "景品ID")),
       );
       break;
     case "deletePrize":
-      data = await active.state.deletePrize(
-        active.generation,
-        identity.email,
-        parsePositiveInteger(body.id, "景品ID"),
-      );
+      data = await game.deletePrize(identity.email, parsePositiveInteger(body.id, "景品ID"));
       break;
     default:
       return assertNever(discriminator);
@@ -471,84 +458,9 @@ async function handleAdminCommand(
   return jsonResponse({ data }, { status: 200 }, { requestOrigin: origin });
 }
 
-async function handleSnapshots(request: Request, env: Env): Promise<Response> {
-  if (request.method === "GET") {
-    const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
-    return jsonResponse({ data: await listSnapshots(env, cursor) });
-  }
-  if (request.method === "POST") {
-    const origin = assertSameOriginMutation(request);
-    return jsonResponse(
-      { data: await createActiveSnapshot(env) },
-      { status: 201 },
-      { requestOrigin: origin },
-    );
-  }
-  throw new ApiError(405, "許可されていないHTTPメソッドです。");
+function getGameState(env: Env): DurableObjectStub<GameState> {
+  return env.GAME_STATE.getByName(GAME_STATE_NAME);
 }
-
-async function handleActivate(
-  request: Request,
-  env: Env,
-  identity: AdminIdentity,
-): Promise<Response> {
-  assertMethod(request, ["POST"]);
-  const origin = assertSameOriginMutation(request);
-  const body = await readJsonBody(request);
-  if (!isRecord(body)) throw new ApiError(400, "generation activate body が不正です。");
-  const generation = readGeneration(body.generation, "generation");
-  const hasExpectedGeneration = body.expectedGeneration !== undefined;
-  const hasExpectedVersion = body.expectedVersion !== undefined;
-  if (hasExpectedGeneration !== hasExpectedVersion) {
-    throw new ApiError(400, "generation切り替えの期待値が不正です。");
-  }
-  const expected = hasExpectedGeneration
-    ? {
-        generation: readGeneration(body.expectedGeneration, "expectedGeneration"),
-        version: parsePositiveInteger(body.expectedVersion, "expectedVersion"),
-      }
-    : undefined;
-  const activation = await activateGeneration(env, generation, identity.email, expected);
-  return jsonResponse({ data: activation }, { status: 200 }, { requestOrigin: origin });
-}
-
-async function activateGeneration(
-  env: Env,
-  generation: string,
-  actor: string,
-  expected?: { generation: string; version: number },
-): Promise<Awaited<ReturnType<GameDirectory["activateGeneration"]>>> {
-  const target = env.GAME_STATE.getByName(`game:${generation}`);
-  if (!(await target.isInitialized(generation))) {
-    throw new ApiError(404, "切り替え先generationが初期化されていません。");
-  }
-
-  const directory = env.GAME_DIRECTORY.getByName("active");
-  if (expected === undefined) return directory.activateGeneration(generation, actor);
-
-  const result = await directory.activateGenerationGuarded(
-    generation,
-    actor,
-    expected.generation,
-    expected.version,
-  );
-  if (!result.ok) {
-    throw new ApiError(
-      409,
-      `active generationが ${result.generation}@${result.version} へ変更されています。`,
-    );
-  }
-  return result.activation;
-}
-
-async function getActiveGame(env: Env): Promise<ActiveGame> {
-  const generation = await env.GAME_DIRECTORY.getByName("active").getActiveGeneration();
-  return {
-    generation,
-    state: env.GAME_STATE.getByName(`game:${generation}`),
-  };
-}
-
 function withStaticSecurityHeaders(response: Response): Response {
   const headers = new Headers(response.headers);
   applySecurityHeaders(headers);
@@ -583,9 +495,11 @@ function readBoolean(value: unknown, label: string): boolean {
   return value;
 }
 
-function readGeneration(value: unknown, label: string): string {
-  if (!isGeneration(value)) throw new ApiError(400, `${label} が不正です。`);
-  return value;
+function readNonNegativeInteger(value: unknown, label: string): number {
+  if (!Number.isSafeInteger(value) || (value as number) < 0) {
+    throw new ApiError(400, `${label} が不正です。`);
+  }
+  return value as number;
 }
 
 const ADMIN_COMMAND_TYPES = new Set<AdminCommand["type"]>([
@@ -595,6 +509,7 @@ const ADMIN_COMMAND_TYPES = new Set<AdminCommand["type"]>([
   "incrementReach",
   "decrementReach",
   "saveSurveyState",
+  "startAnnualEvent",
   "createPrize",
   "updatePrize",
   "togglePrizeWon",

@@ -10,6 +10,7 @@ import {
   type PublicPreferences,
   parseBooleanPreference,
   resolveDarkModePreference,
+  shouldShowReachIcon,
 } from "@/types/bingo/public-preferences";
 
 export type PublicPreferenceState = {
@@ -24,21 +25,25 @@ export const persistBooleanPreference = (key: string, value: boolean) => {
 };
 
 export function usePublicPreferences(
+  eventId: string,
   initialPreferences: PublicPreferences = DEFAULT_PUBLIC_PREFERENCES,
   setIsSortedAscending?: (value: boolean) => void,
 ) {
   const [preferences, setPreferences] = useState<PublicPreferenceState>(() => ({
-    isReachIconVisible: initialPreferences.isReachIconVisible,
+    isReachIconVisible: false,
     isSortOrderActive: initialPreferences.isSortedAscending,
     isDarkMode: resolveDarkModePreference(initialPreferences.isDarkMode),
   }));
 
   useLayoutEffect(() => {
-    const nextReachVisibility = parseBooleanPreference(
-      window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.reachIconVisible) ?? undefined,
-      initialPreferences.isReachIconVisible,
-    );
-    persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.reachIconVisible, nextReachVisibility);
+    let lastReachedEventId: string | null = null;
+    try {
+      window.localStorage.removeItem(PUBLIC_PREFERENCE_KEYS.legacyReachIconVisible);
+      lastReachedEventId = window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.lastReachedEventId);
+    } catch {
+      // Privacy modes may disable persistent storage; keep the action available.
+    }
+    document.cookie = `${PUBLIC_PREFERENCE_KEYS.legacyReachIconVisible}=; path=/; max-age=0; samesite=lax`;
 
     const nextSortOrder = parseBooleanPreference(
       window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.sortedAscending) ?? undefined,
@@ -51,15 +56,26 @@ export function usePublicPreferences(
     persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.darkMode, nextDarkMode);
 
     setPreferences({
-      isReachIconVisible: nextReachVisibility,
+      isReachIconVisible: shouldShowReachIcon(eventId, lastReachedEventId),
       isSortOrderActive: nextSortOrder,
       isDarkMode: nextDarkMode,
     });
-  }, [initialPreferences, setIsSortedAscending]);
+  }, [eventId, initialPreferences, setIsSortedAscending]);
 
   useLayoutEffect(() => {
     applyPublicTheme(preferences.isDarkMode);
   }, [preferences.isDarkMode]);
 
-  return { preferences, setPreferences, persistBooleanPreference };
+  const markReachConfirmed = () => {
+    if (eventId !== "") {
+      try {
+        window.localStorage.setItem(PUBLIC_PREFERENCE_KEYS.lastReachedEventId, eventId);
+      } catch {
+        // The in-memory state still prevents duplicate interaction in this page.
+      }
+    }
+    setPreferences((previous) => ({ ...previous, isReachIconVisible: false }));
+  };
+
+  return { preferences, setPreferences, persistBooleanPreference, markReachConfirmed };
 }

@@ -26,118 +26,33 @@ run = "pnpm test"
 description = "Check generated bindings, Worker bundle, and startup time"
 run = "./scripts/check-cloudflare-worker.sh"
 
-[tasks."cloudflare:check:staging"]
-description = "Check the staging bindings, Worker bundle, and startup time"
-run = "./scripts/check-cloudflare-worker.sh --env staging"
+[tasks.preflight]
+description = "Validate the release, production target, build, and tests"
+run = "./scripts/preflight-cloudflare.sh"
 
-[tasks."cloudflare:whoami"]
-description = "Verify the organization production account and named deploy capability"
-run = "./scripts/check-cloudflare-operator.sh --env production --require-r2"
+[tasks.deploy]
+description = "Deploy develop HEAD to the pinned production Worker"
+run = "./scripts/deploy-cloudflare.sh"
 
-[tasks."cloudflare:whoami:staging"]
-description = "Verify the isolated staging account and deploy capability"
-run = "./scripts/check-cloudflare-operator.sh --env staging --require-r2"
+[tasks.smoke]
+description = "Smoke-test the active production deployment"
+run = "./scripts/run-cloudflare-smoke.sh"
 
-[tasks."cloudflare:env:init"]
-description = "Create the mode-600 production deploy environment from the active Worker"
-run = "node scripts/init-cloudflare-deploy-env.mjs --env production"
+[tasks.recover]
+description = "Prepare or execute guarded SQLite Durable Object PITR"
+run = "node scripts/cloudflare-pitr.mjs"
 
-[tasks."cloudflare:env:init:staging"]
-description = "Create the mode-600 staging deploy environment from the active Worker"
-run = "node scripts/init-cloudflare-deploy-env.mjs --env staging"
-
-[tasks."cloudflare:admins:set"]
-description = "Validate a private production administrator roster and update the deploy environment"
-usage = 'arg "<roster>" help="Mode-600 JSON roster with named administrators"'
-run = 'node scripts/set-cloudflare-admins.mjs --env production --roster "$usage_roster"'
-
-[tasks."cloudflare:admins:set:staging"]
-description = "Validate a private staging administrator roster and update the deploy environment"
-usage = 'arg "<roster>" help="Mode-600 JSON roster with named administrators"'
-run = 'node scripts/set-cloudflare-admins.mjs --env staging --roster "$usage_roster"'
-
-[tasks."cloudflare:smoke"]
-description = "Run automated production smoke checks and write a draft record"
-run = "./scripts/run-cloudflare-smoke.sh --env production"
-
-[tasks."cloudflare:smoke:staging"]
-description = "Run automated staging smoke checks and write a draft record"
-run = "./scripts/run-cloudflare-smoke.sh --env staging"
-
-[tasks."cloudflare:load:staging"]
-description = "Diagnose 1000 staging sockets from one egress (promotion uses the distributed workflow)"
-run = "./scripts/run-staging-load-test.sh"
-
-[tasks."cloudflare:snapshot:test:staging"]
-description = "Import three inactive maximum snapshots into staging"
-usage = 'arg "<access-jwt-file>" help="Mode-600 file containing the staging CF_Authorization JWT"'
-run = './scripts/run-cloudflare-snapshot-load-test.sh --access-jwt-file "$usage_access_jwt_file" --output .cloudflare/deployments/staging-snapshot.json'
-
-[tasks."cloudflare:smoke:finalize:staging"]
-description = "Record manual staging checks and validate promotion evidence"
-usage = 'arg "<cpu-ms-p95>" help="Maximum-snapshot Worker CPU p95 from Cloudflare Analytics"'
+[tasks.capacity]
+description = "Run the explicit capacity-sensitive WebSocket scenario"
+usage = 'arg "<base-url>" help="Loopback origin from mise run cloudflare:dev"'
 run = '''
-sha=$(git rev-parse HEAD)
-./scripts/finalize-cloudflare-smoke.sh \
-  --draft ".cloudflare/deployments/staging-$sha.draft.json" \
-  --load .cloudflare/deployments/staging-load.json \
-  --snapshot .cloudflare/deployments/staging-snapshot.json \
-  --cpu-ms-p95 "$usage_cpu_ms_p95"
+node scripts/cloudflare-load-test.mjs \
+  --run \
+  --base-url "${usage_base_url?}" \
+  --state-ws 1000 \
+  --duration 300 \
+  --expect-broadcasts 0
 '''
-
-[tasks."cloudflare:smoke:finalize"]
-description = "Record manual production smoke checks"
-run = '''
-sha=$(git rev-parse HEAD)
-./scripts/finalize-cloudflare-smoke.sh \
-  --draft ".cloudflare/deployments/production-$sha.draft.json"
-'''
-
-[tasks."cloudflare:deploy"]
-description = "Build and deploy the production Worker (requires explicit Access settings)"
-run = "./scripts/deploy-cloudflare.sh --env production"
-
-[tasks."cloudflare:deploy:staging"]
-description = "Build and deploy the staging Worker (requires explicit staging settings)"
-run = "./scripts/deploy-cloudflare.sh --env staging"
-
-[tasks."cloudflare:restore"]
-description = "Restore a snapshot into a verified inactive generation"
-usage = """
-arg "<environment>" help="production or staging"
-arg "<key>" help="Canonical snapshots/... R2 key"
-arg "<generation>" help="New inactive generation name"
-arg "<access-jwt-file>" help="Mode-600 file containing an Admin Access JWT"
-"""
-run = '''
-node scripts/cloudflare-generation.mjs restore \
-  --env "${usage_environment?}" \
-  --key "${usage_key?}" \
-  --generation "${usage_generation?}" \
-  --access-jwt-file "${usage_access_jwt_file?}"
-'''
-
-[tasks."cloudflare:activate"]
-description = "Guardedly activate a verified restore receipt"
-usage = """
-arg "<environment>" help="production or staging"
-arg "<restore-record>" help="Receipt written by cloudflare:restore"
-arg "<access-jwt-file>" help="Mode-600 file containing an Admin Access JWT"
-"""
-run = '''
-node scripts/cloudflare-generation.mjs activate \
-  --env "${usage_environment?}" \
-  --restore-record "${usage_restore_record?}" \
-  --access-jwt-file "${usage_access_jwt_file?}"
-'''
-
-[tasks."cloudflare:bootstrap"]
-description = "Create the production R2 buckets when absent"
-run = "./scripts/bootstrap-cloudflare.sh"
-
-[tasks."cloudflare:bootstrap:staging"]
-description = "Create the staging R2 buckets when absent"
-run = "./scripts/bootstrap-cloudflare.sh --env staging"
 
 [tasks."add"]
 description = "Add dependency with pnpm (use -D for devDependency)"

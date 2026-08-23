@@ -49,13 +49,14 @@
 ## Architecture boundaries
 
 - Public pages are static exports. Dynamic access must go through the same-origin Worker API.
-- Durable game state belongs in SQLite Durable Objects; loss-tolerant reactions stay separate.
+- One fixed-name SQLite `GameState` Durable Object owns authoritative event state; the separate
+  `ReactionHub` contains only loss-tolerant reactions.
 - Admin pages and `/admin/api/*` require Cloudflare Access and Worker-side JWT validation.
-- Prize images belong in R2; logical snapshots belong in the private backup R2 bucket.
-- Runtime state, authentication, images, backup, and rollback must remain within the documented
-  Cloudflare Worker, Durable Objects, Access, R2, and generation model.
-- No legacy database or container origin is available for rollback; use Worker version rollback and
-  Durable Object generation activation/snapshot restore.
+- Prize images belong in R2. Short-term data recovery uses SQLite Durable Object PITR.
+- Annual rollover uses the atomic event reset command; it does not create generations or databases.
+- No legacy database, container origin, logical snapshot, backup bucket, or generation directory is
+  available. Use Worker version rollback for code-only regressions, PITR for recent data recovery,
+  and fix-forward after Durable Object class or schema changes.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

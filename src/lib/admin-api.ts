@@ -14,7 +14,6 @@ const ADMIN_STATE_TIMEOUT_MS = 15_000;
 const ADMIN_UPLOAD_TIMEOUT_MS = 30_000;
 
 const EMPTY_STATE: BingoUnifiedState = {
-  generation: "",
   revision: 0,
   numbers: [],
   prizes: [],

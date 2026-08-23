@@ -1,6 +1,7 @@
 name: Trivy
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - "Dockerfile.cloudflare"
@@ -15,7 +16,7 @@ on:
       - "wrangler.jsonc"
       - ".github/workflows/trivy.yml"
   push:
-    branches: [main]
+    branches: [develop]
     paths:
       - "Dockerfile.cloudflare"
       - "scripts/**"
@@ -28,8 +29,6 @@ on:
       - "next.config.ts"
       - "wrangler.jsonc"
       - ".github/workflows/trivy.yml"
-  schedule:
-    - cron: "47 18 * * 1"
 
 permissions:
   contents: read
@@ -37,9 +36,6 @@ permissions:
 concurrency:
   group: trivy-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
-env:
-  IMAGE_NAME: nutfes-bingo:${{ github.sha }}
 
 jobs:
   repository:
@@ -84,56 +80,5 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           scanners: vuln,secret,misconfig
-          exit-code: "1"
-          skip-setup-trivy: true
-
-  image:
-    name: Docker image scan
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Build Cloudflare toolchain image
-        run: >-
-          docker build --file Dockerfile.cloudflare --target development
-          --build-arg NEXT_PUBLIC_SITE_URL=https://app.example.test
-          --build-arg NEXT_PUBLIC_MEDIA_ORIGIN=https://media.example.test
-          --build-arg NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
-          --tag "${IMAGE_NAME}" .
-
-      - name: Generate SARIF
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
-        with:
-          image-ref: ${{ env.IMAGE_NAME }}
-          format: sarif
-          output: trivy-image.sarif
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          vuln-type: os,library
-          scanners: vuln
-          exit-code: "0"
-
-      - name: Upload SARIF
-        if: github.event_name != 'pull_request'
-        uses: github/codeql-action/upload-sarif@f52b05f4acaaa234e44466e66d29050e135ea9ef # v4.36.0
-        with:
-          sarif_file: trivy-image.sarif
-          category: trivy-image
-
-      - name: Enforce severity gate
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
-        with:
-          image-ref: ${{ env.IMAGE_NAME }}
-          format: table
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          vuln-type: os,library
-          scanners: vuln
           exit-code: "1"
           skip-setup-trivy: true

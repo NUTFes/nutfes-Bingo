@@ -7,6 +7,12 @@ const IMAGE_TYPES = {
   "image/png": "png",
   "image/webp": "webp",
 } as const;
+const IMAGE_CONTENT_TYPES = {
+  jpg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+} as const;
+const IMMUTABLE_IMAGE_KEY = /^prizes\/([a-f0-9]{64})\.(jpg|png|webp)$/;
 
 export async function uploadPrizeImage(
   request: Request,
@@ -38,7 +44,7 @@ export async function uploadPrizeImage(
   if (
     existing === null ||
     existing.size !== bytes.byteLength ||
-    existing.customMetadata?.checksum_sha256 !== digest ||
+    !hasManagedSha256(existing, digest) ||
     existingContentType !== entry.type
   ) {
     await env.PRIZE_IMAGES.put(key, bytes, {
@@ -65,6 +71,10 @@ export async function servePrizeImage(request: Request, env: Env, key: string): 
     throw new ApiError(405, "許可されていないHTTPメソッドです。");
   }
   if (!isImmutablePrizeImagePath(key)) throw new ApiError(404, "画像が見つかりません。");
+  const keyParts = IMMUTABLE_IMAGE_KEY.exec(key);
+  if (keyParts === null) throw new ApiError(404, "画像が見つかりません。");
+  const [, digest, extension] = keyParts;
+  const contentType = IMAGE_CONTENT_TYPES[extension as keyof typeof IMAGE_CONTENT_TYPES];
 
   let object: R2Object | null;
   let body: ReadableStream | null = null;
@@ -76,17 +86,35 @@ export async function servePrizeImage(request: Request, env: Env, key: string): 
     body = objectBody?.body ?? null;
   }
   if (object === null) throw new ApiError(404, "画像が見つかりません。");
+  if (
+    object.size <= 0 ||
+    object.size > MAX_PRIZE_IMAGE_BYTES ||
+    digest === undefined ||
+    !hasManagedSha256(object, digest)
+  ) {
+    throw new ApiError(500, "景品画像の整合性を確認できません。");
+  }
 
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
-  headers.set("ETag", object.httpEtag);
-  headers.set("Content-Length", String(object.size));
-  headers.set("Cache-Control", "public, max-age=31536000, immutable");
-  headers.set("Cross-Origin-Resource-Policy", "same-site");
+  const headers = new Headers({
+    "Content-Type": contentType,
+    ETag: object.httpEtag,
+    "Content-Length": String(object.size),
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "Cross-Origin-Resource-Policy": "same-site",
+  });
   applySecurityHeaders(headers);
   if (ifNoneMatch(request, object.httpEtag)) return new Response(null, { status: 304, headers });
 
   return new Response(body, { status: 200, headers });
+}
+
+function hasManagedSha256(object: R2Object, expectedHex: string): boolean {
+  const checksum = object.checksums.sha256;
+  if (checksum === undefined) return false;
+  const actualHex = Array.from(new Uint8Array(checksum), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+  return actualHex === expectedHex;
 }
 
 function hasValidSignature(type: string, bytes: Uint8Array): boolean {

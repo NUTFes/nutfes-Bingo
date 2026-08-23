@@ -93,12 +93,13 @@ export function getSameOrigin(request: Request): string | null {
   return parsedOrigin.origin;
 }
 
-export function assertSameOriginMutation(request: Request): string | null {
-  const fetchSite = request.headers.get("Sec-Fetch-Site");
-  if (fetchSite === "cross-site") {
-    throw new ApiError(403, "クロスサイトのリクエストは許可されていません。");
+export function assertSameOriginMutation(request: Request): string {
+  const origin = getSameOrigin(request);
+  if (origin !== null) return origin;
+  if (request.headers.get("Sec-Fetch-Site") === "same-origin") {
+    return new URL(request.url).origin;
   }
-  return getSameOrigin(request);
+  throw new ApiError(403, "同一オリジンであることを確認できないリクエストは許可されていません。");
 }
 
 export function assertWebSocketRequest(request: Request): string | null {
@@ -123,6 +124,10 @@ export function preflightResponse(request: Request): Response {
 }
 
 export async function readJsonBody(request: Request, maxBytes = JSON_BODY_LIMIT): Promise<unknown> {
+  const mediaType = request.headers.get("Content-Type")?.split(";", 1)[0]?.trim().toLowerCase();
+  if (mediaType !== "application/json") {
+    throw new ApiError(415, "application/json が必要です。");
+  }
   const bytes = await readLimitedBody(request, maxBytes);
   if (bytes.byteLength === 0) throw new ApiError(400, "JSON body が必要です。");
 
@@ -161,8 +166,8 @@ export async function sha256Hex(value: string | Uint8Array): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export function makeStateEtag(generation: string, revision: number): string {
-  return `"${generation}:${revision}"`;
+export function makeStateEtag(revision: number): string {
+  return `"state:${revision}"`;
 }
 
 export function ifNoneMatch(request: Request, etag: string): boolean {

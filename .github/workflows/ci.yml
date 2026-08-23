@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
+    branches: [develop]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,8 +18,8 @@ env:
   PNPM_VERSION: "11.2.2"
 
 jobs:
-  quality:
-    name: Quality Check
+  check:
+    name: Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,88 +45,27 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
-      - name: Secret Scan
-        run: pnpm run secrets:check
 
-      - name: Tool Version Check
-        run: pnpm run versions:check
+      - name: Dependency security gate
+        run: |
+          pnpm audit --prod --audit-level high
+          pnpm audit --audit-level high
 
-      - name: Oxfmt Check
-        run: pnpm run fmt:check
+      - name: Static checks
+        run: |
+          pnpm run secrets:check
+          pnpm run check
+          pnpm run worker:types:check
+          pnpm run doctor
+          pnpm run knip
+          sh -n scripts/*.sh
 
-      - name: Oxlint Check
-        run: pnpm run lint
-
-      - name: TypeScript Check
-        run: pnpm run typecheck
-
-      - name: Worker Binding Type Check
-        run: pnpm run worker:types:check
-
-      - name: Worker and Durable Object Tests
+      - name: Worker and Durable Object tests
         run: pnpm run test
 
-      - name: React Doctor
-        run: pnpm run doctor
-
-      - name: Knip Check
-        run: pnpm run knip
-
-      - name: Shell Script Syntax Check
-        run: sh -n scripts/*.sh
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: [quality]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Takumi Guard
-        uses: flatt-security/setup-takumi-guard-npm@8f53b50568e4466f2d92504f349c05b9ffcb8b59 # v1
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
-
-      - name: Build
+      - name: Build and validate production artifact
         env:
           NEXT_PUBLIC_MEDIA_ORIGIN: https://media.example.test
           NEXT_PUBLIC_SITE_URL: https://app.example.test
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
-        run: ./scripts/build-cloudflare-assets.sh
-
-      - name: Wrangler Dry Run
-        run: pnpm run worker:dry-run
-
-      - name: Wrangler Staging Dry Run
-        run: pnpm run worker:dry-run:staging
-
-      - name: Worker Tests Against Built Assets
-        run: pnpm run test
-
-      - name: Enforce Free-plan Worker Bundle Limit
-        run: pnpm run worker:bundle:check
-
-      - name: Enforce Staging Free-plan Worker Bundle Limit
-        run: pnpm run worker:bundle:check:staging
-
-      - name: Worker Startup Profile
-        run: pnpm exec wrangler check startup --env='' --outfile .wrangler-dist/worker-startup.cpuprofile
-
-      - name: Staging Worker Startup Profile
-        run: pnpm exec wrangler check startup --env staging --outfile .wrangler-dist-staging/worker-startup.cpuprofile
+        run: ./scripts/check-cloudflare-worker.sh

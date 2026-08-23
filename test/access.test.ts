@@ -33,6 +33,7 @@ async function signAssertion(input?: {
   audience?: string;
   email?: string;
   expiration?: number | string;
+  issuer?: string;
 }) {
   return new SignJWT({
     email: input?.email ?? "Admin@Example.com",
@@ -40,7 +41,7 @@ async function signAssertion(input?: {
   })
     .setProtectedHeader({ alg: "RS256", kid: KEY_ID })
     .setIssuedAt()
-    .setIssuer(ISSUER)
+    .setIssuer(input?.issuer ?? ISSUER)
     .setAudience(input?.audience ?? AUDIENCE)
     .setExpirationTime(input?.expiration ?? "5m")
     .sign(keys.privateKey);
@@ -64,6 +65,12 @@ describe("Cloudflare Access JWT verification", () => {
 
   it("rejects an assertion for another Access application", async () => {
     const assertion = await signAssertion({ audience: "another-application" });
+
+    await expect(verifyAdminAssertion(assertion, CONFIG, localJwks)).rejects.toThrow();
+  });
+
+  it("rejects a correctly signed assertion from another issuer", async () => {
+    const assertion = await signAssertion({ issuer: "https://attacker.cloudflareaccess.com" });
 
     await expect(verifyAdminAssertion(assertion, CONFIG, localJwks)).rejects.toThrow();
   });

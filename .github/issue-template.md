@@ -16,8 +16,8 @@ assignees: ""
 - [ ] Docker static-build toolchain / image digest
 - [ ] Workers / Durable Objects / Static Assets
 - [ ] Access / Turnstile / WAF
-- [ ] R2 image / snapshot
-- [ ] Backup / restore / rollback
+- [ ] R2 prize images
+- [ ] PITR / Worker rollback
 - [ ] Documentation / ADR / templates
 
 # 現在の状態

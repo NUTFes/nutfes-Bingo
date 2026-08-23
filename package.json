@@ -14,13 +14,11 @@
     "worker:types": "wrangler types --strict-vars=false",
     "worker:types:check": "wrangler types --strict-vars=false --check",
     "worker:dry-run": "wrangler deploy --env='' --dry-run --minify --outdir .wrangler-dist",
-    "worker:dry-run:staging": "wrangler deploy --env staging --dry-run --minify --outdir .wrangler-dist-staging",
     "worker:bundle:check": "node scripts/check-worker-bundle-size.mjs .wrangler-dist",
-    "worker:bundle:check:staging": "node scripts/check-worker-bundle-size.mjs .wrangler-dist-staging",
     "fmt:check": "oxfmt --check",
     "secrets:check": "node scripts/check-secrets.mjs",
     "versions:check": "node scripts/check-tool-versions.mjs",
-    "doctor": "react-doctor --yes --no-score --project . --scope files --base origin/main --verbose --blocking none",
+    "doctor": "react-doctor --yes --no-score --project . --scope files --base origin/develop --verbose --blocking none",
     "knip": "knip"
   },
   "dependencies": {
@@ -30,7 +28,7 @@
     "jose": "6.2.3",
     "lucide-react": "0.511.0",
     "matter-js": "0.20.0",
-    "next": "16.2.10",
+    "next": "16.3.1",
     "next-themes": "0.4.6",
     "react": "19.2.7",
     "react-aria": "3.47.0",
@@ -42,7 +40,7 @@
     "tailwindcss-react-aria-components": "2.1.0"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "0.18.0",
+    "@cloudflare/vitest-pool-workers": "0.21.3",
     "@tailwindcss/postcss": "4.2.1",
     "@types/matter-js": "0.20.2",
     "@types/node": "26.1.0",
@@ -51,14 +49,14 @@
     "knip": "6.14.1",
     "oxfmt": "0.40.0",
     "oxlint": "1.55.0",
-    "postcss": "8.5.16",
+    "postcss": "8.5.26",
     "postcss-load-config": "6.0.1",
     "react-doctor": "0.9.12",
     "tailwindcss": "4.2.1",
     "tailwindcss-animate": "1.0.7",
     "typescript": "5.9.3",
-    "vitest": "4.1.9",
-    "wrangler": "4.106.0"
+    "vitest": "4.1.10",
+    "wrangler": "4.123.0"
   },
   "engines": {
     "node": "26.2.0",

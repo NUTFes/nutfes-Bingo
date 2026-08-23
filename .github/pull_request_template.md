@@ -26,8 +26,8 @@
 - [ ] Cloudflare static build / Worker deploy pathへの影響を確認した
 - [ ] Durable Objects / R2 / Access / Turnstile bindingsへの影響を確認した
 - [ ] `wrangler.jsonc` / `.dev.vars.example` への影響を確認した
-- [ ] Worker変更では `mise run cloudflare:check` / remote smoke evidenceを添付した
-- [ ] backup/restore/rollbackへの影響を説明した
+- [ ] Worker変更では`mise run cloudflare:check`を実行した
+- [ ] PITR / Worker rollbackへの影響を説明した
 
 # 備考
 

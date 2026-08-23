@@ -11,6 +11,7 @@ import type { AppStateRow } from "../../../shared/bingo-transport";
 
 export const EMPTY_APP_STATE: AppStateRow = {
   id: 1,
+  event_id: "",
   survey_url: "",
   is_survey_active: false,
   reach_count: 0,

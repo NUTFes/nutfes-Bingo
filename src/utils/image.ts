@@ -1,5 +1,5 @@
 function isDirectImagePath(imagePath: string): boolean {
-  if (imagePath.startsWith("/PrizeItem/") || imagePath.startsWith("/api/prize-images/")) {
+  if (imagePath.startsWith("/api/prize-images/")) {
     return true;
   }
 

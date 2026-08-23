@@ -11,6 +11,7 @@ import JudgementModal from "./components/JudgementModal";
 import UpdateNumberModal from "./components/UpdateNumberModal";
 import { dashboardActions } from "./actions-client";
 import {
+  AnnualEventSection,
   CreateNumberSection,
   DeleteNumberSection,
   ReachControlSection,
@@ -27,13 +28,21 @@ interface AdminDashboardPageProps {
 
 interface DashboardLoadState {
   bingoNumbers: NumberRow[];
+  eventId: string;
+  revision: number;
   loadError: string | null;
   isLoaded: boolean;
   surveyUrl: string;
 }
 
 type DashboardLoadAction =
-  | { type: "sync-authoritative"; numbers: NumberRow[]; surveyUrl: string; markLoaded?: boolean }
+  | {
+      type: "sync-authoritative";
+      numbers: NumberRow[];
+      appState: AppStateRow;
+      revision: number;
+      markLoaded?: boolean;
+    }
   | { type: "load-error"; message: string }
   | { type: "set-numbers"; value: SetStateAction<NumberRow[]> }
   | { type: "set-survey-url"; value: SetStateAction<string> };
@@ -47,7 +56,9 @@ const dashboardLoadReducer = (
       return {
         ...state,
         bingoNumbers: action.numbers,
-        surveyUrl: action.surveyUrl,
+        eventId: action.appState.event_id,
+        revision: action.revision,
+        surveyUrl: action.appState.survey_url,
         loadError: null,
         isLoaded: action.markLoaded ? true : state.isLoaded,
       };
@@ -100,15 +111,15 @@ const mutateReach = async (direction: "increment" | "decrement") => {
 };
 
 export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
-  const [{ bingoNumbers, loadError, isLoaded, surveyUrl }, dispatchLoadState] = useReducer(
-    dashboardLoadReducer,
-    {
+  const [{ bingoNumbers, eventId, revision, loadError, isLoaded, surveyUrl }, dispatchLoadState] =
+    useReducer(dashboardLoadReducer, {
       bingoNumbers: initialNumbers,
+      eventId: initialAppState.event_id,
+      revision: 0,
       loadError: null,
       isLoaded: false,
       surveyUrl: initialAppState.survey_url,
-    },
-  );
+    });
   const setBingoNumbers = (value: SetStateAction<NumberRow[]>) => {
     dispatchLoadState({ type: "set-numbers", value });
   };
@@ -123,7 +134,8 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       dispatchLoadState({
         type: "sync-authoritative",
         numbers: state.numbers,
-        surveyUrl: state.appState.survey_url,
+        appState: state.appState,
+        revision: state.revision,
       });
       return state;
     } catch (error) {
@@ -146,7 +158,8 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
         dispatchLoadState({
           type: "sync-authoritative",
           numbers: state.numbers,
-          surveyUrl: state.appState.survey_url,
+          appState: state.appState,
+          revision: state.revision,
           markLoaded: true,
         });
       })
@@ -246,6 +259,40 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
     });
   };
 
+  const handleStartAnnualEvent = async (newEventId: string) => {
+    const stateBeforeReset = await refreshAuthoritativeState();
+    if (stateBeforeReset === null) return false;
+    if (stateBeforeReset.appState.event_id !== eventId) {
+      showToast({
+        title: "イベントが切り替わっています",
+        description: "最新のイベントIDを表示しました。内容を確認してから再実行してください。",
+      });
+      return false;
+    }
+
+    const result = await dashboardActions.startAnnualEvent({
+      expectedRevision: stateBeforeReset.revision,
+      expectedEventId: stateBeforeReset.appState.event_id,
+      newEventId,
+    });
+    const stateAfterReset = await refreshAuthoritativeState();
+    if (!result.ok) {
+      console.error(result.error);
+      showToast({
+        title: "年次切替を完了できませんでした",
+        description: stateAfterReset
+          ? "サーバーの最新状態を表示しています。内容を確認して再実行してください。"
+          : "サーバー状態を確認できません。ページを再読み込みしてください。",
+      });
+      return false;
+    }
+    showToast({
+      title: "新年度を開始しました",
+      description: `イベントIDを ${result.data.eventId} に切り替えました。`,
+    });
+    return stateAfterReset?.appState.event_id === result.data.eventId;
+  };
+
   const deleteNumberOptions = [...bingoNumbers].reverse().map((bingoNumber) => ({
     id: String(bingoNumber.number),
     label: `${bingoNumber.number}`,
@@ -334,6 +381,11 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
                 onSurveyUrlChange={setSurveyUrl}
                 onActivate={() => handleSurvey(true)}
                 onDeactivate={() => handleSurvey(false)}
+              />
+              <AnnualEventSection
+                currentEventId={eventId}
+                revision={revision}
+                onStart={handleStartAnnualEvent}
               />
             </div>
           </div>

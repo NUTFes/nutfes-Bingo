@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
+
 import { Button } from "@/components/ui/Button";
 import { ComboBox, ComboBoxItem } from "@/components/ui/ComboBox";
 import { FieldGroup, Input } from "@/components/ui/Field";
 import { Form } from "@/components/ui/Form";
 import { NumberField } from "@/components/ui/NumberField";
+import { TextField } from "@/components/ui/TextField";
 
 interface CreateNumberSectionProps {
   submitNumberFieldKey: number;
@@ -197,6 +200,76 @@ export function SurveyControlSection({
           </Button>
         </div>
       </div>
+    </section>
+  );
+}
+
+interface AnnualEventSectionProps {
+  currentEventId: string;
+  revision: number;
+  onStart: (newEventId: string) => Promise<boolean>;
+}
+
+export function AnnualEventSection({ currentEventId, revision, onStart }: AnnualEventSectionProps) {
+  const [newEventId, setNewEventId] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [isPending, setIsPending] = useState(false);
+  const normalizedEventId = newEventId.trim().toLowerCase();
+  const isConfirmed =
+    /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$/.test(normalizedEventId) &&
+    normalizedEventId !== currentEventId &&
+    confirmation.trim().toLowerCase() === normalizedEventId;
+
+  return (
+    <section className="flex flex-col gap-3 border-t border-border pt-8 sm:gap-4">
+      <header className="max-w-3xl space-y-1">
+        <h2 className="text-lg font-semibold text-foreground">年次イベント開始</h2>
+        <p className="text-sm text-muted-foreground">
+          番号、景品、リーチ、アンケートを空にします。画像ファイル自体は保持されます。
+        </p>
+      </header>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+        <dt className="text-muted-foreground">現在のイベント</dt>
+        <dd className="font-mono text-foreground">{currentEventId}</dd>
+        <dt className="text-muted-foreground">現在のrevision</dt>
+        <dd className="font-mono text-foreground">{revision}</dd>
+      </dl>
+      <Form
+        className="gap-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!isConfirmed || isPending) return;
+          setIsPending(true);
+          void onStart(normalizedEventId).then((completed) => {
+            setIsPending(false);
+            if (completed) {
+              setNewEventId("");
+              setConfirmation("");
+            }
+          });
+        }}
+      >
+        <TextField
+          label="新しいイベントID"
+          description="例: 2027-nutfes-bingo"
+          value={newEventId}
+          onChange={setNewEventId}
+        />
+        <TextField
+          label="確認のため同じイベントIDを再入力"
+          value={confirmation}
+          onChange={setConfirmation}
+        />
+        <Button
+          type="submit"
+          variant="destructive"
+          isDisabled={!isConfirmed || isPending}
+          isPending={isPending}
+          className="w-full"
+        >
+          現在のデータを消して新年度を開始
+        </Button>
+      </Form>
     </section>
   );
 }

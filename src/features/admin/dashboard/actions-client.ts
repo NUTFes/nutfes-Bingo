@@ -19,6 +19,17 @@ export const dashboardActions = {
         isSurveyActive: input.isSurveyActive,
       }),
     ),
+  startAnnualEvent: (input: {
+    expectedRevision: number;
+    expectedEventId: string;
+    newEventId: string;
+  }) =>
+    toActionResult(() =>
+      sendAdminCommand<{ eventId: string; revision: number }>({
+        type: "startAnnualEvent",
+        ...input,
+      }),
+    ),
   logout: async () => {
     window.location.assign("/cdn-cgi/access/logout");
   },

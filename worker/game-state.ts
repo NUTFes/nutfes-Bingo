@@ -2,36 +2,31 @@ import { DurableObject } from "cloudflare:workers";
 import type { BingoUnifiedState, StateSocketMessage } from "../shared/bingo-transport";
 
 import {
-  assertGeneration,
   assertPrizeImagePath,
   capacityProblem,
   conflictProblem,
   type AppStateRow,
-  type AuditLogRow,
-  type GameSnapshot,
   MAX_AUDIT_LOG_ROWS,
   MAX_AUDIT_PAYLOAD_BYTES,
   MAX_PRIZES,
   MAX_REACH_LOGS,
   MAX_REACH_SUBMISSIONS,
   type NumberRow,
+  normalizeHttpsUrl,
   notFoundProblem,
+  parseEventId,
   parseOptionalText,
   parsePositiveInteger,
   parseRequiredText,
-  parseSnapshot,
   PRIZE_SORT_ORDER_STEP,
   type PrizeRow,
   type ReachLogRow,
-  type ReachSubmissionRow,
   resolveImageUrl,
   type StoredPrizeRow,
   validationProblem,
-  normalizeHttpsUrl,
 } from "./domain";
-import { capacityResponse, sha256Hex } from "./http";
+import { capacityResponse } from "./http";
 import { expireScreenSockets, scheduleScreenSocketExpiration } from "./screen-socket-expiration";
-import { storeSnapshot } from "./snapshots";
 
 type MetadataSqlRow = { value: string };
 type RevisionSqlRow = { revision: number };
@@ -39,13 +34,10 @@ type NumberSqlRow = NumberRow;
 type PrizeSqlRow = Omit<StoredPrizeRow, "is_won"> & { is_won: number };
 type AppStateSqlRow = Omit<AppStateRow, "is_survey_active"> & { is_survey_active: number };
 type ReachLogSqlRow = ReachLogRow;
-type ReachSubmissionSqlRow = ReachSubmissionRow;
-type AuditLogSqlRow = AuditLogRow;
 type CachedGameState = Omit<BingoUnifiedState, "serverTime">;
 
 type StateSocketAttachment = {
   kind: "state";
-  generation: string;
   view: "public" | "screen";
   expires_at: number;
 };
@@ -53,39 +45,48 @@ type StateSocketAttachment = {
 const MAX_STATE_SOCKETS = 2_000;
 const MAX_SCREEN_STATE_SOCKETS = 16;
 const MAX_PUBLIC_STATE_SOCKETS = MAX_STATE_SOCKETS - MAX_SCREEN_STATE_SOCKETS;
-const INITIAL_ACTIVATION_TOKEN = "initial";
-const SNAPSHOT_INSTALL_CHECKSUM_KEY = "snapshot_install_checksum";
-const SNAPSHOT_INSTALL_STATUS_KEY = "snapshot_install_status";
-const SNAPSHOT_INSTALL_INSTALLED = "installed";
-const SNAPSHOT_INSTALL_READY = "ready";
+const PITR_EARLIEST_AT_KEY = "pitr_earliest_at";
+const PITR_PENDING_TARGET_KEY = "pitr_pending_target";
+const PITR_PENDING_UNDO_KEY = "pitr_pending_undo";
+const PITR_PENDING_ACTOR_KEY = "pitr_pending_actor";
+const PITR_PENDING_AT_KEY = "pitr_pending_at";
+const PITR_WINDOW_MS = 30 * 24 * 60 * 60 * 1_000;
+const PITR_BOOKMARK_PATTERN = /^[A-Za-z0-9-]{16,256}$/;
 
 export class GameState extends DurableObject<Env> {
   private cachedState: CachedGameState | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
-    ctx.blockConcurrencyWhile(async () => this.migrate());
+    ctx.blockConcurrencyWhile(async () => {
+      this.initializeSchema();
+      this.ensureInitialized();
+      // A scheduled restore is applied before a new session starts. Pending
+      // metadata belongs to the previous session and must never freeze restored data.
+      this.clearPendingRecovery();
+    });
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
   }
 
-  async getState(generation: string): Promise<BingoUnifiedState> {
-    this.ensureActiveGeneration(generation);
-    return this.readState(generation);
+  async getState(): Promise<BingoUnifiedState> {
+    return this.readState();
   }
 
-  async getStatus(generation: string): Promise<{ generation: string; revision: number }> {
-    this.ensureActiveGeneration(generation);
-    return { generation, revision: this.readRevision() };
+  async getStatus(): Promise<{
+    eventId: string;
+    revision: number;
+    recoveryPending: boolean;
+  }> {
+    return {
+      eventId: this.readAppState().event_id,
+      revision: this.readRevision(),
+      recoveryPending: this.readMetadata(PITR_PENDING_TARGET_KEY) !== null,
+    };
   }
 
-  async isInitialized(generation: string): Promise<boolean> {
-    assertGeneration(generation);
-    return this.readMetadata("generation") === generation;
-  }
-
-  async createNumber(generation: string, actor: string, numberInput: number): Promise<NumberRow> {
+  async createNumber(actor: string, numberInput: number): Promise<NumberRow> {
     const number = parsePositiveInteger(numberInput, "番号", { max: 99 });
-    return this.runAdminMutation(generation, actor, "createNumber", { number }, () => {
+    return this.runAdminMutation(actor, "createNumber", { number }, () => {
       if (this.findNumberByValue(number) !== null)
         conflictProblem("同じ番号が既に登録されています。");
       const now = new Date().toISOString();
@@ -101,9 +102,9 @@ export class GameState extends DurableObject<Env> {
     });
   }
 
-  async deleteNumber(generation: string, actor: string, numberInput: number): Promise<NumberRow> {
+  async deleteNumber(actor: string, numberInput: number): Promise<NumberRow> {
     const number = parsePositiveInteger(numberInput, "番号", { max: 99 });
-    return this.runAdminMutation(generation, actor, "deleteNumber", { number }, () => {
+    return this.runAdminMutation(actor, "deleteNumber", { number }, () => {
       const existing = this.findNumberByValue(number);
       if (existing === null) notFoundProblem("番号が見つかりません。");
       this.ctx.storage.sql.exec("DELETE FROM numbers WHERE number = ?", number);
@@ -111,15 +112,10 @@ export class GameState extends DurableObject<Env> {
     });
   }
 
-  async updateNumber(
-    generation: string,
-    actor: string,
-    idInput: number,
-    numberInput: number,
-  ): Promise<NumberRow> {
+  async updateNumber(actor: string, idInput: number, numberInput: number): Promise<NumberRow> {
     const id = parsePositiveInteger(idInput, "番号ID");
     const number = parsePositiveInteger(numberInput, "番号", { max: 99 });
-    return this.runAdminMutation(generation, actor, "updateNumber", { id, number }, () => {
+    return this.runAdminMutation(actor, "updateNumber", { id, number }, () => {
       const existing = this.findNumberById(id);
       if (existing === null) notFoundProblem("番号が見つかりません。");
       const conflicting = this.findNumberByValue(number);
@@ -139,16 +135,16 @@ export class GameState extends DurableObject<Env> {
     });
   }
 
-  async incrementReach(generation: string, actor: string): Promise<number> {
-    return this.changeAdminReach(generation, actor, 1);
+  async incrementReach(actor: string): Promise<number> {
+    return this.changeAdminReach(actor, 1);
   }
 
-  async decrementReach(generation: string, actor: string): Promise<number> {
-    return this.changeAdminReach(generation, actor, -1);
+  async decrementReach(actor: string): Promise<number> {
+    return this.changeAdminReach(actor, -1);
   }
 
-  async recordPublicReach(generation: string, clientHash: string): Promise<number> {
-    this.ensureActiveGeneration(generation);
+  async recordPublicReach(clientHash: string): Promise<number> {
+    this.assertRecoveryNotPending();
     assertClientHash(clientHash);
 
     const mutation = this.ctx.storage.transactionSync(() => {
@@ -207,7 +203,6 @@ export class GameState extends DurableObject<Env> {
     }
     const message: StateSocketMessage = {
       type: "reach",
-      generation,
       revision: mutation.revision,
       reachCount: mutation.count,
       latestReachLog,
@@ -219,7 +214,6 @@ export class GameState extends DurableObject<Env> {
   }
 
   async saveSurveyState(
-    generation: string,
     actor: string,
     surveyUrlInput: string,
     isSurveyActiveInput: boolean,
@@ -231,7 +225,6 @@ export class GameState extends DurableObject<Env> {
     }
 
     return this.runAdminMutation(
-      generation,
       actor,
       "saveSurveyState",
       { surveyUrl, isSurveyActive: isSurveyActiveInput },
@@ -240,7 +233,8 @@ export class GameState extends DurableObject<Env> {
         const row = this.ctx.storage.sql
           .exec<AppStateSqlRow>(
             "UPDATE app_state SET survey_url = ?, is_survey_active = ?, updated_at = ? " +
-              "WHERE id = 1 RETURNING id, survey_url, is_survey_active, reach_count, updated_at",
+              "WHERE id = 1 " +
+              "RETURNING id, event_id, survey_url, is_survey_active, reach_count, updated_at",
             surveyUrl,
             isSurveyActiveInput ? 1 : 0,
             now,
@@ -251,8 +245,49 @@ export class GameState extends DurableObject<Env> {
     );
   }
 
+  async startAnnualEvent(
+    actor: string,
+    expectedRevisionInput: number,
+    expectedEventIdInput: string,
+    newEventIdInput: string,
+  ): Promise<{ eventId: string; revision: number }> {
+    const expectedEventId = parseEventId(expectedEventIdInput);
+    const newEventId = parseEventId(newEventIdInput);
+    this.assertExpectedRevision(expectedRevisionInput);
+    const currentEventId = this.readAppState().event_id;
+    if (currentEventId !== expectedEventId) {
+      conflictProblem("イベント確認後にイベントIDが変更されています。再読み込みしてください。");
+    }
+    if (newEventId === currentEventId) {
+      conflictProblem("新しいイベントIDを指定してください。");
+    }
+
+    return this.runAdminMutation(
+      actor,
+      "startAnnualEvent",
+      { previousEventId: currentEventId, eventId: newEventId },
+      () => {
+        const now = new Date().toISOString();
+        this.ctx.storage.sql.exec("DELETE FROM numbers");
+        this.ctx.storage.sql.exec("DELETE FROM prizes");
+        this.ctx.storage.sql.exec("DELETE FROM reach_logs");
+        this.ctx.storage.sql.exec("DELETE FROM reach_submissions");
+        this.ctx.storage.sql.exec("DELETE FROM audit_log");
+        this.ctx.storage.sql.exec(
+          "UPDATE app_state SET event_id = ?, survey_url = '', is_survey_active = 0, " +
+            "reach_count = 0, updated_at = ? WHERE id = 1",
+          newEventId,
+          now,
+        );
+        this.ctx.storage.sql.exec(
+          "UPDATE game_metadata SET value = '0' WHERE key = 'reach_submission_count'",
+        );
+        return { eventId: newEventId, revision: expectedRevisionInput + 1 };
+      },
+    );
+  }
+
   async createPrize(
-    generation: string,
     actor: string,
     nameJpInput: string,
     nameEnInput: string | null,
@@ -263,44 +298,37 @@ export class GameState extends DurableObject<Env> {
     const imagePath = imagePathInput ?? null;
     assertPrizeImagePath(imagePath);
 
-    return this.runAdminMutation(
-      generation,
-      actor,
-      "createPrize",
-      { nameJp, nameEn, imagePath },
-      () => {
-        const prizeCount = this.ctx.storage.sql
-          .exec<{ count: number }>("SELECT COUNT(*) AS count FROM prizes")
-          .one().count;
-        if (prizeCount >= MAX_PRIZES) {
-          capacityProblem("景品の登録上限に達しています。");
-        }
-        const maxSortOrder = this.ctx.storage.sql
-          .exec<{ sort_order: number }>(
-            "SELECT COALESCE(MAX(sort_order), 0) AS sort_order FROM prizes WHERE is_won = 0",
-          )
-          .one().sort_order;
-        const now = new Date().toISOString();
-        const row = this.ctx.storage.sql
-          .exec<PrizeSqlRow>(
-            "INSERT INTO prizes " +
-              "(name_jp, name_en, image_path, is_won, sort_order, created_at, updated_at) " +
-              "VALUES (?, ?, ?, 0, ?, ?, ?) RETURNING *",
-            nameJp,
-            nameEn,
-            imagePath,
-            maxSortOrder + PRIZE_SORT_ORDER_STEP,
-            now,
-            now,
-          )
-          .one();
-        return this.toPrizeRow(row);
-      },
-    );
+    return this.runAdminMutation(actor, "createPrize", { nameJp, nameEn, imagePath }, () => {
+      const prizeCount = this.ctx.storage.sql
+        .exec<{ count: number }>("SELECT COUNT(*) AS count FROM prizes")
+        .one().count;
+      if (prizeCount >= MAX_PRIZES) {
+        capacityProblem("景品の登録上限に達しています。");
+      }
+      const maxSortOrder = this.ctx.storage.sql
+        .exec<{ sort_order: number }>(
+          "SELECT COALESCE(MAX(sort_order), 0) AS sort_order FROM prizes WHERE is_won = 0",
+        )
+        .one().sort_order;
+      const now = new Date().toISOString();
+      const row = this.ctx.storage.sql
+        .exec<PrizeSqlRow>(
+          "INSERT INTO prizes " +
+            "(name_jp, name_en, image_path, is_won, sort_order, created_at, updated_at) " +
+            "VALUES (?, ?, ?, 0, ?, ?, ?) RETURNING *",
+          nameJp,
+          nameEn,
+          imagePath,
+          maxSortOrder + PRIZE_SORT_ORDER_STEP,
+          now,
+          now,
+        )
+        .one();
+      return this.toPrizeRow(row);
+    });
   }
 
   async updatePrize(
-    generation: string,
     actor: string,
     idInput: number,
     nameJpInput: string,
@@ -313,7 +341,6 @@ export class GameState extends DurableObject<Env> {
     if (imagePathInput !== undefined) assertPrizeImagePath(imagePathInput);
 
     return this.runAdminMutation(
-      generation,
       actor,
       "updatePrize",
       {
@@ -343,39 +370,24 @@ export class GameState extends DurableObject<Env> {
     );
   }
 
-  async togglePrizeWon(
-    generation: string,
-    actor: string,
-    idInput: number,
-    isWonInput: boolean,
-  ): Promise<PrizeRow> {
+  async togglePrizeWon(actor: string, idInput: number, isWonInput: boolean): Promise<PrizeRow> {
     const id = parsePositiveInteger(idInput, "景品ID");
     if (typeof isWonInput !== "boolean") validationProblem("景品状態が不正です。");
-    return this.runAdminMutation(
-      generation,
-      actor,
-      "togglePrizeWon",
-      { id, isWon: isWonInput },
-      () => {
-        if (this.findPrizeById(id) === null) notFoundProblem("景品が見つかりません。");
-        const row = this.ctx.storage.sql
-          .exec<PrizeSqlRow>(
-            "UPDATE prizes SET is_won = ?, updated_at = ? WHERE id = ? RETURNING *",
-            isWonInput ? 1 : 0,
-            new Date().toISOString(),
-            id,
-          )
-          .one();
-        return this.toPrizeRow(row);
-      },
-    );
+    return this.runAdminMutation(actor, "togglePrizeWon", { id, isWon: isWonInput }, () => {
+      if (this.findPrizeById(id) === null) notFoundProblem("景品が見つかりません。");
+      const row = this.ctx.storage.sql
+        .exec<PrizeSqlRow>(
+          "UPDATE prizes SET is_won = ?, updated_at = ? WHERE id = ? RETURNING *",
+          isWonInput ? 1 : 0,
+          new Date().toISOString(),
+          id,
+        )
+        .one();
+      return this.toPrizeRow(row);
+    });
   }
 
-  async reorderPrizeGroup(
-    generation: string,
-    actor: string,
-    orderedIdsInput: number[],
-  ): Promise<PrizeRow[]> {
+  async reorderPrizeGroup(actor: string, orderedIdsInput: number[]): Promise<PrizeRow[]> {
     if (!Array.isArray(orderedIdsInput) || orderedIdsInput.length < 2) {
       validationProblem("景品の表示順が不正です。");
     }
@@ -384,7 +396,7 @@ export class GameState extends DurableObject<Env> {
       validationProblem("景品の表示順が不正です。");
     }
 
-    return this.runAdminMutation(generation, actor, "reorderPrizeGroup", { orderedIds }, () => {
+    return this.runAdminMutation(actor, "reorderPrizeGroup", { orderedIds }, () => {
       const requested = orderedIds.map((id) => {
         const prize = this.findPrizeById(id);
         if (prize === null) notFoundProblem("表示順を変更する景品が見つかりません。");
@@ -420,245 +432,144 @@ export class GameState extends DurableObject<Env> {
     });
   }
 
-  async deletePrize(generation: string, actor: string, idInput: number): Promise<null> {
+  async deletePrize(actor: string, idInput: number): Promise<null> {
     const id = parsePositiveInteger(idInput, "景品ID");
-    return this.runAdminMutation(generation, actor, "deletePrize", { id }, () => {
+    return this.runAdminMutation(actor, "deletePrize", { id }, () => {
       if (this.findPrizeById(id) === null) notFoundProblem("景品が見つかりません。");
       this.ctx.storage.sql.exec("DELETE FROM prizes WHERE id = ?", id);
       return null;
     });
   }
 
-  async exportSnapshot(generation: string): Promise<GameSnapshot> {
-    this.ensureActiveGeneration(generation);
+  async getRecoveryStatus(): Promise<{
+    eventId: string;
+    revision: number;
+    currentBookmark: string;
+    pitrEarliestAt: string;
+    recoveryPending: boolean;
+    pendingTargetBookmark: string | null;
+    pendingUndoBookmark: string | null;
+  }> {
+    const pendingTargetBookmark = this.readMetadata(PITR_PENDING_TARGET_KEY);
     return {
-      schema_version: 1,
-      source_generation: generation,
+      eventId: this.readAppState().event_id,
       revision: this.readRevision(),
-      created_at: new Date().toISOString(),
-      numbers: this.readNumbers(),
-      prizes: this.readStoredPrizes(),
-      app_state: this.readAppState(),
-      reach_logs: this.ctx.storage.sql
-        .exec<ReachLogSqlRow>("SELECT * FROM reach_logs ORDER BY id ASC")
-        .toArray(),
-      reach_submissions: this.ctx.storage.sql
-        .exec<ReachSubmissionSqlRow>(
-          "SELECT client_hash, created_at FROM reach_submissions ORDER BY created_at ASC, client_hash ASC",
-        )
-        .toArray(),
-      audit_log: this.ctx.storage.sql
-        .exec<AuditLogSqlRow>("SELECT * FROM audit_log ORDER BY id ASC")
-        .toArray(),
+      currentBookmark: await this.ctx.storage.getCurrentBookmark(),
+      pitrEarliestAt: this.readPitrEarliestAt(),
+      recoveryPending: pendingTargetBookmark !== null,
+      pendingTargetBookmark,
+      pendingUndoBookmark: this.readMetadata(PITR_PENDING_UNDO_KEY),
     };
   }
 
-  async createSnapshot(generation: string) {
-    return storeSnapshot(this.env, await this.exportSnapshot(generation));
-  }
-
-  async storeImportedSnapshot(generation: string, snapshotInput: GameSnapshot) {
-    this.ensureActiveGeneration(generation);
-    const snapshot = parseSnapshot(snapshotInput);
-    return storeSnapshot(this.env, { ...snapshot, source_generation: generation });
-  }
-
-  async initializeFromSnapshot(
-    generation: string,
-    snapshotInput: GameSnapshot,
-    actor: string,
-  ): Promise<BingoUnifiedState> {
-    assertGeneration(generation);
-    this.assertActor(actor);
-    const snapshot = parseSnapshot(snapshotInput);
-    const installChecksum = await sha256Hex(JSON.stringify(snapshot));
-    const existingGeneration = this.readMetadata("generation");
-    if (existingGeneration !== null) {
-      const installStatus = this.readMetadata(SNAPSHOT_INSTALL_STATUS_KEY);
-      if (
-        existingGeneration === generation &&
-        this.readMetadata(SNAPSHOT_INSTALL_CHECKSUM_KEY) === installChecksum &&
-        (installStatus === SNAPSHOT_INSTALL_INSTALLED || installStatus === SNAPSHOT_INSTALL_READY)
-      ) {
-        return this.readState(generation);
-      }
-      conflictProblem("復元先generationは既に別の状態で初期化されています。");
+  async prepareRecovery(
+    targetTimeInput: string,
+    expectedRevision: number,
+  ): Promise<{
+    eventId: string;
+    revision: number;
+    targetTime: string;
+    targetBookmark: string;
+    currentBookmark: string;
+    pitrEarliestAt: string;
+  }> {
+    this.assertExpectedRevision(expectedRevision);
+    if (this.readMetadata(PITR_PENDING_TARGET_KEY) !== null) {
+      conflictProblem("既にPITR recoveryが予約されています。");
     }
 
-    this.ctx.storage.transactionSync(() => {
-      this.ctx.storage.sql.exec(
-        "INSERT INTO game_metadata (key, value) VALUES " +
-          "('generation', ?), ('revision', ?), ('initialized_by', ?), " +
-          "('initialized_at', ?), ('source_generation', ?), ('reach_submission_count', ?), " +
-          "('activation_token', ?), (?, ?), (?, ?)",
-        generation,
-        String(snapshot.revision),
-        actor,
-        new Date().toISOString(),
-        snapshot.source_generation,
-        String(snapshot.reach_submissions.length),
-        INITIAL_ACTIVATION_TOKEN,
-        SNAPSHOT_INSTALL_CHECKSUM_KEY,
-        installChecksum,
-        SNAPSHOT_INSTALL_STATUS_KEY,
-        SNAPSHOT_INSTALL_INSTALLED,
-      );
-      this.ctx.storage.sql.exec(
-        "INSERT INTO app_state " +
-          "(id, survey_url, is_survey_active, reach_count, updated_at) VALUES (1, ?, ?, ?, ?)",
-        snapshot.app_state.survey_url,
-        snapshot.app_state.is_survey_active ? 1 : 0,
-        snapshot.app_state.reach_count,
-        snapshot.app_state.updated_at,
-      );
-      for (const row of snapshot.numbers) {
-        this.ctx.storage.sql.exec(
-          "INSERT INTO numbers (id, number, created_at, updated_at) VALUES (?, ?, ?, ?)",
-          row.id,
-          row.number,
-          row.created_at,
-          row.updated_at,
-        );
-      }
-      for (const row of snapshot.prizes) {
-        this.ctx.storage.sql.exec(
-          "INSERT INTO prizes " +
-            "(id, name_jp, name_en, image_path, is_won, sort_order, created_at, updated_at) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-          row.id,
-          row.name_jp,
-          row.name_en,
-          row.image_path,
-          row.is_won ? 1 : 0,
-          row.sort_order,
-          row.created_at,
-          row.updated_at,
-        );
-      }
-      for (const row of snapshot.reach_logs) {
-        this.ctx.storage.sql.exec(
-          "INSERT INTO reach_logs (id, delta, reach_num, source, created_at) VALUES (?, ?, ?, ?, ?)",
-          row.id,
-          row.delta,
-          row.reach_num,
-          row.source,
-          row.created_at,
-        );
-      }
-      for (const row of snapshot.reach_submissions) {
-        this.ctx.storage.sql.exec(
-          "INSERT INTO reach_submissions (client_hash, created_at) VALUES (?, ?)",
-          row.client_hash,
-          row.created_at,
-        );
-      }
-      for (const row of snapshot.audit_log) {
-        this.ctx.storage.sql.exec(
-          "INSERT INTO audit_log " +
-            "(id, revision, actor, action, payload_json, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-          row.id,
-          row.revision,
-          row.actor,
-          row.action,
-          row.payload_json,
-          row.created_at,
-        );
-      }
-    });
-    return this.readState(generation);
-  }
-
-  async completeSnapshotInstallation(generation: string): Promise<void> {
-    this.ensureGeneration(generation);
-    const status = this.readMetadata(SNAPSHOT_INSTALL_STATUS_KEY);
-    if (status === SNAPSHOT_INSTALL_READY) return;
+    const targetTime = new Date(targetTimeInput);
+    const now = Date.now();
+    const pitrEarliestAt = this.readPitrEarliestAt();
+    const earliestTime = new Date(pitrEarliestAt).getTime();
     if (
-      status !== SNAPSHOT_INSTALL_INSTALLED ||
-      this.readMetadata(SNAPSHOT_INSTALL_CHECKSUM_KEY) === null
+      !Number.isFinite(targetTime.getTime()) ||
+      targetTime.getTime() > now ||
+      targetTime.getTime() < now - PITR_WINDOW_MS ||
+      targetTime.getTime() < earliestTime
     ) {
-      conflictProblem("snapshot installation marker が不正です。");
-    }
-    this.ctx.storage.sql.exec(
-      "UPDATE game_metadata SET value = ? WHERE key = ?",
-      SNAPSHOT_INSTALL_READY,
-      SNAPSHOT_INSTALL_STATUS_KEY,
-    );
-  }
-
-  async prepareActivation(generation: string, activationToken: string): Promise<void> {
-    this.ensureGeneration(generation);
-    if (this.readMetadata(SNAPSHOT_INSTALL_STATUS_KEY) === SNAPSHOT_INSTALL_INSTALLED) {
-      conflictProblem("snapshot installation が完了していません。");
-    }
-    assertActivationToken(activationToken);
-    this.ctx.storage.transactionSync(() => {
-      this.ctx.storage.sql.exec(
-        "INSERT INTO game_metadata (key, value) VALUES ('activation_token', ?) " +
-          "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-        activationToken,
+      validationProblem(
+        `targetTimeは${pitrEarliestAt}以降かつ過去30日以内の日時を指定してください。`,
       );
-      this.ctx.storage.sql.exec("DELETE FROM game_metadata WHERE key = 'retired_to'");
-    });
+    }
+    const [targetBookmark, currentBookmark] = await Promise.all([
+      this.ctx.storage.getBookmarkForTime(targetTime),
+      this.ctx.storage.getCurrentBookmark(),
+    ]);
+    return {
+      eventId: this.readAppState().event_id,
+      revision: expectedRevision,
+      targetTime: targetTime.toISOString(),
+      targetBookmark,
+      currentBookmark,
+      pitrEarliestAt,
+    };
   }
 
-  async freezeWrites(
-    generation: string,
-    nextGeneration: string,
-    expectedActivationToken: string,
-  ): Promise<void> {
-    this.ensureGeneration(generation);
-    assertGeneration(nextGeneration);
-    assertActivationToken(expectedActivationToken);
-    if (this.readMetadata("activation_token") !== expectedActivationToken) {
-      conflictProblem("generation切り替えtokenが一致しません。");
+  async scheduleRecovery(
+    actor: string,
+    targetBookmark: string,
+    expectedCurrentBookmark: string,
+    expectedRevision: number,
+  ): Promise<{
+    eventId: string;
+    revision: number;
+    targetBookmark: string;
+    undoBookmark: string;
+  }> {
+    this.assertActor(actor);
+    this.assertBookmark(targetBookmark);
+    this.assertBookmark(expectedCurrentBookmark);
+    this.assertExpectedRevision(expectedRevision);
+    if (this.readMetadata(PITR_PENDING_TARGET_KEY) !== null) {
+      conflictProblem("既にPITR recoveryが予約されています。");
     }
+
+    const currentBookmark = await this.ctx.storage.getCurrentBookmark();
+    if (currentBookmark !== expectedCurrentBookmark) {
+      conflictProblem("PITR確認後にstateが変更されています。最初からやり直してください。");
+    }
+
+    // Schedule first: the returned undo bookmark must not contain the write
+    // freeze markers, otherwise an undo would restore a permanently frozen state.
+    const undoBookmark = await this.ctx.storage.onNextSessionRestoreBookmark(targetBookmark);
     this.ctx.storage.sql.exec(
-      "INSERT INTO game_metadata (key, value) VALUES ('retired_to', ?) " +
-        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-      nextGeneration,
+      "INSERT INTO game_metadata (key, value) VALUES " + "(?, ?), (?, ?), (?, ?), (?, ?)",
+      PITR_PENDING_TARGET_KEY,
+      targetBookmark,
+      PITR_PENDING_UNDO_KEY,
+      undoBookmark,
+      PITR_PENDING_ACTOR_KEY,
+      actor,
+      PITR_PENDING_AT_KEY,
+      new Date().toISOString(),
     );
+    return {
+      eventId: this.readAppState().event_id,
+      revision: expectedRevision,
+      targetBookmark,
+      undoBookmark,
+    };
   }
 
-  async unfreezeWrites(generation: string, expectedActivationToken: string): Promise<void> {
-    this.ensureGeneration(generation);
-    assertActivationToken(expectedActivationToken);
-    if (this.readMetadata("activation_token") !== expectedActivationToken) {
-      conflictProblem("generation切り替えtokenが一致しません。");
+  async restartForRecovery(targetBookmark: string): Promise<void> {
+    this.assertBookmark(targetBookmark);
+    if (
+      this.readMetadata(PITR_PENDING_TARGET_KEY) !== targetBookmark ||
+      this.readMetadata(PITR_PENDING_UNDO_KEY) === null
+    ) {
+      conflictProblem("予約済みPITR recoveryと一致しません。");
     }
-    this.ctx.storage.sql.exec("DELETE FROM game_metadata WHERE key = 'retired_to'");
-  }
-
-  async redirectClients(
-    generation: string,
-    nextGeneration: string,
-    expectedActivationToken: string,
-  ): Promise<number> {
-    this.ensureGeneration(generation);
-    assertGeneration(nextGeneration);
-    assertActivationToken(expectedActivationToken);
-    if (this.readMetadata("activation_token") !== expectedActivationToken) return 0;
-    this.ctx.storage.sql.exec(
-      "INSERT INTO game_metadata (key, value) VALUES ('retired_to', ?) " +
-        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-      nextGeneration,
-    );
-    const sockets = this.ctx.getWebSockets("state");
-    const socketMessage: StateSocketMessage = { type: "generation", generation: nextGeneration };
-    const message = JSON.stringify(socketMessage);
-    for (const socket of sockets) {
-      safeSend(socket, message);
-      safeClose(socket, 1012, "game generation changed");
+    for (const socket of this.ctx.getWebSockets("state")) {
+      safeClose(socket, 1012, "game state recovery");
     }
-    return sockets.length;
+    this.ctx.abort("PITR recovery");
   }
 
   async fetch(request: Request): Promise<Response> {
     if (request.method !== "GET" || request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       return Response.json({ error: "WebSocket Upgrade が必要です。" }, { status: 426 });
     }
-    const generation = request.headers.get("X-Bingo-Generation");
-    assertGeneration(generation);
-    this.ensureActiveGeneration(generation);
     const requestedView = request.headers.get("X-Bingo-View");
     const view = requestedView === "screen" ? "screen" : "public";
     if (view === "screen") {
@@ -675,7 +586,6 @@ export class GameState extends DurableObject<Env> {
     this.ctx.acceptWebSocket(server, ["state", view]);
     const attachment: StateSocketAttachment = {
       kind: "state",
-      generation,
       view,
       expires_at: Date.now() + 30 * 60 * 1_000,
     };
@@ -683,7 +593,7 @@ export class GameState extends DurableObject<Env> {
     if (view === "screen") await scheduleScreenSocketExpiration(this.ctx, "screen");
     const initialMessage: StateSocketMessage = {
       type: "state",
-      state: this.readState(generation),
+      state: this.readState(),
     };
     safeSend(server, JSON.stringify(initialMessage));
     return new Response(null, { status: 101, webSocket: client });
@@ -711,23 +621,8 @@ export class GameState extends DurableObject<Env> {
     // With the current compatibility date the runtime replies to close frames automatically.
   }
 
-  private migrate(): void {
+  private initializeSchema(): void {
     this.ctx.storage.sql.exec(`
-      CREATE TABLE IF NOT EXISTS _sql_schema_migrations (
-        id INTEGER PRIMARY KEY,
-        applied_at TEXT NOT NULL
-      );
-    `);
-    const currentVersion =
-      this.ctx.storage.sql
-        .exec<{ version: number }>(
-          "SELECT COALESCE(MAX(id), 0) AS version FROM _sql_schema_migrations",
-        )
-        .one().version ?? 0;
-    if (currentVersion < 1) {
-      const now = new Date().toISOString();
-      this.ctx.storage.transactionSync(() => {
-        this.ctx.storage.sql.exec(`
       CREATE TABLE IF NOT EXISTS game_metadata (
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
@@ -751,6 +646,7 @@ export class GameState extends DurableObject<Env> {
       CREATE INDEX IF NOT EXISTS prizes_display_order_idx ON prizes(is_won, sort_order, id);
       CREATE TABLE IF NOT EXISTS app_state (
         id INTEGER PRIMARY KEY CHECK (id = 1),
+        event_id TEXT NOT NULL,
         survey_url TEXT NOT NULL DEFAULT '',
         is_survey_active INTEGER NOT NULL DEFAULT 0 CHECK (is_survey_active IN (0, 1)),
         reach_count INTEGER NOT NULL DEFAULT 0 CHECK (reach_count >= 0),
@@ -777,91 +673,37 @@ export class GameState extends DurableObject<Env> {
         created_at TEXT NOT NULL
       );
       CREATE INDEX IF NOT EXISTS audit_log_revision_idx ON audit_log(revision DESC);
-        `);
-        this.ctx.storage.sql.exec(
-          "INSERT OR IGNORE INTO _sql_schema_migrations (id, applied_at) VALUES (1, ?)",
-          now,
-        );
-      });
-    }
-
-    if (currentVersion < 2) {
-      const now = new Date().toISOString();
-      this.ctx.storage.transactionSync(() => {
-        this.ctx.storage.sql.exec(
-          "INSERT OR IGNORE INTO game_metadata (key, value) " +
-            "SELECT 'reach_submission_count', " +
-            "CAST((SELECT COUNT(*) FROM reach_submissions) AS TEXT) " +
-            "WHERE EXISTS (SELECT 1 FROM game_metadata WHERE key = 'generation')",
-        );
-        this.ctx.storage.sql.exec(
-          "INSERT OR IGNORE INTO _sql_schema_migrations (id, applied_at) VALUES (2, ?)",
-          now,
-        );
-      });
-    }
-
-    if (currentVersion < 3) {
-      const now = new Date().toISOString();
-      this.ctx.storage.transactionSync(() => {
-        this.ctx.storage.sql.exec(
-          "INSERT OR IGNORE INTO game_metadata (key, value) " +
-            "SELECT 'activation_token', ? " +
-            "WHERE EXISTS (SELECT 1 FROM game_metadata WHERE key = 'generation')",
-          INITIAL_ACTIVATION_TOKEN,
-        );
-        this.ctx.storage.sql.exec(
-          "INSERT OR IGNORE INTO _sql_schema_migrations (id, applied_at) VALUES (3, ?)",
-          now,
-        );
-      });
-    }
+    `);
   }
 
-  private ensureGeneration(generation: string): void {
-    assertGeneration(generation);
-    const existing = this.readMetadata("generation");
-    if (existing === generation) return;
-    if (existing !== null) conflictProblem("Durable Object のgenerationが一致しません。");
+  private ensureInitialized(): void {
+    if (this.readMetadata("revision") !== null) return;
 
     this.ctx.storage.transactionSync(() => {
-      const concurrent = this.readMetadata("generation");
-      if (concurrent !== null && concurrent !== generation) {
-        conflictProblem("Durable Object のgenerationが一致しません。");
-      }
-      if (concurrent === generation) return;
+      if (this.readMetadata("revision") !== null) return;
       const now = new Date().toISOString();
       this.ctx.storage.sql.exec(
-        "INSERT INTO game_metadata (key, value) " +
-          "VALUES ('generation', ?), ('revision', '0'), ('reach_submission_count', '0'), " +
-          "('activation_token', ?)",
-        generation,
-        INITIAL_ACTIVATION_TOKEN,
+        "INSERT INTO game_metadata (key, value) VALUES " +
+          "('revision', '0'), ('reach_submission_count', '0'), (?, ?)",
+        PITR_EARLIEST_AT_KEY,
+        now,
       );
       this.ctx.storage.sql.exec(
         "INSERT INTO app_state " +
-          "(id, survey_url, is_survey_active, reach_count, updated_at) VALUES (1, '', 0, 0, ?)",
+          "(id, event_id, survey_url, is_survey_active, reach_count, updated_at) " +
+          "VALUES (1, 'initial', '', 0, 0, ?)",
         now,
       );
     });
   }
 
-  private ensureActiveGeneration(generation: string): void {
-    this.ensureGeneration(generation);
-    const retiredTo = this.readMetadata("retired_to");
-    if (retiredTo !== null) {
-      conflictProblem(`このgenerationは ${retiredTo} へ切り替え済みです。`);
-    }
-  }
-
   private runAdminMutation<T>(
-    generation: string,
     actor: string,
     action: string,
     payload: unknown,
     operation: () => T,
   ): T {
-    this.ensureActiveGeneration(generation);
+    this.assertRecoveryNotPending();
     this.assertActor(actor);
     const payloadJson = JSON.stringify(payload);
     if (new TextEncoder().encode(payloadJson).byteLength > MAX_AUDIT_PAYLOAD_BYTES) {
@@ -883,13 +725,12 @@ export class GameState extends DurableObject<Env> {
       this.trimAuditLog();
       return data;
     });
-    this.broadcastState(generation);
+    this.broadcastState();
     return result;
   }
 
-  private changeAdminReach(generation: string, actor: string, delta: 1 | -1): number {
+  private changeAdminReach(actor: string, delta: 1 | -1): number {
     return this.runAdminMutation(
-      generation,
       actor,
       delta === 1 ? "incrementReach" : "decrementReach",
       {},
@@ -915,14 +756,13 @@ export class GameState extends DurableObject<Env> {
     );
   }
 
-  private readState(generation: string): BingoUnifiedState {
+  private readState(): BingoUnifiedState {
     const revision = this.readRevision();
-    if (this.cachedState?.generation === generation && this.cachedState.revision === revision) {
+    if (this.cachedState?.revision === revision) {
       return { ...this.cachedState, serverTime: new Date().toISOString() };
     }
 
     const state: CachedGameState = {
-      generation,
       revision,
       numbers: this.readNumbers(),
       prizes: this.readPrizes(),
@@ -939,13 +779,6 @@ export class GameState extends DurableObject<Env> {
       .toArray();
   }
 
-  private readStoredPrizes(): StoredPrizeRow[] {
-    return this.ctx.storage.sql
-      .exec<PrizeSqlRow>("SELECT * FROM prizes ORDER BY is_won ASC, sort_order ASC, id ASC")
-      .toArray()
-      .map(toStoredPrizeRow);
-  }
-
   private readPrizes(): PrizeRow[] {
     return this.ctx.storage.sql
       .exec<PrizeSqlRow>("SELECT * FROM prizes ORDER BY is_won ASC, sort_order ASC, id ASC")
@@ -957,7 +790,8 @@ export class GameState extends DurableObject<Env> {
     return toAppStateRow(
       this.ctx.storage.sql
         .exec<AppStateSqlRow>(
-          "SELECT id, survey_url, is_survey_active, reach_count, updated_at FROM app_state WHERE id = 1",
+          "SELECT id, event_id, survey_url, is_survey_active, reach_count, updated_at " +
+            "FROM app_state WHERE id = 1",
         )
         .one(),
     );
@@ -1014,6 +848,14 @@ export class GameState extends DurableObject<Env> {
     );
   }
 
+  private readPitrEarliestAt(): string {
+    const value = this.readMetadata(PITR_EARLIEST_AT_KEY);
+    if (value === null || !Number.isFinite(Date.parse(value))) {
+      throw new Error("PITR lower bound metadata is corrupt");
+    }
+    return value;
+  }
+
   private readRevision(): number {
     return this.ctx.storage.sql
       .exec<RevisionSqlRow>(
@@ -1045,13 +887,44 @@ export class GameState extends DurableObject<Env> {
     );
   }
 
-  private broadcastState(generation: string): void {
+  private broadcastState(): void {
     const socketMessage: StateSocketMessage = {
       type: "state",
-      state: this.readState(generation),
+      state: this.readState(),
     };
     const message = JSON.stringify(socketMessage);
     for (const socket of this.ctx.getWebSockets("state")) safeSend(socket, message);
+  }
+
+  private assertRecoveryNotPending(): void {
+    if (this.readMetadata(PITR_PENDING_TARGET_KEY) !== null) {
+      conflictProblem("PITR recovery中のためstate更新を停止しています。");
+    }
+  }
+
+  private assertExpectedRevision(expectedRevision: number): void {
+    if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) {
+      validationProblem("expectedRevisionが不正です。");
+    }
+    if (this.readRevision() !== expectedRevision) {
+      conflictProblem("確認後にrevisionが変更されています。最初からやり直してください。");
+    }
+  }
+
+  private assertBookmark(bookmark: string): void {
+    if (!PITR_BOOKMARK_PATTERN.test(bookmark)) {
+      validationProblem("PITR bookmarkが不正です。");
+    }
+  }
+
+  private clearPendingRecovery(): void {
+    this.ctx.storage.sql.exec(
+      "DELETE FROM game_metadata WHERE key IN (?, ?, ?, ?)",
+      PITR_PENDING_TARGET_KEY,
+      PITR_PENDING_UNDO_KEY,
+      PITR_PENDING_ACTOR_KEY,
+      PITR_PENDING_AT_KEY,
+    );
   }
 
   private assertActor(actor: string): void {
@@ -1069,10 +942,6 @@ function toAppStateRow(row: AppStateSqlRow): AppStateRow {
 
 function assertClientHash(value: string): void {
   if (!/^[a-f0-9]{64}$/.test(value)) validationProblem("client hash が不正です。");
-}
-
-function assertActivationToken(value: string): void {
-  if (!/^[a-zA-Z0-9-]{1,64}$/.test(value)) validationProblem("activation token が不正です。");
 }
 
 function safeSend(socket: WebSocket, message: string): void {

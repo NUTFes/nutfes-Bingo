@@ -19,6 +19,7 @@ import {
 } from "@/types/bingo/types";
 import { resolvePrizeImageUrl } from "@/utils/image";
 import { startVenueSocketLifecycle } from "@/lib/venue-socket-lifecycle";
+import { shouldAcceptRevision, type StateUpdateAuthority } from "@/lib/state-order";
 
 const PUBLIC_STATE_URL = "/api/bingo/state";
 const PUBLIC_STATE_SOCKET_PATH = "/api/bingo/socket";
@@ -48,7 +49,6 @@ function createEmptyState(input?: {
   latestReachLog?: ReachLogRow | null;
 }): BingoUnifiedState {
   return {
-    generation: "",
     revision: 0,
     numbers: input?.numbers ?? [],
     prizes: input?.prizes ?? [],
@@ -90,6 +90,7 @@ function normalizeAppState(value: unknown, fallback: AppStateRow): AppStateRow {
 
   return {
     id: typeof value.id === "number" ? value.id : fallback.id,
+    event_id: typeof value.event_id === "string" ? value.event_id : fallback.event_id,
     survey_url: typeof value.survey_url === "string" ? value.survey_url : fallback.survey_url,
     is_survey_active:
       typeof value.is_survey_active === "boolean"
@@ -117,8 +118,6 @@ export function normalizeBingoState(value: unknown, fallback: BingoUnifiedState)
     : fallback.prizes;
 
   return {
-    generation:
-      typeof wrappedValue.generation === "string" ? wrappedValue.generation : fallback.generation,
     revision: typeof wrappedValue.revision === "number" ? wrappedValue.revision : fallback.revision,
     numbers,
     prizes,
@@ -144,10 +143,6 @@ function socketUrl(path: string, parameters?: Record<string, string>) {
 function jitter(delayMs: number) {
   const spread = delayMs * 0.15;
   return Math.round(delayMs - spread + Math.random() * spread * 2);
-}
-
-function isNewerState(current: BingoUnifiedState, next: BingoUnifiedState) {
-  return current.generation !== next.generation || next.revision >= current.revision;
 }
 
 async function fetchState(
@@ -182,7 +177,7 @@ async function fetchState(
 }
 
 function stateEtag(state: BingoUnifiedState) {
-  return state.generation === "" ? null : `"${state.generation}:${state.revision}"`;
+  return state.appState.event_id === "" ? null : `"state:${state.revision}"`;
 }
 
 function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen" = "public") {
@@ -212,13 +207,17 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
       }
     };
 
-    const applyState = (nextState: BingoUnifiedState) => {
-      if (!active || !isNewerState(stateRef.current, nextState)) {
-        return;
+    const applyState = (nextState: BingoUnifiedState, authority: StateUpdateAuthority): boolean => {
+      if (
+        !active ||
+        !shouldAcceptRevision(stateRef.current.revision, nextState.revision, authority)
+      ) {
+        return false;
       }
       stateRef.current = nextState;
       etag = stateEtag(nextState);
       setState(nextState);
+      return true;
     };
 
     const requestSnapshot = async () => {
@@ -230,9 +229,14 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
       try {
         const snapshot = await fetchState(controller.signal, stateRef.current, etag, view);
         if (sequenceAtStart === socketStateSequence) {
-          etag = snapshot.etag ?? etag;
-          if (snapshot.state !== null) {
-            applyState(snapshot.state);
+          if (snapshot.state === null) {
+            etag = snapshot.etag ?? etag;
+          } else {
+            const expectedEtag = stateEtag(snapshot.state);
+            if (expectedEtag === null || snapshot.etag !== expectedEtag) {
+              throw new Error("ビンゴ状態のETagが内容と一致しません。");
+            }
+            applyState(snapshot.state, "authoritative");
           }
         }
       } catch (error) {
@@ -323,6 +327,7 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
       const candidate = new WebSocket(
         socketUrl(view === "screen" ? SCREEN_STATE_SOCKET_PATH : PUBLIC_STATE_SOCKET_PATH),
       );
+      let hasAcceptedFullState = false;
       socket = candidate;
       socketReady = false;
       candidate.addEventListener("open", () => {
@@ -348,41 +353,45 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
           const message = JSON.parse(String(event.data)) as StateSocketMessage;
           if (message.type === "state") {
             const nextState = normalizeBingoState(message.state, stateRef.current);
-            if (nextState.generation === "") {
-              throw new Error("state frame has no generation");
+            if (nextState.appState.event_id === "") {
+              throw new Error("state frame has no event ID");
             }
-            socketStateSequence += 1;
-            applyState(nextState);
-            markSocketReady(candidate);
+            const accepted = applyState(
+              nextState,
+              hasAcceptedFullState ? "incremental" : "authoritative",
+            );
+            if (accepted) {
+              hasAcceptedFullState = true;
+              socketStateSequence += 1;
+              markSocketReady(candidate);
+            }
             return;
           }
           if (
             message.type === "reach" &&
-            message.generation === stateRef.current.generation &&
+            hasAcceptedFullState &&
             Number.isSafeInteger(message.revision) &&
-            message.revision >= stateRef.current.revision &&
             Number.isSafeInteger(message.reachCount) &&
             message.reachCount >= 0 &&
             isRecord(message.latestReachLog) &&
             typeof message.serverTime === "string"
           ) {
-            socketStateSequence += 1;
-            applyState({
-              ...stateRef.current,
-              revision: message.revision,
-              appState: {
-                ...stateRef.current.appState,
-                reach_count: message.reachCount,
-                updated_at: message.serverTime,
+            const accepted = applyState(
+              {
+                ...stateRef.current,
+                revision: message.revision,
+                appState: {
+                  ...stateRef.current.appState,
+                  reach_count: message.reachCount,
+                  updated_at: message.serverTime,
+                },
+                latestReachLog: message.latestReachLog,
+                serverTime: message.serverTime,
               },
-              latestReachLog: message.latestReachLog,
-              serverTime: message.serverTime,
-            });
+              "incremental",
+            );
+            if (accepted) socketStateSequence += 1;
             return;
-          }
-          if (message.type === "generation") {
-            socketStateSequence += 1;
-            candidate.close(1000, "game generation changed");
           }
         } catch (error) {
           console.error("WebSocketメッセージの解析に失敗しました。", error);
@@ -465,7 +474,7 @@ export function useHomeRealtimeState(initialNumbers: NumberRow[], initialAppStat
   return {
     numbers: state.numbers,
     appState: state.appState,
-    isReady: state.generation !== "",
+    isReady: state.appState.event_id !== "",
   };
 }
 
@@ -479,7 +488,7 @@ export function usePrizesRealtimeState(
   return {
     prizes: state.prizes,
     appState: state.appState,
-    isReady: state.generation !== "",
+    isReady: state.appState.event_id !== "",
   };
 }
 
@@ -494,7 +503,7 @@ export function useScreenRealtimeState(
   return {
     numbers: state.numbers,
     latestReachLog: state.latestReachLog,
-    isReady: state.generation !== "",
+    isReady: state.appState.event_id !== "",
   };
 }
 

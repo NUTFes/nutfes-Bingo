@@ -1,34 +1,26 @@
 # nutfes-Bingo
 
-技大祭当日に使う、Cloudflare上のリアルタイム・ビンゴアプリです。
+技大祭当日に使うCloudflare上のリアルタイム・ビンゴアプリです。完成後は原則freezeし、年1回だけ起動・deployします。
 
 ## アーキテクチャ
 
-- Next.js 16のApp Router UIをstatic exportし、Workers Static Assetsから配信します。
-- 公開HTML、JavaScript、CSS、同梱画像は原則Workerを起動しません。
-- 小型WorkerがHTTP API、Cloudflare Access認可、Turnstile検証、R2入出力を担当します。
-- SQLite Durable Objectsの`GameDirectory`と`GameState`がゲーム状態の正本です。
-- `ReactionHub`が消失許容のスタンプ演出をゲーム状態から分離します。
-- 状態更新はDurable Objects WebSocket Hibernationで配信し、障害時だけ回数制限付きHTTP fallbackを使います。
-- 景品画像は公開画像専用R2、logical snapshotは非公開R2に保存します。
-- 管理画面と会場画面は別々のAccess applicationで保護し、WorkerでもAUDとemail allowlistを検証します。
+- Next.js App Router UIをstatic exportし、Workers Static Assetsから配信する。公開HTML、JavaScript、CSSは原則Workerを起動しない。
+- same-origin WorkerがHTTP API、Cloudflare Access認可、Turnstile検証、景品画像R2、Durable Object routingを担当する。
+- 固定名`game`のSQLite `GameState` Durable Object 1個が、番号、景品、当選状態、reach、survey、bounded audit logの正本になる。
+- `ReactionHub` Durable Objectが消失許容のstampを正本から分離する。
+- public stateはHibernation WebSocketで配信し、接続障害時は回数制限付きHTTP fallbackを使う。
+- public reachはTurnstileをserver-side検証する。reachとstampは同じedge kill switchでWorker到達前に停止できる。
+- `/admin*`と`/screen*`は別Cloudflare Access applicationで保護し、WorkerもJWT issuer、AUD、email allowlistを検証する。
+- 景品画像は2 MiB/type/signatureを検証し、content-hash keyで専用R2へ保存する。
+- data recoveryはSQLite Durable Object PITRだけを使う。`GameDirectory`、generation切替、logical snapshot、backup R2、daily Cronはない。
 
-OpenNextは使用しません。静的画面と専用Workerを分離し、Workers Freeのbundle、CPU、request上限に余裕を持たせています。
-
-詳細は[移行計画](docs/cloudflare-migration-plan.md)と[本番運用runbook](docs/cloudflare-operations.md)を参照してください。
+詳細と年次手順は[Cloudflare本番運用runbook](docs/cloudflare-operations.md)を参照してください。
 
 ## Cloudflare環境境界
 
-| 環境       | Cloudflare account                                     | Application / Prize images                                                            |
-| ---------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| production | 団体account（owner/recovery: `nutfes.info@gmail.com`） | `https://bingo.nutfes.net` / `https://bingo-media.nutfes.net`                         |
-| staging    | 個人test account                                       | `https://staging-bingo.tkymhrt.dpdns.org` / `https://staging-media.tkymhrt.dpdns.org` |
+productionは団体Cloudflare accountの`nutfes-bingo` Workerと、団体管理のapp/media custom domainを使います。通常deployに常設stagingや個人accountを使いません。DO/auth/bindingを再び変更する場合だけ、団体account内に一時的な検証環境を作ります。
 
-`cloudflare.project.env`が、両環境のreview済みaccount ID、Worker名、Access team/AUD、
-site/media URL、Turnstile sitekeyの正本です。production account、R2 bucket、Worker deployment、
-公開座標は作成済みです。production URLは運用データ投入とrelease gate完了前の準備状態であり、
-一般公開済みとはみなしません。両環境とも`workers.dev`、preview URL、R2の`r2.dev`を無効にし、
-管理者と会場operatorはnamed human identityだけをAccess policyとWorker allowlistへ登録します。
+`cloudflare.project.env`がaccount ID、Worker名、Access team/AUD、site/media URL、Turnstile sitekeyの公開正本です。credential、Access JWT、allowlist、secretはGitへ保存しません。`workers.dev`、preview URL、R2 `r2.dev`は無効です。
 
 ## 開発環境
 
@@ -44,13 +36,7 @@ mise run cloudflare:dev
 
 ローカルURLは`http://localhost:8787`です。local buildはCloudflare公式dummy Turnstile keyを使用し、明示的test modeはloopbackでだけ有効です。
 
-依存関係は次のtaskで変更します。
-
-```bash
-mise run add <package>
-mise run add -D <package>
-mise run remove <package>
-```
+依存関係は`mise run add <package>`、`mise run add -D <package>`、`mise run remove <package>`で変更します。
 
 ## 品質チェック
 
@@ -62,58 +48,40 @@ pnpm test
 pnpm doctor
 pnpm knip
 mise run cloudflare:check
-mise run cloudflare:check:staging
 ```
 
-`pnpm test`はCloudflare Workers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。ブラウザE2E suiteは未構成です。
-
-`mise run cloudflare:check`と`mise run cloudflare:check:staging`はDocker static build、binding type freshness、環境別Wrangler dry-run、Free planの3 MiB compressed bundle上限、Worker startup profileを確認します。
-
-## Cloudflare resource初期化
-
-production/stagingの通常resourceは作成済みです。通常のreleaseや復旧でbootstrapを実行しません。
-R2 bucketが存在しないことを`r2 bucket list`で確認した初回構築・再構築時だけ、
-[本番運用runbookの「resourceが存在しない場合の初回構築」](docs/cloudflare-operations.md#resourceが存在しない場合の初回構築)
-に従って環境別bootstrapを使います。
-
-credentialとsecretはGitへ保存しません。account ID、Access AUD/team domain、custom domain、
-Turnstile sitekeyは公開設定として`cloudflare.project.env`へ固定します。
+`pnpm test`はWorkers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。ブラウザE2E suiteは未構成です。`mise run cloudflare:check`はDocker static build、binding type freshness、Wrangler dry-run、Free plan bundle上限、Worker startup profileを確認します。
 
 ## Deploy
 
-デプロイ手順の正本は[Cloudflare本番運用runbookの「通常の再デプロイ」](docs/cloudflare-operations.md#通常の再デプロイ)だけです。READMEのコマンドを抜粋して実行せず、runbookのchecklistを上から完了してください。
+通常deployは`develop`のcleanかつpush済みHEADから次の3 commandだけを実行します。
 
-同一のreview済みrelease commitを必ず`staging deploy → staging smoke・負荷・snapshot証跡 → production deploy → production smoke`の順で昇格します。deploy taskは次をfail closedで検査します。
+```bash
+mise run preflight
+mise run deploy
+mise run smoke
+```
 
-- `cloudflare.project.env`に環境別に固定したCloudflare account、Access team、release branch
-- cleanかつpush済みで、`origin/<release branch>`と一致するHEAD
-- 環境別のAccess AUD、hostname、media origin、Turnstile sitekey
-- active staging versionのGit SHAと24時間以内の完全なsmoke記録
-- production確認用Git SHA
+`preflight`と`deploy`はGit HEAD、`origin/develop`、organization account、Worker、R2、Access座標、Turnstile sitekey/secretをfail closedで照合します。private `.cloudflare.deploy.production.env`はmode `600`で、named Admin/Screen allowlistだけを保持します。
 
-Access AUD、account ID、hostname、Turnstile sitekeyは公開設定として`cloudflare.project.env`へ固定しています。productionは共有owner loginを拒否し、招待されたnamed operatorだけが操作できます。app管理者名簿はmode `600`のGit管理外JSONからdeploy環境へ反映し、Turnstile secretはWrangler secretとして保持します。placeholder、空allowlist、共有owner addressはdeployできません。
+1000 socket試験は通常release gateではありません。完成時またはrealtime/DO/capacityに影響する変更時だけ、local Workerに対して`mise run capacity http://127.0.0.1:8787`を実行します。
 
-## データとロールバック
+## Rollbackとdata recovery
 
-旧Supabase環境は実運用されていなかったため、データ移行は行いません。repositoryから旧Supabase、PostgreSQL、Proxmox LXC、Cloudflared originとone-shot migration toolingを削除しています。
+- 通常のcode/assets/config regression: DO class/schemaを変えていない場合だけ、直前のGit SHAとWorker version IDを確認してrollbackし、そのSHAを指定してsmokeする。
+- DO class/schemaを変えたrelease: 古いversionへ戻さずfix-forwardする。
+- data誤操作: まずAdminで逆操作し、紙master logを正とする。
+- 30日以内のstate破損: `mise run recover -- prepare ...`でplanを作り、二者確認後にPITRをscheduleする。commandはrestart前にundo bookmarkをmode `600` receiptへ保存する。
+- Cloudflare全体または復旧長期化: optional reaction/reachを止め、紙master logと`offline/projector.html`でイベントを継続する。
 
-- Worker code障害: `wrangler rollback`で直前の安全なversionへ戻します。
-- データ障害: 直前のDurable Object generationを再activateします。
-- 状態破損: private R2 snapshotを新generationへrestoreし、検証後にpointerを切り替えます。
-- Access、Turnstile、R2障害: bypassせずfail closedまたはdegraded modeへ移行します。
+PITRはlocal runtimeで実行できません。イベント前にproduction相当のremote dummy stateでrestoreとundoを1回rehearseします。
 
-container/database originへのロールバック経路はありません。本番変更前にWorker version、active generation、snapshot作成結果を必ず記録してください。
+## Free planとdegraded mode
 
-## 無料枠とdegraded mode
+通常500人、capacity確認1000 page instanceを想定します。Static Assets bypass、heartbeatなしHibernation WebSocket、単一`GameState`により、1000 page instanceの保守ケースは約16,000 Worker request / 16,000 DO requestです。
 
-想定最大は一般利用者1000人、管理者10人、会場画面3台です。Static Assets、heartbeatなしWebSocket、画像R2 custom domainを使い、通常運用ではFree枠内を目指します。
+異常時は番号・景品・当選状態・survey・Admin更新を優先し、次の順にoptional trafficを止めます。
 
-上限接近時は次の順で簡略化します。
-
-1. スタンプをsamplingし、その後WAFで停止する。
-2. reach演出を最新countだけへ集約する。
-3. 一般利用者のWebSocket reconnectとHTTP fallbackを打ち切り、最後の正常状態を表示する。
-4. Turnstile障害時は公開reachを停止し、Access/JWT障害時は管理・会場機能をfail closedにする。
-5. 番号、景品、当選状態、アンケート、snapshot/generation切替を優先して維持する。
-
-詳細なrequest/DO/R2推計、監視閾値、負荷試験、WAF停止条件は運用runbookに記載しています。
+1. `optional-public-mutations` edge ruleでstampとpublic reachをWorker到達前に同時停止する。
+2. 会場進行を紙master logへ切り替える。reactionとpublic reachの停止をイベント停止理由にしない。
+3. Worker/Access障害はbypassせずfail closedにし、復旧見込みが短い場合だけrollback/PITRを行う。

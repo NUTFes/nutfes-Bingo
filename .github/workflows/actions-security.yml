@@ -1,17 +1,16 @@
 name: GitHub Actions Security
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - ".github/workflows/**"
       - ".github/actions/**"
-      - ".github/dependabot.y*ml"
   push:
-    branches: [main]
+    branches: [develop]
     paths:
       - ".github/workflows/**"
       - ".github/actions/**"
-      - ".github/dependabot.y*ml"
 
 permissions:
   contents: read

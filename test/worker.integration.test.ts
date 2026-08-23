@@ -6,6 +6,7 @@ import { TURNSTILE_ACTION } from "../worker/turnstile";
 type DataEnvelope<T> = { data: T };
 
 const LOCAL_ADMIN_HEADERS = {
+  Origin: "http://localhost",
   "X-Local-Admin-Bypass": "true",
 } as const;
 
@@ -95,7 +96,7 @@ describe("public Worker routes", () => {
     await expect(health.json()).resolves.toMatchObject({
       status: "ok",
       releaseSha: "test-release-sha",
-      generation: "initial",
+      eventId: "initial",
       revision: 0,
     });
   });
@@ -104,7 +105,7 @@ describe("public Worker routes", () => {
     const initial = await SELF.fetch("http://example.com/api/bingo/state");
     expect(initial.status).toBe(200);
     const etag = initial.headers.get("etag");
-    expect(etag).toBe('"initial:0"');
+    expect(etag).toBe('"state:0"');
 
     const unchanged = await SELF.fetch("http://example.com/api/bingo/state", {
       headers: { "If-None-Match": etag ?? "" },
@@ -118,7 +119,7 @@ describe("public Worker routes", () => {
     const clientId = crypto.randomUUID();
     const first = await SELF.fetch("http://example.com/api/bingo/reach", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Origin: "http://example.com" },
       body: JSON.stringify({ clientId, turnstileToken: "fresh-token-1" }),
     });
     expect(first.status).toBe(200);
@@ -131,7 +132,7 @@ describe("public Worker routes", () => {
 
     const duplicate = await SELF.fetch("http://example.com/api/bingo/reach", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Origin: "http://example.com" },
       body: JSON.stringify({ clientId, turnstileToken: "fresh-token-2" }),
     });
     expect(duplicate.status).toBe(200);
@@ -154,6 +155,26 @@ describe("public Worker routes", () => {
       }),
     });
     expect(crossOrigin.status).toBe(403);
+
+    const missingOrigin = await SELF.fetch("http://example.com/api/bingo/reach", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientId: crypto.randomUUID(),
+        turnstileToken: "missing-origin-token",
+      }),
+    });
+    expect(missingOrigin.status).toBe(403);
+
+    const wrongMediaType = await SELF.fetch("http://example.com/api/bingo/reach", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain", Origin: "http://example.com" },
+      body: JSON.stringify({
+        clientId: crypto.randomUUID(),
+        turnstileToken: "wrong-media-type-token",
+      }),
+    });
+    expect(wrongMediaType.status).toBe(415);
     expect(siteverify).toHaveBeenCalledTimes(2);
   });
 
@@ -163,7 +184,7 @@ describe("public Worker routes", () => {
 
     const missing = await SELF.fetch("http://example.com/api/bingo/reach", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Origin: "http://example.com" },
       body: JSON.stringify({ clientId: crypto.randomUUID() }),
     });
     expect(missing.status).toBe(400);
@@ -175,7 +196,7 @@ describe("public Worker routes", () => {
       );
     const rejected = await SELF.fetch("http://example.com/api/bingo/reach", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Origin: "http://example.com" },
       body: JSON.stringify({
         clientId: crypto.randomUUID(),
         turnstileToken: "rejected-token",
@@ -192,218 +213,14 @@ describe("public Worker routes", () => {
 describe("Durable Object state", () => {
   it("persists mutations, increments revision, and enforces unique numbers", async () => {
     const state = env.GAME_STATE.getByName("game:test-state");
-    expect((await state.getState("test-state")).revision).toBe(0);
+    expect((await state.getState()).revision).toBe(0);
 
-    const created = await state.createNumber("test-state", "admin@example.com", 42);
+    const created = await state.createNumber("admin@example.com", 42);
     expect(created.number).toBe(42);
-    const updated = await state.getState("test-state");
+    const updated = await state.getState();
     expect(updated.revision).toBe(1);
     expect(updated.numbers).toHaveLength(1);
     expect(updated.numbers[0]?.number).toBe(42);
-  });
-
-  it("keeps the active generation pointer separate from game state", async () => {
-    const directory = env.GAME_DIRECTORY.getByName("active");
-    const target = env.GAME_STATE.getByName("game:next-generation");
-    await target.getState("next-generation");
-
-    const activation = await directory.activateGeneration("next-generation", "admin@example.com");
-    expect(activation).toMatchObject({
-      generation: "next-generation",
-      previousGeneration: "initial",
-    });
-    expect((await directory.getStatus()).generation).toBe("next-generation");
-
-    const rollback = await directory.activateGeneration("initial", "admin@example.com");
-    expect(rollback).toMatchObject({
-      generation: "initial",
-      previousGeneration: "next-generation",
-    });
-    expect((await directory.getStatus()).generation).toBe("initial");
-  });
-
-  it("keeps a same-generation activation as a no-op", async () => {
-    const generation = "same-generation";
-    const directory = env.GAME_DIRECTORY.getByName("same-generation-directory");
-    const state = env.GAME_STATE.getByName(`game:${generation}`);
-    await state.getState(generation);
-    await state.prepareActivation(generation, "same-generation-token");
-    await runInDurableObject(directory, async (_instance, ctx) => {
-      ctx.storage.sql.exec(
-        "UPDATE directory_metadata SET value = ? WHERE key = 'active_generation'",
-        generation,
-      );
-      ctx.storage.sql.exec(
-        "UPDATE directory_metadata SET value = ? WHERE key = 'active_token'",
-        "same-generation-token",
-      );
-    });
-
-    const beforeToken = await runInDurableObject(
-      state,
-      async (_instance, ctx) =>
-        ctx.storage.sql
-          .exec<{ value: string }>(
-            "SELECT value FROM game_metadata WHERE key = 'activation_token' LIMIT 1",
-          )
-          .one().value,
-    );
-    const activation = await directory.activateGeneration(generation, "admin@example.com");
-    const afterToken = await runInDurableObject(
-      state,
-      async (_instance, ctx) =>
-        ctx.storage.sql
-          .exec<{ value: string }>(
-            "SELECT value FROM game_metadata WHERE key = 'activation_token' LIMIT 1",
-          )
-          .one().value,
-    );
-
-    expect(activation).toMatchObject({
-      generation,
-      previousGeneration: generation,
-      version: 1,
-      redirectQueued: false,
-    });
-    expect(afterToken).toBe(beforeToken);
-  });
-
-  it("recovers an interrupted activation before serving the source generation", async () => {
-    const sourceGeneration = "activation-recovery-source";
-    const targetGeneration = "activation-recovery-target";
-    const sourceToken = "activation-recovery-source-token";
-    const targetToken = "activation-recovery-target-token";
-    const directory = env.GAME_DIRECTORY.getByName("activation-recovery-directory");
-    const source = env.GAME_STATE.getByName(`game:${sourceGeneration}`);
-    const target = env.GAME_STATE.getByName(`game:${targetGeneration}`);
-    await source.getState(sourceGeneration);
-    await source.prepareActivation(sourceGeneration, sourceToken);
-    await target.getState(targetGeneration);
-    await target.prepareActivation(targetGeneration, targetToken);
-    await source.freezeWrites(sourceGeneration, targetGeneration, sourceToken);
-
-    await runInDurableObject(directory, async (_instance, ctx) => {
-      ctx.storage.sql.exec(
-        "UPDATE directory_metadata SET value = ? WHERE key = 'active_generation'",
-        sourceGeneration,
-      );
-      ctx.storage.sql.exec(
-        "UPDATE directory_metadata SET value = ? WHERE key = 'active_token'",
-        sourceToken,
-      );
-      ctx.storage.sql.exec(
-        "INSERT INTO directory_metadata (key, value) VALUES " +
-          "('activation_transition_source_generation', ?), " +
-          "('activation_transition_source_token', ?), " +
-          "('activation_transition_target_generation', ?), " +
-          "('activation_transition_target_token', ?), " +
-          "('activation_transition_actor', ?), " +
-          "('activation_transition_phase', 'freezing_source')",
-        sourceGeneration,
-        sourceToken,
-        targetGeneration,
-        targetToken,
-        "admin@example.com",
-      );
-    });
-
-    await expect(directory.getActiveGeneration()).resolves.toBe(sourceGeneration);
-    await expect(
-      source.createNumber(sourceGeneration, "admin@example.com", 41),
-    ).resolves.toMatchObject({ number: 41 });
-    const targetError = await runInDurableObject(target, async (instance) => {
-      try {
-        await instance.getState(targetGeneration);
-        return null;
-      } catch (error) {
-        return error instanceof Error ? error.message : String(error);
-      }
-    });
-    expect(targetError).toMatch(/切り替え済み/);
-    const transitionRows = await runInDurableObject(directory, async (_instance, ctx) =>
-      ctx.storage.sql
-        .exec<{ key: string }>(
-          "SELECT key FROM directory_metadata WHERE key LIKE 'activation_transition_%'",
-        )
-        .toArray(),
-    );
-    expect(transitionRows).toEqual([]);
-  });
-
-  it("re-arms a durable redirect row when status recovery finds no alarm", async () => {
-    const directory = env.GAME_DIRECTORY.getByName("redirect-alarm-recovery-directory");
-    const nextAt = Date.now() + 60_000;
-    await runInDurableObject(directory, async (_instance, ctx) => {
-      await ctx.storage.deleteAlarm();
-      const now = new Date().toISOString();
-      ctx.storage.sql.exec(
-        "INSERT INTO pending_redirects " +
-          "(previous_generation, next_generation, previous_token, attempts, next_at, " +
-          "expires_at, status, created_at, updated_at) " +
-          "VALUES (?, ?, ?, 0, ?, ?, 'pending', ?, ?)",
-        "redirect-alarm-source",
-        "redirect-alarm-target",
-        "redirect-alarm-token",
-        nextAt,
-        nextAt + 60_000,
-        now,
-        now,
-      );
-    });
-
-    await directory.getStatus();
-    const alarm = await runInDurableObject(directory, async (_instance, ctx) =>
-      ctx.storage.getAlarm(),
-    );
-    expect(alarm).not.toBeNull();
-    expect(alarm).toBeGreaterThanOrEqual(nextAt);
-  });
-
-  it("ignores a stale redirect after a generation is reactivated", async () => {
-    const generation = "activation-race";
-    const state = env.GAME_STATE.getByName(`game:${generation}`);
-    await state.getState(generation);
-
-    await state.prepareActivation(generation, "activation-token-1");
-    expect(await state.redirectClients(generation, "race-successor", "activation-token-1")).toBe(0);
-    const retiredError = await runInDurableObject(state, async (instance) => {
-      try {
-        await instance.getState(generation);
-        return null;
-      } catch (error) {
-        return error instanceof Error ? error.message : String(error);
-      }
-    });
-    expect(retiredError).toMatch(/切り替え済み/);
-
-    await state.prepareActivation(generation, "activation-token-2");
-    await expect(state.getState(generation)).resolves.toMatchObject({ generation });
-
-    expect(await state.redirectClients(generation, "race-successor", "activation-token-1")).toBe(0);
-    await expect(state.getState(generation)).resolves.toMatchObject({ generation });
-  });
-
-  it("fences writes before a generation pointer can move and can safely unfreeze", async () => {
-    const generation = "write-fence";
-    const state = env.GAME_STATE.getByName(`game:${generation}`);
-    await state.getState(generation);
-    await state.prepareActivation(generation, "write-fence-token");
-    await state.freezeWrites(generation, "write-fence-next", "write-fence-token");
-
-    const fencedError = await runInDurableObject(state, async (instance) => {
-      try {
-        await instance.createNumber(generation, "admin@example.com", 41);
-        return null;
-      } catch (error) {
-        return error instanceof Error ? error.message : String(error);
-      }
-    });
-    expect(fencedError).toMatch(/切り替え済み/);
-
-    await state.unfreezeWrites(generation, "write-fence-token");
-    await expect(state.createNumber(generation, "admin@example.com", 41)).resolves.toMatchObject({
-      number: 41,
-    });
   });
 });
 
@@ -434,24 +251,150 @@ describe("admin authorization and mutations", () => {
     expect(publicState.revision).toBeGreaterThanOrEqual(1);
   });
 
-  it("rejects a generation switch when the expected directory version is stale", async () => {
-    const health = await SELF.fetch("http://localhost/api/health");
-    const status = await health.json<{ directoryVersion: number; generation: string }>();
-    const response = await SELF.fetch("http://localhost/admin/api/generations/activate", {
+  it("rejects invalid PITR preparation before invoking the remote-only storage API", async () => {
+    const state = await SELF.fetch("http://localhost/admin/api/state", {
+      headers: LOCAL_ADMIN_HEADERS,
+    });
+    const revision = (await state.json<DataEnvelope<{ revision: number }>>()).data.revision;
+    const response = await SELF.fetch("http://localhost/admin/api/recovery/prepare", {
       method: "POST",
       headers: { ...LOCAL_ADMIN_HEADERS, "Content-Type": "application/json" },
       body: JSON.stringify({
-        generation: status.generation,
-        expectedGeneration: status.generation,
-        expectedVersion: status.directoryVersion + 1,
+        targetTime: new Date(Date.now() + 60_000).toISOString(),
+        expectedRevision: revision,
       }),
     });
 
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: expect.stringMatching(/過去30日以内/),
+    });
+  });
+
+  it("freezes writes after PITR recovery is scheduled", async () => {
+    const state = env.GAME_STATE.getByName("game");
+    await state.getState();
+    await runInDurableObject(state, async (_instance, ctx) => {
+      ctx.storage.sql.exec(
+        "INSERT OR REPLACE INTO game_metadata (key, value) VALUES ('pitr_pending_target', ?)",
+        "0123456789abcdef",
+      );
+    });
+
+    try {
+      const { body, response } = await adminCommand<{ error: string }>({
+        type: "incrementReach",
+      });
+      expect(response.status).toBe(409);
+      expect(body).toMatchObject({ error: expect.stringMatching(/PITR recovery中/) });
+    } finally {
+      await runInDurableObject(state, async (_instance, ctx) => {
+        ctx.storage.sql.exec(
+          "DELETE FROM game_metadata WHERE key IN " +
+            "('pitr_pending_target', 'pitr_pending_undo', 'pitr_pending_actor', 'pitr_pending_at')",
+        );
+      });
+    }
+  });
+
+  it("atomically starts a new annual event without weakening the PITR boundary", async () => {
+    const state = env.GAME_STATE.getByName("annual-reset");
+    await state.createNumber("admin@example.com", 42);
+    await state.createPrize("admin@example.com", "景品", "Prize");
+    await state.saveSurveyState("admin@example.com", "https://example.com/survey", true);
+    await state.recordPublicReach("a".repeat(64));
+    const before = await state.getState();
+    const pitrEarliestAt = await runInDurableObject(
+      state,
+      async (_instance, ctx) =>
+        ctx.storage.sql
+          .exec<{ value: string }>("SELECT value FROM game_metadata WHERE key = 'pitr_earliest_at'")
+          .one().value,
+    );
+
+    await expect(
+      state.startAnnualEvent(
+        "admin@example.com",
+        before.revision,
+        before.appState.event_id,
+        "2027-nutfes-bingo",
+      ),
+    ).resolves.toEqual({
+      eventId: "2027-nutfes-bingo",
+      revision: before.revision + 1,
+    });
+
+    const reset = await state.getState();
+    expect(reset).toMatchObject({
+      revision: before.revision + 1,
+      numbers: [],
+      prizes: [],
+      latestReachLog: null,
+      appState: {
+        event_id: "2027-nutfes-bingo",
+        survey_url: "",
+        is_survey_active: false,
+        reach_count: 0,
+      },
+    });
+    await runInDurableObject(state, async (_instance, ctx) => {
+      expect(
+        ctx.storage.sql
+          .exec<{ value: string }>("SELECT value FROM game_metadata WHERE key = 'pitr_earliest_at'")
+          .one().value,
+      ).toBe(pitrEarliestAt);
+      expect(
+        ctx.storage.sql
+          .exec<{ value: string }>(
+            "SELECT value FROM game_metadata WHERE key = 'reach_submission_count'",
+          )
+          .one().value,
+      ).toBe("0");
+      expect(
+        ctx.storage.sql
+          .exec<{ action: string }>("SELECT action FROM audit_log ORDER BY id")
+          .toArray(),
+      ).toEqual([{ action: "startAnnualEvent" }]);
+    });
+
+    await state.createNumber("admin@example.com", 9);
+    const retryError = await runInDurableObject(state, async (instance) => {
+      try {
+        await instance.startAnnualEvent(
+          "admin@example.com",
+          before.revision,
+          before.appState.event_id,
+          "2027-nutfes-bingo",
+        );
+        return null;
+      } catch (error) {
+        return error instanceof Error ? error.message : String(error);
+      }
+    });
+    expect(retryError).toMatch(/revision/);
+    await expect(state.getState()).resolves.toMatchObject({
+      numbers: [expect.objectContaining({ number: 9 })],
+    });
+  });
+
+  it("does not expose removed generation and logical snapshot routes", async () => {
+    for (const path of [
+      "/admin/api/snapshots",
+      "/admin/api/snapshots/restore",
+      "/admin/api/generations/activate",
+      "/admin/api/import",
+    ]) {
+      const response = await SELF.fetch(`http://localhost${path}`, {
+        method: "POST",
+        headers: { ...LOCAL_ADMIN_HEADERS, "Content-Type": "application/json" },
+        body: "{}",
+      });
+      expect(response.status).toBe(404);
+    }
   });
 });
 
-describe("R2 images and logical snapshots", () => {
+describe("R2 prize images", () => {
   it("validates, stores, and serves an immutable prize image", async () => {
     const pngBytes = new Uint8Array([
       0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x00,
@@ -481,101 +424,15 @@ describe("R2 images and logical snapshots", () => {
       { headers: { "If-None-Match": etag ?? "" } },
     );
     expect(cached.status).toBe(304);
-  });
 
-  it("resumes an interrupted snapshot install and rejects a different retry", async () => {
-    const source = env.GAME_STATE.getByName("game:initial");
-    const snapshot = await source.exportSnapshot("initial");
-    const generation = "resumable-import";
-    const target = env.GAME_STATE.getByName(`game:${generation}`);
-
-    // Simulate a request ending after the SQLite transaction but before the R2 backup.
-    await target.initializeFromSnapshot(generation, snapshot, "admin@example.com");
-    const prematureActivation = await SELF.fetch(
-      "http://localhost/admin/api/generations/activate",
-      {
-        method: "POST",
-        headers: { ...LOCAL_ADMIN_HEADERS, "Content-Type": "application/json" },
-        body: JSON.stringify({ generation }),
-      },
+    await env.PRIZE_IMAGES.put(uploaded.data.image_path, new Uint8Array([1, 2, 3]));
+    const corrupted = await SELF.fetch(
+      `http://example.com/api/prize-images/${uploaded.data.image_path}`,
     );
-    expect(prematureActivation.status).toBe(409);
-
-    const importSnapshot = (input: typeof snapshot) =>
-      SELF.fetch("http://localhost/admin/api/import", {
-        method: "POST",
-        headers: { ...LOCAL_ADMIN_HEADERS, "Content-Type": "application/json" },
-        body: JSON.stringify({ generation, snapshot: input, activate: false }),
-      });
-    const resumed = await importSnapshot(snapshot);
-    expect(resumed.status).toBe(201);
-    const resumedBody =
-      await resumed.json<
-        DataEnvelope<{ backup: { key: string }; integrity: { matches: boolean } }>
-      >();
-    expect(resumedBody.data.integrity.matches).toBe(true);
-    expect(await env.GAME_BACKUPS.head(resumedBody.data.backup.key)).not.toBeNull();
-
-    const repeated = await importSnapshot(snapshot);
-    expect(repeated.status).toBe(201);
-    await expect(repeated.json()).resolves.toMatchObject({
-      data: { backup: { key: resumedBody.data.backup.key } },
+    expect(corrupted.status).toBe(500);
+    await expect(corrupted.json()).resolves.toMatchObject({
+      error: expect.stringMatching(/整合性/),
     });
-
-    const changedSnapshot = { ...snapshot, revision: snapshot.revision + 1 };
-    const conflicting = await importSnapshot(changedSnapshot);
-    expect(conflicting.status).toBe(409);
-  });
-
-  it("creates an R2 snapshot, restores a new generation, and rolls back by pointer", async () => {
-    const command = await adminCommand({ type: "createNumber", number: 73 });
-    expect(command.response.status).toBe(200);
-
-    const snapshotResponse = await SELF.fetch("http://localhost/admin/api/snapshots", {
-      method: "POST",
-      headers: LOCAL_ADMIN_HEADERS,
-    });
-    expect(snapshotResponse.status).toBe(201);
-    const snapshot = await snapshotResponse.json<DataEnvelope<{ key: string }>>();
-    expect(await env.GAME_BACKUPS.head(snapshot.data.key)).not.toBeNull();
-
-    const restore = await SELF.fetch("http://localhost/admin/api/snapshots/restore", {
-      method: "POST",
-      headers: { ...LOCAL_ADMIN_HEADERS, "Content-Type": "application/json" },
-      body: JSON.stringify({ key: snapshot.data.key, generation: "restored-test" }),
-    });
-    expect(restore.status).toBe(201);
-    await expect(restore.json()).resolves.toMatchObject({
-      data: { activated: false, activation: null, generation: "restored-test" },
-    });
-    const beforeActivation = await SELF.fetch("http://example.com/api/health");
-    const active = await beforeActivation.json<{ directoryVersion: number; generation: string }>();
-    expect(active.generation).toBe("initial");
-
-    const activate = await SELF.fetch("http://localhost/admin/api/generations/activate", {
-      method: "POST",
-      headers: { ...LOCAL_ADMIN_HEADERS, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        generation: "restored-test",
-        expectedGeneration: active.generation,
-        expectedVersion: active.directoryVersion,
-      }),
-    });
-    expect(activate.status).toBe(200);
-    const restoredState = await SELF.fetch("http://example.com/api/bingo/state");
-    await expect(restoredState.json()).resolves.toMatchObject({
-      generation: "restored-test",
-      numbers: expect.arrayContaining([expect.objectContaining({ number: 73 })]),
-    });
-
-    const rollback = await SELF.fetch("http://localhost/admin/api/generations/activate", {
-      method: "POST",
-      headers: { ...LOCAL_ADMIN_HEADERS, "Content-Type": "application/json" },
-      body: JSON.stringify({ generation: "initial" }),
-    });
-    expect(rollback.status).toBe(200);
-    const rolledBackState = await SELF.fetch("http://example.com/api/bingo/state");
-    await expect(rolledBackState.json()).resolves.toMatchObject({ generation: "initial" });
   });
 });
 
@@ -589,7 +446,9 @@ describe("venue Screen authorization", () => {
 
     const local = await SELF.fetch("http://localhost/screen/api/state");
     expect(local.status).toBe(200);
-    await expect(local.json()).resolves.toMatchObject({ generation: "initial" });
+    await expect(local.json()).resolves.toMatchObject({
+      appState: { event_id: "initial" },
+    });
   });
 
   it("does not expose legacy Screen and reaction-consumer API routes", async () => {
@@ -614,7 +473,7 @@ describe("Hibernation WebSockets", () => {
     socket?.accept();
     await expect(nextMessage(socket as WebSocket)).resolves.toMatchObject({
       type: "state",
-      state: { generation: "initial" },
+      state: { appState: { event_id: "initial" } },
     });
     await closeSocket(socket as WebSocket);
   });
@@ -686,9 +545,8 @@ describe("Hibernation WebSockets", () => {
   });
 
   it("reserves state-socket capacity for Screen when the public pool is full", async () => {
-    const generation = "screen-reserved-capacity";
-    const state = env.GAME_STATE.getByName(`game:${generation}`);
-    await state.getState(generation);
+    const state = env.GAME_STATE.getByName("screen-reserved-capacity");
+    await state.getState();
 
     const statuses = await runInDurableObject(state, async (instance, ctx) => {
       for (let index = 0; index < 1_984; index += 1) {
@@ -700,7 +558,6 @@ describe("Hibernation WebSockets", () => {
           new Request("http://internal/api/bingo/socket", {
             headers: {
               Upgrade: "websocket",
-              "X-Bingo-Generation": generation,
               "X-Bingo-View": "public",
             },
           }),
@@ -709,7 +566,6 @@ describe("Hibernation WebSockets", () => {
           new Request("http://internal/screen/api/socket", {
             headers: {
               Upgrade: "websocket",
-              "X-Bingo-Generation": generation,
               "X-Bingo-View": "screen",
             },
           }),
@@ -729,7 +585,7 @@ describe("Hibernation WebSockets", () => {
     });
     const stateSocket = stateResponse.webSocket as WebSocket;
     stateSocket.accept();
-    const stateMessage = await nextMessage(stateSocket);
+    await nextMessage(stateSocket);
 
     const reactionResponse = await SELF.fetch("http://localhost/screen/api/stamps/socket", {
       headers: { Upgrade: "websocket" },
@@ -741,8 +597,7 @@ describe("Hibernation WebSockets", () => {
     const stateClose = nextClose(stateSocket);
     const reactionClose = nextClose(reactionSocket);
     const expiredAt = Date.now() - 1;
-    const generation = (stateMessage.state as { generation: string }).generation;
-    const state = env.GAME_STATE.getByName(`game:${generation}`);
+    const state = env.GAME_STATE.getByName("game");
     const reactions = env.REACTION_HUB.getByName("reactions");
 
     await runInDurableObject(state, async (_instance, ctx) => {
@@ -780,7 +635,7 @@ describe("Hibernation WebSockets", () => {
     const stampMessage = nextMessage(socket);
     const stamp = await SELF.fetch("http://example.com/api/bingo/stamps", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Origin: "http://example.com" },
       body: JSON.stringify({ clientId: crypto.randomUUID(), stampName: "good" }),
     });
     expect(stamp.status).toBe(201);

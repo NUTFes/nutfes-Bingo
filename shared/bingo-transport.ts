@@ -34,6 +34,7 @@ export type PrizeRow = {
 
 export type AppStateRow = {
   id: number;
+  event_id: string;
   survey_url: string;
   is_survey_active: boolean;
   reach_count: number;
@@ -49,7 +50,6 @@ export type ReachLogRow = {
 };
 
 export type BingoUnifiedState = {
-  generation: string;
   revision: number;
   numbers: NumberRow[];
   prizes: PrizeRow[];
@@ -62,13 +62,11 @@ export type StateSocketMessage =
   | { type: "state"; state: BingoUnifiedState }
   | {
       type: "reach";
-      generation: string;
       revision: number;
       reachCount: number;
       latestReachLog: ReachLogRow;
       serverTime: string;
-    }
-  | { type: "generation"; generation: string };
+    };
 
 export type StampEvent = {
   id: string | number;
@@ -85,6 +83,12 @@ export type AdminCommand =
   | { type: "incrementReach" }
   | { type: "decrementReach" }
   | { type: "saveSurveyState"; surveyUrl: string; isSurveyActive: boolean }
+  | {
+      type: "startAnnualEvent";
+      expectedRevision: number;
+      expectedEventId: string;
+      newEventId: string;
+    }
   | { type: "createPrize"; nameJp: string; nameEn: string; imagePath?: string }
   | { type: "updatePrize"; id: number; nameJp: string; nameEn: string; imagePath?: string }
   | { type: "togglePrizeWon"; id: number; isWon: boolean }
