@@ -38,6 +38,7 @@ docker buildx build \
   --build-arg "NEXT_PUBLIC_SITE_URL=$site_url" \
   --build-arg "NEXT_PUBLIC_MEDIA_ORIGIN=$media_origin" \
   --build-arg "NEXT_PUBLIC_TURNSTILE_SITE_KEY=$turnstile_site_key" \
+  --build-arg "CLOUDFLARE_IMAGE_TRANSFORMATIONS=true" \
   --output "type=local,dest=$artifact_dir" \
   .
 

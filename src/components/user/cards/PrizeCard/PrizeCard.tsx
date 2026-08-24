@@ -30,7 +30,7 @@ function PrizeImage({ imageUrl, name }: { imageUrl: string | null; name: string 
       alt={name}
       fill
       className={styles.prizeImage}
-      sizes="(max-width: 768px) 50vw, 20vw"
+      sizes="(max-width: 639px) 22.5vw, 98px"
       onError={() => setHasLoadError(true)}
     />
   );
