@@ -50,6 +50,7 @@ production account、Worker名、hostname、Access AUD、media origin、Turnstil
    - Admin/Screen Access applicationのparent/nested path、AUD、session duration、named allowlist。
    - managed Turnstile widgetのhostnameと`TURNSTILE_SECRET_KEY`。
    - prize image R2 bucketとcustom domain。
+   - Images Transformationsがzoneで有効で、sourceはsame-zoneのみに制限されていること。
    - `optional-public-mutations` WAF custom ruleが存在し、通常はdisabled。
    - account全体のWorkers/DO Free usageに他appの大きな利用がない。
 6. `.cloudflare.deploy.production.env`をexampleから更新しmode `600`にする。Admin/Screenには当年のnamed identityを最低1人ずつ登録する。
@@ -251,11 +252,12 @@ PITRが60秒以内に完了しない、Access/Cloudflare障害、復旧見込み
 ```
 
 1. `r2.dev`を無効のままmedia custom domainを接続し、minimum TLSを1.2にする。
-2. managed Turnstile widgetをapp hostnameへ限定し、secretを`TURNSTILE_SECRET_KEY`として登録する。
-3. Admin Access applicationは`/admin`と`/admin/*`、Screen applicationは`/screen`と`/screen/*`を保護する。別AUD・named allowlistを使う。
-4. app custom domainをWorkerへ接続し、`workers.dev`とpreview URLを無効のままにする。
-5. disabledの`optional-public-mutations` WAF ruleを作る。
-6. `develop`のfinal SHAから`mise run preflight && mise run deploy && mise run smoke`を実行する。
+2. Cloudflare Dashboardの`Images > Transformations`でapp/media custom domainを含むzoneのTransformationsを有効にする。source originはsame-zoneのままとし、`Resize images from any origin`は有効にしない。
+3. managed Turnstile widgetをapp hostnameへ限定し、secretを`TURNSTILE_SECRET_KEY`として登録する。
+4. Admin Access applicationは`/admin`と`/admin/*`、Screen applicationは`/screen`と`/screen/*`を保護する。別AUD・named allowlistを使う。
+5. app custom domainをWorkerへ接続し、`workers.dev`とpreview URLを無効のままにする。
+6. disabledの`optional-public-mutations` WAF ruleを作る。
+7. `develop`のfinal SHAから`mise run preflight && mise run deploy && mise run smoke`を実行する。
 
 作成するDO classは`GameState`と`ReactionHub`だけ、R2は景品画像bucketだけです。private backup、Cron、KV、D1、Queue、常設stagingは作りません。
 
@@ -280,5 +282,7 @@ PITRが60秒以内に完了しない、Access/Cloudflare障害、復旧見込み
 - <https://developers.cloudflare.com/durable-objects/best-practices/websockets/>
 - <https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/#pitr-point-in-time-recovery-api>
 - <https://developers.cloudflare.com/r2/pricing/>
+- <https://developers.cloudflare.com/images/optimization/transformations/overview/>
+- <https://developers.cloudflare.com/images/optimization/transformations/integrate-with-frameworks/>
 - <https://developers.cloudflare.com/turnstile/get-started/server-side-validation/>
 - <https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/>

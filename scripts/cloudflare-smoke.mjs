@@ -35,8 +35,9 @@ if (activeVersions.length !== 1 || typeof activeVersions[0].version_id !== "stri
   throw new Error("Production must have exactly one 100% active version");
 }
 
-const fetchChecked = async (path, expectedStatus, expectedType) => {
+const fetchChecked = async (path, expectedStatus, expectedType, headers) => {
   const response = await fetch(new URL(path, site), {
+    headers,
     redirect: "manual",
     signal: AbortSignal.timeout(15_000),
   });
@@ -62,6 +63,11 @@ const assertSecurityHeaders = (path, response) => {
 
 const home = await fetchChecked("/", 200, "text/html");
 assertSecurityHeaders("/", home);
+const transformationProbePath =
+  "/cdn-cgi/image/width=64,fit=scale-down,format=webp/ReactionIcon/good.png";
+await fetchChecked(transformationProbePath, 200, "image/webp", {
+  Accept: "image/webp,image/*;q=0.8,*/*;q=0.5",
+});
 const readyResponse = await fetchChecked("/api/ready", 200, "application/json");
 assertSecurityHeaders("/api/ready", readyResponse);
 const ready = await readyResponse.json();
@@ -107,6 +113,21 @@ if (imageUrl) {
   const image = await fetch(imageUrl, { redirect: "error", signal: AbortSignal.timeout(15_000) });
   if (image.status !== 200 || !(image.headers.get("content-type") ?? "").startsWith("image/")) {
     throw new Error(`Prize image returned ${image.status}`);
+  }
+  const transformedImageUrl = new URL(
+    `/cdn-cgi/image/width=256,height=256,fit=scale-down,format=webp/${imageUrl}`,
+    site,
+  );
+  const transformedImage = await fetch(transformedImageUrl, {
+    headers: { Accept: "image/webp,image/*;q=0.8,*/*;q=0.5" },
+    redirect: "error",
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (
+    transformedImage.status !== 200 ||
+    !(transformedImage.headers.get("content-type") ?? "").startsWith("image/webp")
+  ) {
+    throw new Error(`Transformed prize image returned ${transformedImage.status}`);
   }
 } else {
   const missingImage = await fetch(new URL("/__nutfes-bingo-missing-probe__", mediaOrigin), {
