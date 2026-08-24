@@ -3,25 +3,25 @@ import { ModalOverlay, ModalOverlayProps, Modal as RACModal } from "react-aria-c
 import { tv } from "tailwind-variants";
 
 const overlayStyles = tv({
-  base: "absolute top-0 left-0 w-full h-(--page-height) isolate z-20 bg-black/[50%] text-center backdrop-blur-lg",
+  base: "fixed inset-0 isolate z-50 bg-black/75 text-center",
   variants: {
     isEntering: {
-      true: "animate-in fade-in duration-200 ease-out",
+      true: "animate-in fade-in duration-150 ease-out motion-reduce:animate-none",
     },
     isExiting: {
-      true: "animate-out fade-out duration-200 ease-in",
+      true: "animate-out fade-out duration-150 ease-in motion-reduce:animate-none",
     },
   },
 });
 
 const modalStyles = tv({
-  base: "font-sans w-full max-w-[min(90vw,450px)] max-h-[calc(var(--visual-viewport-height)*.9)] rounded-2xl bg-white dark:bg-neutral-800/70 dark:backdrop-blur-2xl dark:backdrop-saturate-200 forced-colors:bg-[Canvas] text-left align-middle text-neutral-700 dark:text-neutral-300 shadow-2xl bg-clip-padding border border-black/10 dark:border-white/10",
+  base: "w-full max-w-md max-h-[calc(var(--visual-viewport-height)-1rem)] overflow-hidden rounded-xl border border-white/10 bg-neutral-900 font-sans text-left align-middle text-neutral-200 forced-colors:bg-[Canvas]",
   variants: {
     isEntering: {
-      true: "animate-in zoom-in-105 ease-out duration-200",
+      true: "animate-in fade-in zoom-in-95 duration-150 ease-out motion-reduce:animate-none",
     },
     isExiting: {
-      true: "animate-out zoom-out-95 ease-in duration-200",
+      true: "animate-out fade-out zoom-out-95 duration-150 ease-in motion-reduce:animate-none",
     },
   },
 });
@@ -29,7 +29,7 @@ const modalStyles = tv({
 export function Modal(props: ModalOverlayProps) {
   return (
     <ModalOverlay {...props} className={overlayStyles}>
-      <div className="sticky top-0 left-0 w-full h-(--visual-viewport-height) flex items-center justify-center box-border">
+      <div className="flex h-(--visual-viewport-height) w-full items-center justify-center box-border p-2 sm:p-4">
         <RACModal {...props} className={modalStyles} />
       </div>
     </ModalOverlay>

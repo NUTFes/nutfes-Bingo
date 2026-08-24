@@ -6,7 +6,6 @@ import { RxCross1 } from "react-icons/rx";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Modal } from "@/components/ui/Modal";
-import { Separator } from "@/components/ui/Separator";
 import {
   BOARD_SIZE,
   type BingoCard,
@@ -79,6 +78,10 @@ export function JudgementModalView({
     );
   };
 
+  const selectedCellLabel = selectedCell
+    ? `${COL_HEADERS[selectedCell.col]}${selectedCell.row + 1}`
+    : null;
+
   return (
     <Modal
       isOpen={isOpened}
@@ -89,146 +92,170 @@ export function JudgementModalView({
       }}
       isDismissable={canCloseByClickingBackground}
     >
-      <Dialog>
-        <h2 className="text-xl font-semibold leading-tight text-foreground sm:text-2xl">
-          ビンゴ正誤判定
-        </h2>
-        <Separator className="my-4 opacity-75" />
-        <div className="mx-auto w-full max-w-2xl">
-          <div>
-            <p className="mb-4 text-sm">
-              5×5 のカードに数字を入力し、最後に「ビンゴ判定」を押してください。
+      <Dialog className="p-4 outline-none sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold leading-tight text-neutral-50 sm:text-xl">
+              ビンゴ正誤判定
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-neutral-400">
+              カードのマスを選び、数字を入力してください。
             </p>
-            <div className="mx-auto w-full max-w-lg">
-              <div className="mb-2 grid grid-cols-5 gap-2 text-center text-xl font-semibold text-foreground sm:gap-2.5 sm:text-3xl">
-                {COL_HEADERS.map((header) => (
-                  <div key={header}>{header}</div>
-                ))}
+          </div>
+          <Button
+            type="button"
+            variant="quiet"
+            onPress={onClose}
+            aria-label="正誤判定を閉じる"
+            className="h-11 w-11 shrink-0 px-0"
+          >
+            <span aria-hidden>
+              <RxCross1 className="size-4" />
+            </span>
+          </Button>
+        </div>
+
+        <div className="mx-auto mt-4 w-full max-w-[320px]">
+          <div
+            aria-hidden
+            className="mb-1.5 grid grid-cols-5 gap-1.5 text-center text-sm font-bold text-neutral-400"
+          >
+            {COL_HEADERS.map((header) => (
+              <div key={header}>{header}</div>
+            ))}
+          </div>
+
+          <div className="grid grid-rows-5 gap-1.5">
+            {bingoCard.map((row, rowIndex) => (
+              <div key={`row-${rowIndex}`} className="grid grid-cols-5 gap-1.5">
+                {row.map((_, colIndex) => {
+                  const center = isCenter(rowIndex, colIndex);
+                  const selected =
+                    !hasJudged && selectedCell?.row === rowIndex && selectedCell?.col === colIndex;
+                  const highlighted = shouldHighlight(rowIndex, colIndex);
+
+                  return (
+                    <button
+                      type="button"
+                      key={`${rowIndex}-${colIndex}`}
+                      disabled={hasJudged || center}
+                      aria-pressed={selected || undefined}
+                      className={cn(
+                        "relative flex aspect-square min-h-11 min-w-11 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 text-lg font-semibold text-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
+                        !hasJudged &&
+                          !center &&
+                          "cursor-pointer hover:border-neutral-500 hover:bg-neutral-700 active:bg-neutral-700",
+                        center && "cursor-default bg-neutral-700 text-sm text-neutral-300",
+                        selected &&
+                          "border-blue-400 bg-blue-500/15 text-white ring-2 ring-blue-500/40",
+                        highlighted && "border-emerald-400 bg-emerald-500/20 text-emerald-100",
+                      )}
+                      onClick={() => onCellClick(rowIndex, colIndex)}
+                      aria-label={`${COL_HEADERS[colIndex]}${rowIndex + 1} ${center ? "FREE" : getCellText(rowIndex, colIndex) || "空"}`}
+                    >
+                      {getCellText(rowIndex, colIndex)}
+                    </button>
+                  );
+                })}
               </div>
-              <div className="grid grid-rows-5 gap-2 sm:gap-2.5">
-                {bingoCard.map((row, rowIndex) => (
-                  <div key={`row-${rowIndex}`} className="grid grid-cols-5 gap-2 sm:gap-2.5">
-                    {row.map((_, colIndex) => (
-                      <button
-                        type="button"
-                        key={`${rowIndex}-${colIndex}`}
-                        className={cn(
-                          "relative flex aspect-square min-h-12 min-w-12 items-center justify-center rounded-xl border border-border bg-card text-lg font-semibold text-foreground shadow-sm transition sm:min-h-14 sm:min-w-14 sm:rounded-2xl sm:text-2xl",
-                          !isCenter(rowIndex, colIndex) &&
-                            "cursor-pointer hover:border-primary hover:bg-accent",
-                          isCenter(rowIndex, colIndex) &&
-                            "cursor-default bg-primary text-primary-foreground",
-                          !hasJudged &&
-                            selectedCell?.row === rowIndex &&
-                            selectedCell?.col === colIndex &&
-                            "border-primary ring-2 ring-primary/40",
-                          !hasJudged &&
-                            selectedCell?.row === rowIndex &&
-                            selectedCell?.col === colIndex &&
-                            inputValue &&
-                            "text-foreground",
-                          shouldHighlight(rowIndex, colIndex) &&
-                            "border-primary bg-primary/20 text-primary shadow-lg",
-                        )}
-                        onClick={() => onCellClick(rowIndex, colIndex)}
-                        aria-label={`行${rowIndex + 1} 列${COL_HEADERS[colIndex]} ${getCellText(rowIndex, colIndex) || "空"}`}
-                      >
-                        {getCellText(rowIndex, colIndex)}
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </div>
+            ))}
+          </div>
+        </div>
+
+        {!hasJudged ? (
+          <div className="mx-auto mt-4 w-full max-w-[320px]">
+            <div className="mb-2 flex min-h-5 items-center justify-between gap-3 text-xs">
+              <span className="font-medium text-neutral-300">
+                {selectedCellLabel ? `選択中: ${selectedCellLabel}` : "マスを選択してください"}
+              </span>
+              {inputValue && <span className="text-neutral-400">入力値: {inputValue}</span>}
             </div>
 
-            {!hasJudged ? (
-              <div className="mt-5 flex w-full flex-col items-center">
-                <div className="mb-4 grid w-full max-w-sm grid-cols-3 gap-2.5">
-                  {KEYPAD.map((label) => (
-                    <Button
-                      key={label}
-                      type="button"
-                      variant={label === "確定" ? "primary" : "secondary"}
-                      className="min-h-14 text-xl sm:min-h-16 sm:text-2xl"
-                      onPress={() => {
-                        if (label === "消去") onDelete();
-                        else if (label === "確定") onCommit();
-                        else onDigitClick(label);
-                      }}
-                    >
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-
-                {error && (
-                  <p role="alert" className="mb-3 w-full max-w-sm text-sm text-destructive">
-                    {error}
-                  </p>
-                )}
-                <div className="grid w-full max-w-sm grid-cols-1 gap-3 sm:grid-cols-2">
-                  <Button
-                    type="button"
-                    variant="primary"
-                    onPress={onJudge}
-                    isDisabled={isJudging}
-                    isPending={isJudging}
-                    className="w-full"
-                  >
-                    ビンゴ判定
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onPress={onReset}
-                    isDisabled={isJudging}
-                    className="w-full"
-                  >
-                    リセット
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-5 flex w-full flex-col items-center">
-                <div className="w-full max-w-sm text-center">
-                  {completedLines.length > 0 ? (
-                    <div className="flex items-center justify-center gap-3 rounded-3xl border-2 border-emerald-500 bg-emerald-500/20 py-3 text-3xl font-extrabold text-emerald-600 shadow-sm dark:text-emerald-400">
-                      <GiPartyPopper className="text-3xl sm:text-4xl" /> BINGO！
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-3 rounded-3xl border-2 border-destructive bg-destructive/10 py-3 text-2xl font-bold text-destructive shadow-sm">
-                      <RxCross1 className="text-3xl sm:text-4xl" />
-                      ビンゴはありません
-                    </div>
-                  )}
-                  {judgedRevision !== null && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      抽選状態 revision {judgedRevision} で判定
-                    </p>
-                  )}
-                </div>
+            <div className="grid grid-cols-3 gap-2">
+              {KEYPAD.map((label) => (
                 <Button
+                  key={label}
                   type="button"
-                  variant="secondary"
-                  onPress={onReset}
-                  className="mt-5 w-full max-w-sm"
+                  variant={label === "確定" ? "primary" : "secondary"}
+                  className="min-h-12 text-lg font-medium"
+                  onPress={() => {
+                    if (label === "消去") onDelete();
+                    else if (label === "確定") onCommit();
+                    else onDigitClick(label);
+                  }}
                 >
-                  もう一度入力する
+                  {label}
                 </Button>
-              </div>
+              ))}
+            </div>
+
+            {error && (
+              <p
+                role="alert"
+                className="mt-3 rounded-lg bg-red-950/60 px-3 py-2.5 text-sm leading-relaxed text-red-200"
+              >
+                {error}
+              </p>
             )}
-            <div className="mt-4 flex w-full justify-center">
+
+            <div className="mt-3 flex gap-2">
+              <Button
+                type="button"
+                variant="primary"
+                onPress={onJudge}
+                isDisabled={isJudging}
+                isPending={isJudging}
+                className="min-h-12 flex-1 text-base font-semibold"
+              >
+                ビンゴ判定
+              </Button>
               <Button
                 type="button"
                 variant="secondary"
-                onPress={onClose}
-                className="w-full max-w-sm"
+                onPress={onReset}
+                isDisabled={isJudging}
+                className="min-h-12 shrink-0 px-4"
               >
-                閉じる
+                リセット
               </Button>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="mx-auto mt-4 w-full max-w-[320px]">
+            {completedLines.length > 0 ? (
+              <div
+                role="status"
+                className="flex items-center justify-center gap-2 rounded-xl bg-emerald-950 px-4 py-3 text-xl font-bold text-emerald-200"
+              >
+                <GiPartyPopper className="size-6" aria-hidden />
+                BINGO！
+              </div>
+            ) : (
+              <div
+                role="status"
+                className="flex items-center justify-center gap-2 rounded-xl bg-neutral-800 px-4 py-3 text-base font-semibold text-neutral-100"
+              >
+                <RxCross1 className="size-5 text-neutral-400" aria-hidden />
+                ビンゴはありません
+              </div>
+            )}
+
+            {judgedRevision !== null && (
+              <p className="mt-2 text-center text-xs text-neutral-500">
+                抽選状態 revision {judgedRevision} で判定
+              </p>
+            )}
+
+            <Button
+              type="button"
+              variant="primary"
+              onPress={onReset}
+              className="mt-3 min-h-12 w-full text-base font-semibold"
+            >
+              もう一度入力する
+            </Button>
+          </div>
+        )}
       </Dialog>
     </Modal>
   );
