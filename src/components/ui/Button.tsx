@@ -14,18 +14,17 @@ export interface ButtonProps extends RACButtonProps {
 
 let button = tv({
   extend: focusRing,
-  base: "relative inline-flex items-center justify-center gap-2 border border-transparent dark:border-white/10 h-9 box-border px-3.5 py-0 [&:has(>svg:only-child)]:px-0 [&:has(>svg:only-child)]:h-8 [&:has(>svg:only-child)]:w-8 font-sans text-sm text-center transition rounded-lg cursor-default [-webkit-tap-highlight-color:transparent]",
+  base: "relative inline-flex h-9 cursor-pointer items-center justify-center gap-2 box-border rounded-lg border border-white/10 px-3.5 py-0 font-sans text-center text-sm transition-colors [-webkit-tap-highlight-color:transparent] [&:has(>svg:only-child)]:h-8 [&:has(>svg:only-child)]:w-8 [&:has(>svg:only-child)]:px-0",
   variants: {
     variant: {
-      primary: "bg-blue-600 hover:bg-blue-700 pressed:bg-blue-800 text-white",
-      secondary:
-        "border-black/10 bg-neutral-50 hover:bg-neutral-100 pressed:bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:pressed:bg-neutral-500 dark:text-neutral-100",
-      destructive: "bg-red-700 hover:bg-red-800 pressed:bg-red-900 text-white",
+      primary: "bg-blue-600 text-white hover:bg-blue-500 pressed:bg-blue-700",
+      secondary: "bg-neutral-800 text-neutral-100 hover:bg-neutral-700 pressed:bg-neutral-600",
+      destructive: "bg-red-700 text-white hover:bg-red-600 pressed:bg-red-800",
       quiet:
-        "border-0 bg-transparent hover:bg-neutral-200 pressed:bg-neutral-300 text-neutral-800 dark:hover:bg-neutral-700 dark:pressed:bg-neutral-600 dark:text-neutral-100",
+        "border-transparent bg-transparent text-neutral-200 hover:bg-neutral-800 pressed:bg-neutral-700",
     },
     isDisabled: {
-      true: "border-transparent dark:border-transparent bg-neutral-100 dark:bg-neutral-800 text-neutral-300 dark:text-neutral-600 forced-colors:text-[GrayText]",
+      true: "cursor-not-allowed border-transparent bg-neutral-900 text-neutral-600 forced-colors:text-[GrayText]",
     },
     isPending: {
       true: "text-transparent",
@@ -38,7 +37,7 @@ let button = tv({
     {
       variant: "quiet",
       isDisabled: true,
-      class: "bg-transparent dark:bg-transparent",
+      class: "bg-transparent",
     },
   ],
 });
