@@ -9,6 +9,8 @@ import type { AppStateRow } from "@/types/bingo/types";
 const STAMP_COOLDOWN_MS = 2_100;
 const DISMISSED_SURVEY_ACTIVATION_KEY = "bingo.dismissed-survey-activation";
 
+type PublicModalName = "reaction" | "settings" | "reach" | "survey";
+
 type ModalState = {
   isReactionModalOpen: boolean;
   isSettingsModalOpen: boolean;
@@ -17,50 +19,57 @@ type ModalState = {
 };
 
 export function usePublicInteractions(appState: AppStateRow) {
-  const [modalState, setModalState] = useState<ModalState>({
-    isReactionModalOpen: false,
-    isSettingsModalOpen: false,
-    isReachModalOpen: false,
-    isSurveyModalOpen: false,
-  });
+  const [activeModal, setActiveModal] = useState<PublicModalName | null>(null);
   const [stampState, setStampState] = useState({
     isSending: false,
     activeName: null as string | null,
   });
   const stampCooldownTimerRef = useRef<number | null>(null);
+  const dismissedSurveyActivationRef = useRef<string | null>(null);
   const surveyActivation =
     appState.is_survey_active && appState.survey_url ? appState.survey_url : null;
 
-  const setModalOpen = (key: keyof ModalState, isOpened: boolean) => {
-    if (key === "isSurveyModalOpen" && !isOpened && surveyActivation !== null) {
-      writeDismissedSurveyActivation(surveyActivation);
-    }
-    setModalState((previous) =>
-      previous[key] === isOpened ? previous : { ...previous, [key]: isOpened },
-    );
+  const modalState: ModalState = {
+    isReactionModalOpen: activeModal === "reaction",
+    isSettingsModalOpen: activeModal === "settings",
+    isReachModalOpen: activeModal === "reach",
+    isSurveyModalOpen: activeModal === "survey",
   };
 
-  const previousSurveyActivationRef = useRef<string | null>(null);
-  useEffect(() => {
-    const previousActivation = previousSurveyActivationRef.current;
-    previousSurveyActivationRef.current = surveyActivation;
+  const setModalOpen = (modal: PublicModalName, isOpened: boolean) => {
+    if (modal === "survey" && !isOpened && surveyActivation !== null) {
+      dismissedSurveyActivationRef.current = surveyActivation;
+      writeDismissedSurveyActivation(surveyActivation);
+    }
+    if (modal !== "survey" && isOpened && activeModal === "survey" && surveyActivation !== null) {
+      dismissedSurveyActivationRef.current = surveyActivation;
+      writeDismissedSurveyActivation(surveyActivation);
+    }
 
+    setActiveModal((previous) => {
+      if (isOpened) {
+        return previous === modal ? previous : modal;
+      }
+      return previous === modal ? null : previous;
+    });
+  };
+
+  useEffect(() => {
     if (surveyActivation === null) {
+      dismissedSurveyActivationRef.current = null;
       writeDismissedSurveyActivation(null);
-      setModalState((previous) =>
-        previous.isSurveyModalOpen ? { ...previous, isSurveyModalOpen: false } : previous,
-      );
+      setActiveModal((previous) => (previous === "survey" ? null : previous));
       return;
     }
-    if (surveyActivation === previousActivation) return;
+    if (activeModal !== null) return;
 
-    const wasDismissed = readDismissedSurveyActivation() === surveyActivation;
-    setModalState((previous) =>
-      previous.isSurveyModalOpen === !wasDismissed
-        ? previous
-        : { ...previous, isSurveyModalOpen: !wasDismissed },
-    );
-  }, [surveyActivation]);
+    const wasDismissed =
+      dismissedSurveyActivationRef.current === surveyActivation ||
+      readDismissedSurveyActivation() === surveyActivation;
+    if (!wasDismissed) {
+      setActiveModal("survey");
+    }
+  }, [activeModal, surveyActivation]);
 
   useEffect(
     () => () => {
@@ -93,10 +102,10 @@ export function usePublicInteractions(appState: AppStateRow) {
   return {
     modalState,
     stampState,
-    setReactionModalOpen: (isOpened: boolean) => setModalOpen("isReactionModalOpen", isOpened),
-    setSettingsModalOpen: (isOpened: boolean) => setModalOpen("isSettingsModalOpen", isOpened),
-    setReachModalOpen: (isOpened: boolean) => setModalOpen("isReachModalOpen", isOpened),
-    setSurveyModalOpen: (isOpened: boolean) => setModalOpen("isSurveyModalOpen", isOpened),
+    setReactionModalOpen: (isOpened: boolean) => setModalOpen("reaction", isOpened),
+    setSettingsModalOpen: (isOpened: boolean) => setModalOpen("settings", isOpened),
+    setReachModalOpen: (isOpened: boolean) => setModalOpen("reach", isOpened),
+    setSurveyModalOpen: (isOpened: boolean) => setModalOpen("survey", isOpened),
     sendStamp,
   };
 }

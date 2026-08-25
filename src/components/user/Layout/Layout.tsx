@@ -40,12 +40,15 @@ import {
 
 const ReactionStampModal = dynamic(
   () => import("@/components/user/ReactionStampModal/ReactionStampModal"),
+  { loading: () => null },
 );
 const ReachConfirmationModal = dynamic(
   () => import("@/components/user/ReachConfirmationModal/ReachConfirmationModal"),
+  { loading: () => null },
 );
 const SurveyPromptModal = dynamic(
   () => import("@/components/user/SurveyPromptModal/SurveyPromptModal"),
+  { loading: () => null },
 );
 
 interface InnerLayoutProps {
@@ -130,6 +133,7 @@ function InnerLayout({
   const handleAnswerSurvey = () => {
     if (appState.survey_url) {
       openHttpsUrl(appState.survey_url);
+      setIsSurveyModalOpen(false);
     }
   };
 
