@@ -58,7 +58,7 @@ export function PrizeCreateFormSection({
           </div>
         </DropZone>
         <FileTrigger
-          acceptedFileTypes={["image/*"]}
+          acceptedFileTypes={["image/jpeg", "image/png", "image/webp"]}
           onSelect={(files) => {
             const file = files ? Array.from(files)[0] : null;
             onFileSelected(file ?? null);
@@ -66,6 +66,7 @@ export function PrizeCreateFormSection({
         >
           <Button variant="secondary">ファイルを選択</Button>
         </FileTrigger>
+        <p className="text-sm text-muted-foreground">JPEG / PNG / WebP、5 MiB以下</p>
 
         <Form
           className="gap-4"

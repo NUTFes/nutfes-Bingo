@@ -24,7 +24,7 @@ export async function uploadPrizeImage(
     throw new ApiError(400, "景品画像を選択してください。");
   }
   if (entry.size > MAX_PRIZE_IMAGE_BYTES) {
-    throw new ApiError(413, "景品画像は2MB以下にしてください。");
+    throw new ApiError(413, "景品画像は5 MiB以下にしてください。");
   }
 
   const extension = IMAGE_TYPES[entry.type as keyof typeof IMAGE_TYPES];

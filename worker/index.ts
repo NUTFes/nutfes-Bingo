@@ -97,6 +97,20 @@ const worker = {
             error: error instanceof Error ? error.message : String(error),
           }),
         );
+      } else if (
+        normalized.status >= 400 &&
+        (url.pathname === "/admin/api/images" || url.pathname === "/admin/api/command")
+      ) {
+        console.warn(
+          JSON.stringify({
+            message: "admin api request rejected",
+            requestId,
+            method: request.method,
+            path: url.pathname,
+            status: normalized.status,
+            error: normalized.message,
+          }),
+        );
       }
       return errorResponse(normalized, safeRequestOrigin(request));
     }

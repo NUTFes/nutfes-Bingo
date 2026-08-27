@@ -48,6 +48,17 @@ const prizeCreateLoadReducer = (
 };
 
 const TOAST_TIMEOUT = 5000;
+const PRIZE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+const PRIZE_IMAGE_ACCEPTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+const validatePrizeImage = (file: File): string | null => {
+  if (file.size === 0) return "空の画像ファイルは登録できません。";
+  if (!PRIZE_IMAGE_ACCEPTED_TYPES.has(file.type)) {
+    return "景品画像は JPEG / PNG / WebP のみ選択できます。";
+  }
+  if (file.size > PRIZE_IMAGE_MAX_BYTES) return "景品画像は5 MiB以下にしてください。";
+  return null;
+};
 
 const showToast = (content: { title: string; description?: string }) => {
   queue.add(content, { timeout: TOAST_TIMEOUT });
@@ -104,6 +115,14 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
   );
 
   const handleFileSelected = useCallback((targetFile: File | null) => {
+    if (targetFile) {
+      const validationError = validatePrizeImage(targetFile);
+      if (validationError) {
+        showToast({ title: "入力エラー", description: validationError });
+        return;
+      }
+    }
+
     if (previewUrlRef.current !== null) {
       URL.revokeObjectURL(previewUrlRef.current);
       previewUrlRef.current = null;
@@ -136,19 +155,36 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
   );
 
   const submit = async () => {
-    if (!prizeNameJp) {
-      showToast({ title: "入力不足", description: "景品名を入力してください。" });
+    const nameJp = prizeNameJp.trim();
+    const nameEn = prizeNameEn.trim();
+    if (!nameJp) {
+      showToast({ title: "入力エラー", description: "景品名を入力してください。" });
+      return;
+    }
+    if (nameJp.length > 120) {
+      showToast({
+        title: "入力エラー",
+        description: "景品名（日本語）は120文字以下にしてください。",
+      });
+      return;
+    }
+    if (nameEn.length > 160) {
+      showToast({
+        title: "入力エラー",
+        description: "景品名（英語）は160文字以下にしてください。",
+      });
       return;
     }
 
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.set("nameJp", prizeNameJp);
-      formData.set("nameEn", prizeNameEn);
+      formData.set("nameJp", nameJp);
+      formData.set("nameEn", nameEn);
       if (imageFile) {
         formData.set("file", imageFile);
       }
+      const existingPrizeIds = new Set(bingoPrize.map((prize) => prize.id));
       const result = await prizeActions.createPrize(formData);
       if (!result.ok) {
         console.error(result.error);
@@ -156,7 +192,10 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
           const state = await fetchAdminState();
           setBingoPrize(state.prizes);
           const matchingPrize = state.prizes.find(
-            (prize) => prize.name_jp === prizeNameJp && prize.name_en === (prizeNameEn || null),
+            (prize) =>
+              !existingPrizeIds.has(prize.id) &&
+              prize.name_jp === nameJp &&
+              prize.name_en === (nameEn || null),
           );
           showToast(
             matchingPrize
@@ -166,14 +205,14 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
                 }
               : {
                   title: "登録失敗",
-                  description: "サーバーの最新景品一覧を表示しています。",
+                  description: result.error,
                 },
           );
         } catch (refreshError) {
           console.error(refreshError);
           showToast({
             title: "登録結果を確認できません",
-            description: "ページを再読み込みして景品一覧を確認してください。",
+            description: `${result.error} ページを再読み込みして景品一覧を確認してください。`,
           });
         }
         return;
