@@ -37,7 +37,7 @@ export const MAX_REACH_LOGS = 2_000;
 export const MAX_REACH_SUBMISSIONS = 2_000;
 export const MAX_AUDIT_LOG_ROWS = 200;
 export const MAX_AUDIT_PAYLOAD_BYTES = 4 * 1024;
-export const MAX_PRIZE_IMAGE_BYTES = 2 * 1024 * 1024;
+export const MAX_PRIZE_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const MAX_SURVEY_URL_LENGTH = 2_048;
 

@@ -399,6 +399,51 @@ describe("admin authorization and mutations", () => {
 });
 
 describe("R2 prize images", () => {
+  it("rejects unsupported image types and logs the admin API rejection", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const form = new FormData();
+    form.set("file", new File([new Uint8Array([1, 2, 3])], "blocked.gif", { type: "image/gif" }));
+
+    const upload = await SELF.fetch("http://localhost/admin/api/images", {
+      method: "POST",
+      headers: LOCAL_ADMIN_HEADERS,
+      body: form,
+    });
+
+    expect(upload.status).toBe(415);
+    await expect(upload.json()).resolves.toEqual({
+      error: "景品画像は JPEG / PNG / WebP のみ許可します。",
+    });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(String(warn.mock.calls[0]?.[0]))).toEqual({
+      message: "admin api request rejected",
+      requestId: expect.any(String),
+      method: "POST",
+      path: "/admin/api/images",
+      status: 415,
+      error: "景品画像は JPEG / PNG / WebP のみ許可します。",
+    });
+  });
+
+  it("rejects prize images larger than 5 MiB", async () => {
+    const form = new FormData();
+    form.set(
+      "file",
+      new File([new Uint8Array(5 * 1024 * 1024 + 1)], "oversize.png", { type: "image/png" }),
+    );
+
+    const upload = await SELF.fetch("http://localhost/admin/api/images", {
+      method: "POST",
+      headers: LOCAL_ADMIN_HEADERS,
+      body: form,
+    });
+
+    expect(upload.status).toBe(413);
+    await expect(upload.json()).resolves.toEqual({
+      error: "景品画像は5 MiB以下にしてください。",
+    });
+  });
+
   it("validates, stores, and serves an immutable prize image", async () => {
     const pngBytes = new Uint8Array([
       0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x00,

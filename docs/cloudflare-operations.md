@@ -17,7 +17,7 @@ Admin / Screen ─> Access ─> Worker JWT/AUD/email検証 ─> GameState / Reac
 - public state WebSocketとbounded HTTP fallbackを維持する。
 - public reachを維持するためTurnstile server validationも維持する。
 - `/admin*`と`/screen*`は別Access applicationと別AUDを使い、Worker側email allowlistも維持する。
-- 景品画像だけを`nutfes-bingo-prize-images` R2に保存する。2 MiB、MIME、magic bytes、content-hash keyを検証する。
+- 景品画像だけを`nutfes-bingo-prize-images` R2に保存する。5 MiB、MIME、magic bytes、content-hash keyを検証する。
 - `GameDirectory`、generation、logical snapshot/import/restore、daily Cron、private backup R2、常設stagingはない。
 - 30日以内の短期data recoveryはSQLite DO PITRだけを使う。
 
