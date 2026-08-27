@@ -93,6 +93,16 @@ function normalizeAppState(value: unknown, fallback: AppStateRow): AppStateRow {
     id: typeof value.id === "number" ? value.id : fallback.id,
     event_id: typeof value.event_id === "string" ? value.event_id : fallback.event_id,
     survey_url: typeof value.survey_url === "string" ? value.survey_url : fallback.survey_url,
+    survey_title:
+      typeof value.survey_title === "string" ? value.survey_title : fallback.survey_title,
+    survey_description:
+      typeof value.survey_description === "string"
+        ? value.survey_description
+        : fallback.survey_description,
+    survey_button_label:
+      typeof value.survey_button_label === "string"
+        ? value.survey_button_label
+        : fallback.survey_button_label,
     is_survey_active:
       typeof value.is_survey_active === "boolean"
         ? value.is_survey_active

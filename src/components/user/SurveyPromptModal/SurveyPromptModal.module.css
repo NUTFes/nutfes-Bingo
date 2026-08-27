@@ -1,30 +1,51 @@
 .container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
+  align-items: stretch;
+  gap: clamp(20px, 5vw, 28px);
+  color: var(--text-color);
 }
 
 .title {
-  font-weight: 700;
+  margin: 0;
   color: var(--main-color);
+  font-size: clamp(22px, 5.6vw, 26px);
+  font-weight: 700;
+  line-height: 1.45;
   text-align: center;
-  font-size: 6vw;
+  text-wrap: balance;
+}
+
+.description {
+  margin: 0;
+  color: var(--text-color);
+  font-size: clamp(15px, 3.8vw, 17px);
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+  text-align: left;
+  text-wrap: pretty;
+  white-space: pre-line;
 }
 
 .actions {
-  display: flex;
-  gap: 3vw;
-  margin-top: 3vw;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(10px, 3vw, 14px);
+  width: 100%;
+  margin-top: 4px;
 }
 
-@media (min-width: 640px) {
-  .title {
-    font-size: 24px;
-  }
+.actions > button {
+  width: 100%;
+  height: auto;
+  min-height: 48px;
+  padding: 10px 12px;
+  font-size: clamp(15px, 4vw, 17px);
+  line-height: 1.35;
+}
+
+@media (max-width: 360px) {
   .actions {
-    gap: 16px;
-    margin-top: 16px;
+    grid-template-columns: 1fr;
   }
 }

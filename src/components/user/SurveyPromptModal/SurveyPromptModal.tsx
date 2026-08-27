@@ -1,33 +1,34 @@
 import Button from "@/components/user/buttons/Button/Button";
 import Modal from "@/components/user/Modal/Modal";
-import { openHttpsUrl } from "@/utils/url";
-
 import styles from "./SurveyPromptModal.module.css";
 
 interface SurveyPromptModalProps {
   isOpened: boolean;
   setIsOpened: (isOpened: boolean) => void;
-  surveyUrl: string;
+  surveyTitle: string;
+  surveyDescription: string;
+  surveyButtonLabel: string;
+  onAnswer: () => void;
 }
 
-const SurveyPromptModal = ({ isOpened, setIsOpened, surveyUrl }: SurveyPromptModalProps) => {
-  const openSurvey = () => {
-    if (surveyUrl) {
-      openHttpsUrl(surveyUrl);
-    }
-    setIsOpened(false);
-  };
-
+const SurveyPromptModal = ({
+  isOpened,
+  setIsOpened,
+  surveyTitle,
+  surveyDescription,
+  surveyButtonLabel,
+  onAnswer,
+}: SurveyPromptModalProps) => {
   return (
-    <Modal isOpened={isOpened} setIsOpened={setIsOpened}>
+    <Modal isOpened={isOpened} setIsOpened={setIsOpened} ariaLabel={surveyTitle}>
       <div className={styles.container}>
-        <p className={styles.title}>アンケートが届きました</p>
-        <p className={styles.description}>回答のご協力をお願いします。</p>
+        <h2 className={styles.title}>{surveyTitle}</h2>
+        <p className={styles.description}>{surveyDescription}</p>
         <div className={styles.actions}>
-          <Button inversion onClick={openSurvey}>
-            回答する
+          <Button onClick={onAnswer}>{surveyButtonLabel}</Button>
+          <Button inversion onClick={() => setIsOpened(false)}>
+            あとで
           </Button>
-          <Button onClick={() => setIsOpened(false)}>あとで</Button>
         </div>
       </div>
     </Modal>

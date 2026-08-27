@@ -13,18 +13,20 @@
 
 .content {
   position: relative;
-  min-width: 87.5vw;
-  min-height: 58.1vw;
-  max-height: 70vh;
+  width: 87.5vw;
+  max-width: 430px;
+  max-height: min(78dvh, 720px);
   z-index: 50;
   box-sizing: border-box;
-  padding: 10vw;
+  padding: clamp(28px, 8vw, 40px);
   overflow: auto;
+  overscroll-behavior: contain;
+  color: var(--text-color);
   background-color: var(--background-color);
-  border: 1.3vw solid var(--main-color);
-  filter: drop-shadow(1.25vw 1.25vw 0px var(--main-color));
-  border-radius: 7.14vw;
-  animation: modalScaleUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border: clamp(4px, 1.15vw, 5px) solid var(--main-color);
+  filter: drop-shadow(clamp(4px, 1vw, 5px) clamp(4px, 1vw, 5px) 0 var(--main-color));
+  border-radius: clamp(20px, 5.6vw, 28px);
+  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: transform, opacity;
 }
 
@@ -39,14 +41,7 @@
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   border: none;
-  animation: modalFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@media screen and (min-width: 1024px) {
-  .content {
-    padding: 5vw;
-    border-radius: 1vw;
-  }
+  animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes modalScaleUp {
@@ -72,12 +67,12 @@
 @media (min-width: 640px) {
   .content {
     width: 376px;
-    max-width: 90vw;
-    min-width: 376px;
-    min-height: 250px;
-    padding: 43px;
-    border-width: 6px;
-    border-radius: 31px;
-    filter: drop-shadow(5px 5px 0 var(--main-color));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content,
+  .background {
+    animation: none;
   }
 }

@@ -415,6 +415,9 @@ async function handleAdminCommand(
       data = await game.saveSurveyState(
         identity.email,
         readString(body.surveyUrl, "surveyUrl"),
+        readString(body.surveyTitle, "surveyTitle"),
+        readString(body.surveyDescription, "surveyDescription"),
+        readString(body.surveyButtonLabel, "surveyButtonLabel"),
         readBoolean(body.isSurveyActive, "isSurveyActive"),
       );
       break;

@@ -8,6 +8,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
+  color: var(--text-color);
   background-color: var(--background-color);
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -27,6 +28,7 @@ body::-webkit-scrollbar {
   --background-color: #111d53;
   --number-surface-color: #111d53;
   --number-text-color: #f6f8ff;
+  --text-color: var(--number-text-color);
   --number-accent-color: #1b339b;
   --card-shadow-color: #0ba4c8;
   --navigation-background-color: rgb(27 45 123 / 68%);

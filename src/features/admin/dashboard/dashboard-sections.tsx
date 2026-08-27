@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { ComboBox, ComboBoxItem } from "@/components/ui/ComboBox";
-import { FieldGroup, Input } from "@/components/ui/Field";
 import { Form } from "@/components/ui/Form";
 import { NumberField } from "@/components/ui/NumberField";
 import { TextField } from "@/components/ui/TextField";
@@ -163,14 +162,26 @@ export function ReachControlSection({ onIncrement, onDecrement }: ReachControlSe
 
 interface SurveyControlSectionProps {
   surveyUrl: string;
+  surveyTitle: string;
+  surveyDescription: string;
+  surveyButtonLabel: string;
   onSurveyUrlChange: (value: string) => void;
+  onSurveyTitleChange: (value: string) => void;
+  onSurveyDescriptionChange: (value: string) => void;
+  onSurveyButtonLabelChange: (value: string) => void;
   onActivate: () => Promise<void> | void;
   onDeactivate: () => Promise<void> | void;
 }
 
 export function SurveyControlSection({
   surveyUrl,
+  surveyTitle,
+  surveyDescription,
+  surveyButtonLabel,
   onSurveyUrlChange,
+  onSurveyTitleChange,
+  onSurveyDescriptionChange,
+  onSurveyButtonLabelChange,
   onActivate,
   onDeactivate,
 }: SurveyControlSectionProps) {
@@ -179,27 +190,63 @@ export function SurveyControlSection({
       <header className="max-w-3xl space-y-1">
         <h2 className="text-lg font-semibold text-foreground">アンケート配信</h2>
         <p className="text-sm text-muted-foreground">
-          URL設定後に配信開始/停止を選択してください。
+          案内文とURLを設定して配信開始/停止を選択してください。
         </p>
       </header>
-      <div className="space-y-3">
-        <FieldGroup>
-          <Input
-            type="url"
-            placeholder="https://forms.gle/..."
-            value={surveyUrl}
-            onChange={(event) => onSurveyUrlChange(event.target.value)}
+      <Form
+        className="gap-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void onActivate();
+        }}
+      >
+        <TextField
+          label="タイトル"
+          value={surveyTitle}
+          onChange={onSurveyTitleChange}
+          isRequired
+          maxLength={200}
+        />
+        <label className="flex flex-col gap-1 font-sans text-sm font-medium text-foreground">
+          説明
+          <textarea
+            className="min-h-28 resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal text-foreground outline-none transition focus:border-blue-600"
+            value={surveyDescription}
+            onChange={(event) => onSurveyDescriptionChange(event.target.value)}
+            required
+            maxLength={2000}
           />
-        </FieldGroup>
+        </label>
+        <TextField
+          label="ボタン文言"
+          value={surveyButtonLabel}
+          onChange={onSurveyButtonLabelChange}
+          isRequired
+          maxLength={100}
+        />
+        <TextField
+          label="URL"
+          type="url"
+          placeholder="https://forms.gle/..."
+          value={surveyUrl}
+          onChange={onSurveyUrlChange}
+          isRequired
+          maxLength={2048}
+        />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Button className="w-full" onPress={() => void onActivate()}>
+          <Button type="submit" className="w-full">
             配信する
           </Button>
-          <Button className="w-full" variant="secondary" onPress={() => void onDeactivate()}>
+          <Button
+            type="button"
+            className="w-full"
+            variant="secondary"
+            onPress={() => void onDeactivate()}
+          >
             配信を停止する
           </Button>
         </div>
-      </div>
+      </Form>
     </section>
   );
 }

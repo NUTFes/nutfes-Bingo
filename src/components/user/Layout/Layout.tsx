@@ -181,7 +181,10 @@ function InnerLayout({
         <SurveyPromptModal
           isOpened
           setIsOpened={setIsSurveyModalOpen}
-          surveyUrl={appState.survey_url}
+          surveyTitle={appState.survey_title}
+          surveyDescription={appState.survey_description}
+          surveyButtonLabel={appState.survey_button_label}
+          onAnswer={handleAnswerSurvey}
         />
       )}
       {isReachModalOpen && (

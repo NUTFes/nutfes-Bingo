@@ -33,7 +33,12 @@ interface DashboardLoadState {
   loadError: string | null;
   isLoaded: boolean;
   surveyUrl: string;
+  surveyTitle: string;
+  surveyDescription: string;
+  surveyButtonLabel: string;
 }
+
+type SurveyField = "surveyUrl" | "surveyTitle" | "surveyDescription" | "surveyButtonLabel";
 
 type DashboardLoadAction =
   | {
@@ -45,7 +50,8 @@ type DashboardLoadAction =
     }
   | { type: "load-error"; message: string }
   | { type: "set-numbers"; value: SetStateAction<NumberRow[]> }
-  | { type: "set-survey-url"; value: SetStateAction<string> };
+  | { type: "set-survey-field"; field: SurveyField; value: string }
+  | { type: "sync-survey"; appState: AppStateRow };
 
 const dashboardLoadReducer = (
   state: DashboardLoadState,
@@ -59,6 +65,9 @@ const dashboardLoadReducer = (
         eventId: action.appState.event_id,
         revision: action.revision,
         surveyUrl: action.appState.survey_url,
+        surveyTitle: action.appState.survey_title,
+        surveyDescription: action.appState.survey_description,
+        surveyButtonLabel: action.appState.survey_button_label,
         loadError: null,
         isLoaded: action.markLoaded ? true : state.isLoaded,
       };
@@ -70,11 +79,15 @@ const dashboardLoadReducer = (
         bingoNumbers:
           typeof action.value === "function" ? action.value(state.bingoNumbers) : action.value,
       };
-    case "set-survey-url":
+    case "set-survey-field":
+      return { ...state, [action.field]: action.value };
+    case "sync-survey":
       return {
         ...state,
-        surveyUrl:
-          typeof action.value === "function" ? action.value(state.surveyUrl) : action.value,
+        surveyUrl: action.appState.survey_url,
+        surveyTitle: action.appState.survey_title,
+        surveyDescription: action.appState.survey_description,
+        surveyButtonLabel: action.appState.survey_button_label,
       };
   }
 };
@@ -111,20 +124,35 @@ const mutateReach = async (direction: "increment" | "decrement") => {
 };
 
 export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
-  const [{ bingoNumbers, eventId, revision, loadError, isLoaded, surveyUrl }, dispatchLoadState] =
-    useReducer(dashboardLoadReducer, {
-      bingoNumbers: initialNumbers,
-      eventId: initialAppState.event_id,
-      revision: 0,
-      loadError: null,
-      isLoaded: false,
-      surveyUrl: initialAppState.survey_url,
-    });
+  const [
+    {
+      bingoNumbers,
+      eventId,
+      revision,
+      loadError,
+      isLoaded,
+      surveyUrl,
+      surveyTitle,
+      surveyDescription,
+      surveyButtonLabel,
+    },
+    dispatchLoadState,
+  ] = useReducer(dashboardLoadReducer, {
+    bingoNumbers: initialNumbers,
+    eventId: initialAppState.event_id,
+    revision: 0,
+    loadError: null,
+    isLoaded: false,
+    surveyUrl: initialAppState.survey_url,
+    surveyTitle: initialAppState.survey_title,
+    surveyDescription: initialAppState.survey_description,
+    surveyButtonLabel: initialAppState.survey_button_label,
+  });
   const setBingoNumbers = (value: SetStateAction<NumberRow[]>) => {
     dispatchLoadState({ type: "set-numbers", value });
   };
-  const setSurveyUrl = (value: SetStateAction<string>) => {
-    dispatchLoadState({ type: "set-survey-url", value });
+  const setSurveyField = (field: SurveyField, value: string) => {
+    dispatchLoadState({ type: "set-survey-field", field, value });
   };
   const dashboardState = useDashboardState({ bingoNumbers });
 
@@ -241,6 +269,9 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
   const handleSurvey = async (isSurveyActive: boolean) => {
     const result = await dashboardActions.saveSurveyState({
       surveyUrl,
+      surveyTitle,
+      surveyDescription,
+      surveyButtonLabel,
       isSurveyActive,
     });
     if (!result.ok) {
@@ -252,7 +283,7 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       });
       return;
     }
-    setSurveyUrl(result.data.survey_url);
+    dispatchLoadState({ type: "sync-survey", appState: result.data });
     showToast({
       title: isSurveyActive ? "アンケート配信" : "アンケート停止",
       description: isSurveyActive ? "アンケートを送信しました。" : "アンケートを停止しました。",
@@ -378,7 +409,13 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
               />
               <SurveyControlSection
                 surveyUrl={surveyUrl}
-                onSurveyUrlChange={setSurveyUrl}
+                surveyTitle={surveyTitle}
+                surveyDescription={surveyDescription}
+                surveyButtonLabel={surveyButtonLabel}
+                onSurveyUrlChange={(value) => setSurveyField("surveyUrl", value)}
+                onSurveyTitleChange={(value) => setSurveyField("surveyTitle", value)}
+                onSurveyDescriptionChange={(value) => setSurveyField("surveyDescription", value)}
+                onSurveyButtonLabelChange={(value) => setSurveyField("surveyButtonLabel", value)}
                 onActivate={() => handleSurvey(true)}
                 onDeactivate={() => handleSurvey(false)}
               />

@@ -78,6 +78,7 @@ const Modal = ({
             className={styles.content}
             tabIndex={-1}
             aria-label={ariaLabel}
+            aria-modal="true"
             open
           >
             {children}
