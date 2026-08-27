@@ -36,6 +36,9 @@ export type AppStateRow = {
   id: number;
   event_id: string;
   survey_url: string;
+  survey_title: string;
+  survey_description: string;
+  survey_button_label: string;
   is_survey_active: boolean;
   reach_count: number;
   updated_at: string;
@@ -82,7 +85,14 @@ export type AdminCommand =
   | { type: "updateNumber"; id: number; number: number }
   | { type: "incrementReach" }
   | { type: "decrementReach" }
-  | { type: "saveSurveyState"; surveyUrl: string; isSurveyActive: boolean }
+  | {
+      type: "saveSurveyState";
+      surveyUrl: string;
+      surveyTitle: string;
+      surveyDescription: string;
+      surveyButtonLabel: string;
+      isSurveyActive: boolean;
+    }
   | {
       type: "startAnnualEvent";
       expectedRevision: number;

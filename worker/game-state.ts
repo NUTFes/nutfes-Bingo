@@ -216,12 +216,26 @@ export class GameState extends DurableObject<Env> {
   async saveSurveyState(
     actor: string,
     surveyUrlInput: string,
+    surveyTitleInput: string,
+    surveyDescriptionInput: string,
+    surveyButtonLabelInput: string,
     isSurveyActiveInput: boolean,
   ): Promise<AppStateRow> {
     const surveyUrl = normalizeHttpsUrl(surveyUrlInput);
+    const surveyTitle = parseOptionalText(surveyTitleInput, "アンケートタイトル", 200) ?? "";
+    const surveyDescription =
+      parseOptionalText(surveyDescriptionInput, "アンケート説明", 2_000) ?? "";
+    const surveyButtonLabel =
+      parseOptionalText(surveyButtonLabelInput, "アンケートボタン文言", 100) ?? "";
     if (typeof isSurveyActiveInput !== "boolean") validationProblem("公開設定が不正です。");
-    if (isSurveyActiveInput && surveyUrl === "") {
-      validationProblem("アンケートを公開する場合はURLを入力してください。");
+    if (
+      isSurveyActiveInput &&
+      (surveyUrl === "" ||
+        surveyTitle === "" ||
+        surveyDescription === "" ||
+        surveyButtonLabel === "")
+    ) {
+      validationProblem("アンケートを公開する場合はURLと案内文をすべて入力してください。");
     }
 
     return this.runAdminMutation(
@@ -232,10 +246,14 @@ export class GameState extends DurableObject<Env> {
         const now = new Date().toISOString();
         const row = this.ctx.storage.sql
           .exec<AppStateSqlRow>(
-            "UPDATE app_state SET survey_url = ?, is_survey_active = ?, updated_at = ? " +
-              "WHERE id = 1 " +
-              "RETURNING id, event_id, survey_url, is_survey_active, reach_count, updated_at",
+            "UPDATE app_state SET survey_url = ?, survey_title = ?, survey_description = ?, " +
+              "survey_button_label = ?, is_survey_active = ?, updated_at = ? WHERE id = 1 " +
+              "RETURNING id, event_id, survey_url, survey_title, survey_description, " +
+              "survey_button_label, is_survey_active, reach_count, updated_at",
             surveyUrl,
+            surveyTitle,
+            surveyDescription,
+            surveyButtonLabel,
             isSurveyActiveInput ? 1 : 0,
             now,
           )
@@ -274,7 +292,8 @@ export class GameState extends DurableObject<Env> {
         this.ctx.storage.sql.exec("DELETE FROM reach_submissions");
         this.ctx.storage.sql.exec("DELETE FROM audit_log");
         this.ctx.storage.sql.exec(
-          "UPDATE app_state SET event_id = ?, survey_url = '', is_survey_active = 0, " +
+          "UPDATE app_state SET event_id = ?, survey_url = '', survey_title = '', " +
+            "survey_description = '', survey_button_label = '', is_survey_active = 0, " +
             "reach_count = 0, updated_at = ? WHERE id = 1",
           newEventId,
           now,
@@ -648,6 +667,9 @@ export class GameState extends DurableObject<Env> {
         id INTEGER PRIMARY KEY CHECK (id = 1),
         event_id TEXT NOT NULL,
         survey_url TEXT NOT NULL DEFAULT '',
+        survey_title TEXT NOT NULL DEFAULT '',
+        survey_description TEXT NOT NULL DEFAULT '',
+        survey_button_label TEXT NOT NULL DEFAULT '',
         is_survey_active INTEGER NOT NULL DEFAULT 0 CHECK (is_survey_active IN (0, 1)),
         reach_count INTEGER NOT NULL DEFAULT 0 CHECK (reach_count >= 0),
         updated_at TEXT NOT NULL
@@ -674,6 +696,28 @@ export class GameState extends DurableObject<Env> {
       );
       CREATE INDEX IF NOT EXISTS audit_log_revision_idx ON audit_log(revision DESC);
     `);
+
+    const appStateColumns = new Set(
+      this.ctx.storage.sql
+        .exec<{ name: string }>("PRAGMA table_info(app_state)")
+        .toArray()
+        .map((column) => column.name),
+    );
+    if (!appStateColumns.has("survey_title")) {
+      this.ctx.storage.sql.exec(
+        "ALTER TABLE app_state ADD COLUMN survey_title TEXT NOT NULL DEFAULT ''",
+      );
+    }
+    if (!appStateColumns.has("survey_description")) {
+      this.ctx.storage.sql.exec(
+        "ALTER TABLE app_state ADD COLUMN survey_description TEXT NOT NULL DEFAULT ''",
+      );
+    }
+    if (!appStateColumns.has("survey_button_label")) {
+      this.ctx.storage.sql.exec(
+        "ALTER TABLE app_state ADD COLUMN survey_button_label TEXT NOT NULL DEFAULT ''",
+      );
+    }
   }
 
   private ensureInitialized(): void {
@@ -790,7 +834,8 @@ export class GameState extends DurableObject<Env> {
     return toAppStateRow(
       this.ctx.storage.sql
         .exec<AppStateSqlRow>(
-          "SELECT id, event_id, survey_url, is_survey_active, reach_count, updated_at " +
+          "SELECT id, event_id, survey_url, survey_title, survey_description, " +
+            "survey_button_label, is_survey_active, reach_count, updated_at " +
             "FROM app_state WHERE id = 1",
         )
         .one(),

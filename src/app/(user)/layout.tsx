@@ -1,5 +1,4 @@
 import Script from "next/script";
-import { ThemeProvider } from "next-themes";
 
 import {
   DEFAULT_PUBLIC_PREFERENCES,
@@ -14,9 +13,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       <Script id="public-theme-bootstrap" strategy="beforeInteractive">
         {publicThemeBootstrapScript(DEFAULT_PUBLIC_PREFERENCES.isDarkMode)}
       </Script>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-        {children}
-      </ThemeProvider>
+      {children}
     </>
   );
 }

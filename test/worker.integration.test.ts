@@ -255,6 +255,96 @@ describe("admin authorization and mutations", () => {
     expect(publicState.revision).toBeGreaterThanOrEqual(1);
   });
 
+  it("stores survey copy through the existing admin command", async () => {
+    const { body, response } = await adminCommand<{
+      survey_url: string;
+      survey_title: string;
+      survey_description: string;
+      survey_button_label: string;
+      is_survey_active: boolean;
+    }>({
+      type: "saveSurveyState",
+      surveyUrl: "https://example.com/survey",
+      surveyTitle: "アンケートへのご協力をお願いします",
+      surveyDescription: "1行目\n2行目",
+      surveyButtonLabel: "回答する",
+      isSurveyActive: true,
+    });
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      survey_url: "https://example.com/survey",
+      survey_title: "アンケートへのご協力をお願いします",
+      survey_description: "1行目\n2行目",
+      survey_button_label: "回答する",
+      is_survey_active: true,
+    });
+  });
+
+  it.each([
+    ["URL", "", "タイトル", "説明", "回答する"],
+    ["タイトル", "https://example.com/survey", "", "説明", "回答する"],
+    ["説明", "https://example.com/survey", "タイトル", "", "回答する"],
+    ["ボタン文言", "https://example.com/survey", "タイトル", "説明", ""],
+  ] as const)(
+    "rejects an active survey with an empty %s",
+    async (_label, surveyUrl, surveyTitle, surveyDescription, surveyButtonLabel) => {
+      const { response } = await adminCommand({
+        type: "saveSurveyState",
+        surveyUrl,
+        surveyTitle,
+        surveyDescription,
+        surveyButtonLabel,
+        isSurveyActive: true,
+      });
+      expect(response.status).toBe(400);
+    },
+  );
+
+  it.each([
+    ["タイトル", "a".repeat(201), "説明", "回答する"],
+    ["説明", "タイトル", "a".repeat(2_001), "回答する"],
+    ["ボタン文言", "タイトル", "説明", "a".repeat(101)],
+  ] as const)(
+    "rejects overlong survey %s",
+    async (_label, surveyTitle, surveyDescription, surveyButtonLabel) => {
+      const { response } = await adminCommand({
+        type: "saveSurveyState",
+        surveyUrl: "https://example.com/survey",
+        surveyTitle,
+        surveyDescription,
+        surveyButtonLabel,
+        isSurveyActive: true,
+      });
+      expect(response.status).toBe(400);
+    },
+  );
+
+  it("allows an inactive survey to be empty", async () => {
+    const { body, response } = await adminCommand<{
+      survey_url: string;
+      survey_title: string;
+      survey_description: string;
+      survey_button_label: string;
+      is_survey_active: boolean;
+    }>({
+      type: "saveSurveyState",
+      surveyUrl: "",
+      surveyTitle: "",
+      surveyDescription: "",
+      surveyButtonLabel: "",
+      isSurveyActive: false,
+    });
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      survey_url: "",
+      survey_title: "",
+      survey_description: "",
+      survey_button_label: "",
+      is_survey_active: false,
+    });
+  });
+
   it("rejects invalid PITR preparation before invoking the remote-only storage API", async () => {
     const state = await SELF.fetch("http://localhost/admin/api/state", {
       headers: LOCAL_ADMIN_HEADERS,
@@ -305,7 +395,14 @@ describe("admin authorization and mutations", () => {
     const state = env.GAME_STATE.getByName("annual-reset");
     await state.createNumber("admin@example.com", 42);
     await state.createPrize("admin@example.com", "景品", "Prize");
-    await state.saveSurveyState("admin@example.com", "https://example.com/survey", true);
+    await state.saveSurveyState(
+      "admin@example.com",
+      "https://example.com/survey",
+      "アンケート",
+      "回答をお願いします。",
+      "回答する",
+      true,
+    );
     await state.recordPublicReach("a".repeat(64));
     const before = await state.getState();
     const pitrEarliestAt = await runInDurableObject(
@@ -337,6 +434,9 @@ describe("admin authorization and mutations", () => {
       appState: {
         event_id: "2027-nutfes-bingo",
         survey_url: "",
+        survey_title: "",
+        survey_description: "",
+        survey_button_label: "",
         is_survey_active: false,
         reach_count: 0,
       },
