@@ -10,8 +10,8 @@ const PrizeCardList = ({ prizes }: PrizeCardListProps) => {
   return (
     <div className={styles.container}>
       <div className={styles.frame}>
-        {prizes.map((prize) => (
-          <PrizeCard key={prize.id} prize={prize} />
+        {prizes.map((prize, index) => (
+          <PrizeCard key={prize.id} prize={prize} highPriority={index === 0} />
         ))}
       </div>
     </div>

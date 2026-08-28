@@ -10,9 +10,18 @@ import styles from "./PrizeCard.module.css";
 
 interface PrizeCardProps {
   prize: PrizeWithImageUrl;
+  highPriority?: boolean;
 }
 
-function PrizeImage({ imageUrl, name }: { imageUrl: string | null; name: string }) {
+function PrizeImage({
+  imageUrl,
+  name,
+  highPriority,
+}: {
+  imageUrl: string | null;
+  name: string;
+  highPriority: boolean;
+}) {
   const [hasLoadError, setHasLoadError] = useState(false);
 
   if (imageUrl === null || hasLoadError) {
@@ -31,12 +40,14 @@ function PrizeImage({ imageUrl, name }: { imageUrl: string | null; name: string 
       fill
       className={styles.prizeImage}
       sizes="(max-width: 639px) 22.5vw, 98px"
+      loading={highPriority ? "eager" : undefined}
+      fetchPriority={highPriority ? "high" : undefined}
       onError={() => setHasLoadError(true)}
     />
   );
 }
 
-const PrizeCard = ({ prize }: PrizeCardProps) => {
+const PrizeCard = ({ prize, highPriority = false }: PrizeCardProps) => {
   const { language } = useBingoLanguage();
   const prizeName = language === "en" ? prize.name_en || prize.name_jp : prize.name_jp;
 
@@ -53,6 +64,7 @@ const PrizeCard = ({ prize }: PrizeCardProps) => {
               key={prize.image_url ?? "no-image"}
               imageUrl={prize.image_url}
               name={prize.name_jp}
+              highPriority={highPriority}
             />
           </div>
         </div>
