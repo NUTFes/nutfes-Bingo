@@ -1,5 +1,7 @@
 "use client";
 
+import { preload } from "react-dom";
+
 import Layout from "@/components/user/Layout/Layout";
 import PrizeCardList from "@/components/user/cards/PrizeCardList/PrizeCardList";
 import Loading from "@/components/user/Loading";
@@ -18,6 +20,8 @@ export function PrizesPage({
   initialAppState,
   initialPreferences,
 }: PrizesPageProps) {
+  preload("/api/bingo/state", { as: "fetch", crossOrigin: "anonymous" });
+
   const { prizes, appState, isReady } = usePrizesRealtimeState(initialPrizes, initialAppState);
 
   if (!isReady) {
