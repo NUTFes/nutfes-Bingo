@@ -627,6 +627,63 @@ describe("Hibernation WebSockets", () => {
     await closeSocket(socket as WebSocket);
   });
 
+  it("logs public state-socket connection changes and ignores Screen sockets", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const metricEvents = () =>
+      log.mock.calls
+        .map(([entry]) => entry)
+        .filter(
+          (entry) =>
+            typeof entry === "object" &&
+            entry !== null &&
+            "metric" in entry &&
+            entry.metric === "public_websocket_connections",
+        );
+    const sockets: WebSocket[] = [];
+
+    try {
+      const firstResponse = await SELF.fetch("http://example.com/api/bingo/socket", {
+        headers: { Upgrade: "websocket" },
+      });
+      expect(firstResponse.status).toBe(101);
+      const firstSocket = firstResponse.webSocket as WebSocket;
+      firstSocket.accept();
+      sockets.push(firstSocket);
+      await nextMessage(firstSocket);
+
+      const secondResponse = await SELF.fetch("http://example.com/api/bingo/socket", {
+        headers: { Upgrade: "websocket" },
+      });
+      expect(secondResponse.status).toBe(101);
+      const secondSocket = secondResponse.webSocket as WebSocket;
+      secondSocket.accept();
+      sockets.push(secondSocket);
+      await nextMessage(secondSocket);
+
+      await closeSocket(firstSocket);
+      await closeSocket(secondSocket);
+
+      const screenResponse = await SELF.fetch("http://localhost/screen/api/socket", {
+        headers: { Upgrade: "websocket" },
+      });
+      expect(screenResponse.status).toBe(101);
+      const screenSocket = screenResponse.webSocket as WebSocket;
+      screenSocket.accept();
+      sockets.push(screenSocket);
+      await nextMessage(screenSocket);
+      await closeSocket(screenSocket);
+
+      expect(metricEvents()).toEqual([
+        { metric: "public_websocket_connections", cause: "open", connections: 1 },
+        { metric: "public_websocket_connections", cause: "open", connections: 2 },
+        { metric: "public_websocket_connections", cause: "close", connections: 1 },
+        { metric: "public_websocket_connections", cause: "close", connections: 0 },
+      ]);
+    } finally {
+      await Promise.all(sockets.map(closeSocket));
+    }
+  });
+
   it("routes the protected Screen socket explicitly and ignores the legacy view query", async () => {
     const publicSockets: WebSocket[] = [];
     try {

@@ -609,6 +609,13 @@ export class GameState extends DurableObject<Env> {
       expires_at: Date.now() + 30 * 60 * 1_000,
     };
     server.serializeAttachment(attachment);
+    if (view === "public") {
+      console.log({
+        metric: "public_websocket_connections",
+        cause: "open",
+        connections: this.ctx.getWebSockets("public").length,
+      });
+    }
     if (view === "screen") await scheduleScreenSocketExpiration(this.ctx, "screen");
     const initialMessage: StateSocketMessage = {
       type: "state",
@@ -636,7 +643,14 @@ export class GameState extends DurableObject<Env> {
     safeClose(socket, 1011, "websocket error");
   }
 
-  webSocketClose(_socket: WebSocket, _code: number, _reason: string, _wasClean: boolean): void {
+  webSocketClose(socket: WebSocket, _code: number, _reason: string, _wasClean: boolean): void {
+    const attachment = socket.deserializeAttachment() as StateSocketAttachment | null;
+    if (attachment?.kind !== "state" || attachment.view !== "public") return;
+    console.log({
+      metric: "public_websocket_connections",
+      cause: "close",
+      connections: this.ctx.getWebSockets("public").length,
+    });
     // With the current compatibility date the runtime replies to close frames automatically.
   }
 

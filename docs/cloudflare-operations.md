@@ -174,6 +174,14 @@ off-seasonにsite全体を閉じる場合は別の単一`event-closed` edge rule
 
 reactionやpublic reachだけの停止はイベント停止ではありません。
 
+### 当日アクセス・公開WebSocket接続数の確認
+
+アクセス規模はCloudflare DashboardのHTTP Traffic / Analyticsで開催時間を指定して確認します。公開HTML、JavaScript、CSSはWorkers Static Assetsから直接配信されるため、Worker request数をサイト全体のアクセス数として扱いません。
+
+公開ユーザー向けWebSocketの同時接続数はWorkers ObservabilityのQuery Builderで `metric = public_websocket_connections` に絞って確認します。開催開始前から公開WebSocketへ接続できる場合は、開催時間内だけに絞らず公開開始時刻から開催終了までを対象にし、`Max(connections)` をピーク公開WebSocket本数として記録します。接続数の変化はopen/closeログをtimestamp順に確認します。これは利用者人数ではなくWebSocket本数で、再接続、複数タブ、複数端末は別接続として数えます。
+
+ログは接続成立・切断時だけ出るため、値が変化しない時間帯にはイベントがありません。定期サンプリングされた連続時系列としては扱いません。イベント終了後または翌営業日に、開催日時、HTTP Traffic / Analyticsで確認したアクセス規模、`Max(connections)` のピーク値と必要なグラフまたはexportを実行委員会の通常の記録先へ転記します。
+
 ### 終了後
 
 - paper master logとAdmin stateを照合し、必要な結果だけ別途保存。
