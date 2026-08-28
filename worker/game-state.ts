@@ -649,7 +649,9 @@ export class GameState extends DurableObject<Env> {
     console.log({
       metric: "public_websocket_connections",
       cause: "close",
-      connections: this.ctx.getWebSockets("public").length,
+      connections: this.ctx
+        .getWebSockets("public")
+        .filter((publicSocket) => publicSocket.readyState === WebSocket.OPEN).length,
     });
     // With the current compatibility date the runtime replies to close frames automatically.
   }
