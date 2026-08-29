@@ -1,0 +1,6 @@
+services:
+  loadtest:
+    image: artilleryio/artillery:latest # ← 公式ビルド
+    volumes:
+      - ./hasura-sub.yml:/scripts/hasura-sub.yml
+    command: ["run", "/scripts/hasura-sub.yml"]

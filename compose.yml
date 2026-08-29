@@ -1,0 +1,93 @@
+services:
+  db:
+    image: postgres:12
+    container_name: "bingo_db"
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: bingo_db
+      POSTGRES_USER: bingo
+      POSTGRES_PASSWORD: password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "pg_isready"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    env_file:
+      - ./settings/metabase.env
+    volumes:
+      - ./conf/metabase/metabase-data:/metabase-data
+    ports:
+      - 3002:3000
+    tty: true
+    healthcheck:
+      test: curl --fail -I http://localhost:3002/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - db
+
+  api: # hasura
+    build:
+      context: .
+      dockerfile: .docker/api.Dockerfile
+    container_name: "bingo_api"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api:/hasura/api
+    env_file:
+      - ./settings/bingo.env
+
+  view-user:
+    image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
+    container_name: "view-user"
+    volumes:
+      - ./view-user:/app
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev"
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./settings/bingo.env
+    stdin_open: true
+    tty: true
+
+  view-admin:
+    image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
+    container_name: "view-admin"
+    volumes:
+      - ./view-admin:/app
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev"
+    ports:
+      - "3001:3000"
+    env_file:
+      - ./settings/admin.env
+    stdin_open: true
+    tty: true
+
+  minio:
+    image: minio/minio:latest
+    container_name: nutfes-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./tmp/minio/data:/data
+    command: "server /data --console-address :9001"
+    env_file:
+      - ./settings/admin.env
+
+volumes:
+  db-data:

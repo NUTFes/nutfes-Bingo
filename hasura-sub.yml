@@ -1,0 +1,57 @@
+config:
+  target: "http://api:8080" # ← http:// を忘れずに
+  phases:
+    - duration: 30
+      arrivalRate: 5    # ランプアップフェーズ: ゆっくり接続数を増加
+    - duration: 60
+      arrivalRate: 17   # 定常負荷フェーズ
+    - duration: 20
+      arrivalRate: 25   # ピーク時フェーズ: 一時的な急増で現実的な負荷をシミュレート
+    - duration: 20
+      arrivalRate: 12   # ランプダウンフェーズ: 接続数を減少
+    - pause: 600        # 接続維持フェーズ
+  ws:
+    subprotocols: [graphql-transport-ws]
+
+scenarios:
+  # ① 1,000 本の購読 (よりリアルな接続パターン)
+  - name: subscribers
+    engine: ws
+    flow:
+      - connect: "ws://api:8080/v1/graphql" # ← hasura → api
+      - send: { type: connection_init, payload: {} }
+      - send:
+          id: "1"
+          type: subscribe
+          payload:
+            query: |
+              subscription SubscribeListNumbers {
+                numbers {
+                  id
+                  number
+                  createdAt
+                  updatedAt
+                }
+              }
+      - think: 600
+
+  # ② 2 分おきに number++ (最初の 1 VU によるシナリオ)
+  - name: ticker
+    engine: http
+    weight: 0.01  # arrivalRate 17 × 0.01 ≒ 1 接続
+    flow:
+      - loop:
+          - post:
+              url: "/v1/graphql"
+              headers:
+                Content-Type: application/json
+                X-Hasura-Admin-Secret: my-secret
+              json:
+                query: |
+                  mutation Inc {
+                    update_numbers(where: {}, _inc: { number: 1 }) {
+                      affected_rows
+                    }
+                  }
+          - think: 120
+        count: 30

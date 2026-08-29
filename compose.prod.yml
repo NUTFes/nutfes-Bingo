@@ -1,0 +1,45 @@
+version: "3"
+services:
+  cloudflare:
+    image: "cloudflare/cloudflared:latest"
+    container_name: "cloudflare"
+    volumes: ["./cloudflare/prod:/home/nonroot/.cloudflared"]
+    command: tunnel run
+
+  api: # hasura
+    build:
+      context: .
+      dockerfile: .docker/api.Dockerfile
+    container_name: "bingo_api"
+    volumes:
+      - ./api:/hasura/api
+    env_file:
+      - ./settings/bingo-prod.env
+
+  view-user:
+    image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
+    container_name: "view-user"
+    volumes:
+      - ./view-user:/app
+    working_dir: /app
+    command: sh -c "npm run start"
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./settings/bingo-prod.env
+    stdin_open: true
+    tty: true
+
+  view-admin:
+    image: node:18.17.0-alpine@sha256:58878e9e1ed3911bdd675d576331ed8838fc851607aed3bb91e25dfaffab3267
+    container_name: "view-admin"
+    volumes:
+      - ./view-admin:/app
+    working_dir: /app
+    command: sh -c "npm run start"
+    ports:
+      - "3001:3000"
+    env_file:
+      - ./settings/admin-prod.env
+    stdin_open: true
+    tty: true
