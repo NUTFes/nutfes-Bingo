@@ -1,0 +1,42 @@
+# Cursor 開発ルール
+
+このファイルは Nutfes-Bingo プロジェクトにおける Cursor での開発ルールを定義します。
+
+## 📋 ルール一覧
+
+### [プロジェクトガイド](./rules/project-guide.mdc)
+
+- プロジェクト概要とアーキテクチャ
+- 開発環境セットアップ・コマンド
+- コードスタイル・技術スタック
+- 命名規則・Import ルール
+
+### [コミットメッセージルール](./rules/commit-message-rules.mdc)
+
+- Conventional Commits 準拠
+- プレフィックス規則 (feat/fix/docs/refactor 等)
+- コミットメッセージフォーマット
+
+### [プルリクエストルール](./rules/pull-request-rules.mdc)
+
+- PR 作成・レビュープロセス
+- タイトル・説明文のフォーマット
+- マージ前チェックリスト
+
+## 🎯 基本方針
+
+- **品質**: ESLint + Prettier でコード品質を保つ
+- **型安全**: TypeScript + GraphQL Codegen で型安全性を確保
+- **協調**: 統一されたコミット・PR 規則でチーム開発を円滑化
+- **効率**: Docker + Makefile で環境構築・操作を簡素化
+
+## 📚 関連ファイル
+
+- [`PROJECT_GUIDE.md`](../PROJECT_GUIDE.md) - ルートディレクトリの概要ガイド
+- [`README.md`](../README.md) - プロジェクト全体説明
+- [`Makefile`](../Makefile) - 開発・ビルドコマンド定義
+  description:
+  globs:
+  alwaysApply: false
+
+---
