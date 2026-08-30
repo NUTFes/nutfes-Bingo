@@ -1,8 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
 
 import { cn } from "@/utils/utils";
 
@@ -17,26 +15,25 @@ const COMMON_NAV_ITEMS = [
 ] as const;
 
 const Header = ({ children }: HeaderProps) => {
-  const pathname = usePathname();
-  const currentPath = pathname?.replace(/\/$/, "") || "";
+  const currentPath = window.location.pathname.replace(/\/$/, "") || "";
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between gap-4">
           <div className="flex items-center gap-6">
-            <Link
+            <a
               href="/admin"
               className="shrink-0 text-base font-semibold text-foreground transition-colors hover:text-foreground/80"
             >
               NUTFES BINGO
-            </Link>
+            </a>
 
             <nav className="hidden items-center gap-1 md:flex">
               {COMMON_NAV_ITEMS.map((item) => {
                 const isActive = currentPath === item.href;
                 return (
-                  <Link
+                  <a
                     key={item.href}
                     href={item.href}
                     className={cn(
@@ -48,7 +45,7 @@ const Header = ({ children }: HeaderProps) => {
                     aria-current={isActive ? "page" : undefined}
                   >
                     {item.label}
-                  </Link>
+                  </a>
                 );
               })}
             </nav>
@@ -57,12 +54,11 @@ const Header = ({ children }: HeaderProps) => {
           {children ? <div className="flex shrink-0 items-center gap-2">{children}</div> : null}
         </div>
 
-        {/* Mobile Navigation */}
         <nav className="flex items-center gap-1 overflow-x-auto pb-2 md:hidden">
           {COMMON_NAV_ITEMS.map((item) => {
             const isActive = currentPath === item.href;
             return (
-              <Link
+              <a
                 key={item.href}
                 href={item.href}
                 className={cn(
@@ -74,7 +70,7 @@ const Header = ({ children }: HeaderProps) => {
                 aria-current={isActive ? "page" : undefined}
               >
                 {item.label}
-              </Link>
+              </a>
             );
           })}
         </nav>

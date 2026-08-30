@@ -8,21 +8,14 @@ import NumberCardLarge from "@/components/user/NumberCardLarge";
 import NumberCardList from "@/components/user/cards/NumberCardList";
 import Loading from "@/components/user/Loading";
 import { useHomeRealtimeState } from "@/lib/realtime";
-import type { PublicPreferences } from "@/types/bingo/public-preferences";
-import type { AppStateRow, NumberRow } from "@/types/bingo/types";
+import { DEFAULT_PUBLIC_PREFERENCES } from "@/types/bingo/public-preferences";
 import styles from "@/styles/user/home.module.css";
 
-interface HomePageProps {
-  initialNumbers: NumberRow[];
-  initialAppState: AppStateRow;
-  initialPreferences: PublicPreferences;
-}
-
-export function HomePage({ initialNumbers, initialAppState, initialPreferences }: HomePageProps) {
+export function HomePage() {
   const [isSortedAscending, setIsSortedAscending] = useState<boolean>(
-    () => initialPreferences.isSortedAscending,
+    DEFAULT_PUBLIC_PREFERENCES.isSortedAscending,
   );
-  const { numbers, appState, isReady } = useHomeRealtimeState(initialNumbers, initialAppState);
+  const { numbers, appState, isReady } = useHomeRealtimeState();
   const displayBingoNumbers = getHomeDisplayBingoNumbers(isSortedAscending, numbers);
 
   if (!isReady) {
@@ -32,7 +25,6 @@ export function HomePage({ initialNumbers, initialAppState, initialPreferences }
   return (
     <Layout
       appState={appState}
-      initialPreferences={initialPreferences}
       isSortedAscending={isSortedAscending}
       setIsSortedAscending={setIsSortedAscending}
     >

@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { TiArrowBack } from "react-icons/ti";
+import { ArrowLeft } from "lucide-react";
 
 import IconFramework from "@/components/user/icons/IconFramework/IconFramework";
 
@@ -9,12 +8,8 @@ interface BackIconProps {
   id?: string;
 }
 
-const BackIcon = ({ id }: BackIconProps) => {
-  const { push } = useRouter();
-
-  return (
-    <IconFramework icon={<TiArrowBack />} text="Back" outline onClick={() => push("/")} id={id} />
-  );
-};
+const BackIcon = ({ id }: BackIconProps) => (
+  <IconFramework icon={<ArrowLeft />} text="Back" outline href="/" id={id} />
+);
 
 export default BackIcon;

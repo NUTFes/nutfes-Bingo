@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState, type SetStateAction } from "react";
 import { isFileDropItem, type DropEvent } from "react-aria";
-import { AdminHeader, AdminLoading } from "@/components/admin";
+import AdminHeader from "@/components/admin/AdminHeader";
+import AdminLoading from "@/components/admin/AdminLoading";
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { MyToastRegion } from "@/components/ui/Toast";
 import { queue } from "@/components/ui/toastQueue";
@@ -13,10 +14,12 @@ import {
 import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
 import { fetchAdminState } from "@/lib/admin-api";
-
-interface AdminPrizeCreatePageProps {
-  initialPrizes: PrizeWithImageUrl[];
-}
+import {
+  MAX_PRIZE_IMAGE_BYTES,
+  PRIZE_IMAGE_MIME_TYPES,
+  PRIZE_NAME_EN_MAX_LENGTH,
+  PRIZE_NAME_JP_MAX_LENGTH,
+} from "@shared/bingo-constraints";
 
 interface PrizeCreateLoadState {
   bingoPrize: PrizeWithImageUrl[];
@@ -48,15 +51,14 @@ const prizeCreateLoadReducer = (
 };
 
 const TOAST_TIMEOUT = 5000;
-const PRIZE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
-const PRIZE_IMAGE_ACCEPTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const PRIZE_IMAGE_ACCEPTED_TYPES = new Set<string>(PRIZE_IMAGE_MIME_TYPES);
 
 const validatePrizeImage = (file: File): string | null => {
   if (file.size === 0) return "空の画像ファイルは登録できません。";
   if (!PRIZE_IMAGE_ACCEPTED_TYPES.has(file.type)) {
     return "景品画像は JPEG / PNG / WebP のみ選択できます。";
   }
-  if (file.size > PRIZE_IMAGE_MAX_BYTES) return "景品画像は5 MiB以下にしてください。";
+  if (file.size > MAX_PRIZE_IMAGE_BYTES) return "景品画像は5 MiB以下にしてください。";
   return null;
 };
 
@@ -64,11 +66,11 @@ const showToast = (content: { title: string; description?: string }) => {
   queue.add(content, { timeout: TOAST_TIMEOUT });
 };
 
-export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProps) {
+export function AdminPrizeCreatePage() {
   const [{ bingoPrize, loadError, isLoaded }, dispatchLoadState] = useReducer(
     prizeCreateLoadReducer,
     {
-      bingoPrize: initialPrizes,
+      bingoPrize: [],
       loadError: null,
       isLoaded: false,
     },
@@ -161,63 +163,25 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
       showToast({ title: "入力エラー", description: "景品名を入力してください。" });
       return;
     }
-    if (nameJp.length > 120) {
+    if (nameJp.length > PRIZE_NAME_JP_MAX_LENGTH) {
       showToast({
         title: "入力エラー",
-        description: "景品名（日本語）は120文字以下にしてください。",
+        description: `景品名（日本語）は${PRIZE_NAME_JP_MAX_LENGTH}文字以下にしてください。`,
       });
       return;
     }
-    if (nameEn.length > 160) {
+    if (nameEn.length > PRIZE_NAME_EN_MAX_LENGTH) {
       showToast({
         title: "入力エラー",
-        description: "景品名（英語）は160文字以下にしてください。",
+        description: `景品名（英語）は${PRIZE_NAME_EN_MAX_LENGTH}文字以下にしてください。`,
       });
       return;
     }
 
     setIsSubmitting(true);
+    const existingPrizeIds = new Set(bingoPrize.map((prize) => prize.id));
     try {
-      const formData = new FormData();
-      formData.set("nameJp", nameJp);
-      formData.set("nameEn", nameEn);
-      if (imageFile) {
-        formData.set("file", imageFile);
-      }
-      const existingPrizeIds = new Set(bingoPrize.map((prize) => prize.id));
-      const result = await prizeActions.createPrize(formData);
-      if (!result.ok) {
-        console.error(result.error);
-        try {
-          const state = await fetchAdminState();
-          setBingoPrize(state.prizes);
-          const matchingPrize = state.prizes.find(
-            (prize) =>
-              !existingPrizeIds.has(prize.id) &&
-              prize.name_jp === nameJp &&
-              prize.name_en === (nameEn || null),
-          );
-          showToast(
-            matchingPrize
-              ? {
-                  title: "登録済み",
-                  description: "サーバー上の景品一覧へ反映しました。",
-                }
-              : {
-                  title: "登録失敗",
-                  description: result.error,
-                },
-          );
-        } catch (refreshError) {
-          console.error(refreshError);
-          showToast({
-            title: "登録結果を確認できません",
-            description: `${result.error} ページを再読み込みして景品一覧を確認してください。`,
-          });
-        }
-        return;
-      }
-      const prize = result.data;
+      const prize = await prizeActions.createPrize({ nameJp, nameEn, file: imageFile });
       setBingoPrize((prev) => [...prev.filter((item) => item.id !== prize.id), prize]);
       if (previewUrlRef.current !== null) {
         URL.revokeObjectURL(previewUrlRef.current);
@@ -230,6 +194,36 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
         previewUrl: "",
       });
       showToast({ title: "登録完了", description: "景品を登録しました。" });
+    } catch (error) {
+      console.error(error);
+      const message = error instanceof Error ? error.message : String(error);
+      try {
+        const state = await fetchAdminState();
+        setBingoPrize(state.prizes);
+        const matchingPrize = state.prizes.find(
+          (prize) =>
+            !existingPrizeIds.has(prize.id) &&
+            prize.name_jp === nameJp &&
+            prize.name_en === (nameEn || null),
+        );
+        showToast(
+          matchingPrize
+            ? {
+                title: "登録済み",
+                description: "サーバー上の景品一覧へ反映しました。",
+              }
+            : {
+                title: "登録失敗",
+                description: message,
+              },
+        );
+      } catch (refreshError) {
+        console.error(refreshError);
+        showToast({
+          title: "登録結果を確認できません",
+          description: `${message} ページを再読み込みして景品一覧を確認してください。`,
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -267,33 +261,11 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
           setBingoPrize={setBingoPrize}
           showToggle={false}
           showOverlay={false}
-          onToggle={async (id, isWon) => {
-            const result = await prizeActions.togglePrizeWon(id, isWon);
-            if (!result.ok) {
-              throw new Error(result.error);
-            }
-            return result.data;
-          }}
+          onToggle={prizeActions.togglePrizeWon}
           onDelete={async (prize) => {
-            const result = await prizeActions.deletePrize(prize.id);
-            if (!result.ok) {
-              throw new Error(result.error);
-            }
+            await prizeActions.deletePrize(prize.id);
           }}
-          onUpdate={async ({ id, nameJp, nameEn, file }) => {
-            const formData = new FormData();
-            formData.set("id", String(id));
-            formData.set("nameJp", nameJp);
-            formData.set("nameEn", nameEn);
-            if (file) {
-              formData.set("file", file);
-            }
-            const result = await prizeActions.updatePrize(formData);
-            if (!result.ok) {
-              throw new Error(result.error);
-            }
-            return result.data;
-          }}
+          onUpdate={prizeActions.updatePrize}
         />
       </div>
     </div>

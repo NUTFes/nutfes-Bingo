@@ -4,11 +4,9 @@ export const STAMP_NAMES = [
   "crap",
   "good",
   "heart",
-  "peace",
   "sad",
   "skull",
   "smile",
-  "surprise",
 ] as const;
 
 export type StampName = (typeof STAMP_NAMES)[number];

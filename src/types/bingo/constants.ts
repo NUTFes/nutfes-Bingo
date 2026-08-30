@@ -9,6 +9,4 @@ export const REACTION_IMAGES: ReadonlyArray<{ name: StampName; src: string; alt:
   { name: "angry", src: "/ReactionIcon/angry.png", alt: "angry icon" },
   { name: "skull", src: "/ReactionIcon/skull.png", alt: "skull icon" },
   { name: "sad", src: "/ReactionIcon/sad.png", alt: "sad icon" },
-  // { name: "peace", src: "/ReactionIcon/peace.png", alt: "peace icon" },
-  // { name: "surprise", src: "/ReactionIcon/surprise.png", alt: "surprise icon" },
 ] as const;

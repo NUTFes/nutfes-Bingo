@@ -8,6 +8,7 @@ import { Form } from "@/components/ui/Form";
 import { Modal } from "@/components/ui/Modal";
 import { NumberField } from "@/components/ui/NumberField";
 import { Separator } from "@/components/ui/Separator";
+import { MAX_BINGO_NUMBER, MIN_BINGO_NUMBER } from "@shared/bingo-constraints";
 
 interface UpdateNumberModalProps {
   isOpened: boolean;
@@ -29,7 +30,9 @@ const UpdateNumberModal = ({
   const [number, setNumber] = useState<number | null>(null);
   const currentNumber = number ?? initialNumber;
   const isValidNumber =
-    Number.isInteger(currentNumber) && currentNumber >= 1 && currentNumber <= 99;
+    Number.isInteger(currentNumber) &&
+    currentNumber >= MIN_BINGO_NUMBER &&
+    currentNumber <= MAX_BINGO_NUMBER;
 
   const closeModal = () => {
     setNumber(null);
@@ -69,12 +72,14 @@ const UpdateNumberModal = ({
         >
           <div className="space-y-1">
             <p className="m-0 text-sm text-muted-foreground">修正後の番号</p>
-            <p className="m-0 text-xs text-muted-foreground">1〜99の範囲で入力してください。</p>
+            <p className="m-0 text-xs text-muted-foreground">
+              {MIN_BINGO_NUMBER}〜{MAX_BINGO_NUMBER}の範囲で入力してください。
+            </p>
           </div>
           <NumberField
             key={`${isOpened}-${initialNumber}`}
-            minValue={1}
-            maxValue={99}
+            minValue={MIN_BINGO_NUMBER}
+            maxValue={MAX_BINGO_NUMBER}
             defaultValue={initialNumber > 0 ? initialNumber : undefined}
             placeholder="番号を入力"
             className="w-full"

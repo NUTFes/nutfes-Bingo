@@ -479,10 +479,8 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
   return state;
 }
 
-export function useHomeRealtimeState(initialNumbers: NumberRow[], initialAppState: AppStateRow) {
-  const state = useBingoState(
-    createEmptyState({ numbers: initialNumbers, appState: initialAppState }),
-  );
+export function useHomeRealtimeState() {
+  const state = useBingoState(createEmptyState());
   return {
     numbers: state.numbers,
     appState: state.appState,
@@ -490,13 +488,8 @@ export function useHomeRealtimeState(initialNumbers: NumberRow[], initialAppStat
   };
 }
 
-export function usePrizesRealtimeState(
-  initialPrizes: PrizeWithImageUrl[],
-  initialAppState: AppStateRow,
-) {
-  const state = useBingoState(
-    createEmptyState({ prizes: initialPrizes, appState: initialAppState }),
-  );
+export function usePrizesRealtimeState() {
+  const state = useBingoState(createEmptyState());
   return {
     prizes: state.prizes,
     appState: state.appState,
@@ -504,14 +497,8 @@ export function usePrizesRealtimeState(
   };
 }
 
-export function useScreenRealtimeState(
-  initialNumbers: NumberRow[],
-  initialReachLog: ReachLogRow | null,
-) {
-  const state = useBingoState(
-    createEmptyState({ numbers: initialNumbers, latestReachLog: initialReachLog }),
-    "screen",
-  );
+export function useScreenRealtimeState() {
+  const state = useBingoState(createEmptyState(), "screen");
   return {
     numbers: state.numbers,
     latestReachLog: state.latestReachLog,

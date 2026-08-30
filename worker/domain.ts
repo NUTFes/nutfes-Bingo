@@ -1,4 +1,9 @@
 import {
+  MAX_PRIZE_IMAGE_BYTES,
+  MAX_PRIZES,
+  MAX_SURVEY_URL_LENGTH,
+} from "../shared/bingo-constraints";
+import {
   STAMP_NAMES,
   type AppStateRow,
   type NumberRow,
@@ -31,15 +36,13 @@ export type StampSubmissionResult =
       retryAfterSeconds?: number;
     };
 
+export { MAX_PRIZE_IMAGE_BYTES, MAX_PRIZES } from "../shared/bingo-constraints";
+
 export const PRIZE_SORT_ORDER_STEP = 1000;
-export const MAX_PRIZES = 100;
 export const MAX_REACH_LOGS = 2_000;
 export const MAX_REACH_SUBMISSIONS = 2_000;
 export const MAX_AUDIT_LOG_ROWS = 200;
 export const MAX_AUDIT_PAYLOAD_BYTES = 4 * 1024;
-export const MAX_PRIZE_IMAGE_BYTES = 5 * 1024 * 1024;
-
-const MAX_SURVEY_URL_LENGTH = 2_048;
 
 const IMMUTABLE_IMAGE_PATTERN = /^prizes\/[a-f0-9]{64}\.(?:jpg|png|webp)$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

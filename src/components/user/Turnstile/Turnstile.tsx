@@ -6,7 +6,7 @@ import { subscribeToTurnstileScript } from "./turnstile-script-status";
 import styles from "./Turnstile.module.css";
 
 const TURNSTILE_ACTION = "turnstile-spin-v1";
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "";
 
 type TurnstileApi = {
   render: (

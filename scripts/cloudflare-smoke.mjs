@@ -104,8 +104,7 @@ const unchanged = await fetch(new URL("/api/bingo/state", site), {
 if (unchanged.status !== 304)
   throw new Error("HTTP fallback conditional state read did not return 304");
 
-const prizes = await (await fetchChecked("/api/bingo/prizes", 200, "application/json")).json();
-const imageUrl = prizes?.prizes?.find((prize) => typeof prize?.image_url === "string")?.image_url;
+const imageUrl = state.prizes.find((prize) => typeof prize?.image_url === "string")?.image_url;
 if (imageUrl) {
   if (new URL(imageUrl).origin !== mediaOrigin.origin) {
     throw new Error("A prize image points outside the pinned media origin");

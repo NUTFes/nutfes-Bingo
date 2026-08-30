@@ -1,17 +1,27 @@
-"use client";
-
-import type { ImageLoaderProps } from "next/image";
+export interface CloudflareImageLoaderProps {
+  src: string;
+  width: number;
+  quality?: number;
+}
 
 function normalizeSource(src: string): string {
   return src.startsWith("/") ? src.slice(1) : src;
 }
 
 function isPrizeImageSource(src: string): boolean {
-  const pathname = src.startsWith("/") ? src : new URL(src).pathname;
-  return pathname.startsWith("/prizes/") || pathname.startsWith("/api/prize-images/prizes/");
+  try {
+    const pathname = src.startsWith("/") ? src : new URL(src, window.location.href).pathname;
+    return pathname.startsWith("/prizes/") || pathname.startsWith("/api/prize-images/prizes/");
+  } catch {
+    return false;
+  }
 }
 
-export default function cloudflareImageLoader({ src, width, quality }: ImageLoaderProps): string {
+export function canTransformImageSource(src: string): boolean {
+  return !src.startsWith("blob:") && !src.startsWith("data:");
+}
+
+export function cloudflareImageLoader({ src, width, quality }: CloudflareImageLoaderProps): string {
   const params = [`width=${width}`];
   if (isPrizeImageSource(src)) {
     params.push(`height=${width}`);

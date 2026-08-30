@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - "Dockerfile.cloudflare"
       - "scripts/**"
       - "src/**"
       - "worker/**"
@@ -12,13 +11,12 @@ on:
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
-      - "next.config.ts"
+      - "vite.config.ts"
       - "wrangler.jsonc"
       - ".github/workflows/trivy.yml"
   push:
     branches: [develop]
     paths:
-      - "Dockerfile.cloudflare"
       - "scripts/**"
       - "src/**"
       - "worker/**"
@@ -26,7 +24,7 @@ on:
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
-      - "next.config.ts"
+      - "vite.config.ts"
       - "wrangler.jsonc"
       - ".github/workflows/trivy.yml"
 

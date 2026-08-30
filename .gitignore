@@ -14,12 +14,11 @@
 # testing
 /coverage
 
-# next.js
+# build output
+/dist/
+# Legacy local artifacts may remain after the Next.js migration.
 /.next/
 /out/
-
-# production
-/build
 /.data/
 
 # misc
@@ -47,7 +46,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 temp
 .wrangler/

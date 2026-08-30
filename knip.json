@@ -3,9 +3,9 @@
   "tags": ["-lintignore"],
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.mjs", "src/utils/cloudflare-image-loader.ts"]
+      "entry": ["scripts/*.mjs"]
     }
   },
-  "ignore": [".agents/**"],
+  "ignore": [".agents/**", "test/env.d.ts"],
   "ignoreDependencies": ["^cloudflare(?::.*)?$"]
 }

@@ -2,11 +2,13 @@
 
 import { useEffect, useReducer, type SetStateAction } from "react";
 
-import { AdminHeader, AdminLoading, BingoResult } from "@/components/admin";
+import AdminHeader from "@/components/admin/AdminHeader";
+import AdminLoading from "@/components/admin/AdminLoading";
+import BingoResult from "@/components/admin/BingoResult";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion } from "@/components/ui/Toast";
 import { queue } from "@/components/ui/toastQueue";
-import type { AppStateRow, NumberRow } from "@/types/bingo/types";
+import { EMPTY_APP_STATE, type AppStateRow, type NumberRow } from "@/types/bingo/types";
 import JudgementModal from "./components/JudgementModal";
 import UpdateNumberModal from "./components/UpdateNumberModal";
 import { dashboardActions } from "./actions-client";
@@ -20,11 +22,6 @@ import {
 import { useDashboardState } from "./hooks";
 import { parseBingoNumber } from "./utils";
 import { fetchAdminState } from "@/lib/admin-api";
-
-interface AdminDashboardPageProps {
-  initialNumbers: NumberRow[];
-  initialAppState: AppStateRow;
-}
 
 interface DashboardLoadState {
   bingoNumbers: NumberRow[];
@@ -98,32 +95,34 @@ const showToast = (content: { title: string; description?: string }) => {
   queue.add(content, { timeout: TOAST_TIMEOUT });
 };
 
+const toErrorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
 const handleLogout = async () => {
   await dashboardActions.logout();
 };
 
 const mutateReach = async (direction: "increment" | "decrement") => {
-  const result =
-    direction === "increment"
-      ? await dashboardActions.incrementReach()
-      : await dashboardActions.decrementReach();
-  if (!result.ok) {
-    console.error(result.error);
-    showToast({
-      title: "更新結果を確認できません",
-      description: "サーバーの最新状態を再取得します。",
-    });
-  } else {
+  try {
+    if (direction === "increment") {
+      await dashboardActions.incrementReach();
+    } else {
+      await dashboardActions.decrementReach();
+    }
     showToast({
       title: "更新完了",
       description:
         direction === "increment" ? "リーチ数を 1 増加しました。" : "リーチ数を 1 減少しました。",
     });
+  } catch (error) {
+    console.error(error);
+    showToast({
+      title: "更新結果を確認できません",
+      description: "サーバーの最新状態を再取得します。",
+    });
   }
-  return result;
 };
 
-export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
+export function AdminDashboardPage() {
   const [
     {
       bingoNumbers,
@@ -138,15 +137,15 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
     },
     dispatchLoadState,
   ] = useReducer(dashboardLoadReducer, {
-    bingoNumbers: initialNumbers,
-    eventId: initialAppState.event_id,
+    bingoNumbers: [],
+    eventId: EMPTY_APP_STATE.event_id,
     revision: 0,
     loadError: null,
     isLoaded: false,
-    surveyUrl: initialAppState.survey_url,
-    surveyTitle: initialAppState.survey_title,
-    surveyDescription: initialAppState.survey_description,
-    surveyButtonLabel: initialAppState.survey_button_label,
+    surveyUrl: EMPTY_APP_STATE.survey_url,
+    surveyTitle: EMPTY_APP_STATE.survey_title,
+    surveyDescription: EMPTY_APP_STATE.survey_description,
+    surveyButtonLabel: EMPTY_APP_STATE.survey_button_label,
   });
   const setBingoNumbers = (value: SetStateAction<NumberRow[]>) => {
     dispatchLoadState({ type: "set-numbers", value });
@@ -211,9 +210,18 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       showToast({ title: "入力エラー", description: "番号は 1〜99 の範囲で入力してください。" });
       return;
     }
-    const result = await dashboardActions.createNumber(nextNumber);
-    if (!result.ok) {
-      console.error(result.error);
+    try {
+      const created = await dashboardActions.createNumber(nextNumber);
+      setBingoNumbers((prev) =>
+        [...prev.filter((bingoNumber) => bingoNumber.id !== created.id), created].sort(
+          (a, b) => a.id - b.id,
+        ),
+      );
+      dashboardState.resetSubmitNumberInput();
+      showToast({ title: "登録完了", description: `${nextNumber} を追加しました。` });
+    } catch (error) {
+      console.error(error);
+      const message = toErrorMessage(error);
       const state = await refreshAuthoritativeState();
       if (state?.numbers.some((number) => number.number === nextNumber)) {
         dashboardState.resetSubmitNumberInput();
@@ -224,23 +232,15 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
         return;
       }
       if (
-        result.error.includes("duplicate") ||
-        result.error.includes("numbers_number_unique") ||
-        result.error.includes("同じ番号が既に登録")
+        message.includes("duplicate") ||
+        message.includes("numbers_number_unique") ||
+        message.includes("同じ番号が既に登録")
       ) {
         showToast({ title: "重複番号", description: `${nextNumber} は既に入力済みです。` });
         return;
       }
       showToast({ title: "登録失敗", description: "番号の登録結果を確認できませんでした。" });
-      return;
     }
-    setBingoNumbers((prev) =>
-      [...prev.filter((bingoNumber) => bingoNumber.id !== result.data.id), result.data].sort(
-        (a, b) => a.id - b.id,
-      ),
-    );
-    dashboardState.resetSubmitNumberInput();
-    showToast({ title: "登録完了", description: `${nextNumber} を追加しました。` });
   };
 
   const handleDelete = async () => {
@@ -249,9 +249,13 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       showToast({ title: "入力エラー", description: "番号は 1〜99 の範囲で入力してください。" });
       return;
     }
-    const result = await dashboardActions.deleteNumber(target);
-    if (!result.ok) {
-      console.error(result.error);
+    try {
+      const deleted = await dashboardActions.deleteNumber(target);
+      setBingoNumbers((prev) => prev.filter((bingoNumber) => bingoNumber.id !== deleted.id));
+      dashboardState.resetDeleteInput();
+      showToast({ title: "削除完了", description: `${target} を削除しました。` });
+    } catch (error) {
+      console.error(error);
       const state = await refreshAuthoritativeState();
       if (state && !state.numbers.some((number) => number.number === target)) {
         dashboardState.resetDeleteInput();
@@ -259,35 +263,31 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
         return;
       }
       showToast({ title: "削除失敗", description: "番号の削除結果を確認できませんでした。" });
-      return;
     }
-    setBingoNumbers((prev) => prev.filter((bingoNumber) => bingoNumber.id !== result.data.id));
-    dashboardState.resetDeleteInput();
-    showToast({ title: "削除完了", description: `${target} を削除しました。` });
   };
 
   const handleSurvey = async (isSurveyActive: boolean) => {
-    const result = await dashboardActions.saveSurveyState({
-      surveyUrl,
-      surveyTitle,
-      surveyDescription,
-      surveyButtonLabel,
-      isSurveyActive,
-    });
-    if (!result.ok) {
-      console.error(result.error);
+    try {
+      const appState = await dashboardActions.saveSurveyState({
+        surveyUrl,
+        surveyTitle,
+        surveyDescription,
+        surveyButtonLabel,
+        isSurveyActive,
+      });
+      dispatchLoadState({ type: "sync-survey", appState });
+      showToast({
+        title: isSurveyActive ? "アンケート配信" : "アンケート停止",
+        description: isSurveyActive ? "アンケートを送信しました。" : "アンケートを停止しました。",
+      });
+    } catch (error) {
+      console.error(error);
       await refreshAuthoritativeState();
       showToast({
         title: "更新結果を再確認しました",
         description: "サーバーの最新アンケート設定を表示しています。",
       });
-      return;
     }
-    dispatchLoadState({ type: "sync-survey", appState: result.data });
-    showToast({
-      title: isSurveyActive ? "アンケート配信" : "アンケート停止",
-      description: isSurveyActive ? "アンケートを送信しました。" : "アンケートを停止しました。",
-    });
   };
 
   const handleStartAnnualEvent = async (newEventId: string) => {
@@ -301,14 +301,21 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       return false;
     }
 
-    const result = await dashboardActions.startAnnualEvent({
-      expectedRevision: stateBeforeReset.revision,
-      expectedEventId: stateBeforeReset.appState.event_id,
-      newEventId,
-    });
-    const stateAfterReset = await refreshAuthoritativeState();
-    if (!result.ok) {
-      console.error(result.error);
+    try {
+      const result = await dashboardActions.startAnnualEvent({
+        expectedRevision: stateBeforeReset.revision,
+        expectedEventId: stateBeforeReset.appState.event_id,
+        newEventId,
+      });
+      const stateAfterReset = await refreshAuthoritativeState();
+      showToast({
+        title: "新年度を開始しました",
+        description: `イベントIDを ${result.eventId} に切り替えました。`,
+      });
+      return stateAfterReset?.appState.event_id === result.eventId;
+    } catch (error) {
+      console.error(error);
+      const stateAfterReset = await refreshAuthoritativeState();
       showToast({
         title: "年次切替を完了できませんでした",
         description: stateAfterReset
@@ -317,11 +324,6 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
       });
       return false;
     }
-    showToast({
-      title: "新年度を開始しました",
-      description: `イベントIDを ${result.data.eventId} に切り替えました。`,
-    });
-    return stateAfterReset?.appState.event_id === result.data.eventId;
   };
 
   const deleteNumberOptions = [...bingoNumbers].reverse().map((bingoNumber) => ({
@@ -347,22 +349,23 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
         id={dashboardState.selectedId}
         initialNumber={dashboardState.selectedNumber}
         onSubmit={async ({ id, number }) => {
-          const result = await dashboardActions.updateNumber(id, number);
-          if (!result.ok) {
-            console.error(result.error);
+          try {
+            const updated = await dashboardActions.updateNumber(id, number);
+            setBingoNumbers((prev) =>
+              prev
+                .map((bingoNumber) => (bingoNumber.id === updated.id ? updated : bingoNumber))
+                .sort((a, b) => a.id - b.id),
+            );
+            showToast({ title: "更新完了", description: "番号を更新しました。" });
+          } catch (error) {
+            console.error(error);
             await refreshAuthoritativeState();
             showToast({
               title: "更新結果を再確認しました",
               description: "サーバーの最新番号一覧を表示しています。",
             });
-            throw new Error(result.error);
+            throw error;
           }
-          setBingoNumbers((prev) =>
-            prev
-              .map((bingoNumber) => (bingoNumber.id === result.data.id ? result.data : bingoNumber))
-              .sort((a, b) => a.id - b.id),
-          );
-          showToast({ title: "更新完了", description: "番号を更新しました。" });
         }}
       />
       <AdminHeader>

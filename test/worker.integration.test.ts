@@ -91,16 +91,19 @@ describe("public Worker routes", () => {
     expect(asset.status).toBe(200);
     expect(asset.headers.get("content-type")).toContain("text/html");
 
-    const health = await SELF.fetch("http://example.com/api/health");
-    expect(health.status).toBe(200);
-    expect(health.headers.get("strict-transport-security")).toBe("max-age=31536000");
-    expect(health.headers.get("cross-origin-opener-policy")).toBe("same-origin");
-    await expect(health.json()).resolves.toMatchObject({
+    const ready = await SELF.fetch("http://example.com/api/ready");
+    expect(ready.status).toBe(200);
+    expect(ready.headers.get("strict-transport-security")).toBe("max-age=31536000");
+    expect(ready.headers.get("cross-origin-opener-policy")).toBe("same-origin");
+    await expect(ready.json()).resolves.toMatchObject({
       status: "ok",
       releaseSha: "test-release-sha",
       eventId: "initial",
       revision: 0,
     });
+
+    const removedHealth = await SELF.fetch("http://example.com/api/health");
+    expect(removedHealth.status).toBe(404);
   });
 
   it("returns a weak ETag and a 304 for an unchanged state", async () => {

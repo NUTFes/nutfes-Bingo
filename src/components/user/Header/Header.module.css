@@ -30,6 +30,7 @@
   margin: -8px -12px;
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
   border-radius: 12px;
   transition:
     transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),

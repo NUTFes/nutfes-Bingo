@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
+import { CloudUpload } from "lucide-react";
+import ResponsiveImage from "@/components/ui/ResponsiveImage";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { isFileDropItem, type DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
-import { IoCloudUploadOutline } from "react-icons/io5";
 
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -13,6 +13,7 @@ import { Form } from "@/components/ui/Form";
 import { Modal } from "@/components/ui/Modal";
 import { Separator } from "@/components/ui/Separator";
 import { TextField } from "@/components/ui/TextField";
+import { PRIZE_IMAGE_MIME_TYPES } from "@shared/bingo-constraints";
 
 interface Props {
   isOpened: boolean;
@@ -118,7 +119,7 @@ const PrizeEditModal = ({
               <p className="text-sm font-medium text-foreground">画像</p>
               {previewUrl ? (
                 <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-border bg-card/80 p-2">
-                  <Image
+                  <ResponsiveImage
                     className="bg-white"
                     src={previewUrl}
                     alt="preview"
@@ -136,20 +137,18 @@ const PrizeEditModal = ({
               <DropZone
                 onDrop={handleDrop}
                 getDropOperation={(types) =>
-                  types.has("image/jpeg") || types.has("image/png") || types.has("image/webp")
-                    ? "copy"
-                    : "cancel"
+                  PRIZE_IMAGE_MIME_TYPES.some((type) => types.has(type)) ? "copy" : "cancel"
                 }
                 className="w-full rounded-2xl"
               >
                 <div className="flex flex-col items-center gap-2">
-                  <IoCloudUploadOutline size="3rem" />
+                  <CloudUpload className="size-12" />
                   ここに画像をドラッグ&ドロップ
                 </div>
               </DropZone>
 
               <FileTrigger
-                acceptedFileTypes={["image/*"]}
+                acceptedFileTypes={[...PRIZE_IMAGE_MIME_TYPES]}
                 onSelect={(files) => {
                   const file = files ? Array.from(files)[0] : null;
                   handleFileSelected(file ?? null);

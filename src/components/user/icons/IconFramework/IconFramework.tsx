@@ -12,6 +12,7 @@ interface IconFrameworkProps {
   inversion?: boolean;
   id?: string;
   onClick?: () => void;
+  href?: string;
   size?: "normal" | "wide";
   className?: string;
 }
@@ -23,26 +24,37 @@ const IconFramework = ({
   inversion,
   id,
   onClick,
+  href,
   size = "normal",
   className,
 }: IconFrameworkProps) => {
-  return (
-    <button
-      type="button"
-      className={cn(
-        styles.iconContainer,
-        {
-          [styles.outline]: outline,
-          [styles.color_inversion]: inversion,
-          [styles.wide]: size === "wide",
-        },
-        className,
-      )}
-      onClick={onClick}
-      id={id}
-    >
+  const content = (
+    <>
       <div className={styles.icon}>{icon}</div>
       <span className={styles.text}>{text}</span>
+    </>
+  );
+  const resolvedClassName = cn(
+    styles.iconContainer,
+    {
+      [styles.outline]: outline,
+      [styles.color_inversion]: inversion,
+      [styles.wide]: size === "wide",
+    },
+    className,
+  );
+
+  if (href) {
+    return (
+      <a className={resolvedClassName} href={href} id={id}>
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <button type="button" className={resolvedClassName} onClick={onClick} id={id}>
+      {content}
     </button>
   );
 };

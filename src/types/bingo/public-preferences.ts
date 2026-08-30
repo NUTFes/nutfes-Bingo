@@ -49,11 +49,3 @@ export const applyPublicTheme = (isDarkMode: boolean) => {
 
   document.documentElement.dataset.theme = isDarkMode ? "dark" : "light";
 };
-
-export const publicThemeBootstrapScript = (fallbackDarkMode: boolean) => `
-(() => {
-  const stored = window.localStorage.getItem("${PUBLIC_PREFERENCE_KEYS.darkMode}");
-  const isDarkMode = stored === "true" ? true : stored === "false" ? false : ${fallbackDarkMode};
-  document.documentElement.dataset.theme = isDarkMode ? "dark" : "light";
-})();
-`;

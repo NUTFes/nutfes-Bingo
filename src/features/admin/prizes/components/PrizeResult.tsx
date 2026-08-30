@@ -1,23 +1,9 @@
 "use client";
 
-import Image from "next/image";
+import ResponsiveImage from "@/components/ui/ResponsiveImage";
 import React, { type Key, useMemo, useReducer } from "react";
-import { LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
-import {
-  DropIndicator,
-  GridLayout,
-  GridList,
-  GridListItem,
-  Virtualizer,
-  useDragAndDrop,
-} from "react-aria-components";
-import {
-  IoChevronDown,
-  IoChevronUp,
-  IoClose,
-  IoCreateOutline,
-  IoReorderThreeOutline,
-} from "react-icons/io5";
+import { ChevronDown, ChevronUp, GripVertical, Pencil, X } from "lucide-react";
+import { DropIndicator, GridList, GridListItem, useDragAndDrop } from "react-aria-components";
 
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { Button } from "@/components/ui/Button";
@@ -159,7 +145,7 @@ const PrizeGridItem = ({
           className="size-11 p-0"
           onPress={() => onEditClick(prize)}
         >
-          <IoCreateOutline className="size-5" />
+          <Pencil className="size-5" />
         </Button>
         <Button
           variant="secondary"
@@ -167,13 +153,13 @@ const PrizeGridItem = ({
           className="size-11 p-0"
           onPress={() => onDeleteClick(prize)}
         >
-          <IoClose className="size-5" />
+          <X className="size-5" />
         </Button>
       </div>
 
       <div className="relative aspect-4/3 overflow-hidden rounded-md bg-secondary/30">
         {prize.image_url ? (
-          <Image
+          <ResponsiveImage
             src={prize.image_url}
             alt={prize.name_jp}
             fill
@@ -229,7 +215,6 @@ interface PrizeReorderSectionProps {
   onReorderGroup: (orderedIds: number[], movedId: number) => void;
   onMove: (prize: PrizeWithImageUrl, direction: MoveDirection) => void;
   isMoveDisabled: (prize: PrizeWithImageUrl, direction: MoveDirection) => boolean;
-  shouldReduceMotion: boolean;
 }
 
 const PrizeReorderSection = ({
@@ -239,7 +224,6 @@ const PrizeReorderSection = ({
   onReorderGroup,
   onMove,
   isMoveDisabled,
-  shouldReduceMotion,
 }: PrizeReorderSectionProps) => {
   const groupIds = useMemo(() => group.prizes.map((prize) => prize.id), [group.prizes]);
   const { dragAndDropHooks } = useDragAndDrop<PrizeWithImageUrl>({
@@ -308,7 +292,6 @@ const PrizeReorderSection = ({
               movingId={movingId}
               onMove={onMove}
               isMoveDisabled={isMoveDisabled}
-              shouldReduceMotion={shouldReduceMotion}
             />
           )}
         </GridList>
@@ -326,26 +309,15 @@ interface PrizeReorderRowProps {
   movingId: number | null;
   onMove: (prize: PrizeWithImageUrl, direction: MoveDirection) => void;
   isMoveDisabled: (prize: PrizeWithImageUrl, direction: MoveDirection) => boolean;
-  shouldReduceMotion: boolean;
 }
 
-const PrizeReorderRow = ({
-  prize,
-  movingId,
-  onMove,
-  isMoveDisabled,
-  shouldReduceMotion,
-}: PrizeReorderRowProps) => {
+const PrizeReorderRow = ({ prize, movingId, onMove, isMoveDisabled }: PrizeReorderRowProps) => {
   const isBusy = movingId === prize.id;
 
   return (
     <GridListItem id={prize.id} textValue={prize.name_jp} className="outline-none">
       {({ allowsDragging }) => (
-        <m.div
-          layout="position"
-          transition={
-            shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 40 }
-          }
+        <div
           className={`group flex items-center gap-3 rounded-md border border-border bg-card p-2 text-foreground transition-colors sm:gap-4 sm:p-3 ${
             isBusy
               ? "scale-[0.98] opacity-50 ring-2 ring-primary ring-offset-2 ring-offset-background"
@@ -364,12 +336,12 @@ const PrizeReorderRow = ({
                 : "cursor-not-allowed opacity-50"
             }`}
           >
-            <IoReorderThreeOutline className="size-5" aria-hidden />
+            <GripVertical className="size-5" aria-hidden />
           </Button>
 
           <div className="relative size-12 shrink-0 overflow-hidden rounded border border-border/50 bg-secondary/30 sm:size-14">
             {prize.image_url ? (
-              <Image
+              <ResponsiveImage
                 src={prize.image_url}
                 alt={prize.name_jp}
                 fill
@@ -398,7 +370,7 @@ const PrizeReorderRow = ({
               onPress={() => onMove(prize, "up")}
               className="size-9 p-0 sm:size-10"
             >
-              <IoChevronUp className="size-4" aria-hidden />
+              <ChevronUp className="size-4" aria-hidden />
             </Button>
             <Button
               variant="secondary"
@@ -407,10 +379,10 @@ const PrizeReorderRow = ({
               onPress={() => onMove(prize, "down")}
               className="size-9 p-0 sm:size-10"
             >
-              <IoChevronDown className="size-4" aria-hidden />
+              <ChevronDown className="size-4" aria-hidden />
             </Button>
           </div>
-        </m.div>
+        </div>
       )}
     </GridListItem>
   );
@@ -701,50 +673,43 @@ const PrizeResult = (props: PrizeResultProps) => {
     setEditOpen,
   } = usePrizeResultController(props);
 
-  const shouldReduceMotion = useReducedMotion();
-
   return (
     <>
       <div className="flex flex-col gap-4">
         {isReordering ? (
-          <LazyMotion features={domAnimation}>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:gap-10">
-              {prizeGroups.map((group) => (
-                <PrizeReorderSection
-                  key={group.key}
-                  group={group}
-                  canDrag={movingId === null}
-                  movingId={movingId}
-                  onReorderGroup={(orderedIds, movedId) =>
-                    void handleReorderGroup(orderedIds, movedId)
-                  }
-                  onMove={(targetPrize, direction) => void handleMove(targetPrize, direction)}
-                  isMoveDisabled={isMoveDisabled}
-                  shouldReduceMotion={Boolean(shouldReduceMotion)}
-                />
-              ))}
-            </div>
-          </LazyMotion>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:gap-10">
+            {prizeGroups.map((group) => (
+              <PrizeReorderSection
+                key={group.key}
+                group={group}
+                canDrag={movingId === null}
+                movingId={movingId}
+                onReorderGroup={(orderedIds, movedId) =>
+                  void handleReorderGroup(orderedIds, movedId)
+                }
+                onMove={(targetPrize, direction) => void handleMove(targetPrize, direction)}
+                isMoveDisabled={isMoveDisabled}
+              />
+            ))}
+          </div>
         ) : (
           <div className="space-y-4 sm:space-y-5">
-            <Virtualizer
-              layout={GridLayout}
-              layoutOptions={{
-                maxColumns: 5,
-              }}
+            <GridList
+              layout="grid"
+              aria-label="景品一覧"
+              items={sortedPrizes}
+              className="grid grid-cols-1 gap-4 outline-none sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
             >
-              <GridList layout="grid" aria-label="景品一覧" items={sortedPrizes}>
-                {(prize) => (
-                  <PrizeGridItem
-                    prize={prize}
-                    display={{ showOverlay, showToggle }}
-                    onEditClick={openEdit}
-                    onDeleteClick={openDelete}
-                    onToggleChange={handleToggleChange}
-                  />
-                )}
-              </GridList>
-            </Virtualizer>
+              {(prize) => (
+                <PrizeGridItem
+                  prize={prize}
+                  display={{ showOverlay, showToggle }}
+                  onEditClick={openEdit}
+                  onDeleteClick={openDelete}
+                  onToggleChange={handleToggleChange}
+                />
+              )}
+            </GridList>
           </div>
         )}
       </div>

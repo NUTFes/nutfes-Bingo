@@ -1,6 +1,6 @@
 "use client";
 
-import { FaRegFaceSmile } from "react-icons/fa6";
+import { Smile } from "lucide-react";
 
 import IconFramework from "@/components/user/icons/IconFramework/IconFramework";
 
@@ -13,7 +13,7 @@ interface ReactionsIconProps {
 const ReactionsIcon = ({ isOpen, id, setIsReactionModalOpen }: ReactionsIconProps) => {
   return (
     <IconFramework
-      icon={<FaRegFaceSmile />}
+      icon={<Smile />}
       text="Reactions"
       inversion
       onClick={() => setIsReactionModalOpen(!isOpen)}

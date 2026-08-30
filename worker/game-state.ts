@@ -1,4 +1,12 @@
 import { DurableObject } from "cloudflare:workers";
+import {
+  MAX_BINGO_NUMBER,
+  MAX_SURVEY_BUTTON_LABEL_LENGTH,
+  MAX_SURVEY_DESCRIPTION_LENGTH,
+  MAX_SURVEY_TITLE_LENGTH,
+  PRIZE_NAME_EN_MAX_LENGTH,
+  PRIZE_NAME_JP_MAX_LENGTH,
+} from "../shared/bingo-constraints";
 import type { BingoUnifiedState, StateSocketMessage } from "../shared/bingo-transport";
 
 import {
@@ -85,7 +93,7 @@ export class GameState extends DurableObject<Env> {
   }
 
   async createNumber(actor: string, numberInput: number): Promise<NumberRow> {
-    const number = parsePositiveInteger(numberInput, "番号", { max: 99 });
+    const number = parsePositiveInteger(numberInput, "番号", { max: MAX_BINGO_NUMBER });
     return this.runAdminMutation(actor, "createNumber", { number }, () => {
       if (this.findNumberByValue(number) !== null)
         conflictProblem("同じ番号が既に登録されています。");
@@ -103,7 +111,7 @@ export class GameState extends DurableObject<Env> {
   }
 
   async deleteNumber(actor: string, numberInput: number): Promise<NumberRow> {
-    const number = parsePositiveInteger(numberInput, "番号", { max: 99 });
+    const number = parsePositiveInteger(numberInput, "番号", { max: MAX_BINGO_NUMBER });
     return this.runAdminMutation(actor, "deleteNumber", { number }, () => {
       const existing = this.findNumberByValue(number);
       if (existing === null) notFoundProblem("番号が見つかりません。");
@@ -114,7 +122,7 @@ export class GameState extends DurableObject<Env> {
 
   async updateNumber(actor: string, idInput: number, numberInput: number): Promise<NumberRow> {
     const id = parsePositiveInteger(idInput, "番号ID");
-    const number = parsePositiveInteger(numberInput, "番号", { max: 99 });
+    const number = parsePositiveInteger(numberInput, "番号", { max: MAX_BINGO_NUMBER });
     return this.runAdminMutation(actor, "updateNumber", { id, number }, () => {
       const existing = this.findNumberById(id);
       if (existing === null) notFoundProblem("番号が見つかりません。");
@@ -222,11 +230,17 @@ export class GameState extends DurableObject<Env> {
     isSurveyActiveInput: boolean,
   ): Promise<AppStateRow> {
     const surveyUrl = normalizeHttpsUrl(surveyUrlInput);
-    const surveyTitle = parseOptionalText(surveyTitleInput, "アンケートタイトル", 200) ?? "";
+    const surveyTitle =
+      parseOptionalText(surveyTitleInput, "アンケートタイトル", MAX_SURVEY_TITLE_LENGTH) ?? "";
     const surveyDescription =
-      parseOptionalText(surveyDescriptionInput, "アンケート説明", 2_000) ?? "";
+      parseOptionalText(surveyDescriptionInput, "アンケート説明", MAX_SURVEY_DESCRIPTION_LENGTH) ??
+      "";
     const surveyButtonLabel =
-      parseOptionalText(surveyButtonLabelInput, "アンケートボタン文言", 100) ?? "";
+      parseOptionalText(
+        surveyButtonLabelInput,
+        "アンケートボタン文言",
+        MAX_SURVEY_BUTTON_LABEL_LENGTH,
+      ) ?? "";
     if (typeof isSurveyActiveInput !== "boolean") validationProblem("公開設定が不正です。");
     if (
       isSurveyActiveInput &&
@@ -312,8 +326,8 @@ export class GameState extends DurableObject<Env> {
     nameEnInput: string | null,
     imagePathInput?: string | null,
   ): Promise<PrizeRow> {
-    const nameJp = parseRequiredText(nameJpInput, "景品名", 120);
-    const nameEn = parseOptionalText(nameEnInput, "英語景品名", 160);
+    const nameJp = parseRequiredText(nameJpInput, "景品名", PRIZE_NAME_JP_MAX_LENGTH);
+    const nameEn = parseOptionalText(nameEnInput, "英語景品名", PRIZE_NAME_EN_MAX_LENGTH);
     const imagePath = imagePathInput ?? null;
     assertPrizeImagePath(imagePath);
 
@@ -355,8 +369,8 @@ export class GameState extends DurableObject<Env> {
     imagePathInput?: string | null,
   ): Promise<PrizeRow> {
     const id = parsePositiveInteger(idInput, "景品ID");
-    const nameJp = parseRequiredText(nameJpInput, "景品名", 120);
-    const nameEn = parseOptionalText(nameEnInput, "英語景品名", 160);
+    const nameJp = parseRequiredText(nameJpInput, "景品名", PRIZE_NAME_JP_MAX_LENGTH);
+    const nameEn = parseOptionalText(nameEnInput, "英語景品名", PRIZE_NAME_EN_MAX_LENGTH);
     if (imagePathInput !== undefined) assertPrizeImagePath(imagePathInput);
 
     return this.runAdminMutation(

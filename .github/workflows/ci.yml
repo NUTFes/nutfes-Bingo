@@ -65,7 +65,5 @@ jobs:
 
       - name: Build and validate production artifact
         env:
-          NEXT_PUBLIC_MEDIA_ORIGIN: https://media.example.test
-          NEXT_PUBLIC_SITE_URL: https://app.example.test
-          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+          VITE_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
         run: ./scripts/check-cloudflare-worker.sh

@@ -1,5 +1,4 @@
-const MIN_BINGO_NUMBER = 1;
-const MAX_BINGO_NUMBER = 99;
+import { MAX_BINGO_NUMBER, MIN_BINGO_NUMBER } from "@shared/bingo-constraints";
 
 export const parseBingoNumber = (value: string): number | undefined => {
   const trimmed = value.trim();

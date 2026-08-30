@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
+import ResponsiveImage from "@/components/ui/ResponsiveImage";
 import { cn } from "@/utils/utils";
 
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
@@ -34,7 +34,7 @@ function PrizeImage({
   }
 
   return (
-    <Image
+    <ResponsiveImage
       src={imageUrl}
       alt={name}
       fill
