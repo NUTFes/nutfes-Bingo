@@ -2,15 +2,9 @@ export const PUBLIC_PREFERENCE_KEYS = {
   darkMode: "isDarkMode",
   sortedAscending: "isSortedAscending",
   lastReachedEventId: "lastReachedEventId",
-  legacyReachIconVisible: "isReachIconVisible",
 } as const;
 
-export interface PublicPreferences {
-  isDarkMode: boolean;
-  isSortedAscending: boolean;
-}
-
-export const DEFAULT_PUBLIC_PREFERENCES: PublicPreferences = {
+export const DEFAULT_PUBLIC_PREFERENCES = {
   isDarkMode: false,
   isSortedAscending: false,
 };
@@ -24,9 +18,6 @@ export const parseBooleanPreference = (value: string | undefined, fallback: bool
   }
   return fallback;
 };
-
-export const preferenceCookie = (key: string, value: boolean) =>
-  `${key}=${value}; path=/; max-age=31536000; samesite=lax`;
 
 export const shouldShowReachIcon = (eventId: string, lastReachedEventId: string | null) =>
   eventId !== "" && eventId !== lastReachedEventId;

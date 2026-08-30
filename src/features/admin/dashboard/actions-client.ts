@@ -1,5 +1,5 @@
 import { sendAdminCommand } from "@/lib/admin-api";
-import type { AppStateRow, NumberRow } from "@/types/bingo/types";
+import type { AppStateRow, NumberRow } from "@shared/bingo-transport";
 
 export const dashboardActions = {
   createNumber: (number: number) => sendAdminCommand<NumberRow>({ type: "createNumber", number }),

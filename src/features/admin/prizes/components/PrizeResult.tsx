@@ -3,7 +3,7 @@ import React, { type Key, useMemo, useReducer } from "react";
 import { ChevronDown, ChevronUp, GripVertical, Pencil, X } from "lucide-react";
 import { DropIndicator, GridList, GridListItem, useDragAndDrop } from "react-aria-components";
 
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import type { PrizeRow as PrizeWithImageUrl } from "@shared/bingo-transport";
 import { Button } from "@/components/ui/Button";
 import { Switch } from "@/components/ui/Switch";
 import { queue } from "@/components/ui/toastQueue";

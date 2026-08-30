@@ -3,7 +3,6 @@ import { useLayoutEffect, useState } from "react";
 import {
   applyPublicTheme,
   DEFAULT_PUBLIC_PREFERENCES,
-  preferenceCookie,
   PUBLIC_PREFERENCE_KEYS,
   parseBooleanPreference,
   resolveDarkModePreference,
@@ -18,7 +17,6 @@ export type PublicPreferenceState = {
 
 export const persistBooleanPreference = (key: string, value: boolean) => {
   window.localStorage.setItem(key, value.toString());
-  document.cookie = preferenceCookie(key, value);
 };
 
 export function usePublicPreferences(
@@ -34,12 +32,10 @@ export function usePublicPreferences(
   useLayoutEffect(() => {
     let lastReachedEventId: string | null = null;
     try {
-      window.localStorage.removeItem(PUBLIC_PREFERENCE_KEYS.legacyReachIconVisible);
       lastReachedEventId = window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.lastReachedEventId);
     } catch {
       // Privacy modes may disable persistent storage; keep the action available.
     }
-    document.cookie = `${PUBLIC_PREFERENCE_KEYS.legacyReachIconVisible}=; path=/; max-age=0; samesite=lax`;
 
     const nextSortOrder = parseBooleanPreference(
       window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.sortedAscending) ?? undefined,

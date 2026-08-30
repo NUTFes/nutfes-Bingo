@@ -3,7 +3,7 @@ import { useEffect, useReducer, useState, type SetStateAction } from "react";
 
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminLoading from "@/components/admin/AdminLoading";
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import type { PrizeRow as PrizeWithImageUrl } from "@shared/bingo-transport";
 import { SearchField } from "@/components/ui/SearchField";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion } from "@/components/ui/Toast";

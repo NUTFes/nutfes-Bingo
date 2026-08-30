@@ -2,7 +2,7 @@ import { useState } from "react";
 import ResponsiveImage from "@/components/ui/ResponsiveImage";
 import { cn } from "@/utils/utils";
 
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import type { PrizeRow as PrizeWithImageUrl } from "@shared/bingo-transport";
 import { useBingoLanguage } from "@/utils/i18n/provider";
 import styles from "./PrizeCard.module.css";
 

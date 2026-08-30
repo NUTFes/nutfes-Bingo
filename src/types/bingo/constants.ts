@@ -1,4 +1,4 @@
-import type { StampName } from "@/types/bingo/types";
+import type { StampName } from "@shared/bingo-transport";
 
 export const REACTION_IMAGES: ReadonlyArray<{ name: StampName; src: string; alt: string }> = [
   { name: "crap", src: "/ReactionIcon/crap.png", alt: "crap icon" },

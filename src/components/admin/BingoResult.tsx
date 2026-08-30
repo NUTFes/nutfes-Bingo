@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { GridList, GridListItem } from "react-aria-components";
 
-import type { NumberRow } from "@/types/bingo/types";
+import type { NumberRow } from "@shared/bingo-transport";
 
 interface BingoResultProps {
   bingoResultNumber: NumberRow[];

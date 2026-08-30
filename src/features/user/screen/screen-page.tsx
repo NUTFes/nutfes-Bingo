@@ -7,8 +7,7 @@ import ScreenNumberCardList from "./components/ScreenNumberCardList/ScreenNumber
 import ScreenReachCount from "./components/ScreenReachCount/ScreenReachCount";
 import Loading from "@/components/user/Loading";
 import { useScreenRealtimeState, useStampStream } from "@/lib/realtime";
-import type { StampEvent } from "@/types/bingo/realtime";
-import type { StampName } from "@/types/bingo/types";
+import type { StampEvent, StampName } from "@shared/bingo-transport";
 import styles from "@/styles/user/screen.module.css";
 
 const IMAGES: Record<string, string> = {

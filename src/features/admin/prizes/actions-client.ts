@@ -1,5 +1,5 @@
 import { sendAdminCommand, uploadPrizeImage } from "@/lib/admin-api";
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import type { PrizeRow as PrizeWithImageUrl } from "@shared/bingo-transport";
 
 interface PrizeMutationInput {
   nameJp: string;

@@ -10,7 +10,7 @@ import {
   getCompletedLines,
   isCenter,
 } from "@/types/bingo/judgement";
-import type { NumberRow } from "@/types/bingo/types";
+import type { NumberRow } from "@shared/bingo-transport";
 import { JudgementModalView } from "./JudgementModalView";
 
 const MAX_DIGIT_LENGTH = 2;

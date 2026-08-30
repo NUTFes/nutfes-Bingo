@@ -2,7 +2,7 @@ import { useCallback, useEffect, useReducer, useRef, useState, type SetStateActi
 import { isFileDropItem, type DropEvent } from "react-aria";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminLoading from "@/components/admin/AdminLoading";
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import type { PrizeRow as PrizeWithImageUrl } from "@shared/bingo-transport";
 import { MyToastRegion } from "@/components/ui/Toast";
 import { queue } from "@/components/ui/toastQueue";
 import {

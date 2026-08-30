@@ -1,9 +1,8 @@
-import type { AdminCommand } from "../../shared/bingo-transport";
+import type { AdminCommand, BingoUnifiedState } from "@shared/bingo-transport";
 import { normalizeBingoState } from "@/lib/realtime";
-import type { BingoUnifiedState } from "@/types/bingo/realtime";
-import { EMPTY_APP_STATE } from "@/types/bingo/types";
+import { createEmptyBingoState } from "@/types/bingo/realtime";
 
-export type { AdminCommand } from "../../shared/bingo-transport";
+export type { AdminCommand } from "@shared/bingo-transport";
 
 type DataResponse<T> = { data: T };
 
@@ -11,14 +10,7 @@ const ADMIN_COMMAND_TIMEOUT_MS = 15_000;
 const ADMIN_STATE_TIMEOUT_MS = 15_000;
 const ADMIN_UPLOAD_TIMEOUT_MS = 30_000;
 
-const EMPTY_STATE: BingoUnifiedState = {
-  revision: 0,
-  numbers: [],
-  prizes: [],
-  appState: EMPTY_APP_STATE,
-  latestReachLog: null,
-  serverTime: "",
-};
+const EMPTY_STATE: BingoUnifiedState = createEmptyBingoState();
 
 async function parseDataResponse<T>(response: Response): Promise<T> {
   const body = (await response.json().catch(() => null)) as

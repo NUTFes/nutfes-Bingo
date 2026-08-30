@@ -1,20 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 
-import type {
-  BingoUnifiedState,
-  StampEvent,
-  StampSocketMessage,
-  StateSocketMessage,
-} from "@/types/bingo/realtime";
-import { isRecord, isStampName } from "@shared/bingo-transport";
-import { makeStateEtag, weaklyMatchesEntityTag } from "../../shared/state-etag";
 import {
-  EMPTY_APP_STATE,
+  isRecord,
+  isStampName,
   type AppStateRow,
+  type BingoUnifiedState,
   type NumberRow,
-  type PrizeWithImageUrl,
+  type PrizeRow as PrizeWithImageUrl,
   type ReachLogRow,
-} from "@/types/bingo/types";
+  type StampEvent,
+  type StampSocketMessage,
+  type StateSocketMessage,
+} from "@shared/bingo-transport";
+import { makeStateEtag, weaklyMatchesEntityTag } from "../../shared/state-etag";
+import { createEmptyBingoState } from "@/types/bingo/realtime";
 import { resolvePrizeImageUrl } from "@/utils/image";
 import { startVenueSocketLifecycle } from "@/lib/venue-socket-lifecycle";
 import { shouldAcceptRevision, type StateUpdateAuthority } from "@/lib/state-order";
@@ -39,17 +38,6 @@ const FETCH_TIMEOUT_MS = 8_000;
 const SCREEN_ACCESS_RECHECK_MS = 30 * 60_000;
 
 class ScreenAccessExpiredError extends Error {}
-
-function createEmptyState(): BingoUnifiedState {
-  return {
-    revision: 0,
-    numbers: [],
-    prizes: [],
-    appState: EMPTY_APP_STATE,
-    latestReachLog: null,
-    serverTime: "",
-  };
-}
 
 function normalizePrize(value: unknown): PrizeWithImageUrl | null {
   if (!isRecord(value) || typeof value.id !== "number" || typeof value.name_jp !== "string") {
@@ -468,7 +456,7 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
 }
 
 export function useHomeRealtimeState() {
-  const state = useBingoState(createEmptyState());
+  const state = useBingoState(createEmptyBingoState());
   return {
     numbers: state.numbers,
     appState: state.appState,
@@ -477,7 +465,7 @@ export function useHomeRealtimeState() {
 }
 
 export function usePrizesRealtimeState() {
-  const state = useBingoState(createEmptyState());
+  const state = useBingoState(createEmptyBingoState());
   return {
     prizes: state.prizes,
     appState: state.appState,
@@ -486,7 +474,7 @@ export function usePrizesRealtimeState() {
 }
 
 export function useScreenRealtimeState() {
-  const state = useBingoState(createEmptyState(), "screen");
+  const state = useBingoState(createEmptyBingoState(), "screen");
   return {
     numbers: state.numbers,
     latestReachLog: state.latestReachLog,

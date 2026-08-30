@@ -1,4 +1,4 @@
-import type { NumberRow } from "@/types/bingo/types";
+import type { NumberRow } from "@shared/bingo-transport";
 import styles from "./ScreenNumberCardLarge.module.css";
 
 interface ScreenNumberCardLargeProps {

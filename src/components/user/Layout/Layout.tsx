@@ -18,7 +18,7 @@ import {
   Settings as SettingsLucideIcon,
 } from "lucide-react";
 import { REACTION_IMAGES } from "@/types/bingo/constants";
-import type { AppStateRow } from "@/types/bingo/types";
+import type { AppStateRow } from "@shared/bingo-transport";
 import { BingoLanguageProvider, useBingoLanguage } from "@/utils/i18n/provider";
 import { openHttpsUrl } from "@/utils/url";
 
