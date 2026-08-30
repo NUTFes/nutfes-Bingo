@@ -19,7 +19,7 @@ A successful result can be observed by starting the Cloudflare Vite development 
 - [x] (2026-08-31 06:07+09:00) Completed the clean Vite cutover with React, Cloudflare, and Tailwind Vite plugins; removed Next.js, Docker, App Router, and PostCSS-only build paths from the committed tree.
 - [x] (2026-08-31 06:18+09:00) Ran `pnpm check`, Worker tests, React Doctor, knip, and Cloudflare build/dry-run/startup checks. All blocking checks pass; React Doctor reports two non-blocking existing maintainability warnings.
 - [x] (2026-08-31 06:15+09:00) Verified `/`, `/prizes`, `/screen`, `/admin`, `/admin/prizes`, and `/admin/prizes/new` with `agent-browser`, including direct navigation/reload, public/native modal behavior, admin modal open/close, and live Vite HMR.
-- [ ] Inspect the final staged diff, commit and push the branch, then create a draft pull request against `develop`.
+- [x] (2026-08-31 06:25+09:00) Inspected the final staged diff, committed and pushed the branch, and created draft PR #386 against `develop`.
 
 ## Surprises & Discoveries
 
@@ -73,7 +73,7 @@ Implementation and validation are complete pending commit/push/PR creation.
 
 `agent-browser` verified direct load and reload for `/`, `/prizes`, `/screen`, `/admin`, `/admin/prizes`, and `/admin/prizes/new`. The public Settings dialog opens through native dialog semantics and closes with Escape. Admin number editing opens and closes without mutating data. Native public/admin links are exposed as links. A temporary heading edit on `/admin/prizes` appeared without reload and produced Vite `hot updated` console entries, confirming HMR; the temporary edit was reverted. No browser console errors were observed. React Aria emits existing non-fatal admin modal accessibility/overlay warnings that are outside this cutover's native public dialog path.
 
-The pre-existing untracked `docs/code-review.md` remains unmodified and will not be included in the commit. The PR location will be recorded after creation.
+The pre-existing untracked `docs/code-review.md` remains unmodified and is not included in the commits. Draft PR: https://github.com/NUTFes/nutfes-Bingo/pull/386.
 
 ## Context and Orientation
 
