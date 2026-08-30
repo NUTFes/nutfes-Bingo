@@ -1,8 +1,4 @@
-import {
-  MAX_PRIZE_IMAGE_BYTES,
-  MAX_PRIZES,
-  MAX_SURVEY_URL_LENGTH,
-} from "../shared/bingo-constraints";
+import { MAX_SURVEY_URL_LENGTH } from "../shared/bingo-constraints";
 import {
   STAMP_NAMES,
   type AppStateRow,
@@ -35,8 +31,6 @@ export type StampSubmissionResult =
       reason: "daily_limit" | "overloaded" | "rate_limited" | "sampled";
       retryAfterSeconds?: number;
     };
-
-export { MAX_PRIZE_IMAGE_BYTES, MAX_PRIZES } from "../shared/bingo-constraints";
 
 export const PRIZE_SORT_ORDER_STEP = 1000;
 export const MAX_REACH_LOGS = 2_000;

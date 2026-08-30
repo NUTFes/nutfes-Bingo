@@ -1,4 +1,5 @@
-import { isImmutablePrizeImagePath, MAX_PRIZE_IMAGE_BYTES, resolveImageUrl } from "./domain";
+import { MAX_PRIZE_IMAGE_BYTES } from "../shared/bingo-constraints";
+import { isImmutablePrizeImagePath, resolveImageUrl } from "./domain";
 import { ApiError, applySecurityHeaders, ifNoneMatch, readMultipartForm, sha256Hex } from "./http";
 
 const MULTIPART_OVERHEAD_BYTES = 128 * 1024;

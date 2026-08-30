@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import {
   MAX_BINGO_NUMBER,
+  MAX_PRIZES,
   MAX_SURVEY_BUTTON_LABEL_LENGTH,
   MAX_SURVEY_DESCRIPTION_LENGTH,
   MAX_SURVEY_TITLE_LENGTH,
@@ -16,7 +17,6 @@ import {
   type AppStateRow,
   MAX_AUDIT_LOG_ROWS,
   MAX_AUDIT_PAYLOAD_BYTES,
-  MAX_PRIZES,
   MAX_REACH_LOGS,
   MAX_REACH_SUBMISSIONS,
   type NumberRow,
