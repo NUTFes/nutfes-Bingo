@@ -1,7 +1,7 @@
 {
   "$schema": "https://react.doctor/schema/config.json",
   "ignore": {
-    "files": [".agents/**", "src/app/**"],
+    "files": [".agents/**"],
     "overrides": [
       {
         "files": ["src/lib/realtime.ts"],

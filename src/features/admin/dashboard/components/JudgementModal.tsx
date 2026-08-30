@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { fetchAdminState } from "@/lib/admin-api";
+import { MAX_BINGO_NUMBER, MIN_BINGO_NUMBER } from "@shared/bingo-constraints";
 import {
-  MAX_BINGO_NUMBER,
   type BingoCard,
   type CellPos,
   type LineId,
@@ -153,7 +153,7 @@ const JudgementModal = ({
     if (hasJudged || !selectedCell) return;
     const next = (inputValue + digit).slice(0, MAX_DIGIT_LENGTH);
     const n = Number.parseInt(next, 10);
-    if (Number.isNaN(n) || n < 1 || n > MAX_BINGO_NUMBER) return;
+    if (Number.isNaN(n) || n < MIN_BINGO_NUMBER || n > MAX_BINGO_NUMBER) return;
     setJudgementState((prev) => ({ ...prev, inputValue: next }));
   };
 

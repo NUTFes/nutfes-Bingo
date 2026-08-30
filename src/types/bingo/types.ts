@@ -1,5 +1,4 @@
 export {
-  STAMP_NAMES,
   type AppStateRow,
   type NumberRow,
   type PrizeRow as PrizeWithImageUrl,

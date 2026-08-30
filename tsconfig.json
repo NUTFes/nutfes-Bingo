@@ -28,5 +28,5 @@
     "vite.config.ts",
     "worker-configuration.d.ts"
   ],
-  "exclude": ["node_modules", "temp", "src/app", ".next", "out"]
+  "exclude": ["node_modules", "temp"]
 }

@@ -1,12 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
-import type { StampSocketMessage } from "../shared/bingo-transport";
+import { isStampName, type StampSocketMessage } from "../shared/bingo-transport";
 
-import {
-  isStampName,
-  type StampSubmissionResult,
-  type StampTriggerRow,
-  validationProblem,
-} from "./domain";
+import { type StampSubmissionResult, type StampTriggerRow, validationProblem } from "./domain";
 import { capacityResponse } from "./http";
 import { expireScreenSockets, scheduleScreenSocketExpiration } from "./screen-socket-expiration";
 

@@ -4,12 +4,15 @@ import {
   PRIZE_NAME_EN_MAX_LENGTH,
   PRIZE_NAME_JP_MAX_LENGTH,
 } from "../shared/bingo-constraints";
-import type { AdminCommand, BingoUnifiedState } from "../shared/bingo-transport";
+import {
+  isClientId,
+  isRecord,
+  type AdminCommand,
+  type BingoUnifiedState,
+} from "../shared/bingo-transport";
 import { makeStateEtag } from "../shared/state-etag";
 import {
   assertPrizeImagePath,
-  isClientId,
-  isRecord,
   parseOptionalText,
   parsePositiveInteger,
   parseRequiredText,

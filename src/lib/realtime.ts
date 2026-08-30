@@ -8,15 +8,14 @@ import type {
   StampSocketMessage,
   StateSocketMessage,
 } from "@/types/bingo/realtime";
+import { isRecord, isStampName } from "@shared/bingo-transport";
 import { makeStateEtag, weaklyMatchesEntityTag } from "../../shared/state-etag";
 import {
   EMPTY_APP_STATE,
-  STAMP_NAMES,
   type AppStateRow,
   type NumberRow,
   type PrizeWithImageUrl,
   type ReachLogRow,
-  type StampName,
 } from "@/types/bingo/types";
 import { resolvePrizeImageUrl } from "@/utils/image";
 import { startVenueSocketLifecycle } from "@/lib/venue-socket-lifecycle";
@@ -57,10 +56,6 @@ function createEmptyState(input?: {
     latestReachLog: input?.latestReachLog ?? null,
     serverTime: "",
   };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function normalizePrize(value: unknown): PrizeWithImageUrl | null {
@@ -504,10 +499,6 @@ export function useScreenRealtimeState() {
     latestReachLog: state.latestReachLog,
     isReady: state.appState.event_id !== "",
   };
-}
-
-function isStampName(value: unknown): value is StampName {
-  return typeof value === "string" && (STAMP_NAMES as readonly string[]).includes(value);
 }
 
 function parseStampSocketMessage(event: MessageEvent): StampSocketMessage | null {
