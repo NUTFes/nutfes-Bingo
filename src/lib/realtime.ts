@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 
 import type {
@@ -42,18 +40,13 @@ const SCREEN_ACCESS_RECHECK_MS = 30 * 60_000;
 
 class ScreenAccessExpiredError extends Error {}
 
-function createEmptyState(input?: {
-  numbers?: NumberRow[];
-  prizes?: PrizeWithImageUrl[];
-  appState?: AppStateRow;
-  latestReachLog?: ReachLogRow | null;
-}): BingoUnifiedState {
+function createEmptyState(): BingoUnifiedState {
   return {
     revision: 0,
-    numbers: input?.numbers ?? [],
-    prizes: input?.prizes ?? [],
-    appState: input?.appState ?? EMPTY_APP_STATE,
-    latestReachLog: input?.latestReachLog ?? null,
+    numbers: [],
+    prizes: [],
+    appState: EMPTY_APP_STATE,
+    latestReachLog: null,
     serverTime: "",
   };
 }

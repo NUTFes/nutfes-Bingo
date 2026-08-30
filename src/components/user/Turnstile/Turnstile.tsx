@@ -1,12 +1,13 @@
-"use client";
-
 import { type Ref, useCallback, useEffect, useImperativeHandle, useRef } from "react";
 
 import { subscribeToTurnstileScript } from "./turnstile-script-status";
 import styles from "./Turnstile.module.css";
 
 const TURNSTILE_ACTION = "turnstile-spin-v1";
-const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "";
+const TURNSTILE_ALWAYS_PASS_TEST_SITE_KEY = "1x00000000000000000000AA";
+const TURNSTILE_SITE_KEY =
+  import.meta.env.VITE_TURNSTILE_SITE_KEY ||
+  (import.meta.env.DEV ? TURNSTILE_ALWAYS_PASS_TEST_SITE_KEY : "");
 
 type TurnstileApi = {
   render: (

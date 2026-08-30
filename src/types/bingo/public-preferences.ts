@@ -31,21 +31,12 @@ export const preferenceCookie = (key: string, value: boolean) =>
 export const shouldShowReachIcon = (eventId: string, lastReachedEventId: string | null) =>
   eventId !== "" && eventId !== lastReachedEventId;
 
-export const resolveDarkModePreference = (fallback: boolean) => {
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  return parseBooleanPreference(
+export const resolveDarkModePreference = (fallback: boolean) =>
+  parseBooleanPreference(
     window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.darkMode) ?? undefined,
     fallback,
   );
-};
 
 export const applyPublicTheme = (isDarkMode: boolean) => {
-  if (typeof document === "undefined") {
-    return;
-  }
-
   document.documentElement.dataset.theme = isDarkMode ? "dark" : "light";
 };

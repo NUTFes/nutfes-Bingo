@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowUpDown } from "lucide-react";
 import { useEffect, useReducer, useState, type SetStateAction } from "react";
 

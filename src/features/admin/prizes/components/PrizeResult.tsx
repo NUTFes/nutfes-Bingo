@@ -1,5 +1,3 @@
-"use client";
-
 import ResponsiveImage from "@/components/ui/ResponsiveImage";
 import React, { type Key, useMemo, useReducer } from "react";
 import { ChevronDown, ChevronUp, GripVertical, Pencil, X } from "lucide-react";

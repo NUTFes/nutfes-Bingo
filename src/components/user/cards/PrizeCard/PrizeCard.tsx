@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import ResponsiveImage from "@/components/ui/ResponsiveImage";
 import { cn } from "@/utils/utils";

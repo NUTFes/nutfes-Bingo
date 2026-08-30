@@ -12,7 +12,7 @@ export function updateTurnstileScriptStatus(status: TurnstileScriptStatus) {
 }
 
 export function subscribeToTurnstileScript(listener: TurnstileScriptListener) {
-  if (typeof window !== "undefined" && window.turnstile !== undefined) {
+  if (window.turnstile !== undefined) {
     scriptStatus = "ready";
   }
 

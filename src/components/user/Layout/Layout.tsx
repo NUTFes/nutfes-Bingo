@@ -1,5 +1,3 @@
-"use client";
-
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
 
 import BackIcon from "@/components/user/icons/BackIcon";

@@ -1,5 +1,3 @@
-"use client";
-
 import { CloudUpload } from "lucide-react";
 import ResponsiveImage from "@/components/ui/ResponsiveImage";
 import { useCallback, useEffect, useState, useRef } from "react";

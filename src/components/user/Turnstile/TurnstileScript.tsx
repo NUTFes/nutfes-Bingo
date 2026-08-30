@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect } from "react";
 
 import { updateTurnstileScriptStatus } from "./turnstile-script-status";

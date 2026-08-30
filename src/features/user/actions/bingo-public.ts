@@ -1,5 +1,3 @@
-"use client";
-
 import { isClientId, isStampName, type StampName } from "@shared/bingo-transport";
 
 const PUBLIC_CLIENT_ID_KEY = "nutfes-bingo:public-client-id:v1";

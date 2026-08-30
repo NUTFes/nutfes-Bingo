@@ -1,5 +1,3 @@
-"use client";
-
 import { Gift } from "lucide-react";
 
 import IconFramework from "@/components/user/icons/IconFramework/IconFramework";

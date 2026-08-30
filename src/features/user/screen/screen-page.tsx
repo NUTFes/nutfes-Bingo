@@ -1,5 +1,3 @@
-"use client";
-
 import Matter from "matter-js";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 

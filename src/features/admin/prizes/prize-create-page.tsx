@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useReducer, useRef, useState, type SetStateAction } from "react";
 import { isFileDropItem, type DropEvent } from "react-aria";
 import AdminHeader from "@/components/admin/AdminHeader";

@@ -1,5 +1,3 @@
-"use client";
-
 import { Smile } from "lucide-react";
 
 import IconFramework from "@/components/user/icons/IconFramework/IconFramework";
