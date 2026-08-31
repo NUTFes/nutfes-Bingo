@@ -1,8 +1,4 @@
-"use client";
-
-import { useLayoutEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
-import { usePathname } from "next/navigation";
+import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
 
 import BackIcon from "@/components/user/icons/BackIcon";
 import Button from "@/components/user/buttons/Button";
@@ -22,7 +18,7 @@ import {
   Settings as SettingsLucideIcon,
 } from "lucide-react";
 import { REACTION_IMAGES } from "@/types/bingo/constants";
-import type { AppStateRow } from "@/types/bingo/types";
+import type { AppStateRow } from "@shared/bingo-transport";
 import { BingoLanguageProvider, useBingoLanguage } from "@/utils/i18n/provider";
 import { openHttpsUrl } from "@/utils/url";
 
@@ -32,29 +28,21 @@ import {
   usePublicPreferences,
 } from "@/components/user/Layout/usePublicPreferences";
 import { usePublicInteractions } from "@/components/user/Layout/usePublicInteractions";
-import {
-  DEFAULT_PUBLIC_PREFERENCES,
-  PUBLIC_PREFERENCE_KEYS,
-  type PublicPreferences,
-} from "@/types/bingo/public-preferences";
+import { PUBLIC_PREFERENCE_KEYS } from "@/types/bingo/public-preferences";
 
-const ReactionStampModal = dynamic(
+const ReactionStampModal = lazy(
   () => import("@/components/user/ReactionStampModal/ReactionStampModal"),
-  { loading: () => null },
 );
-const ReachConfirmationModal = dynamic(
+const ReachConfirmationModal = lazy(
   () => import("@/components/user/ReachConfirmationModal/ReachConfirmationModal"),
-  { loading: () => null },
 );
-const SurveyPromptModal = dynamic(
+const SurveyPromptModal = lazy(
   () => import("@/components/user/SurveyPromptModal/SurveyPromptModal"),
-  { loading: () => null },
 );
 
 interface InnerLayoutProps {
   children: React.ReactNode;
   appState: AppStateRow;
-  initialPreferences?: PublicPreferences;
   isSortedAscending?: boolean;
   setIsSortedAscending?: (value: boolean) => void;
 }
@@ -62,17 +50,15 @@ interface InnerLayoutProps {
 function InnerLayout({
   children,
   appState,
-  initialPreferences = DEFAULT_PUBLIC_PREFERENCES,
   isSortedAscending,
   setIsSortedAscending,
 }: InnerLayoutProps) {
-  const pathname = usePathname();
+  const pathname = window.location.pathname;
   const { language, setLanguage, t } = useBingoLanguage();
 
   const interactions = usePublicInteractions(appState);
   const { preferences, setPreferences, markReachConfirmed } = usePublicPreferences(
     appState.event_id,
-    initialPreferences,
     setIsSortedAscending,
   );
   const [navBarHeight, setNavBarHeight] = useState<string>();
@@ -167,34 +153,36 @@ function InnerLayout({
 
   return (
     <div className={styles.layoutWrapper}>
-      {isReactionModalOpen && (
-        <ReactionStampModal
-          position={position}
-          height={navBarHeight}
-          images={[...REACTION_IMAGES]}
-          disabled={isStampSending}
-          activeName={activeStampName || undefined}
-          onClick={handleReactionClick}
-        />
-      )}
-      {isSurveyModalOpen && (
-        <SurveyPromptModal
-          isOpened
-          setIsOpened={setIsSurveyModalOpen}
-          surveyTitle={appState.survey_title}
-          surveyDescription={appState.survey_description}
-          surveyButtonLabel={appState.survey_button_label}
-          onAnswer={handleAnswerSurvey}
-        />
-      )}
-      {isReachModalOpen && (
-        <ReachConfirmationModal
-          copy={t.reachModal}
-          language={language}
-          onClose={() => setIsReachModalOpen(false)}
-          onConfirmed={markReachConfirmed}
-        />
-      )}
+      <Suspense fallback={null}>
+        {isReactionModalOpen && (
+          <ReactionStampModal
+            position={position}
+            height={navBarHeight}
+            images={[...REACTION_IMAGES]}
+            disabled={isStampSending}
+            activeName={activeStampName || undefined}
+            onClick={handleReactionClick}
+          />
+        )}
+        {isSurveyModalOpen && (
+          <SurveyPromptModal
+            isOpened
+            setIsOpened={setIsSurveyModalOpen}
+            surveyTitle={appState.survey_title}
+            surveyDescription={appState.survey_description}
+            surveyButtonLabel={appState.survey_button_label}
+            onAnswer={handleAnswerSurvey}
+          />
+        )}
+        {isReachModalOpen && (
+          <ReachConfirmationModal
+            copy={t.reachModal}
+            language={language}
+            onClose={() => setIsReachModalOpen(false)}
+            onConfirmed={markReachConfirmed}
+          />
+        )}
+      </Suspense>
       <Modal isOpened={isSettingsModalOpen} setIsOpened={setIsSettingsModalOpen}>
         <div className={styles.settingsModal}>
           <div className={styles.settingsHeader}>

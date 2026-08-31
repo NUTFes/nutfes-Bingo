@@ -6,7 +6,6 @@ type Line = { id: LineId; cells: CellPos[] };
 export const BOARD_SIZE = 5;
 const CENTER: CellPos = { row: 2, col: 2 };
 const FREE = "FREE";
-export const MAX_BINGO_NUMBER = 99;
 
 export const createEmptyBingoCard = (): BingoCard => {
   const card = Array.from({ length: BOARD_SIZE }, () =>

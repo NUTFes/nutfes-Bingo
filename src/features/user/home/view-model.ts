@@ -1,4 +1,4 @@
-import type { NumberRow } from "@/types/bingo/types";
+import type { NumberRow } from "@shared/bingo-transport";
 
 const sortById = (bingoNumbers: NumberRow[]) => bingoNumbers.toSorted((a, b) => a.id - b.id);
 const sortByNumber = (bingoNumbers: NumberRow[]) =>

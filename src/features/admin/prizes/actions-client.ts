@@ -1,54 +1,47 @@
 import { sendAdminCommand, uploadPrizeImage } from "@/lib/admin-api";
-import { toActionResult } from "@/types/action-result";
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import type { PrizeRow as PrizeWithImageUrl } from "@shared/bingo-transport";
 
-function getString(formData: FormData, key: string) {
-  const value = formData.get(key);
-  return typeof value === "string" ? value : "";
+interface PrizeMutationInput {
+  nameJp: string;
+  nameEn: string;
+  file?: File | null;
 }
 
-function getFile(formData: FormData) {
-  const value = formData.get("file");
-  return value instanceof File && value.size > 0 ? value : null;
+interface PrizeUpdateInput extends PrizeMutationInput {
+  id: number;
 }
 
-async function uploadOptionalImage(formData: FormData) {
-  const file = getFile(formData);
-  return file ? uploadPrizeImage(file) : null;
+async function uploadOptionalImage(file?: File | null) {
+  return file && file.size > 0 ? uploadPrizeImage(file) : null;
 }
 
-async function createPrize(formData: FormData) {
-  const image = await uploadOptionalImage(formData);
+async function createPrize(input: PrizeMutationInput) {
+  const image = await uploadOptionalImage(input.file);
   return sendAdminCommand<PrizeWithImageUrl>({
     type: "createPrize",
-    nameJp: getString(formData, "nameJp"),
-    nameEn: getString(formData, "nameEn"),
+    nameJp: input.nameJp,
+    nameEn: input.nameEn,
     ...(image ? { imagePath: image.image_path } : {}),
   });
 }
 
-async function updatePrize(formData: FormData) {
-  const image = await uploadOptionalImage(formData);
+async function updatePrize(input: PrizeUpdateInput) {
+  const image = await uploadOptionalImage(input.file);
   return sendAdminCommand<PrizeWithImageUrl>({
     type: "updatePrize",
-    id: Number(getString(formData, "id")),
-    nameJp: getString(formData, "nameJp"),
-    nameEn: getString(formData, "nameEn"),
+    id: input.id,
+    nameJp: input.nameJp,
+    nameEn: input.nameEn,
     ...(image ? { imagePath: image.image_path } : {}),
   });
 }
 
 export const prizeActions = {
-  createPrize: (formData: FormData) => toActionResult(() => createPrize(formData)),
-  updatePrize: (formData: FormData) => toActionResult(() => updatePrize(formData)),
+  createPrize,
+  updatePrize,
   togglePrizeWon: (id: number, isWon: boolean) =>
-    toActionResult(() =>
-      sendAdminCommand<PrizeWithImageUrl>({ type: "togglePrizeWon", id, isWon }),
-    ),
+    sendAdminCommand<PrizeWithImageUrl>({ type: "togglePrizeWon", id, isWon }),
   reorderPrizeGroup: (orderedIds: number[]) =>
-    toActionResult(() =>
-      sendAdminCommand<PrizeWithImageUrl[]>({ type: "reorderPrizeGroup", orderedIds }),
-    ),
-  deletePrize: (id: number) =>
-    toActionResult(() => sendAdminCommand<null>({ type: "deletePrize", id })),
+    sendAdminCommand<PrizeWithImageUrl[]>({ type: "reorderPrizeGroup", orderedIds }),
+  deletePrize: (id: number) => sendAdminCommand<null>({ type: "deletePrize", id }),
 };

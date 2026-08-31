@@ -1,12 +1,9 @@
-"use client";
-
 import { useCallback, useRef, useState } from "react";
 import { PartyPopper } from "lucide-react";
 
 import Button from "@/components/user/buttons/Button";
 import Modal from "@/components/user/Modal";
 import Turnstile, { type TurnstileHandle } from "@/components/user/Turnstile/Turnstile";
-import TurnstileScript from "@/components/user/Turnstile/TurnstileScript";
 import { recordPublicReach } from "@/features/user/actions/bingo-public";
 
 import styles from "./ReachConfirmationModal.module.css";
@@ -115,7 +112,6 @@ export default function ReachConfirmationModal({
           <PartyPopper className={styles.reachModalIcon} />
         </div>
         <h2 className={styles.reachModalTitle}>{copy.title}</h2>
-        <TurnstileScript />
         <Turnstile
           ref={turnstileRef}
           language={language}

@@ -1,4 +1,4 @@
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import type { PrizeRow as PrizeWithImageUrl } from "@shared/bingo-transport";
 import styles from "./PrizeCardList.module.css";
 import PrizeCard from "../PrizeCard/PrizeCard";
 

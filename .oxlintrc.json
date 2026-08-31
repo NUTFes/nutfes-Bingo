@@ -36,5 +36,5 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": [".agents"]
+  "ignorePatterns": [".agents", "dist", ".wrangler-dist"]
 }

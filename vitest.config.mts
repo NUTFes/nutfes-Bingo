@@ -1,8 +1,5 @@
 import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
-import { existsSync } from "node:fs";
 import { defineConfig } from "vitest/config";
-
-const assetsDirectory = existsSync("./out/index.html") ? "./out" : "./test/assets";
 
 export default defineConfig({
   plugins: [
@@ -10,7 +7,7 @@ export default defineConfig({
       miniflare: {
         assets: {
           binding: "ASSETS",
-          directory: assetsDirectory,
+          directory: "./test/assets",
         },
         bindings: {
           LOCAL_ADMIN_BYPASS: "true",

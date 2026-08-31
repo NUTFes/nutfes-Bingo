@@ -1,10 +1,9 @@
-"use client";
-
+import { ArrowUpDown } from "lucide-react";
 import { useEffect, useReducer, useState, type SetStateAction } from "react";
-import { IoSwapVerticalOutline } from "react-icons/io5";
 
-import { AdminHeader, AdminLoading } from "@/components/admin";
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import AdminHeader from "@/components/admin/AdminHeader";
+import AdminLoading from "@/components/admin/AdminLoading";
+import type { PrizeRow as PrizeWithImageUrl } from "@shared/bingo-transport";
 import { SearchField } from "@/components/ui/SearchField";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion } from "@/components/ui/Toast";
@@ -12,10 +11,6 @@ import { queue } from "@/components/ui/toastQueue";
 import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
 import { fetchAdminState } from "@/lib/admin-api";
-
-interface AdminPrizesPageProps {
-  initialPrizes: PrizeWithImageUrl[];
-}
 
 interface PrizesLoadState {
   bingoPrize: PrizeWithImageUrl[];
@@ -43,9 +38,9 @@ const prizesLoadReducer = (state: PrizesLoadState, action: PrizesLoadAction): Pr
   }
 };
 
-export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
+export function AdminPrizesPage() {
   const [{ bingoPrize, loadError, isLoaded }, dispatchLoadState] = useReducer(prizesLoadReducer, {
-    bingoPrize: initialPrizes,
+    bingoPrize: [],
     loadError: null,
     isLoaded: false,
   });
@@ -54,22 +49,6 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
   const setBingoPrize = (value: SetStateAction<PrizeWithImageUrl[]>) => {
     dispatchLoadState({ type: "set-prizes", value });
   };
-  const refreshAuthoritativePrizes = async () => {
-    try {
-      const state = await fetchAdminState();
-      setBingoPrize(state.prizes);
-    } catch (error) {
-      console.error(error);
-      queue.add(
-        {
-          title: "再読込失敗",
-          description: "サーバー状態を確認できません。ページを再読み込みしてください。",
-        },
-        { timeout: 5000 },
-      );
-    }
-  };
-
   useEffect(() => {
     const controller = new AbortController();
     void fetchAdminState(controller.signal)
@@ -137,7 +116,7 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
                 isDisabled={Boolean(searchText) || bingoPrize.length < 2}
                 onPress={() => setIsReorderMode((prev) => !prev)}
               >
-                <IoSwapVerticalOutline className="size-4" aria-hidden />
+                <ArrowUpDown className="size-4" aria-hidden />
                 <span>{isReorderMode ? "並び替え終了" : "並び替えモード"}</span>
               </Button>
             </div>
@@ -160,44 +139,12 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
           showOverlay={true}
           showToggle={true}
           canReorder={isReorderMode && !searchText}
-          onToggle={async (id, isWon) => {
-            const result = await prizeActions.togglePrizeWon(id, isWon);
-            if (!result.ok) {
-              await refreshAuthoritativePrizes();
-              throw new Error(result.error);
-            }
-            return result.data;
-          }}
+          onToggle={prizeActions.togglePrizeWon}
           onDelete={async (prize) => {
-            const result = await prizeActions.deletePrize(prize.id);
-            if (!result.ok) {
-              await refreshAuthoritativePrizes();
-              throw new Error(result.error);
-            }
+            await prizeActions.deletePrize(prize.id);
           }}
-          onUpdate={async ({ id, nameJp, nameEn, file }) => {
-            const formData = new FormData();
-            formData.set("id", String(id));
-            formData.set("nameJp", nameJp);
-            formData.set("nameEn", nameEn);
-            if (file) {
-              formData.set("file", file);
-            }
-            const result = await prizeActions.updatePrize(formData);
-            if (!result.ok) {
-              await refreshAuthoritativePrizes();
-              throw new Error(result.error);
-            }
-            return result.data;
-          }}
-          onReorder={async (orderedIds) => {
-            const result = await prizeActions.reorderPrizeGroup(orderedIds);
-            if (!result.ok) {
-              await refreshAuthoritativePrizes();
-              throw new Error(result.error);
-            }
-            return result.data;
-          }}
+          onUpdate={prizeActions.updatePrize}
+          onReorder={prizeActions.reorderPrizeGroup}
         />
       </div>
     </div>

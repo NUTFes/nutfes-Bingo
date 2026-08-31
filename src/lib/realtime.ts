@@ -1,23 +1,19 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 
-import type {
-  BingoUnifiedState,
-  StampEvent,
-  StampSocketMessage,
-  StateSocketMessage,
-} from "@/types/bingo/realtime";
-import { makeStateEtag, weaklyMatchesEntityTag } from "../../shared/state-etag";
 import {
-  EMPTY_APP_STATE,
-  STAMP_NAMES,
+  isRecord,
+  isStampName,
   type AppStateRow,
+  type BingoUnifiedState,
   type NumberRow,
-  type PrizeWithImageUrl,
+  type PrizeRow as PrizeWithImageUrl,
   type ReachLogRow,
-  type StampName,
-} from "@/types/bingo/types";
+  type StampEvent,
+  type StampSocketMessage,
+  type StateSocketMessage,
+} from "@shared/bingo-transport";
+import { makeStateEtag, weaklyMatchesEntityTag } from "../../shared/state-etag";
+import { EMPTY_BINGO_STATE } from "@/types/bingo/realtime";
 import { resolvePrizeImageUrl } from "@/utils/image";
 import { startVenueSocketLifecycle } from "@/lib/venue-socket-lifecycle";
 import { shouldAcceptRevision, type StateUpdateAuthority } from "@/lib/state-order";
@@ -42,26 +38,6 @@ const FETCH_TIMEOUT_MS = 8_000;
 const SCREEN_ACCESS_RECHECK_MS = 30 * 60_000;
 
 class ScreenAccessExpiredError extends Error {}
-
-function createEmptyState(input?: {
-  numbers?: NumberRow[];
-  prizes?: PrizeWithImageUrl[];
-  appState?: AppStateRow;
-  latestReachLog?: ReachLogRow | null;
-}): BingoUnifiedState {
-  return {
-    revision: 0,
-    numbers: input?.numbers ?? [],
-    prizes: input?.prizes ?? [],
-    appState: input?.appState ?? EMPTY_APP_STATE,
-    latestReachLog: input?.latestReachLog ?? null,
-    serverTime: "",
-  };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
 
 function normalizePrize(value: unknown): PrizeWithImageUrl | null {
   if (!isRecord(value) || typeof value.id !== "number" || typeof value.name_jp !== "string") {
@@ -191,9 +167,9 @@ function stateEtag(state: BingoUnifiedState) {
   return state.appState.event_id === "" ? null : makeStateEtag(state.revision);
 }
 
-function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen" = "public") {
-  const [state, setState] = useState(initialState);
-  const stateRef = useRef(initialState);
+function useBingoState(view: "public" | "screen" = "public") {
+  const [state, setState] = useState<BingoUnifiedState>(() => EMPTY_BINGO_STATE);
+  const stateRef = useRef(state);
 
   useEffect(() => {
     let active = true;
@@ -479,10 +455,8 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
   return state;
 }
 
-export function useHomeRealtimeState(initialNumbers: NumberRow[], initialAppState: AppStateRow) {
-  const state = useBingoState(
-    createEmptyState({ numbers: initialNumbers, appState: initialAppState }),
-  );
+export function useHomeRealtimeState() {
+  const state = useBingoState();
   return {
     numbers: state.numbers,
     appState: state.appState,
@@ -490,13 +464,8 @@ export function useHomeRealtimeState(initialNumbers: NumberRow[], initialAppStat
   };
 }
 
-export function usePrizesRealtimeState(
-  initialPrizes: PrizeWithImageUrl[],
-  initialAppState: AppStateRow,
-) {
-  const state = useBingoState(
-    createEmptyState({ prizes: initialPrizes, appState: initialAppState }),
-  );
+export function usePrizesRealtimeState() {
+  const state = useBingoState();
   return {
     prizes: state.prizes,
     appState: state.appState,
@@ -504,23 +473,13 @@ export function usePrizesRealtimeState(
   };
 }
 
-export function useScreenRealtimeState(
-  initialNumbers: NumberRow[],
-  initialReachLog: ReachLogRow | null,
-) {
-  const state = useBingoState(
-    createEmptyState({ numbers: initialNumbers, latestReachLog: initialReachLog }),
-    "screen",
-  );
+export function useScreenRealtimeState() {
+  const state = useBingoState("screen");
   return {
     numbers: state.numbers,
     latestReachLog: state.latestReachLog,
     isReady: state.appState.event_id !== "",
   };
-}
-
-function isStampName(value: unknown): value is StampName {
-  return typeof value === "string" && (STAMP_NAMES as readonly string[]).includes(value);
 }
 
 function parseStampSocketMessage(event: MessageEvent): StampSocketMessage | null {

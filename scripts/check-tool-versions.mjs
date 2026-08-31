@@ -5,13 +5,7 @@ import { readFileSync } from "node:fs";
 const EXPECTED_NODE = "26.2.0";
 const EXPECTED_PNPM = "11.2.2";
 
-const files = [
-  "mise.toml",
-  "package.json",
-  "Dockerfile.cloudflare",
-  ".github/workflows/ci.yml",
-  "README.md",
-];
+const files = ["mise.toml", "package.json", ".github/workflows/ci.yml", "README.md"];
 
 const findings = [];
 
@@ -64,26 +58,6 @@ for (const path of files) {
       }
       break;
     }
-    case "Dockerfile.cloudflare":
-      rejectVersionRegex(
-        path,
-        text,
-        /FROM node:(?<version>\d+\.\d+\.\d+)-(?:alpine|bookworm-slim)/g,
-        EXPECTED_NODE,
-        "Node image",
-      );
-      rejectVersionRegex(
-        path,
-        text,
-        /pnpm@(?<version>\d+\.\d+\.\d+)/g,
-        EXPECTED_PNPM,
-        "pnpm install",
-      );
-      assertIncludes(path, text, `node:${EXPECTED_NODE}-bookworm-slim`, "Node image pin");
-      if (!text.includes(`pnpm@${EXPECTED_PNPM}`) && !text.includes(`pnpm-${EXPECTED_PNPM}.tgz`)) {
-        fail(path, `missing pnpm pin: pnpm@${EXPECTED_PNPM} or pnpm-${EXPECTED_PNPM}.tgz`);
-      }
-      break;
     case ".github/workflows/ci.yml":
       assertIncludes(path, text, `NODE_VERSION: "${EXPECTED_NODE}"`, "workflow Node pin");
       assertIncludes(path, text, `PNPM_VERSION: "${EXPECTED_PNPM}"`, "workflow pnpm pin");

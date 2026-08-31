@@ -1,5 +1,3 @@
-"use client";
-
 import Matter from "matter-js";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
@@ -9,27 +7,9 @@ import ScreenNumberCardList from "./components/ScreenNumberCardList/ScreenNumber
 import ScreenReachCount from "./components/ScreenReachCount/ScreenReachCount";
 import Loading from "@/components/user/Loading";
 import { useScreenRealtimeState, useStampStream } from "@/lib/realtime";
-import type { StampEvent } from "@/types/bingo/realtime";
-import type { NumberRow, ReachLogRow, StampName } from "@/types/bingo/types";
+import { REACTION_IMAGE_SOURCES } from "@/types/bingo/constants";
+import type { StampEvent } from "@shared/bingo-transport";
 import styles from "@/styles/user/screen.module.css";
-
-interface ScreenPageProps {
-  initialNumbers: NumberRow[];
-  initialReachLog: ReachLogRow | null;
-}
-
-const IMAGES: Record<string, string> = {
-  angry: "/ReactionIcon/angry.png",
-  cracker: "/ReactionIcon/cracker.png",
-  crap: "/ReactionIcon/crap.png",
-  good: "/ReactionIcon/good.png",
-  heart: "/ReactionIcon/heart.png",
-  peace: "/ReactionIcon/peace.png",
-  sad: "/ReactionIcon/sad.png",
-  skull: "/ReactionIcon/skull.png",
-  smile: "/ReactionIcon/smile.png",
-  surprise: "/ReactionIcon/surprise.png",
-} satisfies Record<StampName, string>;
 
 const MAX_STAMP_BODIES = 56;
 const STAMP_TEXTURE_SIZE = 842;
@@ -37,7 +17,7 @@ const WALL_THICKNESS = 96;
 const WALL_INSET = 48;
 const STAMP_LIFETIME_MS = 45000;
 
-export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps) {
+export function ScreenPage() {
   const scene = useRef<HTMLDivElement>(null);
   const engine = useRef<Matter.Engine | null>(null);
   const runner = useRef<Matter.Runner | null>(null);
@@ -56,11 +36,7 @@ export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps)
     removalTimersRef.current = new Map();
   }
   const removalTimers = removalTimersRef.current;
-  const {
-    numbers: bingoNumbers,
-    latestReachLog,
-    isReady,
-  } = useScreenRealtimeState(initialNumbers, initialReachLog);
+  const { numbers: bingoNumbers, latestReachLog, isReady } = useScreenRealtimeState();
   const displayBingoNumbers = useMemo(
     () => getScreenDisplayBingoNumbers(bingoNumbers),
     [bingoNumbers],
@@ -89,7 +65,7 @@ export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps)
 
   const handleStampInsert = useCallback(
     (stamp: StampEvent) => {
-      const texture = IMAGES[stamp.name];
+      const texture = REACTION_IMAGE_SOURCES[stamp.name];
       const currentEngine = engine.current;
       if (!texture || !currentEngine) {
         return;

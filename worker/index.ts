@@ -1,10 +1,18 @@
 import { requireAdmin, requireScreen, type AdminIdentity } from "./access";
-import type { AdminCommand, BingoUnifiedState } from "../shared/bingo-transport";
+import {
+  MAX_BINGO_NUMBER,
+  PRIZE_NAME_EN_MAX_LENGTH,
+  PRIZE_NAME_JP_MAX_LENGTH,
+} from "../shared/bingo-constraints";
+import {
+  isClientId,
+  isRecord,
+  type AdminCommand,
+  type BingoUnifiedState,
+} from "../shared/bingo-transport";
 import { makeStateEtag } from "../shared/state-etag";
 import {
   assertPrizeImagePath,
-  isClientId,
-  isRecord,
   parseOptionalText,
   parsePositiveInteger,
   parseRequiredText,
@@ -42,7 +50,7 @@ const worker = {
     try {
       if (request.method === "OPTIONS") return preflightResponse(request);
 
-      if (url.pathname === "/api/health" || url.pathname === "/api/ready") {
+      if (url.pathname === "/api/ready") {
         return await handleHealth(request, env);
       }
       if (url.pathname.startsWith("/api/prize-images/")) {
@@ -65,14 +73,15 @@ const worker = {
           return await handleAdminApi(request, env, identity);
         }
         assertMethod(request, ["GET", "HEAD"]);
-        return withStaticSecurityHeaders(await env.ASSETS.fetch(request));
+        return withStaticSecurityHeaders(
+          await env.ASSETS.fetch(request),
+          env.LOCAL_ADMIN_BYPASS === "true",
+        );
       }
 
       switch (url.pathname) {
         case "/api/bingo/state":
           return await handlePublicState(request, env, "state");
-        case "/api/bingo/prizes":
-          return await handlePublicState(request, env, "prizes");
         case "/api/bingo/socket":
           return await handleStateSocket(request, env, "public");
         case "/api/bingo/reach":
@@ -150,14 +159,17 @@ async function handleScreenRoute(request: Request, env: Env): Promise<Response> 
         throw new ApiError(404, "会場画面APIが見つかりません。");
       }
       assertMethod(request, ["GET", "HEAD"]);
-      return withStaticSecurityHeaders(await env.ASSETS.fetch(request));
+      return withStaticSecurityHeaders(
+        await env.ASSETS.fetch(request),
+        env.LOCAL_SCREEN_BYPASS === "true",
+      );
   }
 }
 
 async function handlePublicState(
   request: Request,
   env: Env,
-  view: "state" | "prizes" | "screen",
+  view: "state" | "screen",
 ): Promise<Response> {
   assertMethod(request, ["GET", "HEAD"]);
   const state = await getGameState(env).getState();
@@ -170,17 +182,10 @@ async function handlePublicState(
   );
 }
 
-function selectPublicView(state: BingoUnifiedState, view: "state" | "prizes" | "screen"): unknown {
+function selectPublicView(state: BingoUnifiedState, view: "state" | "screen"): unknown {
   switch (view) {
     case "state":
       return state;
-    case "prizes":
-      return {
-        revision: state.revision,
-        prizes: state.prizes,
-        appState: state.appState,
-        serverTime: state.serverTime,
-      };
     case "screen":
       return {
         revision: state.revision,
@@ -389,20 +394,20 @@ async function handleAdminCommand(
     case "createNumber":
       data = await game.createNumber(
         identity.email,
-        parsePositiveInteger(body.number, "番号", { max: 99 }),
+        parsePositiveInteger(body.number, "番号", { max: MAX_BINGO_NUMBER }),
       );
       break;
     case "deleteNumber":
       data = await game.deleteNumber(
         identity.email,
-        parsePositiveInteger(body.number, "番号", { max: 99 }),
+        parsePositiveInteger(body.number, "番号", { max: MAX_BINGO_NUMBER }),
       );
       break;
     case "updateNumber":
       data = await game.updateNumber(
         identity.email,
         parsePositiveInteger(body.id, "番号ID"),
-        parsePositiveInteger(body.number, "番号", { max: 99 }),
+        parsePositiveInteger(body.number, "番号", { max: MAX_BINGO_NUMBER }),
       );
       break;
     case "incrementReach":
@@ -434,8 +439,8 @@ async function handleAdminCommand(
       if (imagePath !== undefined) assertPrizeImagePath(imagePath);
       data = await game.createPrize(
         identity.email,
-        parseRequiredText(body.nameJp, "景品名", 120),
-        parseOptionalText(body.nameEn, "英語景品名", 160),
+        parseRequiredText(body.nameJp, "景品名", PRIZE_NAME_JP_MAX_LENGTH),
+        parseOptionalText(body.nameEn, "英語景品名", PRIZE_NAME_EN_MAX_LENGTH),
         imagePath,
       );
       break;
@@ -446,8 +451,8 @@ async function handleAdminCommand(
       data = await game.updatePrize(
         identity.email,
         parsePositiveInteger(body.id, "景品ID"),
-        parseRequiredText(body.nameJp, "景品名", 120),
-        parseOptionalText(body.nameEn, "英語景品名", 160),
+        parseRequiredText(body.nameJp, "景品名", PRIZE_NAME_JP_MAX_LENGTH),
+        parseOptionalText(body.nameEn, "英語景品名", PRIZE_NAME_EN_MAX_LENGTH),
         imagePath,
       );
       break;
@@ -478,9 +483,9 @@ async function handleAdminCommand(
 function getGameState(env: Env): DurableObjectStub<GameState> {
   return env.GAME_STATE.getByName(GAME_STATE_NAME);
 }
-function withStaticSecurityHeaders(response: Response): Response {
+function withStaticSecurityHeaders(response: Response, allowInlineScripts = false): Response {
   const headers = new Headers(response.headers);
-  applySecurityHeaders(headers);
+  applySecurityHeaders(headers, { allowInlineScripts });
   headers.set("Cache-Control", "private, no-store");
   return new Response(response.body, {
     status: response.status,

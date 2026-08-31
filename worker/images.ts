@@ -1,17 +1,13 @@
-import { isImmutablePrizeImagePath, MAX_PRIZE_IMAGE_BYTES, resolveImageUrl } from "./domain";
+import {
+  MAX_PRIZE_IMAGE_BYTES,
+  PRIZE_IMAGE_EXTENSION_BY_MIME_TYPE,
+  PRIZE_IMAGE_MIME_TYPES,
+  type PrizeImageMimeType,
+} from "../shared/bingo-constraints";
+import { isImmutablePrizeImagePath, resolveImageUrl } from "./domain";
 import { ApiError, applySecurityHeaders, ifNoneMatch, readMultipartForm, sha256Hex } from "./http";
 
 const MULTIPART_OVERHEAD_BYTES = 128 * 1024;
-const IMAGE_TYPES = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-} as const;
-const IMAGE_CONTENT_TYPES = {
-  jpg: "image/jpeg",
-  png: "image/png",
-  webp: "image/webp",
-} as const;
 const IMMUTABLE_IMAGE_KEY = /^prizes\/([a-f0-9]{64})\.(jpg|png|webp)$/;
 
 export async function uploadPrizeImage(
@@ -27,7 +23,7 @@ export async function uploadPrizeImage(
     throw new ApiError(413, "景品画像は5 MiB以下にしてください。");
   }
 
-  const extension = IMAGE_TYPES[entry.type as keyof typeof IMAGE_TYPES];
+  const extension = PRIZE_IMAGE_EXTENSION_BY_MIME_TYPE[entry.type as PrizeImageMimeType];
   if (extension === undefined) {
     throw new ApiError(415, "景品画像は JPEG / PNG / WebP のみ許可します。");
   }
@@ -74,7 +70,10 @@ export async function servePrizeImage(request: Request, env: Env, key: string): 
   const keyParts = IMMUTABLE_IMAGE_KEY.exec(key);
   if (keyParts === null) throw new ApiError(404, "画像が見つかりません。");
   const [, digest, extension] = keyParts;
-  const contentType = IMAGE_CONTENT_TYPES[extension as keyof typeof IMAGE_CONTENT_TYPES];
+  const contentType = PRIZE_IMAGE_MIME_TYPES.find(
+    (mimeType) => PRIZE_IMAGE_EXTENSION_BY_MIME_TYPE[mimeType] === extension,
+  );
+  if (contentType === undefined) throw new ApiError(404, "画像が見つかりません。");
 
   let object: R2Object | null;
   let body: ReadableStream | null = null;

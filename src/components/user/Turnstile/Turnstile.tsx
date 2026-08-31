@@ -1,12 +1,14 @@
-"use client";
-
 import { type Ref, useCallback, useEffect, useImperativeHandle, useRef } from "react";
 
-import { subscribeToTurnstileScript } from "./turnstile-script-status";
 import styles from "./Turnstile.module.css";
 
 const TURNSTILE_ACTION = "turnstile-spin-v1";
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+const TURNSTILE_ALWAYS_PASS_TEST_SITE_KEY = "1x00000000000000000000AA";
+const TURNSTILE_SITE_KEY =
+  import.meta.env.VITE_TURNSTILE_SITE_KEY ||
+  (import.meta.env.DEV ? TURNSTILE_ALWAYS_PASS_TEST_SITE_KEY : "");
+const TURNSTILE_API_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+const TURNSTILE_SCRIPT_ID = "cloudflare-turnstile-api";
 
 type TurnstileApi = {
   render: (
@@ -114,10 +116,31 @@ export default function Turnstile({ language, onError, onTokenChange, ref }: Tur
       widgetIdRef.current = null;
       callbacksRef.current.onTokenChange(null);
     }
-    return subscribeToTurnstileScript((status) => {
-      if (status === "ready") renderWidget();
-      if (status === "error") clearTokenWithError();
-    });
+    if (window.turnstile) {
+      renderWidget();
+      return;
+    }
+
+    const existing = document.getElementById(TURNSTILE_SCRIPT_ID) as HTMLScriptElement | null;
+    const script = existing ?? document.createElement("script");
+    const handleLoad = () => renderWidget();
+    const handleError = () => clearTokenWithError();
+
+    script.addEventListener("load", handleLoad);
+    script.addEventListener("error", handleError);
+    if (!existing) {
+      script.id = TURNSTILE_SCRIPT_ID;
+      script.src = TURNSTILE_API_URL;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      script.removeEventListener("load", handleLoad);
+      script.removeEventListener("error", handleError);
+      if (!window.turnstile) script.remove();
+    };
   }, [clearTokenWithError, language, renderWidget]);
 
   useEffect(

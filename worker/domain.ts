@@ -1,19 +1,13 @@
-import {
-  STAMP_NAMES,
-  type AppStateRow,
-  type NumberRow,
-  type PrizeRow,
-  type ReachLogRow,
-  type StampName,
-} from "../shared/bingo-transport";
-
-export type {
+import { MAX_SURVEY_URL_LENGTH } from "../shared/bingo-constraints";
+import type {
   AppStateRow,
   NumberRow,
   PrizeRow,
   ReachLogRow,
   StampName,
 } from "../shared/bingo-transport";
+
+export type { AppStateRow, NumberRow, PrizeRow, ReachLogRow } from "../shared/bingo-transport";
 
 export type StoredPrizeRow = Omit<PrizeRow, "image_url">;
 
@@ -32,17 +26,12 @@ export type StampSubmissionResult =
     };
 
 export const PRIZE_SORT_ORDER_STEP = 1000;
-export const MAX_PRIZES = 100;
 export const MAX_REACH_LOGS = 2_000;
 export const MAX_REACH_SUBMISSIONS = 2_000;
 export const MAX_AUDIT_LOG_ROWS = 200;
 export const MAX_AUDIT_PAYLOAD_BYTES = 4 * 1024;
-export const MAX_PRIZE_IMAGE_BYTES = 5 * 1024 * 1024;
-
-const MAX_SURVEY_URL_LENGTH = 2_048;
 
 const IMMUTABLE_IMAGE_PATTERN = /^prizes\/[a-f0-9]{64}\.(?:jpg|png|webp)$/;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EVENT_ID_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$/;
 
 export class DomainProblem extends Error {
@@ -69,18 +58,6 @@ export function notFoundProblem(message: string): never {
 
 export function capacityProblem(message: string): never {
   throw new DomainProblem("capacity", message);
-}
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-export function isClientId(value: unknown): value is string {
-  return typeof value === "string" && UUID_PATTERN.test(value);
-}
-
-export function isStampName(value: unknown): value is StampName {
-  return typeof value === "string" && (STAMP_NAMES as readonly string[]).includes(value);
 }
 
 function isPrizeImagePath(value: unknown): value is string | null {

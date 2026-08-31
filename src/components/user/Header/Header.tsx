@@ -1,16 +1,12 @@
-"use client";
-
 import type { DriveStep, Driver } from "driver.js";
-import { usePathname, useRouter } from "next/navigation";
-import { IoHelpCircleOutline } from "react-icons/io5";
+import { CircleHelp } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
 
 import { useBingoLanguage } from "@/utils/i18n/provider";
 import styles from "./Header.module.css";
 
 const Header = () => {
-  const { push } = useRouter();
-  const pathname = usePathname() ?? "/";
+  const pathname = window.location.pathname;
   const { t } = useBingoLanguage();
   const driverRef = useRef<Driver | null>(null);
   const isLoadingTourRef = useRef(false);
@@ -120,14 +116,9 @@ const Header = () => {
   return (
     <div className={styles.container}>
       <div className={styles.main}>
-        <button
-          type="button"
-          className={styles.title}
-          onClick={() => push("/")}
-          aria-label="nutfes-Bingo"
-        >
+        <a className={styles.title} href="/" aria-label="nutfes-Bingo">
           nutfes-Bingo
-        </button>
+        </a>
         <button
           type="button"
           className={styles.icon}
@@ -135,7 +126,7 @@ const Header = () => {
           aria-label={t.helpCarousel.open}
           title={t.helpCarousel.open}
         >
-          <IoHelpCircleOutline />
+          <CircleHelp />
         </button>
       </div>
     </div>

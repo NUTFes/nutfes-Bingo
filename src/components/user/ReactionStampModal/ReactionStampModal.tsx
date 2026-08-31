@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 import styles from "./ReactionStampModal.module.css";
 
 interface ImageProps {
@@ -59,19 +58,14 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
                         {Array.from({ length: 6 }).map((_, i) => (
                           <span key={i} className={styles.particle}>
                             <span className={styles.particleImg}>
-                              <Image src={image.src} alt="" fill sizes="40px" />
+                              <img className={styles.image} src={image.src} alt="" />
                             </span>
                           </span>
                         ))}
                       </span>
                     </>
                   )}
-                  <Image
-                    src={image.src}
-                    alt={image.alt}
-                    fill
-                    sizes="(max-width: 768px) 18vw, 88px"
-                  />
+                  <img className={styles.image} src={image.src} alt={image.alt} />
                 </button>
               );
             })}

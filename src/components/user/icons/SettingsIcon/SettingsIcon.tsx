@@ -1,6 +1,4 @@
-"use client";
-
-import { IoIosSettings } from "react-icons/io";
+import { Settings } from "lucide-react";
 
 import IconFramework from "@/components/user/icons/IconFramework/IconFramework";
 
@@ -13,7 +11,7 @@ interface SettingsIconProps {
 const SettingsIcon = ({ isOpen, setIsSettingsModalOpen, id }: SettingsIconProps) => {
   return (
     <IconFramework
-      icon={<IoIosSettings />}
+      icon={<Settings />}
       text="Settings"
       outline
       inversion={isOpen}

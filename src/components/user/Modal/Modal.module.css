@@ -1,22 +1,10 @@
-.wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 200;
-  width: 100%;
-  height: 100%;
-  contain: content;
-}
-
 .content {
-  position: relative;
+  position: fixed;
+  inset: 0;
   width: 87.5vw;
   max-width: 430px;
   max-height: min(78dvh, 720px);
-  z-index: 50;
+  margin: auto;
   box-sizing: border-box;
   padding: clamp(28px, 8vw, 40px);
   overflow: auto;
@@ -30,17 +18,9 @@
   will-change: transform, opacity;
 }
 
-.background {
-  position: absolute;
-  z-index: 25;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
+.content::backdrop {
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
-  border: none;
   animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -72,7 +52,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .content,
-  .background {
+  .content::backdrop {
     animation: none;
   }
 }

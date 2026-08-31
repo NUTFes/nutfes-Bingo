@@ -1,7 +1,4 @@
-"use client";
-
-import { GiPartyPopper } from "react-icons/gi";
-import { RxCross1 } from "react-icons/rx";
+import { PartyPopper, X } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -110,7 +107,7 @@ export function JudgementModalView({
             className="h-11 w-11 shrink-0 px-0"
           >
             <span aria-hidden>
-              <RxCross1 className="size-4" />
+              <X className="size-4" />
             </span>
           </Button>
         </div>
@@ -227,7 +224,7 @@ export function JudgementModalView({
                 role="status"
                 className="flex items-center justify-center gap-2 rounded-xl bg-emerald-950 px-4 py-3 text-xl font-bold text-emerald-200"
               >
-                <GiPartyPopper className="size-6" aria-hidden />
+                <PartyPopper className="size-6" aria-hidden />
                 BINGO！
               </div>
             ) : (
@@ -235,7 +232,7 @@ export function JudgementModalView({
                 role="status"
                 className="flex items-center justify-center gap-2 rounded-xl bg-neutral-800 px-4 py-3 text-base font-semibold text-neutral-100"
               >
-                <RxCross1 className="size-5 text-neutral-400" aria-hidden />
+                <X className="size-5 text-neutral-400" aria-hidden />
                 ビンゴはありません
               </div>
             )}

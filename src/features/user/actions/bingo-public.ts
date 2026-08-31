@@ -1,21 +1,14 @@
-"use client";
-
-import { STAMP_NAMES, type StampName } from "@/types/bingo/types";
+import { isClientId, isStampName, type StampName } from "@shared/bingo-transport";
 
 const PUBLIC_CLIENT_ID_KEY = "nutfes-bingo:public-client-id:v1";
 const PUBLIC_ACTION_TIMEOUT_MS = 8_000;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 let memoryClientId: string | null = null;
-
-function isStampName(value: string): value is StampName {
-  return (STAMP_NAMES as readonly string[]).includes(value);
-}
 
 function getPublicClientId() {
   try {
     const stored = window.localStorage.getItem(PUBLIC_CLIENT_ID_KEY);
-    if (stored && UUID_PATTERN.test(stored)) {
+    if (isClientId(stored)) {
       return stored;
     }
   } catch {

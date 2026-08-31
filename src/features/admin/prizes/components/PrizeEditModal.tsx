@@ -1,10 +1,8 @@
-"use client";
-
-import Image from "next/image";
+import { CloudUpload } from "lucide-react";
+import ResponsiveImage from "@/components/ui/ResponsiveImage";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { isFileDropItem, type DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
-import { IoCloudUploadOutline } from "react-icons/io5";
 
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -13,6 +11,13 @@ import { Form } from "@/components/ui/Form";
 import { Modal } from "@/components/ui/Modal";
 import { Separator } from "@/components/ui/Separator";
 import { TextField } from "@/components/ui/TextField";
+import { queue } from "@/components/ui/toastQueue";
+import {
+  PRIZE_IMAGE_MIME_TYPES,
+  PRIZE_NAME_EN_MAX_LENGTH,
+  PRIZE_NAME_JP_MAX_LENGTH,
+} from "@shared/bingo-constraints";
+import { validatePrizeImage, validatePrizeInput } from "../validation";
 
 interface Props {
   isOpened: boolean;
@@ -56,6 +61,13 @@ const PrizeEditModal = ({
 
   const handleFileSelected = useCallback(
     (file: File | null) => {
+      if (file) {
+        const validationError = validatePrizeImage(file);
+        if (validationError) {
+          queue.add({ title: "入力エラー", description: validationError }, { timeout: 5000 });
+          return;
+        }
+      }
       newFile.current = file;
       if (previewUrlRef.current !== null) {
         URL.revokeObjectURL(previewUrlRef.current);
@@ -83,7 +95,12 @@ const PrizeEditModal = ({
   );
 
   const handleSubmit = async () => {
-    await onSubmit({ nameJp, nameEn, file: newFile.current });
+    const validationError = validatePrizeInput({ nameJp, nameEn, file: newFile.current });
+    if (validationError) {
+      queue.add({ title: "入力エラー", description: validationError }, { timeout: 5000 });
+      return;
+    }
+    await onSubmit({ nameJp: nameJp.trim(), nameEn: nameEn.trim(), file: newFile.current });
     close();
   };
 
@@ -109,8 +126,18 @@ const PrizeEditModal = ({
           }}
         >
           <div className="flex flex-col gap-4">
-            <TextField label="景品名（日本語）" value={nameJp} onChange={setNameJp} />
-            <TextField label="景品名（英語）" value={nameEn} onChange={setNameEn} />
+            <TextField
+              label="景品名（日本語）"
+              value={nameJp}
+              onChange={setNameJp}
+              maxLength={PRIZE_NAME_JP_MAX_LENGTH}
+            />
+            <TextField
+              label="景品名（英語）"
+              value={nameEn}
+              onChange={setNameEn}
+              maxLength={PRIZE_NAME_EN_MAX_LENGTH}
+            />
           </div>
 
           <div>
@@ -118,11 +145,10 @@ const PrizeEditModal = ({
               <p className="text-sm font-medium text-foreground">画像</p>
               {previewUrl ? (
                 <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-border bg-card/80 p-2">
-                  <Image
+                  <ResponsiveImage
                     className="bg-white"
                     src={previewUrl}
                     alt="preview"
-                    fill
                     sizes="(max-width: 768px) 72vw, 360px"
                     style={{ objectFit: "contain" }}
                   />
@@ -136,20 +162,18 @@ const PrizeEditModal = ({
               <DropZone
                 onDrop={handleDrop}
                 getDropOperation={(types) =>
-                  types.has("image/jpeg") || types.has("image/png") || types.has("image/webp")
-                    ? "copy"
-                    : "cancel"
+                  PRIZE_IMAGE_MIME_TYPES.some((type) => types.has(type)) ? "copy" : "cancel"
                 }
                 className="w-full rounded-2xl"
               >
                 <div className="flex flex-col items-center gap-2">
-                  <IoCloudUploadOutline size="3rem" />
+                  <CloudUpload className="size-12" />
                   ここに画像をドラッグ&ドロップ
                 </div>
               </DropZone>
 
               <FileTrigger
-                acceptedFileTypes={["image/*"]}
+                acceptedFileTypes={[...PRIZE_IMAGE_MIME_TYPES]}
                 onSelect={(files) => {
                   const file = files ? Array.from(files)[0] : null;
                   handleFileSelected(file ?? null);

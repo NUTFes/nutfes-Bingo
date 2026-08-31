@@ -1,10 +1,8 @@
-"use client";
-
-import Image from "next/image";
 import { useState } from "react";
+import ResponsiveImage from "@/components/ui/ResponsiveImage";
 import { cn } from "@/utils/utils";
 
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
+import type { PrizeRow as PrizeWithImageUrl } from "@shared/bingo-transport";
 import { useBingoLanguage } from "@/utils/i18n/provider";
 import styles from "./PrizeCard.module.css";
 
@@ -34,10 +32,9 @@ function PrizeImage({
   }
 
   return (
-    <Image
+    <ResponsiveImage
       src={imageUrl}
       alt={name}
-      fill
       className={styles.prizeImage}
       sizes="(max-width: 639px) 22.5vw, 98px"
       loading={highPriority ? "eager" : undefined}

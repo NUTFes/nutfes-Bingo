@@ -1,4 +1,3 @@
-"use client";
 import {
   composeRenderProps,
   Button as RACButton,

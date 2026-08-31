@@ -1,15 +1,18 @@
-"use client";
-
-import Image from "next/image";
+import { CloudUpload } from "lucide-react";
+import ResponsiveImage from "@/components/ui/ResponsiveImage";
 import type { DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
-import { IoCloudUploadOutline } from "react-icons/io5";
 
 import { Button } from "@/components/ui/Button";
 import { DropZone } from "@/components/ui/DropZone";
 import { Form } from "@/components/ui/Form";
 import { Separator } from "@/components/ui/Separator";
 import { TextField } from "@/components/ui/TextField";
+import {
+  PRIZE_IMAGE_MIME_TYPES,
+  PRIZE_NAME_EN_MAX_LENGTH,
+  PRIZE_NAME_JP_MAX_LENGTH,
+} from "@shared/bingo-constraints";
 
 interface PrizeCreateFormSectionProps {
   prizeNameJp: string;
@@ -45,20 +48,18 @@ export function PrizeCreateFormSection({
         <DropZone
           onDrop={onDrop}
           getDropOperation={(types) =>
-            types.has("image/jpeg") || types.has("image/png") || types.has("image/webp")
-              ? "copy"
-              : "cancel"
+            PRIZE_IMAGE_MIME_TYPES.some((type) => types.has(type)) ? "copy" : "cancel"
           }
           className="w-full rounded-2xl"
         >
           <div className="flex flex-col items-center gap-2">
-            <IoCloudUploadOutline size="4rem" />
+            <CloudUpload className="size-16" />
             <p>ここに画像をドラッグ&ドロップ</p>
             <p className="text-sm font-normal text-muted-foreground">または下のボタンから選択</p>
           </div>
         </DropZone>
         <FileTrigger
-          acceptedFileTypes={["image/jpeg", "image/png", "image/webp"]}
+          acceptedFileTypes={[...PRIZE_IMAGE_MIME_TYPES]}
           onSelect={(files) => {
             const file = files ? Array.from(files)[0] : null;
             onFileSelected(file ?? null);
@@ -81,12 +82,14 @@ export function PrizeCreateFormSection({
               name="nameJp"
               value={prizeNameJp}
               onChange={onNameJpChange}
+              maxLength={PRIZE_NAME_JP_MAX_LENGTH}
             />
             <TextField
               label="景品名（英語）"
               name="nameEn"
               value={prizeNameEn}
               onChange={onNameEnChange}
+              maxLength={PRIZE_NAME_EN_MAX_LENGTH}
             />
           </div>
         </Form>
@@ -119,10 +122,9 @@ export function PrizeCreatePreviewSection({
         <div className="flex flex-col items-center gap-4">
           {previewUrl ? (
             <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl bg-muted/70">
-              <Image
+              <ResponsiveImage
                 src={previewUrl}
                 alt="preview"
-                fill
                 sizes="(max-width: 768px) 72vw, 360px"
                 style={{ objectFit: "contain" }}
               />

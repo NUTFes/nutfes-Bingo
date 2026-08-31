@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, use, useMemo, useState } from "react";
 
 import { en } from "@/utils/i18n/en";
@@ -20,11 +18,8 @@ const BingoLanguageContext = createContext<BingoLanguageContextValue | null>(nul
 
 export function BingoLanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<SupportedLanguage>(() => {
-    if (typeof window !== "undefined") {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored === "ja" || stored === "en") return stored;
-    }
-    return "ja";
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored === "ja" || stored === "en" ? stored : "ja";
   });
 
   const value = useMemo<BingoLanguageContextValue>(() => {

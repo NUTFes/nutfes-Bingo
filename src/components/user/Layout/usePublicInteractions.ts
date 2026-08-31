@@ -1,10 +1,8 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 
 import { sendReactionStamp } from "@/features/user/actions/bingo-public";
 import { REACTION_IMAGES } from "@/types/bingo/constants";
-import type { AppStateRow } from "@/types/bingo/types";
+import type { AppStateRow } from "@shared/bingo-transport";
 
 const STAMP_COOLDOWN_MS = 2_100;
 const DISMISSED_SURVEY_ACTIVATION_KEY = "bingo.dismissed-survey-activation";

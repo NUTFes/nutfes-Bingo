@@ -1,8 +1,6 @@
-"use client";
-
 import { useState } from "react";
 
-import type { NumberRow } from "@/types/bingo/types";
+import type { NumberRow } from "@shared/bingo-transport";
 
 interface UseDashboardStateOptions {
   bingoNumbers: NumberRow[];

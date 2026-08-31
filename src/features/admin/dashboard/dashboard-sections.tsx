@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -7,6 +5,14 @@ import { ComboBox, ComboBoxItem } from "@/components/ui/ComboBox";
 import { Form } from "@/components/ui/Form";
 import { NumberField } from "@/components/ui/NumberField";
 import { TextField } from "@/components/ui/TextField";
+import {
+  MAX_BINGO_NUMBER,
+  MAX_SURVEY_BUTTON_LABEL_LENGTH,
+  MAX_SURVEY_DESCRIPTION_LENGTH,
+  MAX_SURVEY_TITLE_LENGTH,
+  MAX_SURVEY_URL_LENGTH,
+  MIN_BINGO_NUMBER,
+} from "@shared/bingo-constraints";
 
 interface CreateNumberSectionProps {
   submitNumberFieldKey: number;
@@ -25,7 +31,9 @@ export function CreateNumberSection({
     <section className="flex flex-col gap-3 sm:gap-4">
       <header className="max-w-3xl space-y-1">
         <h2 className="text-lg font-semibold text-foreground">番号の追加</h2>
-        <p className="text-sm text-muted-foreground">1〜99の番号を入力して抽選結果に追加します。</p>
+        <p className="text-sm text-muted-foreground">
+          {MIN_BINGO_NUMBER}〜{MAX_BINGO_NUMBER}の番号を入力して抽選結果に追加します。
+        </p>
       </header>
       <div className="space-y-3">
         <Form
@@ -39,8 +47,8 @@ export function CreateNumberSection({
             <NumberField
               label="登録する番号"
               key={submitNumberFieldKey}
-              minValue={1}
-              maxValue={99}
+              minValue={MIN_BINGO_NUMBER}
+              maxValue={MAX_BINGO_NUMBER}
               placeholder="番号を入力"
               className="w-full"
               onInput={(event) => {
@@ -205,7 +213,7 @@ export function SurveyControlSection({
           value={surveyTitle}
           onChange={onSurveyTitleChange}
           isRequired
-          maxLength={200}
+          maxLength={MAX_SURVEY_TITLE_LENGTH}
         />
         <label className="flex flex-col gap-1 font-sans text-sm font-medium text-foreground">
           説明
@@ -214,7 +222,7 @@ export function SurveyControlSection({
             value={surveyDescription}
             onChange={(event) => onSurveyDescriptionChange(event.target.value)}
             required
-            maxLength={2000}
+            maxLength={MAX_SURVEY_DESCRIPTION_LENGTH}
           />
         </label>
         <TextField
@@ -222,7 +230,7 @@ export function SurveyControlSection({
           value={surveyButtonLabel}
           onChange={onSurveyButtonLabelChange}
           isRequired
-          maxLength={100}
+          maxLength={MAX_SURVEY_BUTTON_LABEL_LENGTH}
         />
         <TextField
           label="URL"
@@ -231,7 +239,7 @@ export function SurveyControlSection({
           value={surveyUrl}
           onChange={onSurveyUrlChange}
           isRequired
-          maxLength={2048}
+          maxLength={MAX_SURVEY_URL_LENGTH}
         />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Button type="submit" className="w-full">

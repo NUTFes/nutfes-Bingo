@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /prizes
+Disallow: /admin
+Disallow: /admin/
+Disallow: /screen
+Disallow: /api
+
+Sitemap: https://bingo.nutfes.net/sitemap.xml

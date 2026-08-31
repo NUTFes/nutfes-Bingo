@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { GridLayout, GridList, GridListItem, Size, Virtualizer } from "react-aria-components";
+import { GridList, GridListItem } from "react-aria-components";
 
-import type { NumberRow } from "@/types/bingo/types";
+import type { NumberRow } from "@shared/bingo-transport";
 
 interface BingoResultProps {
   bingoResultNumber: NumberRow[];
@@ -27,27 +27,28 @@ const BingoResult = ({ bingoResultNumber, onClick }: BingoResultProps) => {
       </header>
 
       <div className="space-y-3 sm:space-y-4">
-        <Virtualizer
-          layout={GridLayout}
-          layoutOptions={{
-            minItemSize: new Size(84, 84),
-            maxColumns: 8,
-          }}
+        <GridList
+          layout="grid"
+          aria-label="抽選済み番号一覧"
+          items={sortedNumbers}
+          className="grid grid-cols-3 gap-3 outline-none sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8"
         >
-          <GridList layout="grid" aria-label="抽選済み番号一覧" items={sortedNumbers}>
-            {(num) => (
-              <GridListItem id={num.id} textValue={`${num.number}`}>
-                <button
-                  type="button"
-                  onClick={() => onClick(num.id)}
-                  className="h-full w-full aspect-square rounded-2xl bg-primary text-4xl font-extrabold text-primary-foreground transition hover:bg-primary/90 active:scale-95 active:bg-primary/80"
-                >
-                  {num.number}
-                </button>
-              </GridListItem>
-            )}
-          </GridList>
-        </Virtualizer>
+          {(num) => (
+            <GridListItem
+              id={num.id}
+              textValue={`${num.number}`}
+              className="aspect-square outline-none"
+            >
+              <button
+                type="button"
+                onClick={() => onClick(num.id)}
+                className="h-full w-full rounded-2xl bg-primary text-4xl font-extrabold text-primary-foreground transition hover:bg-primary/90 active:scale-95 active:bg-primary/80"
+              >
+                {num.number}
+              </button>
+            </GridListItem>
+          )}
+        </GridList>
       </div>
     </section>
   );

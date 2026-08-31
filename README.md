@@ -4,14 +4,14 @@
 
 ## アーキテクチャ
 
-- Next.js App Router UIをstatic exportし、Workers Static Assetsから配信する。公開HTML、JavaScript、CSSは原則Workerを起動しない。
+- React UIをViteでbuildし、Cloudflare Vite plugin経由でWorkers Static Assetsから配信する。公開HTML、JavaScript、CSSは原則Workerを起動しない。
 - same-origin WorkerがHTTP API、Cloudflare Access認可、Turnstile検証、景品画像R2、Durable Object routingを担当する。
 - 固定名`game`のSQLite `GameState` Durable Object 1個が、番号、景品、当選状態、reach、survey、bounded audit logの正本になる。
 - `ReactionHub` Durable Objectが消失許容のstampを正本から分離する。
 - public stateはHibernation WebSocketで配信し、接続障害時は回数制限付きHTTP fallbackを使う。
 - public reachはTurnstileをserver-side検証する。reachとstampは同じedge kill switchでWorker到達前に停止できる。
 - `/admin*`と`/screen*`は別Cloudflare Access applicationで保護し、WorkerもJWT issuer、AUD、email allowlistを検証する。
-- 景品画像は2 MiB/type/signatureを検証し、content-hash keyで専用R2へ保存する。
+- 景品画像は5 MiB/type/signatureを検証し、content-hash keyで専用R2へ保存する。
 - data recoveryはSQLite Durable Object PITRだけを使う。`GameDirectory`、generation切替、logical snapshot、backup R2、daily Cronはない。
 
 詳細と年次手順は[Cloudflare本番運用runbook](docs/cloudflare-operations.md)を参照してください。
@@ -24,7 +24,7 @@ productionは団体Cloudflare accountの`nutfes-bingo` Workerと、団体管理�
 
 ## 開発環境
 
-Node `26.2.0`、pnpm `11.2.2`、Docker Engine、miseを使用します。package managerはpnpmだけを使い、Next.js buildとCloudflare開発runtimeはDocker内で実行します。ホストで`pnpm dev`や`pnpm build`を実行しないでください。
+Node `26.2.0`、pnpm `11.2.2`、miseを使用します。package managerはpnpmだけを使います。Cloudflare Vite pluginがフロントエンドHMR、Worker、Durable Object、R2、Static Assetsを同じローカル開発serverで起動します。
 
 ```bash
 mise trust
@@ -50,7 +50,7 @@ pnpm knip
 mise run cloudflare:check
 ```
 
-`pnpm test`はWorkers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。ブラウザE2E suiteは未構成です。`mise run cloudflare:check`はDocker static build、binding type freshness、Wrangler dry-run、Free plan bundle上限、Worker startup profileを確認します。
+`pnpm test`はWorkers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。ブラウザE2E suiteは未構成です。`mise run cloudflare:check`はVite/Worker production build、binding type freshness、生成済みWrangler設定によるdry-run、Free plan bundle上限、Worker startup profileを確認します。
 
 ## Deploy
 
