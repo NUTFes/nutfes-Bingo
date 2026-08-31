@@ -1,24 +1,13 @@
 import type { CSSProperties, ImgHTMLAttributes } from "react";
 
-import { canTransformImageSource, cloudflareImageLoader } from "@/utils/cloudflare-image-loader";
+const RESPONSIVE_WIDTHS = [96, 160, 256, 384, 512, 768, 1024] as const;
 
-const RESPONSIVE_WIDTHS = [
-  40, 56, 64, 88, 96, 128, 160, 192, 220, 256, 320, 360, 384, 512, 640, 768, 1024, 1280,
-] as const;
-
-type NativeImageProps = Omit<
+type ResponsiveImageProps = Omit<
   ImgHTMLAttributes<HTMLImageElement>,
-  "src" | "srcSet" | "width" | "height" | "loading"
->;
-
-interface ResponsiveImageProps extends NativeImageProps {
+  "src" | "srcSet" | "width" | "height"
+> & {
   src: string;
-  width?: number;
-  height?: number;
-  fill?: boolean;
-  quality?: number;
-  loading?: "eager" | "lazy";
-}
+};
 
 const fillStyle: CSSProperties = {
   position: "absolute",
@@ -27,28 +16,34 @@ const fillStyle: CSSProperties = {
   height: "100%",
 };
 
+function isPrizeImageSource(src: string): boolean {
+  try {
+    const pathname = src.startsWith("/") ? src : new URL(src, window.location.href).pathname;
+    return pathname.startsWith("/prizes/") || pathname.startsWith("/api/prize-images/prizes/");
+  } catch {
+    return false;
+  }
+}
+
+function cloudflarePrizeImageUrl(src: string, width: number): string {
+  const normalizedSource = src.startsWith("/") ? src.slice(1) : src;
+  return `/cdn-cgi/image/width=${width},height=${width},fit=scale-down,format=auto,onerror=redirect/${normalizedSource}`;
+}
+
 export default function ResponsiveImage({
   src,
   alt,
-  width,
-  height,
-  fill = false,
-  quality,
   sizes,
   loading = "lazy",
   fetchPriority,
   style,
   ...props
 }: ResponsiveImageProps) {
-  const useTransformations = import.meta.env.PROD && canTransformImageSource(src);
-  const fallbackWidth = width ?? 768;
-  const resolvedSrc = useTransformations
-    ? cloudflareImageLoader({ src, width: fallbackWidth, quality })
-    : src;
+  const useTransformations = import.meta.env.PROD && isPrizeImageSource(src);
+  const resolvedSrc = useTransformations ? cloudflarePrizeImageUrl(src, 768) : src;
   const srcSet = useTransformations
     ? RESPONSIVE_WIDTHS.map(
-        (candidateWidth) =>
-          `${cloudflareImageLoader({ src, width: candidateWidth, quality })} ${candidateWidth}w`,
+        (candidateWidth) => `${cloudflarePrizeImageUrl(src, candidateWidth)} ${candidateWidth}w`,
       ).join(", ")
     : undefined;
 
@@ -57,13 +52,11 @@ export default function ResponsiveImage({
       {...props}
       src={resolvedSrc}
       srcSet={srcSet}
-      sizes={srcSet ? sizes : undefined}
+      sizes={sizes}
       alt={alt}
-      width={fill ? undefined : width}
-      height={fill ? undefined : height}
       loading={loading}
       fetchPriority={fetchPriority}
-      style={fill ? { ...fillStyle, ...style } : style}
+      style={{ ...fillStyle, ...style }}
     />
   );
 }

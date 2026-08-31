@@ -8,7 +8,11 @@ import { DropZone } from "@/components/ui/DropZone";
 import { Form } from "@/components/ui/Form";
 import { Separator } from "@/components/ui/Separator";
 import { TextField } from "@/components/ui/TextField";
-import { PRIZE_IMAGE_MIME_TYPES } from "@shared/bingo-constraints";
+import {
+  PRIZE_IMAGE_MIME_TYPES,
+  PRIZE_NAME_EN_MAX_LENGTH,
+  PRIZE_NAME_JP_MAX_LENGTH,
+} from "@shared/bingo-constraints";
 
 interface PrizeCreateFormSectionProps {
   prizeNameJp: string;
@@ -78,12 +82,14 @@ export function PrizeCreateFormSection({
               name="nameJp"
               value={prizeNameJp}
               onChange={onNameJpChange}
+              maxLength={PRIZE_NAME_JP_MAX_LENGTH}
             />
             <TextField
               label="景品名（英語）"
               name="nameEn"
               value={prizeNameEn}
               onChange={onNameEnChange}
+              maxLength={PRIZE_NAME_EN_MAX_LENGTH}
             />
           </div>
         </Form>
@@ -119,7 +125,6 @@ export function PrizeCreatePreviewSection({
               <ResponsiveImage
                 src={previewUrl}
                 alt="preview"
-                fill
                 sizes="(max-width: 768px) 72vw, 360px"
                 style={{ objectFit: "contain" }}
               />

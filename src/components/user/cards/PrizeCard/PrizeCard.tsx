@@ -35,7 +35,6 @@ function PrizeImage({
     <ResponsiveImage
       src={imageUrl}
       alt={name}
-      fill
       className={styles.prizeImage}
       sizes="(max-width: 639px) 22.5vw, 98px"
       loading={highPriority ? "eager" : undefined}

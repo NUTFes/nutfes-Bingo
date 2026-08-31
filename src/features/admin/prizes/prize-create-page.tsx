@@ -12,12 +12,7 @@ import {
 import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
 import { fetchAdminState } from "@/lib/admin-api";
-import {
-  MAX_PRIZE_IMAGE_BYTES,
-  PRIZE_IMAGE_MIME_TYPES,
-  PRIZE_NAME_EN_MAX_LENGTH,
-  PRIZE_NAME_JP_MAX_LENGTH,
-} from "@shared/bingo-constraints";
+import { validatePrizeImage, validatePrizeInput } from "./validation";
 
 interface PrizeCreateLoadState {
   bingoPrize: PrizeWithImageUrl[];
@@ -49,16 +44,6 @@ const prizeCreateLoadReducer = (
 };
 
 const TOAST_TIMEOUT = 5000;
-const PRIZE_IMAGE_ACCEPTED_TYPES = new Set<string>(PRIZE_IMAGE_MIME_TYPES);
-
-const validatePrizeImage = (file: File): string | null => {
-  if (file.size === 0) return "空の画像ファイルは登録できません。";
-  if (!PRIZE_IMAGE_ACCEPTED_TYPES.has(file.type)) {
-    return "景品画像は JPEG / PNG / WebP のみ選択できます。";
-  }
-  if (file.size > MAX_PRIZE_IMAGE_BYTES) return "景品画像は5 MiB以下にしてください。";
-  return null;
-};
 
 const showToast = (content: { title: string; description?: string }) => {
   queue.add(content, { timeout: TOAST_TIMEOUT });
@@ -155,26 +140,17 @@ export function AdminPrizeCreatePage() {
   );
 
   const submit = async () => {
+    const validationError = validatePrizeInput({
+      nameJp: prizeNameJp,
+      nameEn: prizeNameEn,
+      file: imageFile,
+    });
+    if (validationError) {
+      showToast({ title: "入力エラー", description: validationError });
+      return;
+    }
     const nameJp = prizeNameJp.trim();
     const nameEn = prizeNameEn.trim();
-    if (!nameJp) {
-      showToast({ title: "入力エラー", description: "景品名を入力してください。" });
-      return;
-    }
-    if (nameJp.length > PRIZE_NAME_JP_MAX_LENGTH) {
-      showToast({
-        title: "入力エラー",
-        description: `景品名（日本語）は${PRIZE_NAME_JP_MAX_LENGTH}文字以下にしてください。`,
-      });
-      return;
-    }
-    if (nameEn.length > PRIZE_NAME_EN_MAX_LENGTH) {
-      showToast({
-        title: "入力エラー",
-        description: `景品名（英語）は${PRIZE_NAME_EN_MAX_LENGTH}文字以下にしてください。`,
-      });
-      return;
-    }
 
     setIsSubmitting(true);
     const existingPrizeIds = new Set(bingoPrize.map((prize) => prize.id));

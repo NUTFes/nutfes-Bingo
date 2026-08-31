@@ -160,7 +160,6 @@ const PrizeGridItem = ({
           <ResponsiveImage
             src={prize.image_url}
             alt={prize.name_jp}
-            fill
             sizes="(max-width: 768px) 42vw, 220px"
             className="bg-white object-contain p-2"
             draggable={false}
@@ -342,7 +341,6 @@ const PrizeReorderRow = ({ prize, movingId, onMove, isMoveDisabled }: PrizeReord
               <ResponsiveImage
                 src={prize.image_url}
                 alt={prize.name_jp}
-                fill
                 sizes="56px"
                 className="bg-white object-contain p-1"
                 draggable={false}

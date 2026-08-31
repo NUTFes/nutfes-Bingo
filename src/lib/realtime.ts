@@ -13,7 +13,7 @@ import {
   type StateSocketMessage,
 } from "@shared/bingo-transport";
 import { makeStateEtag, weaklyMatchesEntityTag } from "../../shared/state-etag";
-import { createEmptyBingoState } from "@/types/bingo/realtime";
+import { EMPTY_BINGO_STATE } from "@/types/bingo/realtime";
 import { resolvePrizeImageUrl } from "@/utils/image";
 import { startVenueSocketLifecycle } from "@/lib/venue-socket-lifecycle";
 import { shouldAcceptRevision, type StateUpdateAuthority } from "@/lib/state-order";
@@ -167,9 +167,9 @@ function stateEtag(state: BingoUnifiedState) {
   return state.appState.event_id === "" ? null : makeStateEtag(state.revision);
 }
 
-function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen" = "public") {
-  const [state, setState] = useState(initialState);
-  const stateRef = useRef(initialState);
+function useBingoState(view: "public" | "screen" = "public") {
+  const [state, setState] = useState<BingoUnifiedState>(() => EMPTY_BINGO_STATE);
+  const stateRef = useRef(state);
 
   useEffect(() => {
     let active = true;
@@ -456,7 +456,7 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
 }
 
 export function useHomeRealtimeState() {
-  const state = useBingoState(createEmptyBingoState());
+  const state = useBingoState();
   return {
     numbers: state.numbers,
     appState: state.appState,
@@ -465,7 +465,7 @@ export function useHomeRealtimeState() {
 }
 
 export function usePrizesRealtimeState() {
-  const state = useBingoState(createEmptyBingoState());
+  const state = useBingoState();
   return {
     prizes: state.prizes,
     appState: state.appState,
@@ -474,7 +474,7 @@ export function usePrizesRealtimeState() {
 }
 
 export function useScreenRealtimeState() {
-  const state = useBingoState(createEmptyBingoState(), "screen");
+  const state = useBingoState("screen");
   return {
     numbers: state.numbers,
     latestReachLog: state.latestReachLog,

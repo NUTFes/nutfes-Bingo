@@ -17,15 +17,10 @@ turnstile_hostname=$(URL_VALUE="$CLOUDFLARE_PRODUCTION_SITE_URL" node -e '
   process.stdout.write(new URL(process.env.URL_VALUE).hostname.toLowerCase());
 ')
 export VITE_TURNSTILE_SITE_KEY=$CLOUDFLARE_PRODUCTION_TURNSTILE_SITE_KEY
-pnpm build
-generated_config=dist/nutfes_bingo/wrangler.json
 
-test -f "$generated_config"
 test -f dist/client/index.html
 
 ./scripts/cloudflare-wrangler.sh deploy \
-  --config "$generated_config" \
-  --env='' \
   --strict \
   --message "git:$release_sha" \
   --var "ACCESS_TEAM_DOMAIN:$CLOUDFLARE_PRODUCTION_ACCESS_TEAM_DOMAIN" \

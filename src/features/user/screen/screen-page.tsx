@@ -7,19 +7,9 @@ import ScreenNumberCardList from "./components/ScreenNumberCardList/ScreenNumber
 import ScreenReachCount from "./components/ScreenReachCount/ScreenReachCount";
 import Loading from "@/components/user/Loading";
 import { useScreenRealtimeState, useStampStream } from "@/lib/realtime";
-import type { StampEvent, StampName } from "@shared/bingo-transport";
+import { REACTION_IMAGE_SOURCES } from "@/types/bingo/constants";
+import type { StampEvent } from "@shared/bingo-transport";
 import styles from "@/styles/user/screen.module.css";
-
-const IMAGES: Record<string, string> = {
-  angry: "/ReactionIcon/angry.png",
-  cracker: "/ReactionIcon/cracker.png",
-  crap: "/ReactionIcon/crap.png",
-  good: "/ReactionIcon/good.png",
-  heart: "/ReactionIcon/heart.png",
-  sad: "/ReactionIcon/sad.png",
-  skull: "/ReactionIcon/skull.png",
-  smile: "/ReactionIcon/smile.png",
-} satisfies Record<StampName, string>;
 
 const MAX_STAMP_BODIES = 56;
 const STAMP_TEXTURE_SIZE = 842;
@@ -75,7 +65,7 @@ export function ScreenPage() {
 
   const handleStampInsert = useCallback(
     (stamp: StampEvent) => {
-      const texture = IMAGES[stamp.name];
+      const texture = REACTION_IMAGE_SOURCES[stamp.name];
       const currentEngine = engine.current;
       if (!texture || !currentEngine) {
         return;

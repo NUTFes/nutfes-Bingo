@@ -11,7 +11,13 @@ import { Form } from "@/components/ui/Form";
 import { Modal } from "@/components/ui/Modal";
 import { Separator } from "@/components/ui/Separator";
 import { TextField } from "@/components/ui/TextField";
-import { PRIZE_IMAGE_MIME_TYPES } from "@shared/bingo-constraints";
+import { queue } from "@/components/ui/toastQueue";
+import {
+  PRIZE_IMAGE_MIME_TYPES,
+  PRIZE_NAME_EN_MAX_LENGTH,
+  PRIZE_NAME_JP_MAX_LENGTH,
+} from "@shared/bingo-constraints";
+import { validatePrizeImage, validatePrizeInput } from "../validation";
 
 interface Props {
   isOpened: boolean;
@@ -55,6 +61,13 @@ const PrizeEditModal = ({
 
   const handleFileSelected = useCallback(
     (file: File | null) => {
+      if (file) {
+        const validationError = validatePrizeImage(file);
+        if (validationError) {
+          queue.add({ title: "入力エラー", description: validationError }, { timeout: 5000 });
+          return;
+        }
+      }
       newFile.current = file;
       if (previewUrlRef.current !== null) {
         URL.revokeObjectURL(previewUrlRef.current);
@@ -82,7 +95,12 @@ const PrizeEditModal = ({
   );
 
   const handleSubmit = async () => {
-    await onSubmit({ nameJp, nameEn, file: newFile.current });
+    const validationError = validatePrizeInput({ nameJp, nameEn, file: newFile.current });
+    if (validationError) {
+      queue.add({ title: "入力エラー", description: validationError }, { timeout: 5000 });
+      return;
+    }
+    await onSubmit({ nameJp: nameJp.trim(), nameEn: nameEn.trim(), file: newFile.current });
     close();
   };
 
@@ -108,8 +126,18 @@ const PrizeEditModal = ({
           }}
         >
           <div className="flex flex-col gap-4">
-            <TextField label="景品名（日本語）" value={nameJp} onChange={setNameJp} />
-            <TextField label="景品名（英語）" value={nameEn} onChange={setNameEn} />
+            <TextField
+              label="景品名（日本語）"
+              value={nameJp}
+              onChange={setNameJp}
+              maxLength={PRIZE_NAME_JP_MAX_LENGTH}
+            />
+            <TextField
+              label="景品名（英語）"
+              value={nameEn}
+              onChange={setNameEn}
+              maxLength={PRIZE_NAME_EN_MAX_LENGTH}
+            />
           </div>
 
           <div>
@@ -121,7 +149,6 @@ const PrizeEditModal = ({
                     className="bg-white"
                     src={previewUrl}
                     alt="preview"
-                    fill
                     sizes="(max-width: 768px) 72vw, 360px"
                     style={{ objectFit: "contain" }}
                   />
