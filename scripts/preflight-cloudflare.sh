@@ -101,7 +101,7 @@ if (testKeys.has(process.env.CLOUDFLARE_PRODUCTION_TURNSTILE_SITE_KEY)) {
   throw new Error("A Turnstile test sitekey cannot be deployed");
 }
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-for (const [name, maximum] of [["ADMIN_EMAILS", 20], ["SCREEN_EMAILS", 10]]) {
+for (const [name, maximum] of [["ADMIN_EMAILS", 20], ["SCREEN_EMAILS", 20]]) {
   const emails = JSON.parse(process.env[name]);
   if (
     !Array.isArray(emails) ||
