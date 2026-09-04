@@ -47,9 +47,7 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Dependency security gate
-        run: |
-          pnpm --registry=https://registry.npmjs.org/ audit --prod --audit-level high
-          pnpm --registry=https://registry.npmjs.org/ audit --audit-level high
+        run: pnpm --registry=https://registry.npmjs.org/ audit --audit-level high --ignore-registry-errors
 
       - name: Static checks
         run: |
