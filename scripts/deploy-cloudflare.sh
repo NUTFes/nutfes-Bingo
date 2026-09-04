@@ -22,6 +22,7 @@ export NEXT_PUBLIC_TURNSTILE_SITE_KEY=$CLOUDFLARE_PRODUCTION_TURNSTILE_SITE_KEY
 ./scripts/build-cloudflare-assets.sh
 
 ./scripts/cloudflare-wrangler.sh deploy \
+  --config wrangler.jsonc \
   --env='' \
   --strict \
   --message "git:$release_sha" \

@@ -17,6 +17,7 @@ pnpm exec wrangler types --strict-vars=false --check
 
 rm -rf .wrangler-dist
 pnpm exec wrangler deploy \
+  --config wrangler.jsonc \
   --env='' \
   --dry-run \
   --minify \
@@ -24,5 +25,7 @@ pnpm exec wrangler deploy \
 node scripts/check-worker-bundle-size.mjs .wrangler-dist
 
 pnpm exec wrangler check startup \
+  --config wrangler.jsonc \
   --env='' \
+  --args='--config wrangler.jsonc' \
   --outfile .wrangler-dist/worker-startup.cpuprofile
