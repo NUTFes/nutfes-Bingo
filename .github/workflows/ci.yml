@@ -48,8 +48,8 @@ jobs:
 
       - name: Dependency security gate
         run: |
-          pnpm audit --prod --audit-level high
-          pnpm audit --audit-level high
+          pnpm --registry=https://registry.npmjs.org/ audit --prod --audit-level high
+          pnpm --registry=https://registry.npmjs.org/ audit --audit-level high
 
       - name: Static checks
         run: |
