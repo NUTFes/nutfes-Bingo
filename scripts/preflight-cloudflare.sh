@@ -141,7 +141,17 @@ BUCKET_JSON=$bucket_json node -e '
 '
 
 pnpm run secrets:check
-pnpm --registry=https://registry.npmjs.org/ audit --audit-level high --ignore-registry-errors
+audit_status=0
+timeout --kill-after=5s 60s \
+  pnpm --registry=https://registry.npmjs.org/ audit --audit-level high --ignore-registry-errors \
+  || audit_status=$?
+case "$audit_status" in
+  0) ;;
+  124|137)
+    echo "WARN: npm advisory API timed out; continuing because registry errors are configured to be ignored." >&2
+    ;;
+  *) exit "$audit_status" ;;
+esac
 pnpm run check
 pnpm run test
 pnpm run doctor
