@@ -141,8 +141,8 @@ BUCKET_JSON=$bucket_json node -e '
 '
 
 pnpm run secrets:check
-pnpm audit --prod --audit-level high
-pnpm audit --audit-level high
+pnpm --registry=https://registry.npmjs.org/ audit --prod --audit-level high
+pnpm --registry=https://registry.npmjs.org/ audit --audit-level high
 pnpm run check
 pnpm run test
 pnpm run doctor
