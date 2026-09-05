@@ -6,19 +6,6 @@ cd "$repo_root"
 
 set -a
 . ./cloudflare.project.env
-if [ ! -f ./.cloudflare.deploy.production.env ]; then
-  echo "Create .cloudflare.deploy.production.env from the production example first." >&2
-  exit 2
-fi
-permissions=$(stat -c '%a' ./.cloudflare.deploy.production.env)
-case "$permissions" in
-  400|600) ;;
-  *)
-    echo ".cloudflare.deploy.production.env must have mode 400 or 600" >&2
-    exit 2
-    ;;
-esac
-. ./.cloudflare.deploy.production.env
 set +a
 
 ACCESS_TEAM_DOMAIN=$CLOUDFLARE_PRODUCTION_ACCESS_TEAM_DOMAIN
@@ -54,9 +41,6 @@ if [ "$release_sha" != "$remote_sha" ]; then
   echo "HEAD must be pushed and exactly match $expected_upstream" >&2
   exit 2
 fi
-
-: "${ADMIN_EMAILS:?Set ADMIN_EMAILS in the private deploy environment}"
-: "${SCREEN_EMAILS:?Set SCREEN_EMAILS in the private deploy environment}"
 
 node - <<'NODE'
 const origins = {
@@ -99,28 +83,6 @@ const testKeys = new Set([
 ]);
 if (testKeys.has(process.env.CLOUDFLARE_PRODUCTION_TURNSTILE_SITE_KEY)) {
   throw new Error("A Turnstile test sitekey cannot be deployed");
-}
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-for (const [name, maximum] of [["ADMIN_EMAILS", 20], ["SCREEN_EMAILS", 20]]) {
-  const emails = JSON.parse(process.env[name]);
-  if (
-    !Array.isArray(emails) ||
-    emails.length < 1 ||
-    emails.length > maximum ||
-    emails.some(
-      (email) =>
-        typeof email !== "string" ||
-        email !== email.trim().toLowerCase() ||
-        !emailPattern.test(email),
-    ) ||
-    new Set(emails).size !== emails.length
-  ) {
-    throw new Error(`${name} must contain unique lowercase named users`);
-  }
-}
-const stampLimit = Number(process.env.STAMP_DAILY_LIMIT ?? "25000");
-if (!Number.isSafeInteger(stampLimit) || stampLimit < 0 || stampLimit > 25_000) {
-  throw new Error("STAMP_DAILY_LIMIT must be an integer from 0 to 25000");
 }
 NODE
 

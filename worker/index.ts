@@ -239,14 +239,6 @@ async function handlePublicReach(request: Request, env: Env): Promise<Response> 
 async function handlePublicStamp(request: Request, env: Env): Promise<Response> {
   assertMethod(request, ["POST"]);
   const origin = assertSameOriginMutation(request);
-  const dailyLimit = parseStampDailyLimit(env.STAMP_DAILY_LIMIT);
-  if (dailyLimit === 0) {
-    return jsonResponse(
-      { data: null, degraded: true, reason: "disabled" },
-      { status: 202 },
-      { requestOrigin: origin },
-    );
-  }
   const body = await readJsonBody(request);
   if (!isRecord(body) || !isClientId(body.clientId) || typeof body.stampName !== "string") {
     throw new ApiError(400, "リアクション送信内容が不正です。");
@@ -256,7 +248,6 @@ async function handlePublicStamp(request: Request, env: Env): Promise<Response> 
   const result = await env.REACTION_HUB.getByName("reactions").submitStamp(
     clientHash,
     body.stampName,
-    dailyLimit,
   );
   if (result.accepted) {
     return jsonResponse({ data: result.stamp }, { status: 201 }, { requestOrigin: origin });
@@ -495,11 +486,6 @@ function safeRequestOrigin(request: Request): string | null {
   } catch {
     return null;
   }
-}
-
-function parseStampDailyLimit(value: string): number {
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed >= 0 ? Math.min(parsed, 25_000) : 25_000;
 }
 
 function readString(value: unknown, label: string): string {

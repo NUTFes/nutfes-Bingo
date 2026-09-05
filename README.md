@@ -10,7 +10,7 @@
 - `ReactionHub` Durable Objectが消失許容のstampを正本から分離する。
 - public stateはHibernation WebSocketで配信し、接続障害時は回数制限付きHTTP fallbackを使う。
 - public reachはTurnstileをserver-side検証する。reachとstampは同じedge kill switchでWorker到達前に停止できる。
-- `/admin*`と`/screen*`は別Cloudflare Access applicationで保護し、WorkerもJWT issuer、AUD、email allowlistを検証する。
+- `/admin*`と`/screen*`は別Cloudflare Access applicationで保護し、WorkerはJWT issuer、AUD、署名、有効期限、`email`、`sub`を検証する。人員membershipの正本は各Access policyとする。
 - 景品画像は2 MiB/type/signatureを検証し、content-hash keyで専用R2へ保存する。
 - data recoveryはSQLite Durable Object PITRだけを使う。`GameDirectory`、generation切替、logical snapshot、backup R2、daily Cronはない。
 
@@ -20,7 +20,7 @@
 
 productionは団体Cloudflare accountの`nutfes-bingo` Workerと、団体管理のapp/media custom domainを使います。通常deployに常設stagingや個人accountを使いません。DO/auth/bindingを再び変更する場合だけ、団体account内に一時的な検証環境を作ります。
 
-`cloudflare.project.env`がaccount ID、Worker名、Access team/AUD、site/media URL、Turnstile sitekeyの公開正本です。credential、Access JWT、allowlist、secretはGitへ保存しません。`workers.dev`、preview URL、R2 `r2.dev`は無効です。
+`cloudflare.project.env`がaccount ID、Worker名、Access team/AUD、site/media URL、Turnstile sitekeyの公開正本です。credential、Access JWT、secretはGitへ保存しません。Admin/Screenの人員membershipは各Cloudflare Access policy、またはそのpolicyが参照するreusable groupで管理します。`workers.dev`、preview URL、R2 `r2.dev`は無効です。
 
 ## 開発環境
 
@@ -62,7 +62,7 @@ mise run deploy
 mise run smoke
 ```
 
-`preflight`と`deploy`はGit HEAD、`origin/develop`、organization account、Worker、R2、Access座標、Turnstile sitekey/secretをfail closedで照合します。private `.cloudflare.deploy.production.env`はmode `600`で、named Admin/Screen allowlistだけを保持します。
+`preflight`と`deploy`はGit HEAD、`origin/develop`、organization account、Worker、R2、Access座標、Turnstile sitekey/secretをfail closedで照合します。Admin/Screenの人員追加・通常削除はAccess policyだけを変更し、Git、deploy env、Worker deployは不要です。
 
 1000 socket試験は通常release gateではありません。完成時またはrealtime/DO/capacityに影響する変更時だけ、local Workerに対して`mise run capacity http://127.0.0.1:8787`を実行します。
 

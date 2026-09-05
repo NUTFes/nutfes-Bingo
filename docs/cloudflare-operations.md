@@ -9,19 +9,19 @@ public static files ──────────────> Workers Static A
 public state HTTP / WebSocket ───> Worker ─> GameState("game", SQLite DO)
 public reach ─────────────────────> Worker ─> Turnstile ─> GameState
 public stamp ─────────────────────> Worker ─> ReactionHub ─> Screen stamp socket
-Admin / Screen ─> Access ─> Worker JWT/AUD/email検証 ─> GameState / ReactionHub / prize R2
+Admin / Screen ─> Access policy ─> Worker JWT/AUD/claim検証 ─> GameState / ReactionHub / prize R2
 ```
 
 - authoritative stateは固定名`game`の`GameState` 1個だけ。
 - `ReactionHub`は消失許容reaction専用。`GameState`へ統合しない。
 - public state WebSocketとbounded HTTP fallbackを維持する。
 - public reachを維持するためTurnstile server validationも維持する。
-- `/admin*`と`/screen*`は別Access applicationと別AUDを使い、Worker側email allowlistも維持する。
+- `/admin*`と`/screen*`は別Access applicationと別AUDを使う。人員membershipの正本は各Access policy、またはそのpolicyが参照するreusable groupとする。WorkerはAccess JWTの署名、issuer、AUD、有効期限、`email`、`sub`を検証する。
 - 景品画像だけを`nutfes-bingo-prize-images` R2に保存する。5 MiB、MIME、magic bytes、content-hash keyを検証する。
 - `GameDirectory`、generation、logical snapshot/import/restore、daily Cron、private backup R2、常設stagingはない。
 - 30日以内の短期data recoveryはSQLite DO PITRだけを使う。
 
-production account、Worker名、hostname、Access AUD、media origin、Turnstile sitekeyは`cloudflare.project.env`へ固定します。named email allowlistだけをmode `600`の`.cloudflare.deploy.production.env`へ置き、Turnstile secretはWrangler secretへ置きます。
+production account、Worker名、hostname、Access AUD、media origin、Turnstile sitekeyは`cloudflare.project.env`へ固定します。Admin/Screenの人員membershipはCloudflare Access側だけで管理し、Turnstile secretはWrangler secretへ置きます。
 
 ## ゼロベース初回構築
 
@@ -47,13 +47,13 @@ production account、Worker名、hostname、Access AUD、media origin、Turnstil
 5. Cloudflare dashboardで次を確認する。
    - organization account IDと`nutfes-bingo` Worker。
    - app/media custom domain。`workers.dev`、preview URL、R2 `r2.dev`は無効。
-   - Admin/Screen Access applicationのparent/nested path、AUD、session duration、named allowlist。
+   - Admin/Screen Access applicationのparent/nested path、AUD、session duration、policy membership。Screen policyだけの利用者がAdmin applicationへ入れないことも確認する。
    - managed Turnstile widgetのhostnameと`TURNSTILE_SECRET_KEY`。
    - prize image R2 bucketとcustom domain。
    - Images Transformationsがzoneで有効で、sourceはsame-zoneのみに制限されていること。
    - `optional-public-mutations` WAF custom ruleが存在し、通常はdisabled。
    - account全体のWorkers/DO Free usageに他appの大きな利用がない。
-6. `.cloudflare.deploy.production.env`をexampleから更新しmode `600`にする。Admin/Screenには当年のnamed identityを最低1人ずつ登録する。
+6. Admin/Screenの各Access policy、または既存reusable groupに当年の利用者を登録する。両役割が必要な人は両policyに所属させる。人員追加・通常削除にGit、env、Worker deployは不要。即時失効が必要な場合だけCloudflare Accessのsession revokeを使う。
 7. Adminの「年次イベント開始」で新しいevent IDを二重入力し、前年の番号、景品、reach、surveyを一括resetする。R2画像、PITR下限、ReactionHubは保持される。
 8. local Docker runtimeでpublic Home、Prizes、Admin、Screen、WebSocket、HTTP fallback、reaction、reach、画像uploadを確認する。
 9. realtime、DO routing、socket cap、fallback、参加人数想定を変更した年だけ1000 socket試験を行う。
@@ -74,7 +74,7 @@ mise run smoke
 - cleanな`develop` HEAD、upstream `origin/develop`、remoteとの完全一致。
 - organization account membership、named operator、Workers write。
 - pinned account、public座標、Turnstile secret、prize bucket。
-- empty/placeholder allowlist、Admin/Screen同一AUD、Turnstile test key、stamp limitを拒否。
+- Admin/Screen同一AUD、Turnstile test keyを拒否。
 - production/full dependency auditのHigh 0、secrets scan、format、lint、typecheck、Worker tests、React Doctor、knip。
 - Docker static build、generated binding、Wrangler dry-run、bundle、startup profile。
 
@@ -99,8 +99,8 @@ smoke result:
 2. Prizesが景品名、当選状態と、画像登録済みの場合はR2画像を表示する。
 3. real Turnstileを解いたpublic reachが1回だけ増え、同じclient retryで重複しない。
 4. stampがScreenへ届く。reaction停止中でも番号進行が続く。
-5. allowed Adminが番号追加/更新/削除、reach増減、survey、景品作成/並替え/当選/削除、画像uploadを行える。
-6. unlisted/unauthenticated identityはAdmin/Screenのparent/nested pathのedgeおよびWorkerで拒否される。
+5. Admin policy所属者が番号追加/更新/削除、reach増減、survey、景品作成/並替え/当選/削除、画像uploadを行える。
+6. 対象Access policyに所属しないidentityと未認証identityはAdmin/Screenのparent/nested pathでAccess edgeに拒否される。Screen policyだけの利用者はAdmin applicationへ入れない。
 7. Home/ScreenがAdmin更新をWebSocketで受け、socket切断後はreconnectまたはHTTP fallbackで復帰する。
 8. Screen state socketとstamp socketが別々に接続し、Screen Access境界を維持する。
 9. test event IDで年次resetを行い、public reach iconが再表示され、前年dataが空になる。
@@ -157,7 +157,7 @@ off-seasonにsite全体を閉じる場合は別の単一`event-closed` edge rule
 
 - primary/backup operator、Cloudflare login、直前/active Worker version IDを確認。
 - `mise run smoke`を1回実行。
-- allowed Admin 1台、Screen実機、public端末で1回ずつ表示確認。
+- Admin policy所属者の端末1台、Screen実機、public端末で1回ずつ表示確認。
 - `optional-public-mutations`がdisabled、Turnstileが解ける、stamp/reachが届くことを確認。
 - 紙master logを開始し、以後のcalled number、取消、景品winner/引渡しを時刻順に記録。
 
@@ -219,7 +219,7 @@ rollbackはWorker code、assets、bindings、compatibilityを戻します。DO/R
 
 PITRはSQLとKVを含む`game`全体を過去30日へ戻し、既存WebSocketを切断します。localでは使えません。イベントをpauseし、紙master logを継続してから実行します。
 
-1. allowed Admin browserから`CF_Authorization`値をmode `600` fileへ保存する。shell argumentへtoken値を直接書かない。
+1. Admin policy所属者のbrowserから`CF_Authorization`値をmode `600` fileへ保存する。shell argumentへtoken値を直接書かない。
 2. `/admin/api/recovery`の`pitrEarliestAt`より後のrestore時刻を二者確認しplanを作る。
 
 ```bash
@@ -262,7 +262,7 @@ PITRが60秒以内に完了しない、Access/Cloudflare障害、復旧見込み
 1. `r2.dev`を無効のままmedia custom domainを接続し、minimum TLSを1.2にする。
 2. Cloudflare Dashboardの`Images > Transformations`でapp/media custom domainを含むzoneのTransformationsを有効にする。source originはsame-zoneのままとし、`Resize images from any origin`は有効にしない。
 3. managed Turnstile widgetをapp hostnameへ限定し、secretを`TURNSTILE_SECRET_KEY`として登録する。
-4. Admin Access applicationは`/admin`と`/admin/*`、Screen applicationは`/screen`と`/screen/*`を保護する。別AUD・named allowlistを使う。
+4. Admin Access applicationは`/admin`と`/admin/*`、Screen applicationは`/screen`と`/screen/*`を保護し、別AUDを使う。各policyまたは既存reusable groupでmembershipを管理し、Screen policyだけの利用者はAdmin applicationへ入れない。
 5. app custom domainをWorkerへ接続し、`workers.dev`とpreview URLを無効のままにする。
 6. disabledの`optional-public-mutations` WAF ruleを作る。
 7. `develop`のfinal SHAから`mise run preflight && mise run deploy && mise run smoke`を実行する。

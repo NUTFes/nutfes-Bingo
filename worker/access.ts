@@ -7,53 +7,34 @@ const accessJwks = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
 type AccessIdentity = {
   email: string;
-  subject: string;
 };
 
 export type AdminIdentity = AccessIdentity;
-export type ScreenIdentity = AccessIdentity;
-
-type AccessAssertionConfig = {
-  issuer: string;
-  audiences: readonly string[];
-  allowedEmails: readonly string[];
-};
-
-export type AdminAssertionConfig = AccessAssertionConfig;
-export type ScreenAssertionConfig = AccessAssertionConfig;
 
 export async function requireAdmin(request: Request, env: Env): Promise<AdminIdentity> {
   if (isLocalBypass(request, env.LOCAL_ADMIN_BYPASS)) {
     const actorOverride = request.headers.get("X-Local-Admin-Email");
     const email =
       actorOverride === null ? "local-development@localhost" : parseLocalActor(actorOverride);
-    return { email, subject: "local-development" };
+    return { email };
   }
 
+  const { adminAudience } = parseAccessAudiences(env);
   return requireAccessIdentity(request, env, {
-    audiences: env.ACCESS_AUD,
-    allowedEmails: env.ADMIN_EMAILS,
+    audience: adminAudience,
     authenticationMessage: "管理者認証が必要です。",
-    permissionMessage: "管理者権限がありません。",
   });
 }
 
-export async function requireScreen(request: Request, env: Env): Promise<ScreenIdentity> {
+export async function requireScreen(request: Request, env: Env): Promise<AccessIdentity> {
   if (isLocalBypass(request, env.LOCAL_SCREEN_BYPASS)) {
-    return { email: "local-screen@localhost", subject: "local-screen" };
+    return { email: "local-screen@localhost" };
   }
 
-  const adminAudiences = new Set(parseStringList(env.ACCESS_AUD));
-  const screenAudiences = parseStringList(env.SCREEN_ACCESS_AUD);
-  if (screenAudiences.some((audience) => adminAudiences.has(audience))) {
-    throw new ApiError(503, "管理画面と会場画面には異なる Access application が必要です。");
-  }
-
+  const { screenAudience } = parseAccessAudiences(env);
   return requireAccessIdentity(request, env, {
-    audiences: JSON.stringify(screenAudiences),
-    allowedEmails: env.SCREEN_EMAILS,
+    audience: screenAudience,
     authenticationMessage: "会場画面の認証が必要です。",
-    permissionMessage: "会場画面を利用する権限がありません。",
   });
 }
 
@@ -61,20 +42,11 @@ async function requireAccessIdentity(
   request: Request,
   env: Env,
   requirement: {
-    audiences: string;
-    allowedEmails: string;
+    audience: string;
     authenticationMessage: string;
-    permissionMessage: string;
   },
 ): Promise<AccessIdentity> {
   const issuer = parseTeamIssuer(env.ACCESS_TEAM_DOMAIN);
-  const audiences = parseStringList(requirement.audiences);
-  const allowedEmails = parseStringList(requirement.allowedEmails).map((email) =>
-    email.toLowerCase(),
-  );
-  if (audiences.length === 0 || allowedEmails.length === 0) {
-    throw new ApiError(503, "Cloudflare Access の設定が完了していません。");
-  }
 
   const assertion = request.headers.get("Cf-Access-Jwt-Assertion");
   if (assertion === null || assertion.length === 0 || assertion.length > 16_384) {
@@ -83,12 +55,7 @@ async function requireAccessIdentity(
 
   try {
     const jwks = getAccessJwks(issuer);
-    return await verifyAccessAssertion(
-      assertion,
-      { issuer, audiences, allowedEmails },
-      jwks,
-      requirement.permissionMessage,
-    );
+    return await verifyAccessAssertion(assertion, { issuer, audience: requirement.audience }, jwks);
   } catch (error) {
     if (error instanceof ApiError) throw error;
     if (isAccessKeyServiceError(error)) {
@@ -107,44 +74,39 @@ function isAccessKeyServiceError(error: unknown): boolean {
   );
 }
 
-export async function verifyAdminAssertion(
+export async function verifyAccessAssertion(
   assertion: string,
-  config: AdminAssertionConfig,
+  config: { issuer: string; audience: string },
   jwks: JWTVerifyGetKey,
-): Promise<AdminIdentity> {
-  return verifyAccessAssertion(assertion, config, jwks, "管理者権限がありません。");
-}
-
-export async function verifyScreenAssertion(
-  assertion: string,
-  config: ScreenAssertionConfig,
-  jwks: JWTVerifyGetKey,
-): Promise<ScreenIdentity> {
-  return verifyAccessAssertion(assertion, config, jwks, "会場画面を利用する権限がありません。");
-}
-
-async function verifyAccessAssertion(
-  assertion: string,
-  config: AccessAssertionConfig,
-  jwks: JWTVerifyGetKey,
-  permissionMessage: string,
 ): Promise<AccessIdentity> {
   const { payload } = await jwtVerify(assertion, jwks, {
     algorithms: ["RS256"],
     issuer: config.issuer,
-    audience: [...config.audiences],
+    audience: config.audience,
     clockTolerance: 10,
     requiredClaims: ["exp", "email", "sub"],
   });
 
   const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
-  if (email === "" || !config.allowedEmails.includes(email)) {
-    throw new ApiError(403, permissionMessage);
+  if (email === "") {
+    throw new ApiError(401, "Cloudflare Access token の email が不正です。");
   }
-  if (typeof payload.sub !== "string" || payload.sub === "") {
+  if (typeof payload.sub !== "string" || payload.sub.trim() === "") {
     throw new ApiError(401, "Cloudflare Access token の subject が不正です。");
   }
-  return { email, subject: payload.sub };
+  return { email };
+}
+
+function parseAccessAudiences(env: Env): { adminAudience: string; screenAudience: string } {
+  const adminAudience = env.ACCESS_AUD.trim();
+  const screenAudience = env.SCREEN_ACCESS_AUD.trim();
+  if (adminAudience === "" || screenAudience === "") {
+    throw new ApiError(503, "Cloudflare Access の設定が完了していません。");
+  }
+  if (adminAudience === screenAudience) {
+    throw new ApiError(503, "管理画面と会場画面には異なる Access application が必要です。");
+  }
+  return { adminAudience, screenAudience };
 }
 
 function isLocalBypass(request: Request, enabled: string): boolean {
@@ -161,7 +123,7 @@ function parseTeamIssuer(value: string): string {
 
   let parsed: URL;
   try {
-    parsed = new URL(trimmed.startsWith("https://") ? trimmed : `https://${trimmed}`);
+    parsed = new URL(trimmed);
   } catch {
     throw new ApiError(503, "Cloudflare Access team domain が不正です。");
   }
@@ -186,9 +148,6 @@ function getAccessJwks(issuer: string): ReturnType<typeof createRemoteJWKSet> {
   if (existing !== undefined) return existing;
   const created = createRemoteJWKSet(new URL(`${issuer}/cdn-cgi/access/certs`), {
     timeoutDuration: 3_000,
-    cooldownDuration: 30_000,
-    cacheMaxAge: 10 * 60_000,
-    headers: { Accept: "application/json" },
   });
   accessJwks.set(issuer, created);
   return created;
@@ -211,32 +170,4 @@ function hasControlCharacters(value: string): boolean {
     const code = character.charCodeAt(0);
     return code < 32 || code === 127;
   });
-}
-
-function trimNonEmptyEntries(entries: string[]): string[] {
-  const result: string[] = [];
-  for (const entry of entries) {
-    const normalized = entry.trim();
-    if (normalized !== "") result.push(normalized);
-  }
-  return result;
-}
-
-function parseStringList(value: string): string[] {
-  const trimmed = value.trim();
-  if (trimmed === "") return [];
-
-  if (trimmed.startsWith("[")) {
-    try {
-      const parsed = JSON.parse(trimmed) as unknown;
-      if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === "string")) {
-        return trimNonEmptyEntries(parsed);
-      }
-    } catch {
-      return [];
-    }
-    return [];
-  }
-
-  return trimNonEmptyEntries(trimmed.split(/[\s,]+/));
 }

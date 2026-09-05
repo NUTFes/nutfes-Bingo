@@ -24,7 +24,7 @@ type StampSocketAttachment = {
 const CLIENT_INTERVAL_MS = 2_000;
 const SAMPLE_THRESHOLD_PER_SECOND = 50;
 const DROP_THRESHOLD_PER_SECOND = 100;
-const MAX_DAILY_LIMIT = 25_000;
+const STAMP_DAILY_LIMIT = 25_000;
 const MAX_SCREEN_SOCKETS = 16;
 const JST_OFFSET_MS = 9 * 60 * 60 * 1_000;
 
@@ -39,15 +39,10 @@ export class ReactionHub extends DurableObject<Env> {
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
   }
 
-  async submitStamp(
-    clientHash: string,
-    stampName: string,
-    requestedDailyLimit: number,
-  ): Promise<StampSubmissionResult> {
+  async submitStamp(clientHash: string, stampName: string): Promise<StampSubmissionResult> {
     this.ensureState();
     assertClientHash(clientHash);
     if (!isStampName(stampName)) validationProblem("リアクションの種類が不正です。");
-    const dailyLimit = normalizeDailyLimit(requestedDailyLimit);
 
     const nowMs = Date.now();
     const previous = this.lastAcceptedByClient.get(clientHash);
@@ -75,7 +70,7 @@ export class ReactionHub extends DurableObject<Env> {
     const persisted = this.ctx.storage.transactionSync(() => {
       const state = this.readStateRow();
       const currentCount = state.day === day ? state.daily_count : 0;
-      if (currentCount >= dailyLimit) return null;
+      if (currentCount >= STAMP_DAILY_LIMIT) return null;
       return this.ctx.storage.sql
         .exec<{ daily_count: number; stamp_id: number }>(
           "UPDATE reaction_state SET day = ?, daily_count = ?, next_id = next_id + 1 " +
@@ -226,11 +221,6 @@ export class ReactionHub extends DurableObject<Env> {
 
 function jstCalendarDay(timestampMs = Date.now()): string {
   return new Date(timestampMs + JST_OFFSET_MS).toISOString().slice(0, 10);
-}
-
-function normalizeDailyLimit(value: number): number {
-  if (!Number.isInteger(value) || value < 0) return MAX_DAILY_LIMIT;
-  return Math.min(value, MAX_DAILY_LIMIT);
 }
 
 function assertClientHash(value: string): void {
