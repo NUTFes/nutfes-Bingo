@@ -7,19 +7,14 @@ cd "$repo_root"
 ./scripts/preflight-cloudflare.sh
 
 set -a
-. ./cloudflare.project.env
+. ./cloudflare.production.env
 set +a
 
 release_sha=$(git rev-parse HEAD)
 turnstile_hostname=$(URL_VALUE="$CLOUDFLARE_PRODUCTION_SITE_URL" node -e '
   process.stdout.write(new URL(process.env.URL_VALUE).hostname.toLowerCase());
 ')
-export NEXT_PUBLIC_SITE_URL=$CLOUDFLARE_PRODUCTION_SITE_URL
-export NEXT_PUBLIC_MEDIA_ORIGIN=$CLOUDFLARE_PRODUCTION_MEDIA_ORIGIN
-export NEXT_PUBLIC_TURNSTILE_SITE_KEY=$CLOUDFLARE_PRODUCTION_TURNSTILE_SITE_KEY
-./scripts/build-cloudflare-assets.sh
-
-./scripts/cloudflare-wrangler.sh deploy \
+pnpm exec wrangler deploy \
   --config wrangler.jsonc \
   --env='' \
   --strict \

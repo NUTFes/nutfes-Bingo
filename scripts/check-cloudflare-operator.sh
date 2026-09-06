@@ -5,7 +5,7 @@ repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$repo_root"
 
 set -a
-. ./cloudflare.project.env
+. ./cloudflare.production.env
 set +a
 
 if [ "$#" -ne 0 ]; then
@@ -13,14 +13,21 @@ if [ "$#" -ne 0 ]; then
   exit 2
 fi
 
-account_id=${CLOUDFLARE_PRODUCTION_ACCOUNT_ID:-}
+account_id=$(node --input-type=module -e '
+  import { unstable_readConfig } from "wrangler";
+  const accountId = unstable_readConfig({ config: "./wrangler.jsonc" }).account_id;
+  if (typeof accountId !== "string" || accountId === "") {
+    throw new Error("wrangler.jsonc must define account_id");
+  }
+  process.stdout.write(accountId);
+')
 shared_owner_email=${CLOUDFLARE_PRODUCTION_ACCOUNT_OWNER_EMAIL:-}
-if [ -z "$account_id" ] || [ -z "$shared_owner_email" ]; then
-  echo "Production account ID and owner email must be set in cloudflare.project.env" >&2
+if [ -z "$shared_owner_email" ]; then
+  echo "Production owner email must be set in cloudflare.production.env" >&2
   exit 2
 fi
 
-whoami_json=$(./scripts/cloudflare-wrangler.sh whoami --json)
+whoami_json=$(pnpm exec wrangler whoami --json)
 WHOAMI_JSON=$whoami_json \
   EXPECTED_ACCOUNT_ID=$account_id \
   SHARED_OWNER_EMAIL=$shared_owner_email \
@@ -65,6 +72,5 @@ if (!hasWorkerWrite) {
   process.exit(2);
 }
 NODE
-
 
 echo "Cloudflare production operator account and required capabilities verified."

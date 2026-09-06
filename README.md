@@ -20,7 +20,7 @@
 
 productionは団体Cloudflare accountの`nutfes-bingo` Workerと、団体管理のapp/media custom domainを使います。通常deployに常設stagingや個人accountを使いません。DO/auth/bindingを再び変更する場合だけ、団体account内に一時的な検証環境を作ります。
 
-`cloudflare.project.env`がaccount ID、Worker名、Access team/AUD、site/media URL、Turnstile sitekeyの公開正本です。credential、Access JWT、secretはGitへ保存しません。Admin/Screenの人員membershipは各Cloudflare Access policy、またはそのpolicyが参照するreusable groupで管理します。`workers.dev`、preview URL、R2 `r2.dev`は無効です。
+`cloudflare.production.env`がAccess team/AUD、site/media URL、Turnstile sitekeyの公開正本です。production account ID、Worker名、binding構成は`wrangler.jsonc`を正本とします。credential、Access JWT、secretはGitへ保存しません。Admin/Screenの人員membershipは各Cloudflare Access policy、またはそのpolicyが参照するreusable groupで管理します。`workers.dev`、preview URL、R2 `r2.dev`は無効です。
 
 ## 開発環境
 
@@ -30,11 +30,10 @@ Node `26.2.0`、pnpm `11.2.2`、Docker Engine、miseを使用します。package
 mise trust
 mise install
 mise run install
-cp .dev.vars.example .dev.vars
 mise run cloudflare:dev
 ```
 
-ローカルURLは`http://localhost:8787`です。local buildはCloudflare公式dummy Turnstile keyを使用し、明示的test modeはloopbackでだけ有効です。
+ローカルURLは`http://localhost:8787`です。local buildはCloudflare公式dummy Turnstile keyを使用し、`cloudflare-dev.sh`が公式test secretをコンテナへ直接渡します。明示的test modeはloopbackでだけ有効です。本番のTurnstile secretはWrangler secretだけで管理します。
 
 依存関係は`mise run add <package>`、`mise run add -D <package>`、`mise run remove <package>`で変更します。
 

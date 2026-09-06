@@ -21,7 +21,7 @@ Admin / Screen ─> Access policy ─> Worker JWT/AUD/claim検証 ─> GameState
 - `GameDirectory`、generation、logical snapshot/import/restore、daily Cron、private backup R2、常設stagingはない。
 - 30日以内の短期data recoveryはSQLite DO PITRだけを使う。
 
-production account、Worker名、hostname、Access AUD、media origin、Turnstile sitekeyは`cloudflare.project.env`へ固定します。Admin/Screenの人員membershipはCloudflare Access側だけで管理し、Turnstile secretはWrangler secretへ置きます。
+hostname、Access AUD、media origin、Turnstile sitekeyは`cloudflare.production.env`へ固定し、production account、Worker名、binding構成は`wrangler.jsonc`へ固定します。Admin/Screenの人員membershipはCloudflare Access側だけで管理し、Turnstile secretはWrangler secretへ置きます。
 
 ## ゼロベース初回構築
 
@@ -205,7 +205,7 @@ DO class/bindingを変更していない通常releaseだけ、記録した直前
 ```bash
 previous_sha=<previous-git-sha>
 ./scripts/check-cloudflare-operator.sh
-./scripts/cloudflare-wrangler.sh rollback <previous-version-id> --message "git:$previous_sha"
+pnpm exec wrangler rollback <previous-version-id> --config wrangler.jsonc --message "git:$previous_sha"
 SMOKE_RELEASE_SHA=$previous_sha mise run smoke
 ```
 
@@ -256,7 +256,7 @@ PITRが60秒以内に完了しない、Access/Cloudflare障害、復旧見込み
 
 ```bash
 ./scripts/check-cloudflare-operator.sh
-./scripts/cloudflare-wrangler.sh r2 bucket create nutfes-bingo-prize-images --update-config=false
+pnpm exec wrangler r2 bucket create nutfes-bingo-prize-images --config wrangler.jsonc --update-config=false
 ```
 
 1. `r2.dev`を無効のままmedia custom domainを接続し、minimum TLSを1.2にする。

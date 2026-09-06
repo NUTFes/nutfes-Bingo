@@ -11,18 +11,13 @@ fi
 
 ./scripts/build-cloudflare-assets.sh
 
-# These checks are local-only. Remote commands use the account-pinned wrapper.
+# These checks are local-only. Avoid any ambient account override.
 unset CLOUDFLARE_ACCOUNT_ID
-pnpm exec wrangler types --strict-vars=false --check
+pnpm run worker:types:check
 
 rm -rf .wrangler-dist
-pnpm exec wrangler deploy \
-  --config wrangler.jsonc \
-  --env='' \
-  --dry-run \
-  --minify \
-  --outdir .wrangler-dist
-node scripts/check-worker-bundle-size.mjs .wrangler-dist
+pnpm run worker:dry-run
+pnpm run worker:bundle:check
 
 pnpm exec wrangler check startup \
   --config wrangler.jsonc \

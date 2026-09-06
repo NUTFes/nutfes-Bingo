@@ -33,14 +33,9 @@ yarn-error.log*
 .pnpm-debug.log*
 .deepsec
 
-# env files (can opt-in for committing if needed)
-.env*.local
+# env files
 .env
-.env.production
-.dev.vars
-.dev.vars.*
-!.dev.vars.example
-.cloudflare.deploy.*.env
+.env.*
 
 # vercel
 .vercel

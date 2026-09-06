@@ -18,7 +18,6 @@ export default defineConfig({
           LOCAL_TURNSTILE_TEST_MODE: "false",
           RELEASE_SHA: "test-release-sha",
           TURNSTILE_HOSTNAME: "example.com",
-          TURNSTILE_SECRET_KEY: "test-turnstile-secret",
         },
       },
       wrangler: { configPath: "./wrangler.jsonc" },

@@ -6,6 +6,5 @@
       "entry": ["scripts/*.mjs", "src/utils/cloudflare-image-loader.ts"]
     }
   },
-  "ignore": [".agents/**"],
   "ignoreDependencies": ["^cloudflare(?::.*)?$"]
 }

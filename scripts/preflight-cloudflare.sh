@@ -5,17 +5,14 @@ repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$repo_root"
 
 set -a
-. ./cloudflare.project.env
+. ./cloudflare.production.env
 set +a
+release_branch=develop
 
-ACCESS_TEAM_DOMAIN=$CLOUDFLARE_PRODUCTION_ACCESS_TEAM_DOMAIN
-ACCESS_AUD=$CLOUDFLARE_PRODUCTION_ADMIN_AUD
-SCREEN_ACCESS_AUD=$CLOUDFLARE_PRODUCTION_SCREEN_AUD
-MEDIA_ORIGIN=$CLOUDFLARE_PRODUCTION_MEDIA_ORIGIN
 NEXT_PUBLIC_SITE_URL=$CLOUDFLARE_PRODUCTION_SITE_URL
+NEXT_PUBLIC_MEDIA_ORIGIN=$CLOUDFLARE_PRODUCTION_MEDIA_ORIGIN
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=$CLOUDFLARE_PRODUCTION_TURNSTILE_SITE_KEY
-export ACCESS_TEAM_DOMAIN ACCESS_AUD SCREEN_ACCESS_AUD MEDIA_ORIGIN
-export NEXT_PUBLIC_SITE_URL NEXT_PUBLIC_TURNSTILE_SITE_KEY
+export NEXT_PUBLIC_SITE_URL NEXT_PUBLIC_MEDIA_ORIGIN NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
 worktree_status=$(git status --porcelain --untracked-files=all)
 if [ -n "$worktree_status" ]; then
@@ -24,17 +21,17 @@ if [ -n "$worktree_status" ]; then
   exit 2
 fi
 current_branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)
-if [ "$current_branch" != "$CLOUDFLARE_RELEASE_BRANCH" ]; then
-  echo "Deploys must run from $CLOUDFLARE_RELEASE_BRANCH" >&2
+if [ "$current_branch" != "$release_branch" ]; then
+  echo "Deploys must run from $release_branch" >&2
   exit 2
 fi
-expected_upstream=origin/$CLOUDFLARE_RELEASE_BRANCH
+expected_upstream=origin/$release_branch
 upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
 if [ "$upstream" != "$expected_upstream" ]; then
-  echo "$CLOUDFLARE_RELEASE_BRANCH must track $expected_upstream" >&2
+  echo "$release_branch must track $expected_upstream" >&2
   exit 2
 fi
-git fetch --quiet origin "$CLOUDFLARE_RELEASE_BRANCH"
+git fetch --quiet origin "$release_branch"
 release_sha=$(git rev-parse HEAD)
 remote_sha=$(git rev-parse "refs/remotes/$expected_upstream")
 if [ "$release_sha" != "$remote_sha" ]; then
@@ -42,7 +39,10 @@ if [ "$release_sha" != "$remote_sha" ]; then
   exit 2
 fi
 
-node - <<'NODE'
+node --input-type=module - <<'NODE'
+import { unstable_readConfig } from "wrangler";
+
+const wranglerConfig = unstable_readConfig({ config: "./wrangler.jsonc" });
 const origins = {
   CLOUDFLARE_PRODUCTION_ACCESS_TEAM_DOMAIN: process.env.CLOUDFLARE_PRODUCTION_ACCESS_TEAM_DOMAIN,
   CLOUDFLARE_PRODUCTION_MEDIA_ORIGIN: process.env.CLOUDFLARE_PRODUCTION_MEDIA_ORIGIN,
@@ -65,11 +65,8 @@ for (const [name, value] of Object.entries(origins)) {
 if (!new URL(process.env.CLOUDFLARE_PRODUCTION_ACCESS_TEAM_DOMAIN).hostname.endsWith(".cloudflareaccess.com")) {
   throw new Error("The Access team domain is invalid");
 }
-if (process.env.CLOUDFLARE_PRODUCTION_WORKER !== "nutfes-bingo") {
-  throw new Error("The configured production Worker name is invalid");
-}
-if (process.env.CLOUDFLARE_RELEASE_BRANCH !== "develop") {
-  throw new Error("develop must be the only deployment source");
+if (wranglerConfig.name !== "nutfes-bingo") {
+  throw new Error("wrangler.jsonc must target the nutfes-bingo Worker");
 }
 if (process.env.CLOUDFLARE_PRODUCTION_ADMIN_AUD === process.env.CLOUDFLARE_PRODUCTION_SCREEN_AUD) {
   throw new Error("Admin and Screen must use separate Access applications");
@@ -87,14 +84,14 @@ if (testKeys.has(process.env.CLOUDFLARE_PRODUCTION_TURNSTILE_SITE_KEY)) {
 NODE
 
 ./scripts/check-cloudflare-operator.sh
-secrets_json=$(./scripts/cloudflare-wrangler.sh secret list --env='' --format json)
+secrets_json=$(pnpm exec wrangler secret list --config wrangler.jsonc --env='' --format json)
 SECRETS_JSON=$secrets_json node -e '
   const secrets = JSON.parse(process.env.SECRETS_JSON);
   if (!Array.isArray(secrets) || !secrets.some((secret) => secret?.name === "TURNSTILE_SECRET_KEY")) {
     throw new Error("TURNSTILE_SECRET_KEY is not registered on the production Worker");
   }
 '
-bucket_json=$(./scripts/cloudflare-wrangler.sh r2 bucket info nutfes-bingo-prize-images --json)
+bucket_json=$(pnpm exec wrangler r2 bucket info nutfes-bingo-prize-images --config wrangler.jsonc --json)
 BUCKET_JSON=$bucket_json node -e '
   const bucket = JSON.parse(process.env.BUCKET_JSON);
   if (bucket?.name !== "nutfes-bingo-prize-images") {

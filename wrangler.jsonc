@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  // scripts/cloudflare-wrangler.sh pins every CLI call to the organization account.
   "name": "nutfes-bingo",
+  "account_id": "30abadf466f28e5479cda64e7bb5c9ae",
   "main": "./worker/index.ts",
   // Custom domains are configured out-of-band. Never expose an Access/WAF-bypassing workers.dev URL.
   "workers_dev": false,

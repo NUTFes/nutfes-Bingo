@@ -5,7 +5,7 @@ import process from "node:process";
 
 if (process.argv.length !== 2) throw new Error("Usage: node scripts/cloudflare-smoke.mjs");
 if (typeof WebSocket === "undefined") throw new Error("Node 26 WebSocket support is required");
-process.loadEnvFile("./cloudflare.project.env");
+process.loadEnvFile("./cloudflare.production.env");
 
 const site = new URL(process.env.CLOUDFLARE_PRODUCTION_SITE_URL);
 const mediaOrigin = new URL(process.env.CLOUDFLARE_PRODUCTION_MEDIA_ORIGIN);
@@ -16,10 +16,14 @@ if (!/^[a-f0-9]{40}$/.test(releaseSha)) {
   throw new Error("SMOKE_RELEASE_SHA must be a full lowercase Git SHA");
 }
 const deployments = JSON.parse(
-  execFileSync("./scripts/cloudflare-wrangler.sh", ["deployments", "list", "--env=", "--json"], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "inherit"],
-  }),
+  execFileSync(
+    "pnpm",
+    ["exec", "wrangler", "deployments", "list", "--config", "wrangler.jsonc", "--env=", "--json"],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "inherit"],
+    },
+  ),
 );
 const latest = deployments
   .filter((deployment) => typeof deployment?.created_on === "string")

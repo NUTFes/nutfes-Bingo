@@ -40,7 +40,7 @@ for (const name of options.keys()) {
   if (!allowed.has(name)) throw new Error(`Unknown ${command} option: --${name}`);
 }
 
-process.loadEnvFile("./cloudflare.project.env");
+process.loadEnvFile("./cloudflare.production.env");
 const siteValue = process.env.CLOUDFLARE_PRODUCTION_SITE_URL;
 if (!siteValue) throw new Error("CLOUDFLARE_PRODUCTION_SITE_URL is missing");
 const site = new URL(siteValue);
