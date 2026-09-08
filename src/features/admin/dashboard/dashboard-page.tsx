@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useReducer, type SetStateAction } from "react";
 
 import { AdminHeader, AdminLoading, BingoResult } from "@/components/admin";

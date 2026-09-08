@@ -3,7 +3,7 @@
   "tags": ["-lintignore"],
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.mjs", "src/utils/cloudflare-image-loader.ts"]
+      "entry": ["scripts/*.mjs", "config/**/*.ts", "src/entry/*.tsx"]
     }
   },
   "ignoreDependencies": ["^cloudflare(?::.*)?$"]

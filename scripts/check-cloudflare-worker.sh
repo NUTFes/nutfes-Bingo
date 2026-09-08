@@ -20,7 +20,7 @@ pnpm run worker:dry-run
 pnpm run worker:bundle:check
 
 pnpm exec wrangler check startup \
-  --config wrangler.jsonc \
+  --config dist/worker/wrangler.json \
   --env='' \
-  --args='--config wrangler.jsonc' \
+  --args='--config dist/worker/wrangler.json' \
   --outfile .wrangler-dist/worker-startup.cpuprofile

@@ -11,12 +11,16 @@ description = "Run format, lint, and TypeScript checks"
 run = "pnpm check"
 
 [tasks."cloudflare:build"]
-description = "Build the static Next.js artifact in Docker and export it to out/"
+description = "Build the Vite client and Worker distribution in Docker"
 run = "./scripts/build-cloudflare-assets.sh"
 
 [tasks."cloudflare:dev"]
 description = "Build and run the complete Worker locally in Docker"
 run = "./scripts/cloudflare-dev.sh"
+
+[tasks."cloudflare:preview"]
+description = "Run the immutable production distribution locally"
+run = "./scripts/cloudflare-dev.sh --preview"
 
 [tasks."cloudflare:test"]
 description = "Run Worker and Durable Object tests in workerd"

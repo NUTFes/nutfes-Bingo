@@ -76,7 +76,7 @@ mise run smoke
 - pinned account、public座標、Turnstile secret、prize bucket。
 - Admin/Screen同一AUD、Turnstile test keyを拒否。
 - production/full dependency auditのHigh 0、secrets scan、format、lint、typecheck、Worker tests、React Doctor、knip。
-- Docker static build、generated binding、Wrangler dry-run、bundle、startup profile。
+- DockerでのVite client/Worker build、generated binding、Wrangler dry-run、bundle、startup profile。`dist/client/`と`dist/worker/`を同時にexportし、生成済み`dist/worker/wrangler.json`を検査・deployする。account、binding、Access保護対象などの設定正本は引き続き`wrangler.jsonc`とする。
 
 `deploy`は同じpreflightを再実行してから、同じHEADを`git:<SHA>` annotation付きでproductionへdeployします。CI secretからproduction deployしません。
 

@@ -1,6 +1,4 @@
-"use client";
-
-import Image from "next/image";
+import { ResponsiveImage } from "@/components/ui/ResponsiveImage";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { isFileDropItem, type DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
@@ -118,11 +116,10 @@ const PrizeEditModal = ({
               <p className="text-sm font-medium text-foreground">画像</p>
               {previewUrl ? (
                 <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-border bg-card/80 p-2">
-                  <Image
+                  <ResponsiveImage
                     className="bg-white"
                     src={previewUrl}
                     alt="preview"
-                    fill
                     sizes="(max-width: 768px) 72vw, 360px"
                     style={{ objectFit: "contain" }}
                   />

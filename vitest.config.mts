@@ -2,7 +2,7 @@ import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
 import { existsSync } from "node:fs";
 import { defineConfig } from "vitest/config";
 
-const assetsDirectory = existsSync("./out/index.html") ? "./out" : "./test/assets";
+const assetsDirectory = existsSync("./dist/client/index.html") ? "./dist/client" : "./test/assets";
 
 export default defineConfig({
   plugins: [

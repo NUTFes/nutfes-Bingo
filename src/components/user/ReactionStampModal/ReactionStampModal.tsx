@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+import { ResponsiveImage } from "@/components/ui/ResponsiveImage";
 import styles from "./ReactionStampModal.module.css";
 
 interface ImageProps {
@@ -59,17 +59,16 @@ const ReactionStampModal = (props: ReactionStampModalProps) => {
                         {Array.from({ length: 6 }).map((_, i) => (
                           <span key={i} className={styles.particle}>
                             <span className={styles.particleImg}>
-                              <Image src={image.src} alt="" fill sizes="40px" />
+                              <ResponsiveImage src={image.src} alt="" sizes="40px" />
                             </span>
                           </span>
                         ))}
                       </span>
                     </>
                   )}
-                  <Image
+                  <ResponsiveImage
                     src={image.src}
                     alt={image.alt}
-                    fill
                     sizes="(max-width: 768px) 18vw, 88px"
                   />
                 </button>

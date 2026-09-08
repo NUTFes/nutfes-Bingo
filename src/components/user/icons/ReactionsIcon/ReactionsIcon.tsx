@@ -1,5 +1,3 @@
-"use client";
-
 import { FaRegFaceSmile } from "react-icons/fa6";
 
 import IconFramework from "@/components/user/icons/IconFramework/IconFramework";

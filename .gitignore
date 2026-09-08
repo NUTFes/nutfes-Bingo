@@ -14,11 +14,8 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
 # production
+/dist/
 /build
 /.data/
 
@@ -42,7 +39,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 temp
 .wrangler/

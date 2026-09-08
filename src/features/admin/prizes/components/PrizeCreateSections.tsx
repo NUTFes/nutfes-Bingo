@@ -1,6 +1,4 @@
-"use client";
-
-import Image from "next/image";
+import { ResponsiveImage } from "@/components/ui/ResponsiveImage";
 import type { DropEvent } from "react-aria";
 import { FileTrigger } from "react-aria-components";
 import { IoCloudUploadOutline } from "react-icons/io5";
@@ -119,10 +117,9 @@ export function PrizeCreatePreviewSection({
         <div className="flex flex-col items-center gap-4">
           {previewUrl ? (
             <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl bg-muted/70">
-              <Image
+              <ResponsiveImage
                 src={previewUrl}
                 alt="preview"
-                fill
                 sizes="(max-width: 768px) 72vw, 360px"
                 style={{ objectFit: "contain" }}
               />

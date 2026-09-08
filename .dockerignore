@@ -3,8 +3,6 @@ node_modules
 .pnpm-store
 
 # build outputs
-.next
-out
 build
 dist
 .data

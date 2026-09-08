@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, use, useMemo, useState } from "react";
 
 import { en } from "@/utils/i18n/en";

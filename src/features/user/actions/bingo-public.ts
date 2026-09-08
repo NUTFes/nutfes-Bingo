@@ -1,5 +1,3 @@
-"use client";
-
 import { STAMP_NAMES, type StampName } from "@/types/bingo/types";
 
 const PUBLIC_CLIENT_ID_KEY = "nutfes-bingo:public-client-id:v1";

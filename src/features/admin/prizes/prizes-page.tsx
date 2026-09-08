@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useReducer, useState, type SetStateAction } from "react";
 import { IoSwapVerticalOutline } from "react-icons/io5";
 

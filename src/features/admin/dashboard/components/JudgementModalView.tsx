@@ -1,5 +1,3 @@
-"use client";
-
 import { GiPartyPopper } from "react-icons/gi";
 import { RxCross1 } from "react-icons/rx";
 

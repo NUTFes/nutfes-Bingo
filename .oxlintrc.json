@@ -9,9 +9,6 @@
       "components": {},
       "attributes": {}
     },
-    "next": {
-      "rootDir": []
-    },
     "react": {
       "formComponents": [],
       "linkComponents": [],

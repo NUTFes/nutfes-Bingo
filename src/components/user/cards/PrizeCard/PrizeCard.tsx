@@ -1,6 +1,4 @@
-"use client";
-
-import Image from "next/image";
+import { ResponsiveImage } from "@/components/ui/ResponsiveImage";
 import { useState } from "react";
 import { cn } from "@/utils/utils";
 
@@ -34,10 +32,9 @@ function PrizeImage({
   }
 
   return (
-    <Image
+    <ResponsiveImage
       src={imageUrl}
       alt={name}
-      fill
       className={styles.prizeImage}
       sizes="(max-width: 639px) 22.5vw, 98px"
       loading={highPriority ? "eager" : undefined}

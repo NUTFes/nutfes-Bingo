@@ -1,6 +1,4 @@
-"use client";
-
-import Image from "next/image";
+import { ResponsiveImage } from "@/components/ui/ResponsiveImage";
 import React, { type Key, useMemo, useReducer } from "react";
 import { LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
 import {
@@ -173,10 +171,9 @@ const PrizeGridItem = ({
 
       <div className="relative aspect-4/3 overflow-hidden rounded-md bg-secondary/30">
         {prize.image_url ? (
-          <Image
+          <ResponsiveImage
             src={prize.image_url}
             alt={prize.name_jp}
-            fill
             sizes="(max-width: 768px) 42vw, 220px"
             className="bg-white object-contain p-2"
             draggable={false}
@@ -369,10 +366,9 @@ const PrizeReorderRow = ({
 
           <div className="relative size-12 shrink-0 overflow-hidden rounded border border-border/50 bg-secondary/30 sm:size-14">
             {prize.image_url ? (
-              <Image
+              <ResponsiveImage
                 src={prize.image_url}
                 alt={prize.name_jp}
-                fill
                 sizes="56px"
                 className="bg-white object-contain p-1"
                 draggable={false}

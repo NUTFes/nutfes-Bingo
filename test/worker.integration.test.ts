@@ -241,6 +241,18 @@ describe("admin authorization and mutations", () => {
     expect(local.status).toBe(200);
   });
 
+  it.each(["/admin/login", "/admin/auth-error"])(
+    "does not serve removed authentication UI at %s",
+    async (pathname) => {
+      const response = await SELF.fetch(`http://localhost${pathname}`, {
+        headers: LOCAL_ADMIN_HEADERS,
+        redirect: "manual",
+      });
+      expect(response.status).toBe(404);
+      expect(response.headers.get("location")).toBeNull();
+    },
+  );
+
   it("runs an admin command and exposes its revision publicly", async () => {
     const { body, response } = await adminCommand<{ number: number }>({
       type: "createNumber",

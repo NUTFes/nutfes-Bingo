@@ -1,5 +1,3 @@
-"use client";
-
 import { IoIosSettings } from "react-icons/io";
 
 import IconFramework from "@/components/user/icons/IconFramework/IconFramework";

@@ -1,8 +1,5 @@
-"use client";
-
 import type { ReactNode } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { Link, useLocation } from "react-router";
 
 import { cn } from "@/utils/utils";
 
@@ -17,8 +14,8 @@ const COMMON_NAV_ITEMS = [
 ] as const;
 
 const Header = ({ children }: HeaderProps) => {
-  const pathname = usePathname();
-  const currentPath = pathname?.replace(/\/$/, "") || "";
+  const { pathname } = useLocation();
+  const currentPath = pathname.replace(/\/$/, "") || "";
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur-md">
@@ -26,7 +23,7 @@ const Header = ({ children }: HeaderProps) => {
         <div className="flex h-14 items-center justify-between gap-4">
           <div className="flex items-center gap-6">
             <Link
-              href="/admin"
+              to="/admin"
               className="shrink-0 text-base font-semibold text-foreground transition-colors hover:text-foreground/80"
             >
               NUTFES BINGO
@@ -38,7 +35,7 @@ const Header = ({ children }: HeaderProps) => {
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    to={item.href}
                     className={cn(
                       "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                       isActive
@@ -64,7 +61,7 @@ const Header = ({ children }: HeaderProps) => {
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                to={item.href}
                 className={cn(
                   "whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                   isActive

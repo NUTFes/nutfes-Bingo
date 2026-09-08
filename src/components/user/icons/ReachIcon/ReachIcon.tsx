@@ -1,5 +1,3 @@
-"use client";
-
 import styles from "./ReachIcon.module.css";
 
 interface ReachIconProps {

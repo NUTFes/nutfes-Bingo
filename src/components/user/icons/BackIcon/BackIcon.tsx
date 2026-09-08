@@ -1,6 +1,4 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { TiArrowBack } from "react-icons/ti";
 
 import IconFramework from "@/components/user/icons/IconFramework/IconFramework";
@@ -10,10 +8,16 @@ interface BackIconProps {
 }
 
 const BackIcon = ({ id }: BackIconProps) => {
-  const { push } = useRouter();
+  const navigate = useNavigate();
 
   return (
-    <IconFramework icon={<TiArrowBack />} text="Back" outline onClick={() => push("/")} id={id} />
+    <IconFramework
+      icon={<TiArrowBack />}
+      text="Back"
+      outline
+      onClick={() => navigate("/")}
+      id={id}
+    />
   );
 };
 

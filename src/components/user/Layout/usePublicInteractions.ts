@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 
 import { sendReactionStamp } from "@/features/user/actions/bingo-public";

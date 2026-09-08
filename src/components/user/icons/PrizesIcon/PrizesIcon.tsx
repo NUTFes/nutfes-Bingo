@@ -1,6 +1,4 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router";
 import { BiGift } from "react-icons/bi";
 
 import IconFramework from "@/components/user/icons/IconFramework/IconFramework";
@@ -10,14 +8,14 @@ interface PrizesIconProps {
 }
 
 const PrizesIcon = ({ id }: PrizesIconProps) => {
-  const { push } = useRouter();
+  const navigate = useNavigate();
 
   return (
     <IconFramework
       icon={<BiGift />}
       text="Prizes"
       outline
-      onClick={() => push("/prizes")}
+      onClick={() => navigate("/prizes")}
       id={id}
     />
   );

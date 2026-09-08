@@ -1,5 +1,3 @@
-"use client";
-
 interface AdminLoadingProps {
   error?: string | null;
 }

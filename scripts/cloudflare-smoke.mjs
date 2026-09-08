@@ -67,6 +67,11 @@ const assertSecurityHeaders = (path, response) => {
 
 const home = await fetchChecked("/", 200, "text/html");
 assertSecurityHeaders("/", home);
+const prizesPage = await fetchChecked("/prizes", 200, "text/html");
+if (!(await prizesPage.text()).includes("<title>景品一覧 | NUTFes Bingo</title>")) {
+  throw new Error("/prizes returned the wrong page title");
+}
+await fetchChecked("/__nutfes-bingo-missing-page__", 404, "text/html");
 const transformationProbePath =
   "/cdn-cgi/image/width=64,fit=scale-down,format=webp/ReactionIcon/good.png";
 await fetchChecked(transformationProbePath, 200, "image/webp", {
@@ -163,6 +168,7 @@ const checkAccess = async (path, audience) => {
 for (const [path, audience] of [
   ["/admin", process.env.CLOUDFLARE_PRODUCTION_ADMIN_AUD],
   ["/admin/prizes", process.env.CLOUDFLARE_PRODUCTION_ADMIN_AUD],
+  ["/admin/prizes/new", process.env.CLOUDFLARE_PRODUCTION_ADMIN_AUD],
   ["/screen", process.env.CLOUDFLARE_PRODUCTION_SCREEN_AUD],
   ["/screen/", process.env.CLOUDFLARE_PRODUCTION_SCREEN_AUD],
 ]) {

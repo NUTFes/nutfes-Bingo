@@ -1,7 +1,5 @@
-"use client";
-
 import type { DriveStep, Driver } from "driver.js";
-import { usePathname, useRouter } from "next/navigation";
+import { useMatch, useNavigate } from "react-router";
 import { IoHelpCircleOutline } from "react-icons/io5";
 import { useCallback, useEffect, useRef } from "react";
 
@@ -9,15 +7,13 @@ import { useBingoLanguage } from "@/utils/i18n/provider";
 import styles from "./Header.module.css";
 
 const Header = () => {
-  const { push } = useRouter();
-  const pathname = usePathname() ?? "/";
+  const navigate = useNavigate();
+  const isPrizePage = useMatch("/prizes") !== null;
   const { t } = useBingoLanguage();
   const driverRef = useRef<Driver | null>(null);
   const isLoadingTourRef = useRef(false);
 
   const buildSteps = useCallback((): DriveStep[] => {
-    const isPrizePage = pathname === "/prizes";
-
     const steps: DriveStep[] = [
       {
         popover: {
@@ -71,7 +67,7 @@ const Header = () => {
       if (typeof step.element === "function") return Boolean(step.element());
       return Boolean(step.element);
     });
-  }, [pathname, t]);
+  }, [isPrizePage, t]);
 
   const startTour = useCallback(async () => {
     if (isLoadingTourRef.current) return;
@@ -123,7 +119,7 @@ const Header = () => {
         <button
           type="button"
           className={styles.title}
-          onClick={() => push("/")}
+          onClick={() => navigate("/")}
           aria-label="nutfes-Bingo"
         >
           nutfes-Bingo

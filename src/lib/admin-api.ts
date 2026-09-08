@@ -1,5 +1,3 @@
-"use client";
-
 import type { AdminCommand } from "../../shared/bingo-transport";
 import { normalizeBingoState } from "@/lib/realtime";
 import type { BingoUnifiedState } from "@/types/bingo/realtime";

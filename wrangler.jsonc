@@ -13,7 +13,6 @@
   // Public pages and framework assets bypass the Worker. Only dynamic APIs and the
   // Access-protected admin/screen trees invoke it.
   "assets": {
-    "directory": "./out",
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page",

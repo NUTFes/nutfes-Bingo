@@ -4,7 +4,7 @@
 
 ## アーキテクチャ
 
-- Next.js App Router UIをstatic exportし、Workers Static Assetsから配信する。公開HTML、JavaScript、CSSは原則Workerを起動しない。
+- React UIをViteの複数HTMLエントリーからbuildし、Workers Static Assetsから配信する。公開HTML、JavaScript、CSSは原則Workerを起動しない。
 - same-origin WorkerがHTTP API、Cloudflare Access認可、Turnstile検証、景品画像R2、Durable Object routingを担当する。
 - 固定名`game`のSQLite `GameState` Durable Object 1個が、番号、景品、当選状態、reach、survey、bounded audit logの正本になる。
 - `ReactionHub` Durable Objectが消失許容のstampを正本から分離する。
@@ -24,7 +24,7 @@ productionは団体Cloudflare accountの`nutfes-bingo` Workerと、団体管理�
 
 ## 開発環境
 
-Node `26.2.0`、pnpm `11.2.2`、Docker Engine、miseを使用します。package managerはpnpmだけを使い、Next.js buildとCloudflare開発runtimeはDocker内で実行します。ホストで`pnpm dev`や`pnpm build`を実行しないでください。
+Node `26.2.0`、pnpm `11.2.2`、Docker Engine、miseを使用します。package managerはpnpmだけを使い、Vite buildとCloudflare開発runtimeはDocker内で実行します。ホストで`pnpm dev`や`pnpm build`を実行しないでください。
 
 ```bash
 mise trust
@@ -33,7 +33,11 @@ mise run install
 mise run cloudflare:dev
 ```
 
-ローカルURLは`http://localhost:8787`です。local buildはCloudflare公式dummy Turnstile keyを使用し、`cloudflare-dev.sh`が公式test secretをコンテナへ直接渡します。明示的test modeはloopbackでだけ有効です。本番のTurnstile secretはWrangler secretだけで管理します。
+ローカルURLは`http://localhost:8787`です。`cloudflare:dev`はソースをマウントしてVite HMRを使い、`mise run cloudflare:preview`はbuild済みのclient/WorkerをWranglerで配信します。両方とも同じportを使うため同時には起動しません。WSLなどでファイル変更を検知しない場合は`VITE_USE_POLLING=true mise run cloudflare:dev`を使います。
+
+local runtimeはCloudflare公式dummy Turnstile key/secretを使います。明示的test modeはloopbackでだけ有効です。本番のTurnstile secretはWrangler secretだけで管理します。
+
+`mise run cloudflare:build`はDockerから`dist/client/`と`dist/worker/`を一緒にexportします。Wrangler dry-run/deployは生成済みの`dist/worker/wrangler.json`を使います。公開build設定は`VITE_SITE_URL`、`VITE_MEDIA_ORIGIN`、`VITE_TURNSTILE_SITE_KEY`で指定し、本番では`preflight`が`cloudflare.production.env`から設定します。
 
 依存関係は`mise run add <package>`、`mise run add -D <package>`、`mise run remove <package>`で変更します。
 
@@ -49,7 +53,7 @@ pnpm knip
 mise run cloudflare:check
 ```
 
-`pnpm test`はWorkers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。ブラウザE2E suiteは未構成です。`mise run cloudflare:check`はDocker static build、binding type freshness、Wrangler dry-run、Free plan bundle上限、Worker startup profileを確認します。
+`pnpm test`はWorkers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。ブラウザE2E suiteは未構成です。`mise run cloudflare:check`はDockerでのclient/Worker build、binding type freshness、Wrangler dry-run、Free plan bundle上限、Worker startup profileを確認します。
 
 ## Deploy
 

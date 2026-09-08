@@ -4,30 +4,71 @@ set -eu
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$repo_root"
 
-image=nutfes-bingo-cloudflare-dev
-site_url=${NEXT_PUBLIC_SITE_URL:-http://localhost:8787}
-media_origin=${NEXT_PUBLIC_MEDIA_ORIGIN:-}
-turnstile_site_key=${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
-turnstile_secret_key=1x0000000000000000000000000000000AA
-set -- node node_modules/wrangler/bin/wrangler.js dev --config wrangler.jsonc --ip 0.0.0.0 --port 8787 \
-  --var LOCAL_ADMIN_BYPASS:true \
-  --var LOCAL_SCREEN_BYPASS:true \
-  --var LOCAL_TURNSTILE_TEST_MODE:true \
-  --var TURNSTILE_HOSTNAME:localhost
+usage() {
+  echo "Usage: $0 [--preview]" >&2
+  exit 2
+}
 
+mode=development
+case "$#" in
+  0) ;;
+  1)
+    [ "$1" = "--preview" ] || usage
+    mode=preview
+    ;;
+  *) usage ;;
+esac
+
+site_url=${VITE_SITE_URL:-http://localhost:8787}
+media_origin=${VITE_MEDIA_ORIGIN:-}
+turnstile_site_key=${VITE_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
+use_polling=${VITE_USE_POLLING:-false}
+turnstile_secret_key=1x0000000000000000000000000000000AA
+mkdir -p .wrangler
+
+if [ "$mode" = preview ]; then
+  image=nutfes-bingo-cloudflare-preview
+  docker build \
+    --file Dockerfile.cloudflare \
+    --target preview \
+    --build-arg "VITE_SITE_URL=$site_url" \
+    --build-arg "VITE_MEDIA_ORIGIN=$media_origin" \
+    --build-arg "VITE_TURNSTILE_SITE_KEY=$turnstile_site_key" \
+    --build-arg "VITE_IMAGE_TRANSFORMATIONS=true" \
+    --tag "$image" \
+    .
+
+  exec docker run --rm -it --init \
+    --publish 127.0.0.1:8787:8787 \
+    --mount "type=bind,source=$repo_root/.wrangler,target=/app/.wrangler" \
+    "$image" \
+    node node_modules/wrangler/bin/wrangler.js dev \
+      --config dist/worker/wrangler.json \
+      --ip 0.0.0.0 \
+      --port 8787 \
+      --var LOCAL_ADMIN_BYPASS:true \
+      --var LOCAL_SCREEN_BYPASS:true \
+      --var LOCAL_TURNSTILE_TEST_MODE:true \
+      --var TURNSTILE_HOSTNAME:localhost \
+      --var "TURNSTILE_SECRET_KEY:$turnstile_secret_key"
+fi
+
+image=nutfes-bingo-cloudflare-dev
 docker build \
   --file Dockerfile.cloudflare \
   --target development \
-  --build-arg "NEXT_PUBLIC_SITE_URL=$site_url" \
-  --build-arg "NEXT_PUBLIC_MEDIA_ORIGIN=$media_origin" \
-  --build-arg "NEXT_PUBLIC_TURNSTILE_SITE_KEY=$turnstile_site_key" \
   --tag "$image" \
   .
 
-mkdir -p .wrangler
-
 exec docker run --rm -it --init \
   --publish 127.0.0.1:8787:8787 \
+  --env BINGO_LOCAL_DEV=true \
+  --env "VITE_SITE_URL=$site_url" \
+  --env "VITE_MEDIA_ORIGIN=$media_origin" \
+  --env "VITE_TURNSTILE_SITE_KEY=$turnstile_site_key" \
+  --env VITE_IMAGE_TRANSFORMATIONS=false \
+  --env "VITE_USE_POLLING=$use_polling" \
   --env "TURNSTILE_SECRET_KEY=$turnstile_secret_key" \
-  --mount "type=bind,source=$repo_root/.wrangler,target=/app/.wrangler" \
-  "$image" "$@"
+  --mount "type=bind,source=$repo_root,target=/app" \
+  --volume /app/node_modules \
+  "$image"
