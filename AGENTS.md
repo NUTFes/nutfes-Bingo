@@ -32,7 +32,10 @@
 ## Tests
 
 - Run `pnpm test` for Worker and Durable Object tests in the Workers Vitest runtime.
-- No browser end-to-end test suite is configured. Do not invent an E2E test command.
+- Run `pnpm test:e2e` for Chromium browser E2E and `pnpm perf` for Lighthouse CI.
+- Install the shared browser with `pnpm exec playwright install chromium` (Linux: `--with-deps` if needed).
+- Both commands own an isolated Docker production preview on localhost:8788; run sequentially with that port free.
+- Never point mutation E2E at production or reuse developer `.wrangler` state.
 
 ## Validation
 

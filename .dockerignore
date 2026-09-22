@@ -9,6 +9,12 @@ dist
 snapshots
 *.snapshot.json
 *.logical-export.json
+playwright-report
+test-results
+.lighthouseci
+lighthouse-report
+.wrangler
+.wrangler-dist
 
 # vcs / editor
 .git

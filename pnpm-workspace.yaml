@@ -13,6 +13,14 @@ allowBuilds:
 overrides:
   brace-expansion: 5.0.9
   fast-uri: 3.1.6
+  # Lighthouse 12 pins semver 5; keep the trust policy instead of adding an exception.
+  lighthouse>semver: 7.8.5
+  # Puppeteer 24 pulls unpatched extract-zip; 25 uses the maintained browser installer.
+  lighthouse>puppeteer-core: 25.11.0
   postcss: 8.5.26
   sharp: 0.35.4
   smol-toml: 1.7.1
+  # LHCI's temporary-file helpers need the path-traversal fixes.
+  tmp: 0.2.7
+  "@lhci/cli>uuid": 11.1.1
+  "@lhci/cli>proxy-agent": 8.0.2

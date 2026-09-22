@@ -53,7 +53,41 @@ pnpm knip
 mise run cloudflare:check
 ```
 
-`pnpm test`はWorkers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。ブラウザE2E suiteは未構成です。`mise run cloudflare:check`はDockerでのclient/Worker build、binding type freshness、Wrangler dry-run、Free plan bundle上限、Worker startup profileを確認します。
+`pnpm test`はWorkers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。`mise run cloudflare:check`はDockerでのclient/Worker build、binding type freshness、Wrangler dry-run、Free plan bundle上限、Worker startup profileを確認します。
+
+### ブラウザE2EとLighthouse CI
+
+```bash
+# 初回・Playwright更新時。Linuxで共有ライブラリが不足する場合は --with-deps を付ける
+pnpm exec playwright install chromium
+pnpm test:e2e
+pnpm perf
+
+# E2EのHTMLレポートを開く
+pnpm test:e2e:report
+```
+
+両commandは既存のDocker production previewを`http://localhost:8788`で自動起動・終了します。port 8788を空け、E2Eと性能計測は順番に実行してください。既存サーバーや任意のremote URLは使いません。毎回新しいcontainerのtmpfsにDO/R2の状態を作り、通常開発の`.wrangler`や本番データには触れません。build用URLとTurnstile keyはテスト値に固定し、Admin/Screenは既存のloopback限定local bypassだけを使用します。Cloudflare Accessの実ログインはE2E対象外です。
+
+- `playwright.config.ts` / `e2e/`：Chromiumでモバイル幅のキーボード操作、番号の入力境界、管理画面での追加・削除→公開画面へのlive反映・reload後の永続化を検査します。Worker/APIをmockしません。失敗時のscreenshotとtraceは`test-results/`、HTMLは`playwright-report/`に保存します。
+- `lighthouserc.cjs`：公開`/`と`/prizes/`をLighthouse標準のmobile条件で各3回計測します。PlaywrightのChromiumを再利用し、計測データは`.lighthouseci/`、HTML/JSONとmanifestは`lighthouse-report/`に保存します。外部のレポート公開serviceやAPI keyは使いません。
+- CIはPR・developへのpush・手動実行で両方を実行します。E2E失敗時もLighthouseを実行し、生成できたレポートを`browser-quality-reports` artifactとして7日間保持します。レポートはGit・Docker build contextに含めません。
+- Ubuntu CIでは、インストールしたChromium実行ファイルだけにAppArmorのuser namespace許可を設定します。Lighthouseの起動に`--no-sandbox`は使わず、OS全体の制限も無効化しません。[Chromium公式の説明](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md)を参照してください。
+
+#### 計測結果の読み方
+
+1. CI artifactを展開し、`lighthouse-report/`のHTMLをブラウザで開きます。`manifest.json`からURLと代表runを確認し、JSONと`.lighthouseci/assertion-results.json`で数値・assertionを確認できます。
+2. Performanceは総合スコアだけでなくLCP・CLS・TBTと、各auditの対象要素・resource・削減見込みを確認します。同じChrome・計測条件で複数runを比較してください。空のイベント状態でのlocal lab計測なので、当日の景品画像・人数・Cloudflare edge latencyや実ユーザーのINPを代表する値ではありません。
+3. Accessibilityは自動検査だけで合格とは判断せず、E2Eのキーボード操作と手動でのfocus・読み上げ確認を併用します。問題を隠すためにauditを無効化したり閾値を下げたりしないでください。
+4. Performance / Best Practices / SEOの90点未満はwarningとして分析対象にし、計測自体の失敗とAccessibilityが1回でも100点未満の場合はcommandを失敗させます。閾値は`lighthouserc.cjs`を正本とします。計測の揺れをテストretryで隠さず、実行環境とaudit結果を確認してください。
+
+#### PageSpeed Insightsで公開環境を測る
+
+[PageSpeed Insights](https://pagespeed.web.dev/)へ`cloudflare.production.env`の`CLOUDFLARE_PRODUCTION_SITE_URL`とその`/prizes`を入力し、mobile・desktopの両方を確認します。localhostやAccess保護下の管理・会場画面は対象にせず、認証を解除して測定しないでください。
+
+Lighthouseのlab結果と、直近28日間のCrUX実利用データは別物です。実利用データがある場合は75パーセンタイルのLCP・CLS・INPを確認します。アクセスが少ない場合の「データなし」を合格扱いしません。PSI結果の共有URL、計測日時、対象deployのcommitをPRやIssueに記録して比較します。API clientや常設dashboardは追加せず、公式UIの分析機能を使います。
+
+参考：[Playwright CI](https://playwright.dev/docs/ci)、[Lighthouse CI設定](https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md)、[PSIのlab/field data](https://developers.google.com/speed/docs/insights/v5/about)。
 
 ## Deploy
 
