@@ -67,9 +67,13 @@ const assertSecurityHeaders = (path, response) => {
 
 const home = await fetchChecked("/", 200, "text/html");
 assertSecurityHeaders("/", home);
-const prizesPage = await fetchChecked("/prizes", 200, "text/html");
+const prizesRedirect = await fetchChecked("/prizes", 307, "");
+if (prizesRedirect.headers.get("location") !== "/prizes/") {
+  throw new Error("/prizes did not redirect to the canonical /prizes/ route");
+}
+const prizesPage = await fetchChecked("/prizes/", 200, "text/html");
 if (!(await prizesPage.text()).includes("<title>景品一覧 | NUTFes Bingo</title>")) {
-  throw new Error("/prizes returned the wrong page title");
+  throw new Error("/prizes/ returned the wrong page title");
 }
 await fetchChecked("/__nutfes-bingo-missing-page__", 404, "text/html");
 const transformationProbePath =
