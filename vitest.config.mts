@@ -1,0 +1,30 @@
+import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
+import { existsSync } from "node:fs";
+import { defineConfig } from "vitest/config";
+
+const assetsDirectory = existsSync("./dist/client/index.html") ? "./dist/client" : "./test/assets";
+
+export default defineConfig({
+  plugins: [
+    cloudflareTest({
+      miniflare: {
+        assets: {
+          binding: "ASSETS",
+          directory: assetsDirectory,
+        },
+        bindings: {
+          LOCAL_ADMIN_BYPASS: "true",
+          LOCAL_SCREEN_BYPASS: "true",
+          LOCAL_TURNSTILE_TEST_MODE: "false",
+          RELEASE_SHA: "test-release-sha",
+          TURNSTILE_HOSTNAME: "example.com",
+        },
+      },
+      wrangler: { configPath: "./wrangler.jsonc" },
+    }),
+  ],
+  test: {
+    include: ["worker/**/*.test.ts", "test/**/*.test.ts", "test/**/*.test.mjs"],
+    testTimeout: 10_000,
+  },
+});

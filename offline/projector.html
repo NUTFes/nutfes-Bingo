@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Offline Bingo Projector</title>
+    <style>
+      :root {
+        font-family: system-ui, "Noto Sans JP", sans-serif;
+        color: #fff;
+        background: #17131a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      .app {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 1rem;
+        padding: clamp(1rem, 2vw, 2rem);
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+      h1 {
+        margin: 0;
+        color: #ffd607;
+        font-size: clamp(1.4rem, 3vw, 2.5rem);
+      }
+      .master {
+        margin: 0;
+        font-weight: 700;
+        color: #ffd607;
+      }
+      .display {
+        display: grid;
+        grid-template-columns: minmax(15rem, 0.8fr) minmax(20rem, 1.2fr);
+        gap: clamp(1rem, 3vw, 3rem);
+        min-height: 0;
+      }
+      .last,
+      .history {
+        border: 3px solid #ffd607;
+        border-radius: 1.5rem;
+        background: #2c252f;
+        padding: clamp(1rem, 3vw, 2.5rem);
+      }
+      .last {
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+      .last span {
+        display: block;
+        color: #d7ccd9;
+        font-weight: 700;
+      }
+      .last strong {
+        display: block;
+        color: #ffd607;
+        font-size: clamp(8rem, 28vw, 24rem);
+        line-height: 0.9;
+        font-variant-numeric: tabular-nums;
+      }
+      .history {
+        overflow: auto;
+      }
+      .history h2 {
+        margin-top: 0;
+      }
+      .numbers {
+        display: grid;
+        grid-template-columns: repeat(10, minmax(2.7rem, 1fr));
+        gap: 0.55rem;
+      }
+      .number {
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1;
+        border-radius: 999px;
+        background: #ffd607;
+        color: #17131a;
+        font-size: clamp(1rem, 2vw, 1.8rem);
+        font-weight: 900;
+      }
+      .empty {
+        color: #d7ccd9;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-radius: 1rem;
+        background: #2c252f;
+      }
+      label {
+        display: grid;
+        gap: 0.35rem;
+        font-weight: 700;
+      }
+      input {
+        width: 9rem;
+        min-height: 3rem;
+        padding: 0.5rem 0.75rem;
+        color: #17131a;
+        background: #fff;
+        border: 3px solid transparent;
+        border-radius: 0.65rem;
+      }
+      input:focus-visible,
+      button:focus-visible {
+        outline: 4px solid #fff;
+        outline-offset: 3px;
+      }
+      button {
+        min-height: 3rem;
+        padding: 0.55rem 1rem;
+        border: 2px solid #ffd607;
+        border-radius: 0.65rem;
+        background: #ffd607;
+        color: #17131a;
+        font-weight: 900;
+      }
+      button.secondary {
+        background: transparent;
+        color: #ffd607;
+      }
+      button.danger {
+        margin-left: auto;
+        border-color: #ff8c8c;
+        background: transparent;
+        color: #ffb3b3;
+      }
+      .status {
+        min-height: 1.5em;
+        margin: 0;
+        flex-basis: 100%;
+        color: #fff;
+      }
+      dialog {
+        max-width: 32rem;
+        color: #fff;
+        background: #2c252f;
+        border: 3px solid #ff8c8c;
+        border-radius: 1rem;
+      }
+      dialog::backdrop {
+        background: rgb(0 0 0 / 75%);
+      }
+      dialog form {
+        display: grid;
+        gap: 1rem;
+      }
+      @media (max-width: 850px) {
+        .display {
+          grid-template-columns: 1fr;
+        }
+        .last strong {
+          font-size: clamp(7rem, 42vw, 15rem);
+        }
+        .numbers {
+          grid-template-columns: repeat(5, 1fr);
+        }
+        .danger {
+          margin-left: 0;
+        }
+      }
+      @media print {
+        .controls,
+        dialog,
+        .master {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <h1>OFFLINE BINGO</h1>
+        <p class="master">正本は紙master logです</p>
+      </header>
+      <div class="display">
+        <section class="last" aria-labelledby="last-title">
+          <div>
+            <span id="last-title">LAST NUMBER</span>
+            <strong id="last-number" aria-live="polite">—</strong>
+          </div>
+        </section>
+        <section class="history" aria-labelledby="history-title">
+          <h2 id="history-title">CALLED NUMBERS</h2>
+          <div id="numbers" class="numbers"></div>
+          <p id="empty" class="empty">まだ番号はありません。</p>
+        </section>
+      </div>
+      <form id="controls" class="controls">
+        <label>
+          紙へ記録した番号
+          <input
+            id="number-input"
+            type="number"
+            min="1"
+            max="99"
+            inputmode="numeric"
+            required
+            autofocus
+          />
+        </label>
+        <button type="submit">表示する</button>
+        <button id="undo" class="secondary" type="button">1つ戻す</button>
+        <button id="fullscreen" class="secondary" type="button">全画面</button>
+        <button id="reset" class="danger" type="button">全番号をreset</button>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </form>
+    </main>
+    <dialog id="reset-dialog">
+      <form method="dialog">
+        <h2>全番号を消します</h2>
+        <p>
+          紙master logは変更されません。実行するには <strong>RESET</strong> と入力してください。
+        </p>
+        <label>確認 <input id="reset-confirmation" autocomplete="off" /></label>
+        <div>
+          <button value="cancel" class="secondary">中止</button>
+          <button id="reset-confirm" value="confirm" class="danger">消去する</button>
+        </div>
+      </form>
+    </dialog>
+    <script>
+      (() => {
+        "use strict";
+        const storageKey = "nutfes-bingo-offline-projector-v1";
+        const numberInput = document.querySelector("#number-input");
+        const lastNumber = document.querySelector("#last-number");
+        const numbers = document.querySelector("#numbers");
+        const empty = document.querySelector("#empty");
+        const status = document.querySelector("#status");
+        const resetDialog = document.querySelector("#reset-dialog");
+        const resetConfirmation = document.querySelector("#reset-confirmation");
+        let called = [];
+        try {
+          const stored = JSON.parse(localStorage.getItem(storageKey) || "[]");
+          if (Array.isArray(stored))
+            called = stored.filter((value) => Number.isInteger(value) && value >= 1 && value <= 99);
+          called = [...new Set(called)];
+        } catch {
+          status.textContent =
+            "端末保存を読み込めませんでした。紙master logを正として続行してください。";
+        }
+        const persist = () => {
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(called));
+          } catch {
+            status.textContent = "端末へ保存できません。紙master logを正として続行してください。";
+          }
+        };
+        const render = () => {
+          lastNumber.textContent = called.at(-1) ?? "—";
+          numbers.replaceChildren(
+            ...called.map((value) => {
+              const item = document.createElement("span");
+              item.className = "number";
+              item.textContent = String(value);
+              return item;
+            }),
+          );
+          empty.hidden = called.length > 0;
+          document.querySelector("#undo").disabled = called.length === 0;
+        };
+        document.querySelector("#controls").addEventListener("submit", (event) => {
+          event.preventDefault();
+          const value = Number(numberInput.value);
+          if (!Number.isInteger(value) || value < 1 || value > 99) {
+            status.textContent = "1〜99の番号を入力してください。";
+          } else if (called.includes(value)) {
+            status.textContent = `${value} は表示済みです。紙master logを確認してください。`;
+          } else {
+            called.push(value);
+            persist();
+            render();
+            status.textContent = `${value} を表示しました。`;
+            numberInput.value = "";
+          }
+          numberInput.focus();
+        });
+        document.querySelector("#undo").addEventListener("click", () => {
+          const removed = called.pop();
+          if (removed === undefined) return;
+          persist();
+          render();
+          status.textContent = `${removed} を画面から戻しました。紙master logへ訂正を記録してください。`;
+          numberInput.focus();
+        });
+        document.querySelector("#fullscreen").addEventListener("click", async () => {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else await document.documentElement.requestFullscreen();
+        });
+        document.querySelector("#reset").addEventListener("click", () => {
+          resetConfirmation.value = "";
+          resetDialog.showModal();
+          resetConfirmation.focus();
+        });
+        resetDialog.addEventListener("close", () => {
+          if (resetDialog.returnValue !== "confirm" || resetConfirmation.value !== "RESET") return;
+          called = [];
+          persist();
+          render();
+          status.textContent = "画面上の全番号を消去しました。";
+          numberInput.focus();
+        });
+        document.querySelector("#reset-confirm").addEventListener("click", (event) => {
+          if (resetConfirmation.value !== "RESET") {
+            event.preventDefault();
+            status.textContent = "RESET と入力した場合だけ消去できます。";
+          }
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

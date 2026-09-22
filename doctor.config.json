@@ -1,0 +1,18 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "ignore": {
+    "overrides": [
+      {
+        "files": ["src/lib/realtime.ts"],
+        "rules": ["react-doctor/effect-needs-cleanup", "react-doctor/no-fetch-in-effect"]
+      },
+      {
+        "files": [
+          "src/features/admin/prizes/components/PrizeEditModal.tsx",
+          "src/features/admin/prizes/prize-create-page.tsx"
+        ],
+        "rules": ["react-doctor/no-create-object-url-without-revoke"]
+      }
+    ]
+  }
+}

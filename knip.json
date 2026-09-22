@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "tags": ["-lintignore"],
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.mjs", "config/**/*.ts", "src/entry/*.tsx"]
+    }
+  },
+  "ignoreDependencies": ["^cloudflare(?::.*)?$"]
+}

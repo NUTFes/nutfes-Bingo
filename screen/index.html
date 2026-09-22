@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.ico" />
+    <!-- Metadata is injected by config/site-html.ts. -->
+    <style>
+      html {
+        background: #111d53;
+        color: #f6f8ff;
+      }
+      html[data-theme="light"] {
+        background: #fcfcfc;
+        color: #1b339b;
+      }
+      body {
+        margin: 0;
+      }
+      .initial-loading {
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        font-family: system-ui, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="initial-loading" role="status" aria-live="polite">スクリーンを読み込み中…</div>
+    </div>
+    <noscript>このアプリを利用するには JavaScript を有効にしてください。</noscript>
+    <script type="module" src="/src/entry/screen.tsx"></script>
+  </body>
+</html>

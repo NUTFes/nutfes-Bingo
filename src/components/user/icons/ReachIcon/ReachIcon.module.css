@@ -1,0 +1,51 @@
+.reachButton {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: clamp(111px, 34.6875vw, 149px);
+  height: var(--navigation-control-size);
+  padding: 0 clamp(6px, 1.875vw, 8px);
+  gap: clamp(4px, 1.25vw, 6px);
+  border: clamp(2px, 0.625vw, 3px) solid var(--main-color);
+  border-radius: clamp(5px, 1.5625vw, 7px);
+  background-color: var(--main-color);
+  color: var(--navigation-active-foreground-color);
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reachButton:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 4px;
+}
+
+.reachButton:active {
+  transform: scale(0.98);
+}
+
+.text {
+  font-family: var(--font-rajdhani), var(--font-sans);
+  font-size: clamp(20px, 6.25vw, 27px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.icon {
+  width: clamp(29px, 9.0625vw, 39px);
+  height: clamp(29px, 9.0625vw, 39px);
+  display: block;
+  flex-shrink: 0;
+  background-color: currentColor;
+  mask: url("/icon_reach.svg") no-repeat center / contain;
+  -webkit-mask: url("/icon_reach.svg") no-repeat center / contain;
+  /* 装飾部分を除いたビンゴカードの中心をボタン中央に合わせる */
+  transform: translate(14%, -14%);
+}

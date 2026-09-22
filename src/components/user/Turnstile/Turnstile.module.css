@@ -1,0 +1,6 @@
+.widget {
+  display: flex;
+  width: 150px;
+  max-width: 100%;
+  justify-content: center;
+}

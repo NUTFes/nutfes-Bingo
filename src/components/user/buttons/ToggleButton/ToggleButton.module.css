@@ -1,0 +1,58 @@
+.toggleContainer {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+  background-color: var(--background-color);
+  border: 2px solid var(--main-color);
+  border-radius: 99px;
+  overflow: hidden;
+  cursor: pointer;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggleText {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  line-height: 1;
+  text-align: center;
+  font-family: var(--font-rajdhani), var(--font-sans);
+  font-weight: 700;
+  color: var(--main-color);
+  background-color: transparent;
+  z-index: 1;
+  transition: color 0.15s ease-out;
+}
+
+.active {
+  color: var(--background-color);
+}
+
+.motionDiv {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background-color: var(--main-color);
+  border-radius: 99px;
+  z-index: 0;
+  pointer-events: none;
+  transform: translateX(0);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.motionDivActive {
+  transform: translateX(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motionDiv {
+    transition: none;
+  }
+}

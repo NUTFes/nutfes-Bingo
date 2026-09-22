@@ -1,0 +1,64 @@
+# syntax=docker.io/docker/dockerfile:1
+
+FROM node:26.2.0-bookworm-slim@sha256:e89172f5e6154ba212269866bf3fbadbca8eb7901e10c0eccf08f2147bfae505 AS base
+
+WORKDIR /app
+RUN apt-get update \
+  && apt-get upgrade --yes \
+  && apt-get install --yes --no-install-recommends ca-certificates libc++1 \
+  && rm -rf /var/lib/apt/lists/*
+
+FROM base AS pnpm-base
+ADD --checksum=sha256:99c4be831ed231829895142d96793dbe75afc53795933aed8366e68dcce1e1b8 \
+  https://registry.npmjs.org/pnpm/-/pnpm-11.2.2.tgz /tmp/pnpm.tgz
+RUN mkdir -p /opt/pnpm \
+  && tar -xzf /tmp/pnpm.tgz --strip-components=1 -C /opt/pnpm \
+  && chmod 0755 /opt/pnpm/bin/pnpm.cjs \
+  && ln -s /opt/pnpm/bin/pnpm.cjs /usr/local/bin/pnpm \
+  && rm /tmp/pnpm.tgz
+
+FROM pnpm-base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
+RUN chown node:node /app
+USER node
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS development
+COPY --chown=node:node . .
+USER root
+RUN rm -rf /usr/local/lib/node_modules/npm \
+  && rm -f /usr/local/bin/npm /usr/local/bin/npx
+USER node
+EXPOSE 8787
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:8787/api/ready').then(response=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+CMD ["pnpm", "dev"]
+
+FROM deps AS builder
+ARG VITE_SITE_URL=http://localhost:8787
+ARG VITE_MEDIA_ORIGIN
+ARG VITE_TURNSTILE_SITE_KEY
+ARG VITE_IMAGE_TRANSFORMATIONS=true
+ENV VITE_SITE_URL=${VITE_SITE_URL}
+ENV VITE_MEDIA_ORIGIN=${VITE_MEDIA_ORIGIN}
+ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
+ENV VITE_IMAGE_TRANSFORMATIONS=${VITE_IMAGE_TRANSFORMATIONS}
+COPY --chown=node:node . .
+RUN pnpm build
+
+FROM base AS preview
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./package.json
+RUN rm -rf /usr/local/lib/node_modules/npm \
+  && rm -f /usr/local/bin/npm /usr/local/bin/npx
+USER node
+EXPOSE 8787
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:8787/api/ready').then(response=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+CMD ["node", "node_modules/wrangler/bin/wrangler.js", "dev", "--config", "dist/worker/wrangler.json", "--ip", "0.0.0.0", "--port", "8787"]
+
+# Export with `docker buildx build --target export --output type=local,dest=. ...`.
+# The host receives the complete client and Worker distribution from one build.
+FROM scratch AS export
+COPY --from=builder /app/dist /dist

@@ -1,0 +1,274 @@
+.horizontalCenter {
+  display: flex;
+  justify-content: center;
+}
+
+.bubble {
+  width: 87.5vw;
+  height: 50.9vw;
+  position: fixed;
+  box-sizing: border-box;
+  max-width: 87.5vw;
+  background: var(--background-color);
+  box-shadow:
+    1.09375vw 1.09375vw 0px 0px var(--main-color),
+    0 2.5vw 8vw rgba(0, 0, 0, 0.65);
+  border-radius: 5.46875vw;
+  border: var(--main-color) solid 1.640625vw;
+  padding: 1rem;
+  z-index: 100;
+  transform-origin: bottom center;
+  animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.effectFrame {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.bubble:before {
+  content: "";
+  position: absolute;
+  width: 0;
+  z-index: 0;
+  border-style: solid;
+  border-color: var(--main-color) transparent;
+  border-width: 8.203125vw 4.1015625vw 0;
+  bottom: -8.75vw;
+  margin-left: -4.1015625vw;
+  display: block;
+  filter: drop-shadow(0.546875vw 1.09375vw var(--main-color));
+}
+
+.bubble:after {
+  content: "";
+  position: absolute;
+  display: block;
+  width: 0;
+  z-index: 1;
+  border-style: solid;
+  border-color: var(--background-color) transparent;
+  border-width: 6.2890625vw 2.4609375vw 0;
+  bottom: -5.7421875vw;
+  margin-left: -2.4609375vw;
+}
+
+.bubble:before,
+.bubble:after {
+  left: var(--bubble-left-position, 50%);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  justify-items: center;
+  align-items: center;
+}
+
+.iconButton {
+  position: relative;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.iconButton:active {
+  animation: softBounce 1.5s infinite;
+}
+
+.iconButton.active {
+  animation: softBounce 0.8s ease-in-out;
+}
+
+.iconButton.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.iconButton .ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20%;
+  height: 20%;
+  border-radius: 50%;
+  border: 0.5vw solid var(--main-color);
+  opacity: 0.7;
+  animation: rippleExpand 0.8s ease-out forwards;
+  pointer-events: none;
+}
+
+.iconButton .ripple.delay {
+  animation-delay: 0.15s;
+}
+
+.particles {
+  position: absolute;
+  inset: -1.8vw;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4.8vw;
+  height: 4.8vw;
+  transform: translate(-50%, -50%);
+  animation: burst 0.65s ease-out forwards;
+}
+
+.particleImg {
+  position: absolute;
+  inset: 0;
+}
+
+.particle:nth-child(1) {
+  --tx: 0;
+  --ty: -9vw;
+}
+.particle:nth-child(2) {
+  --tx: 7.2vw;
+  --ty: -5.4vw;
+}
+.particle:nth-child(3) {
+  --tx: 7.2vw;
+  --ty: 5.4vw;
+}
+.particle:nth-child(4) {
+  --tx: 0;
+  --ty: 9vw;
+}
+.particle:nth-child(5) {
+  --tx: -7.2vw;
+  --ty: 5.4vw;
+}
+.particle:nth-child(6) {
+  --tx: -7.2vw;
+  --ty: -5.4vw;
+}
+
+@keyframes softBounce {
+  0% {
+    transform: scale(1, 0.8);
+  }
+  20% {
+    transform: scale(0.8, 1.1);
+  }
+  90% {
+    transform: scale(1, 1);
+  }
+  100% {
+    transform: scale(1, 0.8);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes rippleExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+@keyframes burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.6);
+    opacity: 0;
+  }
+}
+
+@media (min-width: 640px) {
+  .bubble {
+    width: 376px;
+    height: 219px;
+    max-width: 376px;
+    border-width: 7px;
+    border-radius: 24px;
+    box-shadow:
+      5px 5px 0 0 var(--main-color),
+      0 15px 40px rgba(0, 0, 0, 0.65);
+  }
+
+  .bubble:before {
+    border-width: 35px 18px 0;
+    bottom: -38px;
+    margin-left: -18px;
+    filter: drop-shadow(2px 5px var(--main-color));
+  }
+
+  .bubble:after {
+    border-width: 27px 11px 0;
+    bottom: -25px;
+    margin-left: -11px;
+  }
+
+  .iconButton .ripple {
+    border-width: 2px;
+  }
+
+  .particles {
+    inset: -8px;
+  }
+
+  .particle {
+    width: 21px;
+    height: 21px;
+  }
+
+  .particle:nth-child(1) {
+    --ty: -39px;
+  }
+  .particle:nth-child(2) {
+    --tx: 31px;
+    --ty: -23px;
+  }
+  .particle:nth-child(3) {
+    --tx: 31px;
+    --ty: 23px;
+  }
+  .particle:nth-child(4) {
+    --ty: 39px;
+  }
+  .particle:nth-child(5) {
+    --tx: -31px;
+    --ty: 23px;
+  }
+  .particle:nth-child(6) {
+    --tx: -31px;
+    --ty: -23px;
+  }
+}

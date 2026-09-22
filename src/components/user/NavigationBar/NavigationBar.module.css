@@ -1,0 +1,36 @@
+.navigationBar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  z-index: 500;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--navigation-top-padding) clamp(16px, 5vw, 22px)
+    calc(var(--navigation-bottom-padding) + env(safe-area-inset-bottom));
+  background-color: var(--navigation-background-color);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 clamp(-3px, -0.625vw, -2px) clamp(10px, 3.125vw, 13px) 0 var(--nav-top-shadow-color),
+    0 -2px 10px rgba(17, 29, 83, 0.12);
+}
+.navigationBar:not(.center) > :nth-child(2) {
+  margin-left: clamp(6px, 1.875vw, 8px);
+}
+
+.navigationBar:not(.center) > :nth-child(3) {
+  margin-left: clamp(13px, 4.0625vw, 17px);
+}
+
+.navigationBar:not(.center) > :nth-child(4) {
+  margin-left: clamp(11px, 3.4375vw, 15px);
+}
+
+.center {
+  justify-content: center;
+  gap: clamp(6px, 1.875vw, 8px);
+}
