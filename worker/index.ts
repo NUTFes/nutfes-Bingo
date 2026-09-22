@@ -369,10 +369,7 @@ async function handleAdminCommand(
   const origin = assertSameOriginMutation(request);
   const body = await readJsonBody(request);
   if (!isRecord(body)) throw new ApiError(400, "command body が不正です。");
-  const discriminator: AdminCommand["type"] =
-    typeof body.type === "string"
-      ? assertAdminCommandType(body.type)
-      : assertAdminCommandType(body.command);
+  const discriminator = assertAdminCommandType(body.type);
 
   const game = getGameState(env);
   let data: unknown;

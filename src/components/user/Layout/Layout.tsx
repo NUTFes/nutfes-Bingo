@@ -29,11 +29,7 @@ import {
   usePublicPreferences,
 } from "@/components/user/Layout/usePublicPreferences";
 import { usePublicInteractions } from "@/components/user/Layout/usePublicInteractions";
-import {
-  DEFAULT_PUBLIC_PREFERENCES,
-  PUBLIC_PREFERENCE_KEYS,
-  type PublicPreferences,
-} from "@/types/bingo/public-preferences";
+import { PUBLIC_PREFERENCE_KEYS } from "@/types/bingo/public-preferences";
 
 const ReactionStampModal = lazy(
   () => import("@/components/user/ReactionStampModal/ReactionStampModal"),
@@ -48,7 +44,6 @@ const SurveyPromptModal = lazy(
 interface InnerLayoutProps {
   children: React.ReactNode;
   appState: AppStateRow;
-  initialPreferences?: PublicPreferences;
   isSortedAscending?: boolean;
   setIsSortedAscending?: (value: boolean) => void;
 }
@@ -56,7 +51,6 @@ interface InnerLayoutProps {
 function InnerLayout({
   children,
   appState,
-  initialPreferences = DEFAULT_PUBLIC_PREFERENCES,
   isSortedAscending,
   setIsSortedAscending,
 }: InnerLayoutProps) {
@@ -66,7 +60,6 @@ function InnerLayout({
   const interactions = usePublicInteractions(appState);
   const { preferences, setPreferences, markReachConfirmed } = usePublicPreferences(
     appState.event_id,
-    initialPreferences,
     setIsSortedAscending,
   );
   const [navBarHeight, setNavBarHeight] = useState<string>();

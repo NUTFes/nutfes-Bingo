@@ -6,7 +6,7 @@ import type { SiteArea } from "@/site-pages";
 type Props = { children: ReactNode; area: SiteArea };
 type State = { error: Error | null };
 
-class AppErrorBoundary extends Component<Props, State> {
+export class AppErrorBoundary extends Component<Props, State> {
   state: State = { error: null };
 
   static getDerivedStateFromError(error: Error): Partial<State> {

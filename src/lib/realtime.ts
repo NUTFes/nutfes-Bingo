@@ -41,18 +41,13 @@ const SCREEN_ACCESS_RECHECK_MS = 30 * 60_000;
 
 class ScreenAccessExpiredError extends Error {}
 
-function createEmptyState(input?: {
-  numbers?: NumberRow[];
-  prizes?: PrizeWithImageUrl[];
-  appState?: AppStateRow;
-  latestReachLog?: ReachLogRow | null;
-}): BingoUnifiedState {
+function createEmptyState(): BingoUnifiedState {
   return {
     revision: 0,
-    numbers: input?.numbers ?? [],
-    prizes: input?.prizes ?? [],
-    appState: input?.appState ?? EMPTY_APP_STATE,
-    latestReachLog: input?.latestReachLog ?? null,
+    numbers: [],
+    prizes: [],
+    appState: EMPTY_APP_STATE,
+    latestReachLog: null,
     serverTime: "",
   };
 }
@@ -140,12 +135,9 @@ export function normalizeBingoState(value: unknown, fallback: BingoUnifiedState)
   } satisfies BingoUnifiedState;
 }
 
-function socketUrl(path: string, parameters?: Record<string, string>) {
+function socketUrl(path: string) {
   const url = new URL(path, window.location.href);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-  for (const [name, value] of Object.entries(parameters ?? {})) {
-    url.searchParams.set(name, value);
-  }
   return url.toString();
 }
 
@@ -189,9 +181,9 @@ function stateEtag(state: BingoUnifiedState) {
   return state.appState.event_id === "" ? null : makeStateEtag(state.revision);
 }
 
-function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen" = "public") {
-  const [state, setState] = useState(initialState);
-  const stateRef = useRef(initialState);
+function useBingoState(view: "public" | "screen" = "public") {
+  const [state, setState] = useState<BingoUnifiedState>(createEmptyState);
+  const stateRef = useRef(state);
 
   useEffect(() => {
     let active = true;
@@ -477,10 +469,8 @@ function useBingoState(initialState: BingoUnifiedState, view: "public" | "screen
   return state;
 }
 
-export function useHomeRealtimeState(initialNumbers: NumberRow[], initialAppState: AppStateRow) {
-  const state = useBingoState(
-    createEmptyState({ numbers: initialNumbers, appState: initialAppState }),
-  );
+export function useHomeRealtimeState() {
+  const state = useBingoState();
   return {
     numbers: state.numbers,
     appState: state.appState,
@@ -488,13 +478,8 @@ export function useHomeRealtimeState(initialNumbers: NumberRow[], initialAppStat
   };
 }
 
-export function usePrizesRealtimeState(
-  initialPrizes: PrizeWithImageUrl[],
-  initialAppState: AppStateRow,
-) {
-  const state = useBingoState(
-    createEmptyState({ prizes: initialPrizes, appState: initialAppState }),
-  );
+export function usePrizesRealtimeState() {
+  const state = useBingoState();
   return {
     prizes: state.prizes,
     appState: state.appState,
@@ -502,14 +487,8 @@ export function usePrizesRealtimeState(
   };
 }
 
-export function useScreenRealtimeState(
-  initialNumbers: NumberRow[],
-  initialReachLog: ReachLogRow | null,
-) {
-  const state = useBingoState(
-    createEmptyState({ numbers: initialNumbers, latestReachLog: initialReachLog }),
-    "screen",
-  );
+export function useScreenRealtimeState() {
+  const state = useBingoState("screen");
   return {
     numbers: state.numbers,
     latestReachLog: state.latestReachLog,
@@ -546,8 +525,7 @@ export function useStampStream(onInsert: (stamp: StampEvent) => void) {
       startVenueSocketLifecycle({
         url: socketUrl(SCREEN_STAMP_SOCKET_PATH),
         replacementIntervalMs: SCREEN_SOCKET_REPLACEMENT_MS,
-        replaceHealthySocketOnWake: true,
-        onMessage: (event, _candidate, isActiveSocket) => {
+        onMessage: (event, isActiveSocket) => {
           const message = parseStampSocketMessage(event);
           if (message === null) return "ignored";
           if (message.type === "ready") return "ready";

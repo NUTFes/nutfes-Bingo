@@ -1,8 +1,7 @@
-import { useEffect, useReducer, useState, type SetStateAction } from "react";
+import { useState } from "react";
 import { IoSwapVerticalOutline } from "react-icons/io5";
 
 import { AdminHeader, AdminLoading } from "@/components/admin";
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { SearchField } from "@/components/ui/SearchField";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion } from "@/components/ui/Toast";
@@ -10,48 +9,13 @@ import { queue } from "@/components/ui/toastQueue";
 import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
 import { fetchAdminState } from "@/lib/admin-api";
+import { useAdminPrizes } from "./useAdminPrizes";
 
-interface AdminPrizesPageProps {
-  initialPrizes: PrizeWithImageUrl[];
-}
-
-interface PrizesLoadState {
-  bingoPrize: PrizeWithImageUrl[];
-  loadError: string | null;
-  isLoaded: boolean;
-}
-
-type PrizesLoadAction =
-  | { type: "load-success"; prizes: PrizeWithImageUrl[] }
-  | { type: "load-error"; message: string }
-  | { type: "set-prizes"; value: SetStateAction<PrizeWithImageUrl[]> };
-
-const prizesLoadReducer = (state: PrizesLoadState, action: PrizesLoadAction): PrizesLoadState => {
-  switch (action.type) {
-    case "load-success":
-      return { bingoPrize: action.prizes, loadError: null, isLoaded: true };
-    case "load-error":
-      return { ...state, loadError: action.message };
-    case "set-prizes":
-      return {
-        ...state,
-        bingoPrize:
-          typeof action.value === "function" ? action.value(state.bingoPrize) : action.value,
-      };
-  }
-};
-
-export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
-  const [{ bingoPrize, loadError, isLoaded }, dispatchLoadState] = useReducer(prizesLoadReducer, {
-    bingoPrize: initialPrizes,
-    loadError: null,
-    isLoaded: false,
-  });
+export function AdminPrizesPage() {
+  const { bingoPrize, setBingoPrize, loadError, isLoaded } = useAdminPrizes();
   const [searchText, setSearchText] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
-  const setBingoPrize = (value: SetStateAction<PrizeWithImageUrl[]>) => {
-    dispatchLoadState({ type: "set-prizes", value });
-  };
+
   const refreshAuthoritativePrizes = async () => {
     try {
       const state = await fetchAdminState();
@@ -68,27 +32,6 @@ export function AdminPrizesPage({ initialPrizes }: AdminPrizesPageProps) {
     }
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    void fetchAdminState(controller.signal)
-      .then((state) => {
-        dispatchLoadState({ type: "load-success", prizes: state.prizes });
-      })
-      .catch((error) => {
-        if (!(error instanceof DOMException && error.name === "AbortError")) {
-          console.error(error);
-          dispatchLoadState({
-            type: "load-error",
-            message: "景品データを取得できませんでした。接続を確認して再読み込みしてください。",
-          });
-          queue.add(
-            { title: "読込失敗", description: "景品データを取得できませんでした。" },
-            { timeout: 5000 },
-          );
-        }
-      });
-    return () => controller.abort();
-  }, []);
   const handleSearchChange = (value: string) => {
     setSearchText(value);
     if (value) {

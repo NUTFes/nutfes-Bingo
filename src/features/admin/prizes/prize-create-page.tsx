@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useReducer, useRef, useState, type SetStateAction } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isFileDropItem, type DropEvent } from "react-aria";
 import { AdminHeader, AdminLoading } from "@/components/admin";
-import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { MyToastRegion } from "@/components/ui/Toast";
 import { queue } from "@/components/ui/toastQueue";
 import {
@@ -11,39 +10,7 @@ import {
 import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
 import { fetchAdminState } from "@/lib/admin-api";
-
-interface AdminPrizeCreatePageProps {
-  initialPrizes: PrizeWithImageUrl[];
-}
-
-interface PrizeCreateLoadState {
-  bingoPrize: PrizeWithImageUrl[];
-  loadError: string | null;
-  isLoaded: boolean;
-}
-
-type PrizeCreateLoadAction =
-  | { type: "load-success"; prizes: PrizeWithImageUrl[] }
-  | { type: "load-error"; message: string }
-  | { type: "set-prizes"; value: SetStateAction<PrizeWithImageUrl[]> };
-
-const prizeCreateLoadReducer = (
-  state: PrizeCreateLoadState,
-  action: PrizeCreateLoadAction,
-): PrizeCreateLoadState => {
-  switch (action.type) {
-    case "load-success":
-      return { bingoPrize: action.prizes, loadError: null, isLoaded: true };
-    case "load-error":
-      return { ...state, loadError: action.message };
-    case "set-prizes":
-      return {
-        ...state,
-        bingoPrize:
-          typeof action.value === "function" ? action.value(state.bingoPrize) : action.value,
-      };
-  }
-};
+import { useAdminPrizes } from "./useAdminPrizes";
 
 const TOAST_TIMEOUT = 5000;
 const PRIZE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
@@ -62,18 +29,8 @@ const showToast = (content: { title: string; description?: string }) => {
   queue.add(content, { timeout: TOAST_TIMEOUT });
 };
 
-export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProps) {
-  const [{ bingoPrize, loadError, isLoaded }, dispatchLoadState] = useReducer(
-    prizeCreateLoadReducer,
-    {
-      bingoPrize: initialPrizes,
-      loadError: null,
-      isLoaded: false,
-    },
-  );
-  const setBingoPrize = (value: SetStateAction<PrizeWithImageUrl[]>) => {
-    dispatchLoadState({ type: "set-prizes", value });
-  };
+export function AdminPrizeCreatePage() {
+  const { bingoPrize, setBingoPrize, loadError, isLoaded } = useAdminPrizes();
   const [formState, setFormState] = useState({
     prizeNameJp: "",
     prizeNameEn: "",
@@ -83,25 +40,6 @@ export function AdminPrizeCreatePage({ initialPrizes }: AdminPrizeCreatePageProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const previewUrlRef = useRef<string | null>(null);
   const { prizeNameJp, prizeNameEn, imageFile, previewUrl } = formState;
-
-  useEffect(() => {
-    const controller = new AbortController();
-    void fetchAdminState(controller.signal)
-      .then((state) => {
-        dispatchLoadState({ type: "load-success", prizes: state.prizes });
-      })
-      .catch((error) => {
-        if (!(error instanceof DOMException && error.name === "AbortError")) {
-          console.error(error);
-          dispatchLoadState({
-            type: "load-error",
-            message: "景品データを取得できませんでした。接続を確認して再読み込みしてください。",
-          });
-          showToast({ title: "読込失敗", description: "景品データを取得できませんでした。" });
-        }
-      });
-    return () => controller.abort();
-  }, []);
 
   useEffect(
     () => () => {

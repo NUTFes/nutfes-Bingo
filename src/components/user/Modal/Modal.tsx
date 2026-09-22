@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode, type SyntheticEvent } from "react";
 import styles from "./Modal.module.css";
 
 interface ModalProps {
@@ -16,82 +16,55 @@ const Modal = ({
   ariaLabel = "モーダル",
   setIsOpened,
 }: ModalProps) => {
-  const contentRef = useRef<HTMLDialogElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => {
-    if (!isOpened) {
-      return undefined;
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog || !isOpened) return;
+
+    dialog.showModal();
+    // Close before React removes the dialog so the browser can restore focus.
+    return () => dialog.close();
+  }, [isOpened]);
+
+  const handleCancel = (event: SyntheticEvent<HTMLDialogElement>) => {
+    event.preventDefault();
+    if (canCloseByClickingBackground) {
+      setIsOpened(false);
     }
+  };
 
-    previousFocusRef.current = document.activeElement as HTMLElement | null;
-    contentRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && canCloseByClickingBackground) {
-        event.preventDefault();
-        setIsOpened(false);
-        return;
-      }
-
-      if (event.key !== "Tab" || !contentRef.current) {
-        return;
-      }
-
-      const focusableElements = contentRef.current.querySelectorAll<HTMLElement>(
-        'iframe, a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
-      );
-      const first = focusableElements[0];
-      const last = focusableElements[focusableElements.length - 1];
-
-      if (!first || !last) {
-        event.preventDefault();
-        contentRef.current.focus();
-        return;
-      }
-
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      previousFocusRef.current?.focus();
-    };
-  }, [canCloseByClickingBackground, isOpened, setIsOpened]);
+  const handleClose = (event: SyntheticEvent<HTMLDialogElement>) => {
+    // Ignore a queued close event from an earlier open/close cycle.
+    if (isOpened && !event.currentTarget.open) {
+      setIsOpened(false);
+    }
+  };
 
   return (
-    <>
+    <dialog
+      ref={dialogRef}
+      className={styles.wrapper}
+      onCancel={handleCancel}
+      onClose={handleClose}
+      aria-label={ariaLabel}
+      aria-modal="true"
+    >
       {isOpened && (
-        <div className={styles.wrapper}>
-          <dialog
-            ref={contentRef}
-            className={styles.content}
-            tabIndex={-1}
-            aria-label={ariaLabel}
-            aria-modal="true"
-            open
-          >
-            {children}
-          </dialog>
+        <>
+          <div className={styles.content}>{children}</div>
           {canCloseByClickingBackground && (
             <button
               type="button"
               className={styles.background}
+              tabIndex={-1}
               onClick={() => setIsOpened(false)}
               aria-label="モーダルを閉じる"
             />
           )}
-        </div>
+        </>
       )}
-    </>
+    </dialog>
   );
 };
 

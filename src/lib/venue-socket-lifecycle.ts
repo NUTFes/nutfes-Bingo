@@ -3,13 +3,7 @@ type VenueSocketMessageDisposition = "ready" | "handled" | "ignored";
 type VenueSocketLifecycleOptions = {
   url: string;
   replacementIntervalMs: number;
-  replaceHealthySocketOnWake: boolean;
-  onMessage: (
-    event: MessageEvent,
-    socket: WebSocket,
-    isActiveSocket: boolean,
-  ) => VenueSocketMessageDisposition;
-  onWake?: () => void;
+  onMessage: (event: MessageEvent, isActiveSocket: boolean) => VenueSocketMessageDisposition;
 };
 
 const SOCKET_READY_TIMEOUT_MS = 10_000;
@@ -112,7 +106,7 @@ export function startVenueSocketLifecycle(options: VenueSocketLifecycleOptions):
       }, SOCKET_READY_TIMEOUT_MS);
     });
     candidate.addEventListener("message", (event) => {
-      const disposition = options.onMessage(event, candidate, socket === candidate);
+      const disposition = options.onMessage(event, socket === candidate);
       if (disposition === "ready") promote(candidate);
     });
     candidate.addEventListener("close", () => {
@@ -145,9 +139,8 @@ export function startVenueSocketLifecycle(options: VenueSocketLifecycleOptions):
 
   const restartRecovery = () => {
     reconnectAttempt = 0;
-    options.onWake?.();
     if (socket?.readyState === WebSocket.OPEN) {
-      if (options.replaceHealthySocketOnWake) connect(true);
+      connect(true);
     } else {
       connect(false);
     }

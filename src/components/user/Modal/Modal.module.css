@@ -1,22 +1,37 @@
 .wrapper {
+  display: none;
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: none;
+}
+
+.wrapper[open] {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 200;
-  width: 100%;
-  height: 100%;
-  contain: content;
+}
+
+.wrapper::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .content {
   position: relative;
+  z-index: 1;
   width: 87.5vw;
   max-width: 430px;
   max-height: min(78dvh, 720px);
-  z-index: 50;
   box-sizing: border-box;
   padding: clamp(28px, 8vw, 40px);
   overflow: auto;
@@ -32,16 +47,10 @@
 
 .background {
   position: absolute;
-  z-index: 25;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   padding: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
   border: none;
-  animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  background: transparent;
 }
 
 @keyframes modalScaleUp {
@@ -72,7 +81,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .content,
-  .background {
+  .wrapper::backdrop {
     animation: none;
   }
 }

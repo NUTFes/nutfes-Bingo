@@ -4,7 +4,7 @@ import { AdminHeader, AdminLoading, BingoResult } from "@/components/admin";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion } from "@/components/ui/Toast";
 import { queue } from "@/components/ui/toastQueue";
-import type { AppStateRow, NumberRow } from "@/types/bingo/types";
+import { EMPTY_APP_STATE, type AppStateRow, type NumberRow } from "@/types/bingo/types";
 import JudgementModal from "./components/JudgementModal";
 import UpdateNumberModal from "./components/UpdateNumberModal";
 import { dashboardActions } from "./actions-client";
@@ -18,11 +18,6 @@ import {
 import { useDashboardState } from "./hooks";
 import { parseBingoNumber } from "./utils";
 import { fetchAdminState } from "@/lib/admin-api";
-
-interface AdminDashboardPageProps {
-  initialNumbers: NumberRow[];
-  initialAppState: AppStateRow;
-}
 
 interface DashboardLoadState {
   bingoNumbers: NumberRow[];
@@ -121,7 +116,7 @@ const mutateReach = async (direction: "increment" | "decrement") => {
   return result;
 };
 
-export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDashboardPageProps) {
+export function AdminDashboardPage() {
   const [
     {
       bingoNumbers,
@@ -136,15 +131,15 @@ export function AdminDashboardPage({ initialNumbers, initialAppState }: AdminDas
     },
     dispatchLoadState,
   ] = useReducer(dashboardLoadReducer, {
-    bingoNumbers: initialNumbers,
-    eventId: initialAppState.event_id,
+    bingoNumbers: [],
+    eventId: EMPTY_APP_STATE.event_id,
     revision: 0,
     loadError: null,
     isLoaded: false,
-    surveyUrl: initialAppState.survey_url,
-    surveyTitle: initialAppState.survey_title,
-    surveyDescription: initialAppState.survey_description,
-    surveyButtonLabel: initialAppState.survey_button_label,
+    surveyUrl: EMPTY_APP_STATE.survey_url,
+    surveyTitle: EMPTY_APP_STATE.survey_title,
+    surveyDescription: EMPTY_APP_STATE.survey_description,
+    surveyButtonLabel: EMPTY_APP_STATE.survey_button_label,
   });
   const setBingoNumbers = (value: SetStateAction<NumberRow[]>) => {
     dispatchLoadState({ type: "set-numbers", value });

@@ -3,9 +3,7 @@ import { useLayoutEffect, useState } from "react";
 import {
   applyPublicTheme,
   DEFAULT_PUBLIC_PREFERENCES,
-  preferenceCookie,
   PUBLIC_PREFERENCE_KEYS,
-  type PublicPreferences,
   parseBooleanPreference,
   resolveDarkModePreference,
   shouldShowReachIcon,
@@ -19,18 +17,16 @@ export type PublicPreferenceState = {
 
 export const persistBooleanPreference = (key: string, value: boolean) => {
   window.localStorage.setItem(key, value.toString());
-  document.cookie = preferenceCookie(key, value);
 };
 
 export function usePublicPreferences(
   eventId: string,
-  initialPreferences: PublicPreferences = DEFAULT_PUBLIC_PREFERENCES,
   setIsSortedAscending?: (value: boolean) => void,
 ) {
   const [preferences, setPreferences] = useState<PublicPreferenceState>(() => ({
     isReachIconVisible: false,
-    isSortOrderActive: initialPreferences.isSortedAscending,
-    isDarkMode: resolveDarkModePreference(initialPreferences.isDarkMode),
+    isSortOrderActive: DEFAULT_PUBLIC_PREFERENCES.isSortedAscending,
+    isDarkMode: resolveDarkModePreference(DEFAULT_PUBLIC_PREFERENCES.isDarkMode),
   }));
 
   useLayoutEffect(() => {
@@ -45,12 +41,12 @@ export function usePublicPreferences(
 
     const nextSortOrder = parseBooleanPreference(
       window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.sortedAscending) ?? undefined,
-      initialPreferences.isSortedAscending,
+      DEFAULT_PUBLIC_PREFERENCES.isSortedAscending,
     );
     setIsSortedAscending?.(nextSortOrder);
     persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.sortedAscending, nextSortOrder);
 
-    const nextDarkMode = resolveDarkModePreference(initialPreferences.isDarkMode);
+    const nextDarkMode = resolveDarkModePreference(DEFAULT_PUBLIC_PREFERENCES.isDarkMode);
     persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.darkMode, nextDarkMode);
 
     setPreferences({
@@ -58,7 +54,7 @@ export function usePublicPreferences(
       isSortOrderActive: nextSortOrder,
       isDarkMode: nextDarkMode,
     });
-  }, [eventId, initialPreferences, setIsSortedAscending]);
+  }, [eventId, setIsSortedAscending]);
 
   useLayoutEffect(() => {
     applyPublicTheme(preferences.isDarkMode);

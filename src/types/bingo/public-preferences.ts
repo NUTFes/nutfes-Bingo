@@ -5,7 +5,7 @@ export const PUBLIC_PREFERENCE_KEYS = {
   legacyReachIconVisible: "isReachIconVisible",
 } as const;
 
-export interface PublicPreferences {
+interface PublicPreferences {
   isDarkMode: boolean;
   isSortedAscending: boolean;
 }
@@ -24,9 +24,6 @@ export const parseBooleanPreference = (value: string | undefined, fallback: bool
   }
   return fallback;
 };
-
-export const preferenceCookie = (key: string, value: boolean) =>
-  `${key}=${value}; path=/; max-age=31536000; samesite=lax`;
 
 export const shouldShowReachIcon = (eventId: string, lastReachedEventId: string | null) =>
   eventId !== "" && eventId !== lastReachedEventId;

@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 
 import AdminLoading from "@/components/admin/AdminLoading";
-import { EMPTY_APP_STATE } from "@/types/bingo/types";
 import "@/styles/fonts.css";
 import "@/styles/admin/globals.css";
 
@@ -41,17 +40,9 @@ function AdminApp() {
         <RouteErrorBoundary area="admin">
           <Suspense fallback={<AdminLoading />}>
             <Routes>
-              <Route
-                path="/admin"
-                element={
-                  <AdminDashboardPage initialNumbers={[]} initialAppState={EMPTY_APP_STATE} />
-                }
-              />
-              <Route path="/admin/prizes" element={<AdminPrizesPage initialPrizes={[]} />} />
-              <Route
-                path="/admin/prizes/new"
-                element={<AdminPrizeCreatePage initialPrizes={[]} />}
-              />
+              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/admin/prizes" element={<AdminPrizesPage />} />
+              <Route path="/admin/prizes/new" element={<AdminPrizeCreatePage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

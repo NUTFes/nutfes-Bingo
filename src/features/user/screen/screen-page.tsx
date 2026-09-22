@@ -8,13 +8,8 @@ import ScreenReachCount from "./components/ScreenReachCount/ScreenReachCount";
 import Loading from "@/components/user/Loading";
 import { useScreenRealtimeState, useStampStream } from "@/lib/realtime";
 import type { StampEvent } from "@/types/bingo/realtime";
-import type { NumberRow, ReachLogRow, StampName } from "@/types/bingo/types";
+import type { StampName } from "@/types/bingo/types";
 import styles from "@/styles/user/screen.module.css";
-
-interface ScreenPageProps {
-  initialNumbers: NumberRow[];
-  initialReachLog: ReachLogRow | null;
-}
 
 const IMAGES: Record<string, string> = {
   angry: "/ReactionIcon/angry.png",
@@ -35,7 +30,7 @@ const WALL_THICKNESS = 96;
 const WALL_INSET = 48;
 const STAMP_LIFETIME_MS = 45000;
 
-export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps) {
+export function ScreenPage() {
   const scene = useRef<HTMLDivElement>(null);
   const engine = useRef<Matter.Engine | null>(null);
   const runner = useRef<Matter.Runner | null>(null);
@@ -54,11 +49,7 @@ export function ScreenPage({ initialNumbers, initialReachLog }: ScreenPageProps)
     removalTimersRef.current = new Map();
   }
   const removalTimers = removalTimersRef.current;
-  const {
-    numbers: bingoNumbers,
-    latestReachLog,
-    isReady,
-  } = useScreenRealtimeState(initialNumbers, initialReachLog);
+  const { numbers: bingoNumbers, latestReachLog, isReady } = useScreenRealtimeState();
   const displayBingoNumbers = useMemo(
     () => getScreenDisplayBingoNumbers(bingoNumbers),
     [bingoNumbers],

@@ -3,8 +3,6 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 
 import Loading from "@/components/user/Loading/Loading";
-import { DEFAULT_PUBLIC_PREFERENCES } from "@/types/bingo/public-preferences";
-import { EMPTY_APP_STATE } from "@/types/bingo/types";
 import "@/styles/fonts.css";
 import "@/styles/user/globals.css";
 
@@ -34,26 +32,8 @@ function PublicApp() {
       <RouteErrorBoundary area="public">
         <Suspense fallback={<Loading />}>
           <Routes>
-            <Route
-              path="/"
-              element={
-                <HomePage
-                  initialNumbers={[]}
-                  initialAppState={EMPTY_APP_STATE}
-                  initialPreferences={DEFAULT_PUBLIC_PREFERENCES}
-                />
-              }
-            />
-            <Route
-              path="/prizes"
-              element={
-                <PrizesPage
-                  initialPrizes={[]}
-                  initialAppState={EMPTY_APP_STATE}
-                  initialPreferences={DEFAULT_PUBLIC_PREFERENCES}
-                />
-              }
-            />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/prizes" element={<PrizesPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

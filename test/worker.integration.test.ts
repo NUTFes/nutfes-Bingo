@@ -256,6 +256,7 @@ describe("admin authorization and mutations", () => {
   it("runs an admin command and exposes its revision publicly", async () => {
     const { body, response } = await adminCommand<{ number: number }>({
       type: "createNumber",
+      command: "deleteNumber",
       number: 55,
     });
     expect(response.status).toBe(200);
@@ -265,6 +266,26 @@ describe("admin authorization and mutations", () => {
     const publicState = await state.json<{ numbers: { number: number }[]; revision: number }>();
     expect(publicState.numbers).toContainEqual(expect.objectContaining({ number: 55 }));
     expect(publicState.revision).toBeGreaterThanOrEqual(1);
+  });
+
+  it("rejects missing or invalid command types without mutating the game", async () => {
+    const before = await SELF.fetch("http://example.com/api/bingo/state");
+    const beforeState = await before.json<{ numbers: unknown[]; revision: number }>();
+
+    for (const command of [
+      { number: 55 },
+      { command: "createNumber", number: 55 },
+      { type: null, command: "createNumber", number: 55 },
+      { type: "unknown", command: "createNumber", number: 55 },
+    ]) {
+      const { response } = await adminCommand(command);
+      expect(response.status).toBe(400);
+    }
+
+    const after = await SELF.fetch("http://example.com/api/bingo/state");
+    const afterState = await after.json<{ numbers: unknown[]; revision: number }>();
+    expect(afterState.revision).toBe(beforeState.revision);
+    expect(afterState.numbers).toEqual(beforeState.numbers);
   });
 
   it("stores survey copy through the existing admin command", async () => {
