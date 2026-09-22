@@ -72,6 +72,7 @@ pnpm test:e2e:report
 - `playwright.config.ts` / `e2e/`：Chromiumでモバイル幅のキーボード操作、番号の入力境界、管理画面での追加・削除→公開画面へのlive反映・reload後の永続化を検査します。Worker/APIをmockしません。失敗時のscreenshotとtraceは`test-results/`、HTMLは`playwright-report/`に保存します。
 - `lighthouserc.cjs`：公開`/`と`/prizes/`をLighthouse標準のmobile条件で各3回計測します。PlaywrightのChromiumを再利用し、計測データは`.lighthouseci/`、HTML/JSONとmanifestは`lighthouse-report/`に保存します。外部のレポート公開serviceやAPI keyは使いません。
 - CIはPR・developへのpush・手動実行で両方を実行します。E2E失敗時もLighthouseを実行し、生成できたレポートを`browser-quality-reports` artifactとして7日間保持します。レポートはGit・Docker build contextに含めません。
+- Ubuntu CIでは、インストールしたChromium実行ファイルだけにAppArmorのuser namespace許可を設定します。Lighthouseの起動に`--no-sandbox`は使わず、OS全体の制限も無効化しません。[Chromium公式の説明](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md)を参照してください。
 
 #### 計測結果の読み方
 

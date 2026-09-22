@@ -70,9 +70,22 @@ jobs:
           VITE_IMAGE_TRANSFORMATIONS: "true"
         run: ./scripts/check-cloudflare-worker.sh
 
-      - name: Install Chromium
+      - name: Install Chromium and allow its sandbox
         id: browsers
-        run: pnpm exec playwright install --with-deps chromium
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          chromium_path="$(node -p "require('@playwright/test').chromium.executablePath()")"
+          test -x "$chromium_path"
+          # Ubuntu restricts user namespaces for downloaded Chromium binaries.
+          # Allow only this executable; keep the Chromium sandbox and global policy.
+          sudo tee /etc/apparmor.d/bingo-playwright-chromium <<EOF
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile bingo-playwright-chromium "$chromium_path" flags=(unconfined) {
+            userns,
+          }
+          EOF
+          sudo apparmor_parser --replace /etc/apparmor.d/bingo-playwright-chromium
 
       - name: Browser E2E against production artifact
         run: pnpm test:e2e
