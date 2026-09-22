@@ -21,6 +21,7 @@ jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -68,3 +69,27 @@ jobs:
           VITE_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
           VITE_IMAGE_TRANSFORMATIONS: "true"
         run: ./scripts/check-cloudflare-worker.sh
+
+      - name: Install Chromium
+        id: browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser E2E against production artifact
+        run: pnpm test:e2e
+
+      - name: Lighthouse measurements
+        if: ${{ !cancelled() && steps.browsers.outcome == 'success' }}
+        run: pnpm perf
+
+      - name: Upload browser quality reports
+        if: ${{ !cancelled() && steps.browsers.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: browser-quality-reports
+          path: |
+            playwright-report/
+            test-results/
+            lighthouse-report/
+            .lighthouseci/
+          include-hidden-files: true
+          retention-days: 7

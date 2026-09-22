@@ -3,7 +3,7 @@
   "tags": ["-lintignore"],
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.mjs", "config/**/*.ts", "src/entry/*.tsx"]
+      "entry": ["scripts/*.mjs", "config/**/*.ts", "src/entry/*.tsx", "lighthouserc.cjs"]
     }
   },
   "ignoreDependencies": ["^cloudflare(?::.*)?$"]
