@@ -1,0 +1,59 @@
+---
+description: ""
+applyTo: "**"
+---
+
+# Git Commit Message Rules
+
+## コミットルール
+
+### 基本原則
+
+- **1 行完結**: 改行なしで 50 文字以内
+- **機能単位**: 1 コミット = 1 つの論理的変更
+- **分割**: 関連性の低い変更は別コミットに分ける
+
+### フォーマット
+
+```
+<type>: <subject>
+```
+
+### Type 一覧
+
+- `feat`: 新機能追加
+- `fix`: バグ修正
+- `docs`: ドキュメント変更
+- `style`: フォーマット変更（機能影響なし）
+- `refactor`: リファクタリング
+- `test`: テスト追加・修正
+- `chore`: その他（依存関係更新など）
+
+### 良い例
+
+```bash
+feat: add MinIO client to API container
+fix: correct GraphQL field names to camelCase
+refactor: simplify JSON escaping logic
+docs: update README with seed script usage
+```
+
+### 避けるべき例
+
+```bash
+❌ fix bug                    # 何のバグか不明
+❌ update file               # どのファイルの何を更新したか不明
+❌ wip / temp                # 作業途中・一時的なコミット
+❌ いろいろ修正                 # 複数変更の混在
+```
+
+### ブランチ戦略
+
+- **新機能**: `feature/issue○○/title[簡単な説明]`
+- **修正**: `fix/issue○○/title[簡単な説明]`
+- **ベースブランチ**: `develop` (通常) / `main` (リリース)
+  description:
+  globs:
+  alwaysApply: false
+
+---

@@ -1,0 +1,73 @@
+{
+  "name": "nutfes-bingo-rules",
+  "version": "1.0.0",
+  "description": "Nutfes-Bingo プロジェクト分散開発ルール",
+  "rules_files": [
+    {
+      "name": "project-guide",
+      "path": "rules/project-guide.mdc",
+      "description": "プロジェクト概要・環境構築・コードスタイル",
+      "scope": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"]
+    },
+    {
+      "name": "commit-rules",
+      "path": "rules/commit-message-rules.mdc",
+      "description": "Git コミットメッセージ・ブランチ戦略",
+      "scope": ["git"]
+    },
+    {
+      "name": "pr-rules",
+      "path": "rules/pull-request-rules.mdc",
+      "description": "プルリクエスト作成・GitHub MCP 使用法",
+      "scope": ["github", "pull-request"]
+    }
+  ],
+  "settings": {
+    "auto_apply": true,
+    "priority": "high",
+    "distributed_mode": true,
+    "scope": {
+      "include_globs": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.json",
+        "**/*.md",
+        "**/*.mdc"
+      ],
+      "exclude_globs": [
+        "node_modules/**",
+        ".git/**",
+        "dist/**",
+        "build/**",
+        ".next/**"
+      ]
+    },
+    "enforcement": {
+      "commit_messages": true,
+      "pull_requests": true,
+      "code_style": true,
+      "file_naming": true
+    }
+  },
+  "integrations": {
+    "cursor": {
+      "enabled": true,
+      "rules_directory": "./rules/"
+    },
+    "claude": {
+      "enabled": true,
+      "context_injection": true
+    },
+    "cline": {
+      "enabled": true,
+      "auto_reference": true
+    }
+  },
+  "sync": {
+    "auto_update": true,
+    "conflict_resolution": "merge",
+    "notification": false
+  }
+}
