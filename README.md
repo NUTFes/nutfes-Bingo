@@ -8,10 +8,10 @@
 - same-origin WorkerがHTTP API、Cloudflare Access認可、Turnstile検証、景品画像R2、Durable Object routingを担当する。
 - 固定名`game`のSQLite `GameState` Durable Object 1個が、番号、景品、当選状態、reach、survey、bounded audit logの正本になる。
 - `ReactionHub` Durable Objectが消失許容のstampを正本から分離する。
-- public stateはHibernation WebSocketで配信し、接続障害時は回数制限付きHTTP fallbackを使う。
+- public stateはHibernation WebSocketで配信し、接続障害時は回数制限付きHTTP fallbackを使う。条件付きGETのETagは復元で巻き戻り得るrevisionだけでなく、状態内容から算出する。
 - public reachはTurnstileをserver-side検証する。reachとstampは同じedge kill switchでWorker到達前に停止できる。
 - `/admin*`と`/screen*`は別Cloudflare Access applicationで保護し、WorkerはJWT issuer、AUD、署名、有効期限、`email`、`sub`を検証する。人員membershipの正本は各Access policyとする。
-- 景品画像は2 MiB/type/signatureを検証し、content-hash keyで専用R2へ保存する。
+- 景品画像は5 MiB/type/signatureを検証し、content-hash keyで専用R2へ保存する。
 - data recoveryはSQLite Durable Object PITRだけを使う。`GameDirectory`、generation切替、logical snapshot、backup R2、daily Cronはない。
 
 詳細と年次手順は[Cloudflare本番運用runbook](docs/cloudflare-operations.md)を参照してください。

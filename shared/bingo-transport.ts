@@ -91,8 +91,9 @@ export type AdminCommand =
       surveyTitle: string;
       surveyDescription: string;
       surveyButtonLabel: string;
-      isSurveyActive: boolean;
+      isSurveyActive: true;
     }
+  | { type: "saveSurveyState"; isSurveyActive: false }
   | {
       type: "startAnnualEvent";
       expectedRevision: number;

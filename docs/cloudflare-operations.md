@@ -75,7 +75,7 @@ mise run smoke
 - organization account membership、named operator、Workers write。
 - pinned account、public座標、Turnstile secret、prize bucket。
 - Admin/Screen同一AUD、Turnstile test keyを拒否。
-- production/full dependency auditのHigh 0、secrets scan、format、lint、typecheck、Worker tests、React Doctor、knip。
+- 本番用と全依存関係の監査でHighが0件であること（advisory取得失敗・timeout時も停止）、secrets scan、format、lint、typecheck、Worker tests、React Doctor、knip。
 - DockerでのVite client/Worker build、generated binding、Wrangler dry-run、bundle、startup profile。`dist/client/`と`dist/worker/`を同時にexportし、生成済み`dist/worker/wrangler.json`を検査・deployする。account、binding、Access保護対象などの設定正本は引き続き`wrangler.jsonc`とする。
 
 `deploy`は同じpreflightを再実行してから、同じHEADを`git:<SHA>` annotation付きでproductionへdeployします。CI secretからproduction deployしません。
@@ -187,7 +187,7 @@ reactionやpublic reachだけの停止はイベント停止ではありません
 - paper master logとAdmin stateを照合し、必要な結果だけ別途保存。
 - `optional-public-mutations`または`event-closed`を必要に応じてenable。
 - Worker version、incident、PITR receiptの有無を年次記録へ追記。
-- R2画像は容量上限へ近づいた場合だけ、参照中content-hashを確認して削除する。
+- R2画像は容量上限に近づいた場合だけ削除を検討する。現在の景品に参照がないだけでは削除しない。画像ごとに最後に参照された時刻（景品の画像変更・削除または年次リセットの時刻）を記録で確認し、`/admin/api/recovery`の`pitrEarliestAt`がその時刻より後になってから、現在も参照されていないcontent-hashだけを削除する。最終参照時刻を証明できない画像は削除しない。
 - 翌年まで週次on-call、daily backup、quarterly GCを置かない。
 
 ## Incident対応
@@ -218,6 +218,8 @@ rollbackはWorker code、assets、bindings、compatibilityを戻します。DO/R
 ### SQLite DO PITR
 
 PITRはSQLとKVを含む`game`全体を過去30日へ戻し、既存WebSocketを切断します。localでは使えません。イベントをpauseし、紙master logを継続してから実行します。
+
+PITRはR2画像を復元しません。復元可能な時点で参照される画像はR2に残す必要があります。容量上限に近づいた場合も、上記のR2画像の削除条件に従ってください。
 
 1. Admin policy所属者のbrowserから`CF_Authorization`値をmode `600` fileへ保存する。shell argumentへtoken値を直接書かない。
 2. `/admin/api/recovery`の`pitrEarliestAt`より後のrestore時刻を二者確認しplanを作る。

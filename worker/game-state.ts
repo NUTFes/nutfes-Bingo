@@ -221,19 +221,32 @@ export class GameState extends DurableObject<Env> {
     surveyButtonLabelInput: string,
     isSurveyActiveInput: boolean,
   ): Promise<AppStateRow> {
+    if (typeof isSurveyActiveInput !== "boolean") validationProblem("公開設定が不正です。");
+    if (!isSurveyActiveInput) {
+      return this.runAdminMutation(actor, "saveSurveyState", { isSurveyActive: false }, () =>
+        toAppStateRow(
+          this.ctx.storage.sql
+            .exec<AppStateSqlRow>(
+              "UPDATE app_state SET is_survey_active = 0, updated_at = ? WHERE id = 1 " +
+                "RETURNING id, event_id, survey_url, survey_title, survey_description, " +
+                "survey_button_label, is_survey_active, reach_count, updated_at",
+              new Date().toISOString(),
+            )
+            .one(),
+        ),
+      );
+    }
     const surveyUrl = normalizeHttpsUrl(surveyUrlInput);
     const surveyTitle = parseOptionalText(surveyTitleInput, "アンケートタイトル", 200) ?? "";
     const surveyDescription =
       parseOptionalText(surveyDescriptionInput, "アンケート説明", 2_000) ?? "";
     const surveyButtonLabel =
       parseOptionalText(surveyButtonLabelInput, "アンケートボタン文言", 100) ?? "";
-    if (typeof isSurveyActiveInput !== "boolean") validationProblem("公開設定が不正です。");
     if (
-      isSurveyActiveInput &&
-      (surveyUrl === "" ||
-        surveyTitle === "" ||
-        surveyDescription === "" ||
-        surveyButtonLabel === "")
+      surveyUrl === "" ||
+      surveyTitle === "" ||
+      surveyDescription === "" ||
+      surveyButtonLabel === ""
     ) {
       validationProblem("アンケートを公開する場合はURLと案内文をすべて入力してください。");
     }
@@ -241,7 +254,7 @@ export class GameState extends DurableObject<Env> {
     return this.runAdminMutation(
       actor,
       "saveSurveyState",
-      { surveyUrl, isSurveyActive: isSurveyActiveInput },
+      { surveyUrl, isSurveyActive: true },
       () => {
         const now = new Date().toISOString();
         const row = this.ctx.storage.sql
@@ -254,7 +267,7 @@ export class GameState extends DurableObject<Env> {
             surveyTitle,
             surveyDescription,
             surveyButtonLabel,
-            isSurveyActiveInput ? 1 : 0,
+            1,
             now,
           )
           .one();

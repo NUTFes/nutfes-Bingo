@@ -1,3 +1,4 @@
+import type { BingoUnifiedState } from "../shared/bingo-transport";
 import { DomainProblem } from "./domain";
 import { weaklyMatchesEntityTag } from "../shared/state-etag";
 
@@ -167,6 +168,18 @@ export async function sha256Hex(value: string | Uint8Array): Promise<string> {
     typeof value === "string" ? new TextEncoder().encode(value) : Uint8Array.from(value);
   const digest = await crypto.subtle.digest("SHA-256", input);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export async function makeStateEtag(state: BingoUnifiedState): Promise<string> {
+  // serverTime is per-request; only authoritative state determines the validator.
+  const content = JSON.stringify([
+    state.revision,
+    state.numbers,
+    state.prizes,
+    state.appState,
+    state.latestReachLog,
+  ]);
+  return `W/"state:${await sha256Hex(content)}"`;
 }
 
 export function ifNoneMatch(request: Request, etag: string): boolean {

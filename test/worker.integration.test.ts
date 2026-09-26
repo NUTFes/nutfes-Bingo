@@ -106,16 +106,41 @@ describe("public Worker routes", () => {
   it("returns a weak ETag and a 304 for an unchanged state", async () => {
     const initial = await SELF.fetch("http://example.com/api/bingo/state");
     expect(initial.status).toBe(200);
-    expect(initial.headers.get("etag")).toBe('W/"state:0"');
+    const tag = initial.headers.get("etag");
+    expect(tag).toMatch(/^W\/"state:[a-f0-9]{64}"$/);
 
-    for (const candidate of ['"state:0"', 'W/"state:0"']) {
+    for (const candidate of [tag!, tag!.slice(2)]) {
       const unchanged = await SELF.fetch("http://example.com/api/bingo/state", {
         headers: { "If-None-Match": candidate },
       });
       expect(unchanged.status).toBe(304);
-      expect(unchanged.headers.get("etag")).toBe('W/"state:0"');
+      expect(unchanged.headers.get("etag")).toBe(tag);
       expect(unchanged.headers.get("cache-control")).toBe("no-cache");
     }
+  });
+
+  it("returns a new snapshot when a restored state reuses the previous revision", async () => {
+    const before = await SELF.fetch("http://example.com/api/bingo/state");
+    const previousTag = before.headers.get("etag");
+    const { revision } = await before.json<{ revision: number }>();
+    const game = env.GAME_STATE.getByName("game");
+    await game.createNumber("admin@example.com", 9);
+    await runInDurableObject(game, async (_instance, ctx) => {
+      ctx.storage.sql.exec(
+        "UPDATE game_metadata SET value = ? WHERE key = 'revision'",
+        String(revision),
+      );
+    });
+
+    const restored = await SELF.fetch("http://example.com/api/bingo/state", {
+      headers: { "If-None-Match": previousTag! },
+    });
+    expect(restored.status).toBe(200);
+    expect(restored.headers.get("etag")).not.toBe(previousTag);
+    await expect(restored.json()).resolves.toMatchObject({
+      revision,
+      numbers: [{ number: 9 }],
+    });
   });
 
   it("deduplicates public reach submissions and rejects cross-origin mutation", async () => {
@@ -353,27 +378,29 @@ describe("admin authorization and mutations", () => {
     },
   );
 
-  it("allows an inactive survey to be empty", async () => {
-    const { body, response } = await adminCommand<{
+  it("stops a published survey despite invalid unsaved draft fields", async () => {
+    const published = await adminCommand({
+      type: "saveSurveyState",
+      surveyUrl: "https://example.com/live",
+      surveyTitle: "回答のお願い",
+      surveyDescription: "回答してください",
+      surveyButtonLabel: "回答する",
+      isSurveyActive: true,
+    });
+    expect(published.response.status).toBe(200);
+
+    const stopped = await adminCommand<{
       survey_url: string;
-      survey_title: string;
-      survey_description: string;
-      survey_button_label: string;
       is_survey_active: boolean;
     }>({
       type: "saveSurveyState",
-      surveyUrl: "",
-      surveyTitle: "",
-      surveyDescription: "",
-      surveyButtonLabel: "",
+      surveyUrl: "http://example.com/draft",
+      surveyTitle: "未保存",
       isSurveyActive: false,
     });
-    expect(response.status).toBe(200);
-    expect(body.data).toMatchObject({
-      survey_url: "",
-      survey_title: "",
-      survey_description: "",
-      survey_button_label: "",
+    expect(stopped.response.status).toBe(200);
+    expect(stopped.body.data).toMatchObject({
+      survey_url: "https://example.com/live",
       is_survey_active: false,
     });
   });

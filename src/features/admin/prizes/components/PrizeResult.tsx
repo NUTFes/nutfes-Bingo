@@ -640,7 +640,7 @@ function usePrizeResultController({
 
   const submitEdit = async (params: { nameJp: string; nameEn: string; file?: File | null }) => {
     if (!state.selected) {
-      return;
+      return false;
     }
 
     try {
@@ -649,12 +649,12 @@ function usePrizeResultController({
         prev.map((prize) => (prize.id === state.selected?.id ? updated : prize)),
       );
       showToast({ title: "更新完了", description: "景品を更新しました。" });
+      return true;
     } catch (error) {
       console.error(error);
       await refreshAuthoritativePrizes();
       showToast({ title: "更新失敗", description: "景品の更新に失敗しました。" });
-    } finally {
-      dispatch({ type: "setEditOpen", isOpen: false });
+      return false;
     }
   };
 

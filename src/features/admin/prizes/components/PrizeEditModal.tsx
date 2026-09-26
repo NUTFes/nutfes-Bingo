@@ -11,6 +11,8 @@ import { Form } from "@/components/ui/Form";
 import { Modal } from "@/components/ui/Modal";
 import { Separator } from "@/components/ui/Separator";
 import { TextField } from "@/components/ui/TextField";
+import { queue } from "@/components/ui/toastQueue";
+import { PRIZE_IMAGE_ACCEPTED_TYPES, validatePrizeImage } from "../image-validation";
 
 interface Props {
   isOpened: boolean;
@@ -20,11 +22,7 @@ interface Props {
   initialNameJp?: string | null;
   initialNameEn?: string | null;
   initialImageUrl?: string | null;
-  onSubmit: (params: {
-    nameJp: string;
-    nameEn: string;
-    file?: File | null;
-  }) => Promise<void> | void;
+  onSubmit: (params: { nameJp: string; nameEn: string; file?: File | null }) => Promise<boolean>;
 }
 
 const PrizeEditModal = ({
@@ -42,6 +40,7 @@ const PrizeEditModal = ({
   const newFile = useRef<File | null>(null);
   const previewUrlRef = useRef<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(() => initialImageUrl || "");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(
     () => () => {
@@ -54,6 +53,13 @@ const PrizeEditModal = ({
 
   const handleFileSelected = useCallback(
     (file: File | null) => {
+      if (file) {
+        const validationError = validatePrizeImage(file);
+        if (validationError) {
+          queue.add({ title: "入力エラー", description: validationError }, { timeout: 5000 });
+          return;
+        }
+      }
       newFile.current = file;
       if (previewUrlRef.current !== null) {
         URL.revokeObjectURL(previewUrlRef.current);
@@ -81,8 +87,13 @@ const PrizeEditModal = ({
   );
 
   const handleSubmit = async () => {
-    await onSubmit({ nameJp, nameEn, file: newFile.current });
-    close();
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      if (await onSubmit({ nameJp, nameEn, file: newFile.current })) close();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -133,9 +144,7 @@ const PrizeEditModal = ({
               <DropZone
                 onDrop={handleDrop}
                 getDropOperation={(types) =>
-                  types.has("image/jpeg") || types.has("image/png") || types.has("image/webp")
-                    ? "copy"
-                    : "cancel"
+                  PRIZE_IMAGE_ACCEPTED_TYPES.some((type) => types.has(type)) ? "copy" : "cancel"
                 }
                 className="w-full rounded-2xl"
               >
@@ -146,7 +155,7 @@ const PrizeEditModal = ({
               </DropZone>
 
               <FileTrigger
-                acceptedFileTypes={["image/*"]}
+                acceptedFileTypes={PRIZE_IMAGE_ACCEPTED_TYPES}
                 onSelect={(files) => {
                   const file = files ? Array.from(files)[0] : null;
                   handleFileSelected(file ?? null);
@@ -161,10 +170,15 @@ const PrizeEditModal = ({
           </div>
         </Form>
         <div className="flex flex-wrap justify-end gap-2.5 sm:gap-3 mt-5">
-          <Button variant="secondary" onPress={close}>
+          <Button variant="secondary" onPress={close} isDisabled={isSaving}>
             キャンセル
           </Button>
-          <Button variant="primary" onPress={handleSubmit}>
+          <Button
+            variant="primary"
+            onPress={() => void handleSubmit()}
+            isDisabled={isSaving}
+            isPending={isSaving}
+          >
             保存
           </Button>
         </div>

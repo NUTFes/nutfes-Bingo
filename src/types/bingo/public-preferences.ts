@@ -28,13 +28,21 @@ export const parseBooleanPreference = (value: string | undefined, fallback: bool
 export const shouldShowReachIcon = (eventId: string, lastReachedEventId: string | null) =>
   eventId !== "" && eventId !== lastReachedEventId;
 
+export const readPublicPreference = (key: string): string | null => {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
 export const resolveDarkModePreference = (fallback: boolean) => {
   if (typeof window === "undefined") {
     return fallback;
   }
 
   return parseBooleanPreference(
-    window.localStorage.getItem(PUBLIC_PREFERENCE_KEYS.darkMode) ?? undefined,
+    readPublicPreference(PUBLIC_PREFERENCE_KEYS.darkMode) ?? undefined,
     fallback,
   );
 };
@@ -49,7 +57,12 @@ export const applyPublicTheme = (isDarkMode: boolean) => {
 
 export const publicThemeBootstrapScript = (fallbackDarkMode: boolean) => `
 (() => {
-  const stored = window.localStorage.getItem("${PUBLIC_PREFERENCE_KEYS.darkMode}");
+  let stored = null;
+  try {
+    stored = window.localStorage.getItem("${PUBLIC_PREFERENCE_KEYS.darkMode}");
+  } catch {
+    // Continue with the default theme when persistent storage is blocked.
+  }
   const isDarkMode = stored === "true" ? true : stored === "false" ? false : ${fallbackDarkMode};
   document.documentElement.dataset.theme = isDarkMode ? "dark" : "light";
 })();

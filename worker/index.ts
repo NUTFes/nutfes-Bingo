@@ -1,6 +1,5 @@
 import { requireAdmin, requireScreen, type AdminIdentity } from "./access";
 import type { AdminCommand, BingoUnifiedState } from "../shared/bingo-transport";
-import { makeStateEtag } from "../shared/state-etag";
 import {
   assertPrizeImagePath,
   isClientId,
@@ -21,6 +20,7 @@ import {
   getSameOrigin,
   ifNoneMatch,
   jsonResponse,
+  makeStateEtag,
   normalizeError,
   notModifiedResponse,
   preflightResponse,
@@ -161,7 +161,7 @@ async function handlePublicState(
 ): Promise<Response> {
   assertMethod(request, ["GET", "HEAD"]);
   const state = await getGameState(env).getState();
-  const etag = makeStateEtag(state.revision);
+  const etag = await makeStateEtag(state);
   if (ifNoneMatch(request, etag)) return notModifiedResponse(etag);
   return jsonResponse(
     selectPublicView(state, view),
@@ -399,16 +399,18 @@ async function handleAdminCommand(
     case "decrementReach":
       data = await game.decrementReach(identity.email);
       break;
-    case "saveSurveyState":
+    case "saveSurveyState": {
+      const isActive = readBoolean(body.isSurveyActive, "isSurveyActive");
       data = await game.saveSurveyState(
         identity.email,
-        readString(body.surveyUrl, "surveyUrl"),
-        readString(body.surveyTitle, "surveyTitle"),
-        readString(body.surveyDescription, "surveyDescription"),
-        readString(body.surveyButtonLabel, "surveyButtonLabel"),
-        readBoolean(body.isSurveyActive, "isSurveyActive"),
+        isActive ? readString(body.surveyUrl, "surveyUrl") : "",
+        isActive ? readString(body.surveyTitle, "surveyTitle") : "",
+        isActive ? readString(body.surveyDescription, "surveyDescription") : "",
+        isActive ? readString(body.surveyButtonLabel, "surveyButtonLabel") : "",
+        isActive,
       );
       break;
+    }
     case "startAnnualEvent":
       data = await game.startAnnualEvent(
         identity.email,
