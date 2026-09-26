@@ -268,10 +268,9 @@ export function AdminDashboardPage() {
     if (!result.ok) {
       console.error(result.error);
       const state = await refreshAuthoritativeState();
-      const status = isSurveyActive
-        ? "アンケートは配信されていません。"
-        : state === null
-          ? "配信が停止したか確認できません。"
+      const status =
+        state === null
+          ? "アンケートの配信状態を確認できません。"
           : state.appState.is_survey_active
             ? "アンケート配信は継続中です。"
             : "再取得した設定では配信停止済みです。";

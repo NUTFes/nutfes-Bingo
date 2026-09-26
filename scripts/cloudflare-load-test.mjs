@@ -73,10 +73,11 @@ const broadcasts = new Map();
 const errors = [];
 let ready = 0;
 let earlyCloses = 0;
-let liveReady = 0;
 let tearingDown = false;
 let liveAtHoldStart = false;
 let liveAtHoldEnd = false;
+const allSocketsOpen = () =>
+  sockets.length === stateWs && sockets.every((socket) => socket.readyState === WebSocket.OPEN);
 
 const openSocket = (id) =>
   new Promise((resolve, reject) => {
@@ -117,7 +118,6 @@ const openSocket = (id) =>
           clearTimeout(timeout);
           ready += 1;
           becameReady = true;
-          liveReady += 1;
           readyLatencies.push(performance.now() - startedAt);
           resolve();
         }
@@ -140,10 +140,7 @@ const openSocket = (id) =>
       }
     });
     socket.addEventListener("close", () => {
-      if (becameReady) {
-        liveReady -= 1;
-        if (!tearingDown) earlyCloses += 1;
-      }
+      if (becameReady && !tearingDown) earlyCloses += 1;
       if (!settled) {
         settled = true;
         clearTimeout(timeout);
@@ -159,10 +156,10 @@ try {
     await Promise.all(Array.from({ length: size }, (_, index) => openSocket(offset + index)));
     await delay(25);
   }
-  liveAtHoldStart = liveReady === stateWs;
+  liveAtHoldStart = allSocketsOpen();
   console.log(`Ready ${ready}/${stateWs}; holding for ${durationSeconds}s.`);
   await delay(durationSeconds * 1_000);
-  liveAtHoldEnd = liveReady === stateWs;
+  liveAtHoldEnd = allSocketsOpen();
 } finally {
   tearingDown = true;
   for (const socket of sockets) socket.close(1000, "capacity test complete");

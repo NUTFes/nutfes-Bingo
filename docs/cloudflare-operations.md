@@ -116,7 +116,7 @@ smoke result:
 mise run capacity http://127.0.0.1:8787
 ```
 
-3. 1000/1000 socket ready、ready failure 0、early close/error 0、5分保持を確認する。
+3. 1000/1000 socket ready、ready failure 0、保持開始・終了の`liveAtHoldStart`/`liveAtHoldEnd`がともに`true`、early close/error 0、5分保持を確認する。
 4. broadcast経路を変更した場合はload中にAdminで5回reversible mutationし、`--expect-broadcasts 5`を明示したscript実行でも全socket受信を確認する。
 5. event当日、通常release、単なる景品/番号data変更では再実行しない。
 
