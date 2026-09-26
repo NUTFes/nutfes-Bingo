@@ -134,7 +134,7 @@ const JudgementModal = ({
   };
 
   const handleCellClick = (row: number, col: number) => {
-    if (hasJudged || isCenter(row, col)) return;
+    if (isJudging || hasJudged || isCenter(row, col)) return;
 
     if (selectedCell && (selectedCell.row !== row || selectedCell.col !== col) && inputValue) {
       commitValueAt(selectedCell, inputValue);
@@ -148,7 +148,7 @@ const JudgementModal = ({
   };
 
   const handleDigitClick = (digit: string) => {
-    if (hasJudged || !selectedCell) return;
+    if (isJudging || hasJudged || !selectedCell) return;
     const next = (inputValue + digit).slice(0, MAX_DIGIT_LENGTH);
     const n = Number.parseInt(next, 10);
     if (Number.isNaN(n) || n < 1 || n > MAX_BINGO_NUMBER) return;
@@ -156,13 +156,13 @@ const JudgementModal = ({
   };
 
   const handleDelete = () => {
-    if (hasJudged || !selectedCell) return;
+    if (isJudging || hasJudged || !selectedCell) return;
     setJudgementState((prev) => ({ ...prev, inputValue: "" }));
     setBingoCard((prev) => setCardValue(prev, selectedCell, ""));
   };
 
   const handleCommit = () => {
-    if (hasJudged || !selectedCell || !inputValue) return;
+    if (isJudging || hasJudged || !selectedCell || !inputValue) return;
     commitValueAt(selectedCell, inputValue);
   };
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { makeStateEtag, weaklyMatchesEntityTag } from "../shared/state-etag";
+import { weaklyMatchesEntityTag } from "../shared/state-etag";
+import { makeStateEtag } from "../worker/http";
 
 import { shouldAcceptRevision } from "../src/lib/state-order";
 import { shouldShowReachIcon } from "../src/types/bingo/public-preferences";
@@ -14,21 +15,35 @@ describe("realtime state ordering", () => {
 });
 
 describe("state ETag validation", () => {
-  it("uses a weak revision validator and accepts equivalent strong or weak tags", () => {
-    const expected = makeStateEtag(12);
+  it("distinguishes divergent states at the same revision after a restore", async () => {
+    const beforeRestore = {
+      revision: 7,
+      numbers: [{ id: 1, number: 10, created_at: "", updated_at: "" }],
+      prizes: [],
+      appState: {
+        id: 1,
+        event_id: "event",
+        survey_url: "",
+        survey_title: "",
+        survey_description: "",
+        survey_button_label: "",
+        is_survey_active: false,
+        reach_count: 0,
+        updated_at: "",
+      },
+      latestReachLog: null,
+      serverTime: "2026-09-26T00:00:00Z",
+    };
+    const afterRestore = {
+      ...beforeRestore,
+      numbers: [{ ...beforeRestore.numbers[0], number: 20 }],
+    };
 
-    expect(expected).toBe('W/"state:12"');
-    expect(weaklyMatchesEntityTag('"state:12"', expected)).toBe(true);
-    expect(weaklyMatchesEntityTag('W/"state:12"', expected)).toBe(true);
-  });
-
-  it("rejects a different revision or malformed entity tag", () => {
-    const expected = makeStateEtag(12);
-
-    expect(weaklyMatchesEntityTag('W/"state:11"', expected)).toBe(false);
-    expect(weaklyMatchesEntityTag("state:12", expected)).toBe(false);
-    expect(weaklyMatchesEntityTag('W/W/"state:12"', expected)).toBe(false);
-    expect(weaklyMatchesEntityTag(null, expected)).toBe(false);
+    const previousTag = await makeStateEtag(beforeRestore);
+    const restoredTag = await makeStateEtag(afterRestore);
+    expect(restoredTag).not.toBe(previousTag);
+    expect(weaklyMatchesEntityTag(previousTag, restoredTag)).toBe(false);
+    expect(await makeStateEtag({ ...beforeRestore, serverTime: "later" })).toBe(previousTag);
   });
 });
 

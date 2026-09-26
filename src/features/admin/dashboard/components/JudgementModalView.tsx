@@ -136,11 +136,12 @@ export function JudgementModalView({
                     <button
                       type="button"
                       key={`${rowIndex}-${colIndex}`}
-                      disabled={hasJudged || center}
+                      disabled={isJudging || hasJudged || center}
                       aria-pressed={selected || undefined}
                       className={cn(
                         "relative flex aspect-square min-h-11 min-w-11 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 text-lg font-semibold text-neutral-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
-                        !hasJudged &&
+                        !isJudging &&
+                          !hasJudged &&
                           !center &&
                           "cursor-pointer hover:border-neutral-500 hover:bg-neutral-700 active:bg-neutral-700",
                         center && "cursor-default bg-neutral-700 text-sm text-neutral-300",
@@ -176,6 +177,7 @@ export function JudgementModalView({
                   type="button"
                   variant={label === "確定" ? "primary" : "secondary"}
                   className="min-h-12 text-lg font-medium"
+                  isDisabled={isJudging}
                   onPress={() => {
                     if (label === "消去") onDelete();
                     else if (label === "確定") onCommit();

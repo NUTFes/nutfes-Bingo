@@ -6,7 +6,6 @@ import type {
   StampSocketMessage,
   StateSocketMessage,
 } from "@/types/bingo/realtime";
-import { makeStateEtag, weaklyMatchesEntityTag } from "../../shared/state-etag";
 import {
   EMPTY_APP_STATE,
   STAMP_NAMES,
@@ -177,10 +176,6 @@ async function fetchState(
   };
 }
 
-function stateEtag(state: BingoUnifiedState) {
-  return state.appState.event_id === "" ? null : makeStateEtag(state.revision);
-}
-
 function useBingoState(view: "public" | "screen" = "public") {
   const [state, setState] = useState<BingoUnifiedState>(createEmptyState);
   const stateRef = useRef(state);
@@ -200,7 +195,7 @@ function useBingoState(view: "public" | "screen" = "public") {
     let fallbackAttempt = 0;
     let socketStateSequence = 0;
     let accessRefreshRequested = false;
-    let etag = stateEtag(stateRef.current);
+    let etag: string | null = null;
 
     const clearTimer = (timer: number | null) => {
       if (timer !== null) {
@@ -216,7 +211,7 @@ function useBingoState(view: "public" | "screen" = "public") {
         return false;
       }
       stateRef.current = nextState;
-      etag = stateEtag(nextState);
+      etag = null;
       setState(nextState);
       return true;
     };
@@ -232,12 +227,8 @@ function useBingoState(view: "public" | "screen" = "public") {
         if (sequenceAtStart === socketStateSequence) {
           if (snapshot.state === null) {
             etag = snapshot.etag ?? etag;
-          } else {
-            const expectedEtag = stateEtag(snapshot.state);
-            if (expectedEtag === null || !weaklyMatchesEntityTag(snapshot.etag, expectedEtag)) {
-              throw new Error("ビンゴ状態のETagが内容と一致しません。");
-            }
-            applyState(snapshot.state, "authoritative");
+          } else if (applyState(snapshot.state, "authoritative")) {
+            etag = snapshot.etag;
           }
         }
       } catch (error) {

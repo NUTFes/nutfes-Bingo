@@ -18,6 +18,7 @@ on:
       - "admin/**/*.html"
       - "prizes/**/*.html"
       - "screen/**/*.html"
+      - "cloudflare.production.env"
       - "wrangler.jsonc"
       - ".github/workflows/trivy.yml"
   push:
@@ -38,6 +39,7 @@ on:
       - "prizes/**/*.html"
       - "screen/**/*.html"
       - "wrangler.jsonc"
+      - "cloudflare.production.env"
       - ".github/workflows/trivy.yml"
 
 permissions:

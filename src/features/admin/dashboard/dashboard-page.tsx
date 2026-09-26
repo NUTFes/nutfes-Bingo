@@ -260,19 +260,23 @@ export function AdminDashboardPage() {
   };
 
   const handleSurvey = async (isSurveyActive: boolean) => {
-    const result = await dashboardActions.saveSurveyState({
-      surveyUrl,
-      surveyTitle,
-      surveyDescription,
-      surveyButtonLabel,
-      isSurveyActive,
-    });
+    const result = await dashboardActions.saveSurveyState(
+      isSurveyActive
+        ? { surveyUrl, surveyTitle, surveyDescription, surveyButtonLabel, isSurveyActive: true }
+        : { isSurveyActive: false },
+    );
     if (!result.ok) {
       console.error(result.error);
-      await refreshAuthoritativeState();
+      const state = await refreshAuthoritativeState();
+      const status =
+        state === null
+          ? "アンケートの配信状態を確認できません。"
+          : state.appState.is_survey_active
+            ? "アンケート配信は継続中です。"
+            : "再取得した設定では配信停止済みです。";
       showToast({
-        title: "更新結果を再確認しました",
-        description: "サーバーの最新アンケート設定を表示しています。",
+        title: isSurveyActive ? "アンケート配信失敗" : "アンケート停止結果を確認してください",
+        description: `${result.error} ${status}`,
       });
       return;
     }

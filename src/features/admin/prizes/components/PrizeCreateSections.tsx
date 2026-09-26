@@ -8,6 +8,7 @@ import { DropZone } from "@/components/ui/DropZone";
 import { Form } from "@/components/ui/Form";
 import { Separator } from "@/components/ui/Separator";
 import { TextField } from "@/components/ui/TextField";
+import { PRIZE_IMAGE_ACCEPTED_TYPES } from "../image-validation";
 
 interface PrizeCreateFormSectionProps {
   prizeNameJp: string;
@@ -43,9 +44,7 @@ export function PrizeCreateFormSection({
         <DropZone
           onDrop={onDrop}
           getDropOperation={(types) =>
-            types.has("image/jpeg") || types.has("image/png") || types.has("image/webp")
-              ? "copy"
-              : "cancel"
+            PRIZE_IMAGE_ACCEPTED_TYPES.some((type) => types.has(type)) ? "copy" : "cancel"
           }
           className="w-full rounded-2xl"
         >
@@ -56,7 +55,7 @@ export function PrizeCreateFormSection({
           </div>
         </DropZone>
         <FileTrigger
-          acceptedFileTypes={["image/jpeg", "image/png", "image/webp"]}
+          acceptedFileTypes={PRIZE_IMAGE_ACCEPTED_TYPES}
           onSelect={(files) => {
             const file = files ? Array.from(files)[0] : null;
             onFileSelected(file ?? null);

@@ -55,7 +55,9 @@ if [ "$mode" != development ]; then
     trap 'docker stop "$container" >/dev/null 2>&1 || true' EXIT
     trap 'exit 130' INT
     trap 'exit 143' TERM
-    set -- --name "$container" --tmpfs /app/.wrangler:uid=1000,gid=1000,mode=0700
+    set -- --name "$container" \
+      --tmpfs /app/.wrangler:uid=1000,gid=1000,mode=0700 \
+      --tmpfs /app/node_modules/.mf:uid=1000,gid=1000,mode=0700
   else
     set -- -it --mount "type=bind,source=$repo_root/.wrangler,target=/app/.wrangler"
   fi

@@ -1,4 +1,4 @@
-import { createContext, use, useMemo, useState } from "react";
+import { createContext, use, useLayoutEffect, useMemo, useState } from "react";
 
 import { en } from "@/utils/i18n/en";
 import { ja } from "@/utils/i18n/ja";
@@ -19,16 +19,27 @@ const BingoLanguageContext = createContext<BingoLanguageContextValue | null>(nul
 export function BingoLanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<SupportedLanguage>(() => {
     if (typeof window !== "undefined") {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored === "ja" || stored === "en") return stored;
+      try {
+        const stored = window.localStorage.getItem(STORAGE_KEY);
+        if (stored === "ja" || stored === "en") return stored;
+      } catch {
+        // Use Japanese when persistent storage is unavailable.
+      }
     }
     return "ja";
   });
+  useLayoutEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const value = useMemo<BingoLanguageContextValue>(() => {
     const setLanguage = (nextLanguage: SupportedLanguage) => {
       setLanguageState(nextLanguage);
-      window.localStorage.setItem(STORAGE_KEY, nextLanguage);
+      try {
+        window.localStorage.setItem(STORAGE_KEY, nextLanguage);
+      } catch {
+        // Language selection still applies to this page.
+      }
     };
 
     return {

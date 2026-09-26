@@ -73,7 +73,11 @@ const broadcasts = new Map();
 const errors = [];
 let ready = 0;
 let earlyCloses = 0;
-let holding = false;
+let tearingDown = false;
+let liveAtHoldStart = false;
+let liveAtHoldEnd = false;
+const allSocketsOpen = () =>
+  sockets.length === stateWs && sockets.every((socket) => socket.readyState === WebSocket.OPEN);
 
 const openSocket = (id) =>
   new Promise((resolve, reject) => {
@@ -85,6 +89,7 @@ const openSocket = (id) =>
     const startedAt = performance.now();
     let initialRevision = null;
     let settled = false;
+    let becameReady = false;
     const timeout = setTimeout(() => {
       if (settled) return;
       settled = true;
@@ -112,6 +117,7 @@ const openSocket = (id) =>
           settled = true;
           clearTimeout(timeout);
           ready += 1;
+          becameReady = true;
           readyLatencies.push(performance.now() - startedAt);
           resolve();
         }
@@ -134,7 +140,7 @@ const openSocket = (id) =>
       }
     });
     socket.addEventListener("close", () => {
-      if (holding) earlyCloses += 1;
+      if (becameReady && !tearingDown) earlyCloses += 1;
       if (!settled) {
         settled = true;
         clearTimeout(timeout);
@@ -150,11 +156,12 @@ try {
     await Promise.all(Array.from({ length: size }, (_, index) => openSocket(offset + index)));
     await delay(25);
   }
-  holding = true;
+  liveAtHoldStart = allSocketsOpen();
   console.log(`Ready ${ready}/${stateWs}; holding for ${durationSeconds}s.`);
   await delay(durationSeconds * 1_000);
+  liveAtHoldEnd = allSocketsOpen();
 } finally {
-  holding = false;
+  tearingDown = true;
   for (const socket of sockets) socket.close(1000, "capacity test complete");
   await delay(250);
 }
@@ -166,6 +173,8 @@ const sortedLatencies = readyLatencies.toSorted((left, right) => left - right);
 const p95Index = Math.max(0, Math.ceil(sortedLatencies.length * 0.95) - 1);
 const passed =
   ready === stateWs &&
+  liveAtHoldStart &&
+  liveAtHoldEnd &&
   earlyCloses === 0 &&
   errors.length === 0 &&
   completeBroadcasts >= expectBroadcasts;
@@ -176,6 +185,8 @@ const result = {
   stateWs,
   ready,
   readyFailures: stateWs - ready,
+  liveAtHoldStart,
+  liveAtHoldEnd,
   earlyCloses,
   errors: errors.slice(0, 20),
   readyLatencyP95Ms: Math.round((sortedLatencies[p95Index] ?? 0) * 100) / 100,

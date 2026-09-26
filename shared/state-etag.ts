@@ -21,10 +21,3 @@ export function weaklyMatchesEntityTag(actual: string | null, expected: string):
   const actualOpaqueTag = readOpaqueEntityTag(actual);
   return actualOpaqueTag !== null && actualOpaqueTag === readOpaqueEntityTag(expected);
 }
-
-export function makeStateEtag(revision: number): string {
-  if (!Number.isSafeInteger(revision) || revision < 0) {
-    throw new RangeError("state revision must be a non-negative safe integer");
-  }
-  return `W/"state:${revision}"`;
-}

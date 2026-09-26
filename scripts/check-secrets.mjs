@@ -25,13 +25,14 @@ function lineNumberForIndex(text, index) {
   return line;
 }
 
-function envValue(line, name) {
-  const match = new RegExp(`^${name}=([^#\\r\\n]*)`).exec(line.trim());
-  if (!match) {
-    return null;
-  }
+function envValue(line) {
+  const match =
+    /^([A-Z][A-Z0-9_]*(?:_API_TOKEN|_API_KEY|_ACCESS_TOKEN|_AUTH_TOKEN|_PASSWORD|_PRIVATE_KEY|_SECRET(?:_KEY)?))=([^#\r\n]*)/.exec(
+      line.trim(),
+    );
+  if (!match) return null;
 
-  let value = match[1].trim();
+  let value = match[2].trim();
   if (
     ((value.startsWith('"') && value.endsWith('"')) ||
       (value.startsWith("'") && value.endsWith("'"))) &&
@@ -39,7 +40,7 @@ function envValue(line, name) {
   ) {
     value = value.slice(1, -1);
   }
-  return value;
+  return { name: match[1], value };
 }
 
 function isAllowedPlaceholder(value) {
@@ -81,14 +82,14 @@ for (const path of trackedFiles()) {
   for (const [index, line] of lines.entries()) {
     const lineNo = index + 1;
 
-    const turnstileSecret = envValue(line, "TURNSTILE_SECRET_KEY");
+    const credential = envValue(line);
     if (
-      turnstileSecret !== null &&
-      turnstileSecret !== "" &&
-      !isAllowedPlaceholder(turnstileSecret) &&
-      !isTurnstileTestSecret(turnstileSecret)
+      credential !== null &&
+      credential.value !== "" &&
+      !isAllowedPlaceholder(credential.value) &&
+      !(credential.name === "TURNSTILE_SECRET_KEY" && isTurnstileTestSecret(credential.value))
     ) {
-      addFinding(findings, path, lineNo, "turnstile_secret_key");
+      addFinding(findings, path, lineNo, "credential_value");
     }
   }
 }

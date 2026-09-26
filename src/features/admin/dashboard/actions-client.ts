@@ -11,13 +11,17 @@ export const dashboardActions = {
     toActionResult(() => sendAdminCommand<NumberRow>({ type: "updateNumber", id, number })),
   incrementReach: () => toActionResult(() => sendAdminCommand<number>({ type: "incrementReach" })),
   decrementReach: () => toActionResult(() => sendAdminCommand<number>({ type: "decrementReach" })),
-  saveSurveyState: (input: {
-    surveyUrl: string;
-    surveyTitle: string;
-    surveyDescription: string;
-    surveyButtonLabel: string;
-    isSurveyActive: boolean;
-  }) =>
+  saveSurveyState: (
+    input:
+      | { isSurveyActive: false }
+      | {
+          surveyUrl: string;
+          surveyTitle: string;
+          surveyDescription: string;
+          surveyButtonLabel: string;
+          isSurveyActive: true;
+        },
+  ) =>
     toActionResult(() =>
       sendAdminCommand<AppStateRow>({
         type: "saveSurveyState",
