@@ -16,6 +16,8 @@
 
 詳細と年次手順は[Cloudflare本番運用runbook](docs/cloudflare-operations.md)を参照してください。
 
+公開・会場画面の読み込み表示は既存モーダルの枠を再利用し、スピナーは背景装飾なしで表示します。10秒経っても準備できない場合は、通信エラーと再読み込みボタンを表示します。
+
 ## Cloudflare環境境界
 
 productionは団体Cloudflare accountの`nutfes-bingo` Workerと、団体管理のapp/media custom domainを使います。通常deployに常設stagingや個人accountを使いません。DO/auth/bindingを再び変更する場合だけ、団体account内に一時的な検証環境を作ります。

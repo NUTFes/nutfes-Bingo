@@ -1,12 +1,12 @@
 .overlay {
   position: fixed;
   inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   z-index: 1000;
-  background: color-mix(in srgb, var(--background-color) 72%, transparent);
-  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
 }
 
 .card {
@@ -14,57 +14,55 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(10px, 3vw, 18px);
-  width: min(86vw, 360px);
-  padding: clamp(20px, 6vw, 32px);
-  border-radius: clamp(18px, 5vw, 28px);
-  border: 2px solid var(--main-color);
-  background-color: var(--background-color);
-  box-shadow:
-    0 12px 30px color-mix(in srgb, var(--background-color) 62%, transparent),
-    0 0 0 4px color-mix(in srgb, var(--main-color) 10%, transparent) inset;
-}
-
-.brand {
-  font-family: var(--font-rajdhani), var(--font-sans);
-  font-size: clamp(20px, 6vw, 32px);
-  font-weight: 700;
-  color: var(--main-color);
-  letter-spacing: 0.06em;
+  gap: clamp(16px, 4vw, 20px);
   text-align: center;
 }
 
+.brand {
+  margin: 0;
+  color: var(--main-color);
+  font-family: var(--font-rajdhani), var(--font-sans);
+  font-size: clamp(24px, 7.5vw, 30px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
 .spinner {
-  width: clamp(36px, 10vw, 52px);
-  height: clamp(36px, 10vw, 52px);
-  border-radius: 999px;
+  width: 36px;
+  height: 36px;
   border: 4px solid color-mix(in srgb, var(--main-color) 24%, transparent);
   border-top-color: var(--main-color);
+  border-radius: 50%;
   animation: spin 0.9s linear infinite;
 }
 
 .message {
-  font-family: var(--font-rajdhani), var(--font-sans);
-  font-size: clamp(14px, 4vw, 18px);
-  font-weight: 700;
-  color: var(--main-color);
-  letter-spacing: 0.04em;
-  text-align: center;
+  color: var(--text-color);
+  font-size: clamp(15px, 3.8vw, 17px);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.error {
+  margin: 0;
+  color: var(--text-color);
+  font-size: clamp(15px, 3.8vw, 17px);
+  line-height: 1.6;
 }
 
 .retryButton {
-  border: 2px solid var(--main-color);
-  border-radius: 999px;
-  padding: 0.65rem 1.25rem;
-  background: var(--main-color);
-  color: var(--background-color);
-  font: inherit;
-  font-weight: 700;
+  width: clamp(200px, 60vw, 260px);
+  min-height: 48px;
+  height: auto;
+  padding: 10px 16px;
+  border-width: 3px;
+  border-radius: 99px;
+  font-size: clamp(16px, 4.5vw, 18px);
   cursor: pointer;
 }
 
 .retryButton:focus-visible {
-  outline: 3px solid currentColor;
+  outline: 3px solid var(--text-color);
   outline-offset: 3px;
 }
 
@@ -74,5 +72,11 @@
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
   }
 }
