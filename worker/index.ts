@@ -37,7 +37,6 @@ const GAME_STATE_NAME = "game";
 
 const worker = {
   async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
-    const requestId = crypto.randomUUID();
     const url = new URL(request.url);
     try {
       if (request.method === "OPTIONS") return preflightResponse(request);
@@ -86,6 +85,7 @@ const worker = {
       }
     } catch (error) {
       const normalized = normalizeError(error);
+      const requestId = crypto.randomUUID();
       if (normalized.status >= 500) {
         console.error(
           JSON.stringify({

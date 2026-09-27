@@ -163,9 +163,8 @@ export async function readMultipartForm(request: Request, maxBytes: number): Pro
   }
 }
 
-export async function sha256Hex(value: string | Uint8Array): Promise<string> {
-  const input =
-    typeof value === "string" ? new TextEncoder().encode(value) : Uint8Array.from(value);
+export async function sha256Hex(value: string | Uint8Array<ArrayBuffer>): Promise<string> {
+  const input = typeof value === "string" ? new TextEncoder().encode(value) : value;
   const digest = await crypto.subtle.digest("SHA-256", input);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }

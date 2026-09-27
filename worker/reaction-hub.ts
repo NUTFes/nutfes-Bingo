@@ -72,9 +72,9 @@ export class ReactionHub extends DurableObject<Env> {
       const currentCount = state.day === day ? state.daily_count : 0;
       if (currentCount >= STAMP_DAILY_LIMIT) return null;
       return this.ctx.storage.sql
-        .exec<{ daily_count: number; stamp_id: number }>(
+        .exec<{ stamp_id: number }>(
           "UPDATE reaction_state SET day = ?, daily_count = ?, next_id = next_id + 1 " +
-            "WHERE id = 1 RETURNING daily_count, next_id - 1 AS stamp_id",
+            "WHERE id = 1 RETURNING next_id - 1 AS stamp_id",
           day,
           currentCount + 1,
         )
@@ -93,7 +93,7 @@ export class ReactionHub extends DurableObject<Env> {
     const socketMessage: StampSocketMessage = { type: "stamp", stamp };
     const message = JSON.stringify(socketMessage);
     for (const socket of this.ctx.getWebSockets("stamps")) safeSend(socket, message);
-    return { accepted: true, stamp, dailyCount: persisted.daily_count };
+    return { accepted: true, stamp };
   }
 
   async getStatus(): Promise<{

@@ -104,10 +104,9 @@ if (
 ) {
   throw new Error("/api/bingo/state returned an invalid state");
 }
-const expectedEtag = `"state:${state.revision}"`;
 const etag = stateResponse.headers.get("etag");
-if (etag !== expectedEtag && etag !== `W/${expectedEtag}`) {
-  throw new Error("/api/bingo/state returned an inconsistent ETag");
+if (!/^W\/"state:[a-f0-9]{64}"$/.test(etag ?? "")) {
+  throw new Error("/api/bingo/state returned an invalid ETag");
 }
 const unchanged = await fetch(new URL("/api/bingo/state", site), {
   headers: { "If-None-Match": etag },

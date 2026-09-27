@@ -24,7 +24,7 @@ export type StampTriggerRow = {
 };
 
 export type StampSubmissionResult =
-  | { accepted: true; stamp: StampTriggerRow; dailyCount: number }
+  | { accepted: true; stamp: StampTriggerRow }
   | {
       accepted: false;
       reason: "daily_limit" | "overloaded" | "rate_limited" | "sampled";
