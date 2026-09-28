@@ -1,67 +1,93 @@
 # Cloudflare本番運用
 
-この文書がproduction deploy、当日運用、rollback、年次引継ぎの正本です。完成後は原則freezeし、週次運用は行いません。
+団体のCloudflareアカウントで`nutfes-bingo`を運用する担当者向けの手順です。プロジェクトの開発経験は前提にしません。Git、Docker、Cloudflare Dashboardの基本操作は必要です。初めて担当する場合は「構成」「作業環境」「イベント準備」「デプロイ」を順に読み、以降は必要な章を参照してください。準備の開始日は固定せず、権限の取得やリハーサルに必要な時間を運営側と決めてください。
 
-## 固定architecture
+操作に必要なCloudflareの招待や権限がない場合は、団体アカウントの管理者に依頼します。設定や運用判断がこの文書で解決しない場合は、[リポジトリのIssue](https://github.com/NUTFes/nutfes-Bingo/issues)で開発担当者に確認してください。認証情報やAccessのCookieはIssueに貼らないでください。
 
-```text
-public static files ──────────────> Workers Static Assets
-public state HTTP / WebSocket ───> Worker ─> GameState("game", SQLite DO)
-public reach ─────────────────────> Worker ─> Turnstile ─> GameState
-public stamp ─────────────────────> Worker ─> ReactionHub ─> Screen stamp socket
-Admin / Screen ─> Access policy ─> Worker JWT/AUD/claim検証 ─> GameState / ReactionHub / prize R2
+## 構成を確認してから作業する
+
+公開画面は`/`と`/prizes/`、管理画面は`/admin`以下、会場画面は`/screen`以下です。まず入口を示し、次にWorkerが呼び出す保存先を示します。両図の矢印は**リクエストの向き**で、返されるデータの向きは省略しています。矢印上の文字は、通る画面・APIや処理の種類です。
+
+公開ページはStatic Assetsから直接配信します。`/admin`と`/screen`は別々のCloudflare Accessアプリケーションを通過した後、WorkerでもJWTを検証します。管理・会場画面のファイルは、その確認後にWorkerからStatic Assetsへ取得しに行きます。
+
+```mermaid
+flowchart LR
+    visitor["来場者"] --> site["bingo.nutfes.net"]
+    admin["管理担当"] --> site
+    screen["会場端末"] --> site
+    site -->|公開ページ| assets["Static Assets"]
+    site -->|公開API| worker["nutfes-bingo Worker"]
+    site -->|/admin| adminAccess["Access: 管理用"]
+    site -->|/screen| screenAccess["Access: 会場用"]
+    adminAccess --> worker
+    screenAccess --> worker
+    worker -->|認証後の画面| assets
 ```
 
-- authoritative stateは固定名`game`の`GameState` 1個だけ。
-- `ReactionHub`は消失許容reaction専用。`GameState`へ統合しない。
-- public state WebSocketとbounded HTTP fallbackを維持する。
-- public reachを維持するためTurnstile server validationも維持する。
-- `/admin*`と`/screen*`は別Access applicationと別AUDを使う。人員membershipの正本は各Access policy、またはそのpolicyが参照するreusable groupとする。WorkerはAccess JWTの署名、issuer、AUD、有効期限、`email`、`sub`を検証する。
-- 景品画像だけを`nutfes-bingo-prize-images` R2に保存する。5 MiB、MIME、magic bytes、content-hash keyを検証する。
-- `GameDirectory`、generation、logical snapshot/import/restore、daily Cron、private backup R2、常設stagingはない。
-- 30日以内の短期data recoveryはSQLite DO PITRだけを使う。
+Workerは状態の読み書きとWebSocket接続を`GameState`へ送ります。スタンプ演出は別の`ReactionHub`へ送るため、演出が止まっても番号の正本は保たれます。景品画像はWorkerからR2へ登録し、閲覧時は画像用ドメインから取得します。
 
-hostname、Access AUD、media origin、Turnstile sitekeyは`cloudflare.production.env`へ固定し、production account、Worker名、binding構成は`wrangler.jsonc`へ固定します。Admin/Screenの人員membershipはCloudflare Access側だけで管理し、Turnstile secretはWrangler secretへ置きます。
+```mermaid
+flowchart LR
+    appWorker["nutfes-bingo Worker"] -->|状態の取得・更新とWebSocket| game["GameState (game): 番号・景品・リーチの正本"]
+    appWorker -->|スタンプ送信・会場用WebSocket| reaction["ReactionHub: 演出用"]
+    appWorker -->|公開リーチの検証| turnstile["Turnstile"]
+    appWorker -->|景品画像の登録| r2["R2: 景品画像"]
+    media["bingo-media.nutfes.net"] -->|景品画像の取得| r2
+```
 
-## ゼロベース初回構築
+管理用・会場用のAccess policyとAUDは別々です。WorkerでもJWTの署名、issuer、AUD、有効期限、`email`、`sub`を確認します。人員の追加・削除はAccess policy（または参照するreusable group）で行い、Workerの再デプロイは不要です。公開状態はWebSocketで配信し、接続できないときは回数制限付きHTTP取得に切り替わります。公開リーチは`/api/bingo/reach`でTurnstileによる検証を受け、スタンプは`/api/bingo/stamps`から`ReactionHub`へ送られます。
 
-旧production、旧Durable Object、旧migration historyは引き継ぎません。初回は次のresourceだけをorganization accountへ新規作成します。
+| 確認したい内容                                                                       | 設定・実装の正本                                                                                                                            |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Worker名、団体account ID、Static Assets、DO/R2 binding、migration、保護対象のrouting | `wrangler.jsonc`                                                                                                                            |
+| 公開URL、画像URL、Access team/AUD、Turnstile sitekey、共有ownerの識別                | `cloudflare.production.env`（認証情報は含まない）                                                                                           |
+| Wrangler secret `TURNSTILE_SECRET_KEY`                                               | 団体CloudflareアカウントのWorker secret。Gitには保存しない                                                                                  |
+| 管理・会場画面への所属                                                               | Cloudflare Access applicationのpolicy / reusable group                                                                                      |
+| 本番の処理                                                                           | `worker/index.ts`、`worker/game-state.ts`、`worker/reaction-hub.ts`                                                                         |
+| ローカル実行と本番リリース                                                           | `mise.toml`、`scripts/cloudflare-dev.sh`、`scripts/preflight-cloudflare.sh`、`scripts/deploy-cloudflare.sh`、`scripts/cloudflare-smoke.mjs` |
 
-- `nutfes-bingo` Worker、Static Assets、`GameState`/`ReactionHub` SQLite DO namespace
-- `nutfes-bingo-prize-images` R2 bucketと`bingo-media.nutfes.net` custom domain
-- `bingo.nutfes.net` Worker custom domain
-- Admin用とScreen用のAccess application/policy
-- managed Turnstile widgetとWorker secret
-- disabled状態の`optional-public-mutations` WAF custom rule
+`wrangler.jsonc`のDO migrationは`GameState`と`ReactionHub`を作る`v1`です。番号・景品・当選状態・reach・survey・監査記録の正本は固定名`game`のSQLite Durable Object 1個です。景品画像だけをR2に保存します。画像アップロード時には5 MiB上限、MIME、実データの形式、content-hash keyを検査します。DOの世代切替、論理スナップショット、専用バックアップbucket、常設stagingはありません。短期のデータ復旧はSQLite DOのPITR（ある時点への復元）を使います。
 
-`wrangler.jsonc`のDO migrationは最終classだけを作る`v1` 1件です。旧class削除migration、compatibility release、data importは作りません。構築手順は「Resourceを初回作成する場合」に限定し、通常年は再実行しません。
+## 作業環境とCLIを用意する
 
-## 通常の年次準備
+ローカルにはGit、[mise](https://mise.jdx.dev/getting-started.html)、[Docker Engine](https://docs.docker.com/engine/install/)（`docker buildx`を含む）を用意します。Docker daemonに接続できることも確認してください。WSLの場合はDockerがそのディストリビューションから使える状態にします。Node `26.2.0`とpnpm `11.2.2`は`mise.toml`で固定しています。Wrangler `4.123.0`は`package.json`の開発依存で、グローバルインストールは不要です。
 
-### イベント4〜6週間前
+```bash
+git clone https://github.com/NUTFes/nutfes-Bingo.git
+cd nutfes-Bingo
+git switch develop
+mise trust
+mise install
+mise run install
+docker info
+pnpm exec wrangler --version
+```
 
-1. 団体Cloudflare accountへprimary/backup operatorがnamed accountでloginでき、MFAとrecovery contactが有効であることを確認する。共有owner loginは通常操作に使わない。
-2. `develop`がremote defaultで、required CI、force-push/delete禁止を持つことを確認する。
-3. fresh checkoutで`mise trust && mise install && mise run install`を実行する。Node、pnpm、Wrangler、Docker buildを現在のpinで再現できない場合はここで修正する。
-4. dependency/security maintenanceを1回だけ行い、CI、CodeQL、Trivy、Actions Securityを確認する。重大advisory以外はoff-seasonに常設対応しない。
-5. Cloudflare dashboardで次を確認する。
-   - organization account IDと`nutfes-bingo` Worker。
-   - app/media custom domain。`workers.dev`、preview URL、R2 `r2.dev`は無効。
-   - Admin/Screen Access applicationのparent/nested path、AUD、session duration、policy membership。Screen policyだけの利用者がAdmin applicationへ入れないことも確認する。
-   - managed Turnstile widgetのhostnameと`TURNSTILE_SECRET_KEY`。
-   - prize image R2 bucketとcustom domain。
-   - Images Transformationsがzoneで有効で、sourceはsame-zoneのみに制限されていること。
-   - `optional-public-mutations` WAF custom ruleが存在し、通常はdisabled。
-   - account全体のWorkers/DO Free usageに他appの大きな利用がない。
-6. Admin/Screenの各Access policy、または既存reusable groupに当年の利用者を登録する。両役割が必要な人は両policyに所属させる。人員追加・通常削除にGit、env、Worker deployは不要。即時失効が必要な場合だけCloudflare Accessのsession revokeを使う。
-7. Adminの「年次イベント開始」で新しいevent IDを二重入力し、前年の番号、景品、reach、surveyを一括resetする。R2画像、PITR下限、ReactionHubは保持される。
-8. local Docker runtimeでpublic Home、Prizes、Admin、Screen、WebSocket、HTTP fallback、reaction、reach、画像uploadを確認する。
-9. realtime、DO routing、socket cap、fallback、参加人数想定を変更した年だけ1000 socket試験を行う。
-10. 紙master log、番号表、景品当選/引渡し表と`offline/projector.html`をoffline端末へ保存し、回線を切って操作する。
+リリース担当者は団体Cloudflareアカウントへ個人名義で招待され、MFAとWorkers Scripts書き込み権限を持つ必要があります。共有ownerアカウントや匿名API tokenでは運用スクリプトが止まります。ブラウザで次のログインを完了してから、検証を実行してください。
 
-### イベント2〜4週間前のdeploy
+```bash
+pnpm exec wrangler login
+./scripts/check-cloudflare-operator.sh
+```
 
-`develop`のrelease対象をcommit/pushし、次だけを順番に実行します。
+検証は`wrangler.jsonc`のaccount IDとの所属一致、個人のログイン、Workers Scripts書き込み権限を確認します。失敗したら団体アカウントの管理者に所属と権限を確認し、別アカウントへデプロイして解決しないでください。`CLOUDFLARE_API_TOKEN`が環境にあるとOAuthログインより優先されるため、この運用では使いません。ブラウザからローカルの認証画面に接続できない場合は`pnpm exec wrangler login --device`を使います。詳細は[CloudflareのWrangler login資料](https://developers.cloudflare.com/workers/wrangler/commands/general/#login)を参照してください。
+
+ローカル表示を確認するときは`mise run cloudflare:dev`を起動し、`http://localhost:8787`を開きます。ビルド済み成果物を確認する場合は別途`mise run cloudflare:preview`を使います。両者は同じポートを使うので同時には起動しません。Viteのclient/WorkerビルドとCloudflare開発runtimeはDocker内で動かします。ホストで`pnpm dev`や`pnpm build`を実行しないでください。ローカルのTurnstileはテストキーで、本番のAccessやTurnstile確認の代わりにはなりません。
+
+## イベントに向けて準備する
+
+既存の本番環境がある場合は次を確認します。初回構築やリソース消失時は、先に「リソース消失・初回構築時だけ作成する」でリソースとWorkerを用意し、その後この章で利用者や当年のデータを整えてください。
+
+1. 主担当と代行担当がそれぞれ個人名義でCloudflareへログインでき、MFAとrecovery contactを利用できることを確認する。`develop`がremote defaultで、required CI、force-push/delete禁止を持つことも確認する。
+2. 新しいcheckoutで上記のツールとDockerビルドを再現する。依存関係・security advisoryを見直し、CI、CodeQL、Trivy、Actions Securityの結果を確認する。
+3. Dashboardで`nutfes-bingo` Workerと団体account ID、`bingo.nutfes.net`と`bingo-media.nutfes.net`、R2 bucket、Turnstile widget、AccessのAdmin/Screen別AUD・保護対象path・session・所属を照合する。`workers.dev`、preview URL、`r2.dev`は無効にする。Images Transformationsはsame-zone sourceのみ許可する。
+4. `optional-public-mutations` WAF ruleが存在し、通常は無効であることと、account全体のWorkers/DO利用状況を確認する。Admin/Screenの各policyに当年の利用者を登録し、Screen担当だけでAdminを開けないことを確かめる。即時失効が必要ならAccessのsessionもrevokeする。
+5. Adminの「年次イベント開始」で新しいevent IDを二重入力し、前年の番号、景品、reach、surveyを一括リセットする。R2画像、PITRの下限、`ReactionHub`は保持される。操作前に前年の必要な記録を保存する。
+6. Dockerで公開Home、Prizes、Admin、Screen、WebSocket、HTTP fallback、stamp、reach、画像uploadを確認する。通信断に備えて紙の番号・景品当選／引渡し記録と`offline/projector.html`をオフライン端末で試す。リアルタイム通信、DO経路、接続上限、fallback、想定参加規模を変えた場合は後述の接続試験も行う。
+
+## developから本番へデプロイする
+
+`develop`のリリース対象をcommit/pushし、変更がない作業ツリーで実行します。ローカルの未commitファイルや未pushのHEADがあると`preflight`は失敗します。既存Workerを更新する場合は直前のGit SHAとWorker version IDを運用記録で照合してください。初回は直前versionがなく、ロールバック先もありません。リリース記録の直前欄に「なし（初回）」と記入します。
 
 ```bash
 mise run preflight
@@ -69,20 +95,13 @@ mise run deploy
 mise run smoke
 ```
 
-`preflight`は次をfail closedで検査します。
+`preflight`は、`develop`のHEADが`origin/develop`と一致すること、団体アカウントへの個人名義のログインとWorkers書き込み権限を確認します。Turnstile secret、R2 bucket、公開URL、別々のAccess AUDも照合します。依存関係のHigh以上のadvisory、secret scan、format、lint、typecheck、Worker tests、React Doctor、knipを検査し、Dockerでclient/WorkerをビルドしてWrangler dry-runまで実行します。監査情報を取得できない場合も停止します。
 
-- cleanな`develop` HEAD、upstream `origin/develop`、remoteとの完全一致。
-- organization account membership、named operator、Workers write。
-- pinned account、public座標、Turnstile secret、prize bucket。
-- Admin/Screen同一AUD、Turnstile test keyを拒否。
-- 本番用と全依存関係の監査でHighが0件であること（advisory取得失敗・timeout時も停止）、secrets scan、format、lint、typecheck、Worker tests、React Doctor、knip。
-- DockerでのVite client/Worker build、generated binding、Wrangler dry-run、bundle、startup profile。`dist/client/`と`dist/worker/`を同時にexportし、生成済み`dist/worker/wrangler.json`を検査・deployする。account、binding、Access保護対象などの設定正本は引き続き`wrangler.jsonc`とする。
+`mise run deploy`はpreflightをもう一度実行し、同じHEADを`git:<SHA>`のmessage付きでデプロイします。CIから本番をデプロイしません。成果物は`dist/client/`と`dist/worker/`に同時出力され、デプロイには生成した`dist/worker/wrangler.json`を使います。設定の正本は引き続き`wrangler.jsonc`です。`preflight`が失敗したら原因を修正して再実行し、検査を飛ばした直接の`wrangler deploy`は行わないでください。
 
-`deploy`は同じpreflightを再実行してから、同じHEADを`git:<SHA>` annotation付きでproductionへdeployします。CI secretからproduction deployしません。
+`mise run smoke`は、本番のGit SHA/Worker version、公開ページ、`/api/ready`、状態取得時のETag/304、画像配信、Admin/ScreenのAccess redirect、公開WebSocketを確認します。成功時は`status: "passed"`、`releaseSha`、`workerVersionId`などを含むJSONを出力します。失敗したら公開画面とDashboardのWorker errorを確認し、後述の切り戻し可否を判定してください。自動smokeは管理画面での実操作やTurnstileの実入力を検査しません。
 
-`smoke`はactive deployment SHA/version、public static page、singleton readiness、HTTP conditional fallback、空bucketを許容するmedia origin、Admin/Screen parent/nested Access redirect、public WebSocketを検査し、JSON 1行を標準出力します。証跡file、24時間gate、manual attestation schemaはありません。
-
-年次記録は次の4項目だけで十分です。
+リリース記録には実施日時、直前と新規のGit SHA / Worker version ID、smoke結果を残します。新規version IDはsmoke出力とCloudflareのDeployments画面で照合できます。障害時の切り戻し先に使うため、直前の値を上書きしないでください。
 
 ```text
 date/time:
@@ -91,23 +110,23 @@ new Git SHA / Worker version ID:
 smoke result:
 ```
 
-### 手動UX rehearsal
+### 自動確認後に実端末で操作を確かめる
 
-自動smoke後に実端末で1回だけ確認します。
+本番状態を変更する操作は運営担当と調整し、イベント進行中には試さないでください。後で戻せるテストデータを用意し、番号や景品の変更は紙の記録と突き合わせます。
 
-1. public Homeが現在番号、reach、surveyを表示し、reload後も同じstateになる。
-2. Prizesが景品名、当選状態と、画像登録済みの場合はR2画像を表示する。
-3. real Turnstileを解いたpublic reachが1回だけ増え、同じclient retryで重複しない。
-4. stampがScreenへ届く。reaction停止中でも番号進行が続く。
-5. Admin policy所属者が番号追加/更新/削除、reach増減、survey、景品作成/並替え/当選/削除、画像uploadを行える。
-6. 対象Access policyに所属しないidentityと未認証identityはAdmin/Screenのparent/nested pathでAccess edgeに拒否される。Screen policyだけの利用者はAdmin applicationへ入れない。
-7. Home/ScreenがAdmin更新をWebSocketで受け、socket切断後はreconnectまたはHTTP fallbackで復帰する。
-8. Screen state socketとstamp socketが別々に接続し、Screen Access境界を維持する。
-9. test event IDで年次resetを行い、public reach iconが再表示され、前年dataが空になる。
+1. 公開Homeに現在番号、reach、surveyが表示され、再読み込み後も同じ状態になる。
+2. Prizesに景品名・当選状態と、画像登録済みの場合はR2画像が表示される。
+3. 本番のTurnstileを解いてreachを送ると1回だけ増え、同じclientの再送では重複しない。
+4. stampが会場画面へ届く。演出の通信が止まっても番号の進行は続く。
+5. Admin担当者が番号の追加・更新・削除、reach増減、survey、景品の作成・並べ替え・当選・削除、画像uploadを行える。
+6. 未認証者と対象のAccess policyに所属しない人はAdmin/Screenの各pathでAccessに拒否される。Screenだけの担当者はAdminを開けない。
+7. 公開Homeと会場画面にAdminの更新がWebSocketで届き、切断後は再接続かHTTP fallbackで復帰する。
+8. 会場画面のstate socketとstamp socketが別々に接続し、ScreenのAccess境界を維持する。
+9. 年次リセットの確認は実イベントのデータ登録前に行う。すでに本番の番号・景品を登録した後はテスト目的でリセットしない。
 
-## 1000 socket capacity確認
+## 接続規模に影響する変更時は容量を確認する
 
-通常500人に対して1000 page instanceをcapacity baselineとします。release gateではなく、完成時またはcapacity-sensitive変更時だけ実行します。
+`mise run capacity`は1000 page instance・5分保持の試験です。通常のデプロイのたびには実行しません。リアルタイム配信、DOの経路、接続上限、fallback、想定参加規模を変更した場合に、現状の試験条件が必要な規模を満たすか検討して実行します。
 
 1. `mise run cloudflare:dev`でlocal Workerを起動する。
 2. 別terminalで次を実行する。
@@ -118,13 +137,13 @@ mise run capacity http://127.0.0.1:8787
 
 3. 1000/1000 socket ready、ready failure 0、保持開始・終了の`liveAtHoldStart`/`liveAtHoldEnd`がともに`true`、early close/error 0、5分保持を確認する。
 4. broadcast経路を変更した場合はload中にAdminで5回reversible mutationし、`--expect-broadcasts 5`を明示したscript実行でも全socket受信を確認する。
-5. event当日、通常release、単なる景品/番号data変更では再実行しない。
+5. イベント当日や単なる番号・景品データ変更では原則再実行しない。
 
 app capはpublic 1,984 + Screen 16です。Cloudflare platform上限より先にこのapp capでauthoritative DOを保護します。
 
-## Free plan判断
+## Free枠は団体アカウント全体の利用量で判断する
 
-public static assetsはWorkerをbypassします。1000 page instanceが初回HTTP、socket upgrade、保守的reconnect/fallbackを使う場合、基線は約16,000 Worker request / 16,000 DO requestです。500人通常ケースはこの半分程度です。
+公開の静的ファイルは原則Workerを経由しません。1000 page instanceで初回HTTP、socket upgrade、再接続/fallbackを見込んだ設計上の試算は約16,000 Worker request / 16,000 DO requestです。実人数やアクセス数の保証値ではありません。下表は計画時の基線であり、料金・上限は変更され得るため、判断時はCloudflare Dashboardのaccount aggregateと末尾の公式料金表を照合します。
 
 | dimension              |         Free基線 | 運用判断                                                |
 | ---------------------- | ---------------: | ------------------------------------------------------- |
@@ -136,34 +155,31 @@ public static assetsはWorkerをbypassします。1000 page instanceが初回HTT
 | DO duration            |  13,000 GB-s/day | Hibernation eligibleなidle socket時間は課金対象外       |
 | R2                     |      10 GB-month | prize imageのみ。上限接近時だけ年次GCを検討する         |
 
-Free usageはaccount全体で共有されます。通常500/確認1000ではFreeを第一案とし、account aggregateまたは実測CPUが成立しない場合だけevent月Paidを判断します。
+Free usageはアカウント全体で共有されます。Free枠で足りるかは同じアカウントの他アプリの消費量と実測CPUを合わせて判断し、超える見込みなら有料プランを検討します。
 
-## optional public mutation kill switch
+## stamp・reachの負荷が進行を妨げたらWAFで止める
 
-Cloudflare WAF custom ruleを1個だけ事前作成します。
+事前にCloudflare WAF custom ruleを1件作り、通常は無効にします。
 
 - name: `optional-public-mutations`
 - expression: `http.request.uri.path in {"/api/bingo/stamps" "/api/bingo/reach"}`
 - action: Block
 - normal state: Disabled
 
-これはWorkerより前でstamp/reachを同時停止し、Free request/CPUとauthoritative GameStateを守る最後のswitchです。reaction/reach異常、bot traffic、quota急増時にprimary operatorがEnableし、司会へ「演出停止、ビンゴ継続」を伝えます。Turnstile障害時もreachだけをbypassせず、このruleで停止します。
+このruleを有効にするとWorkerより手前でstamp/reachが同時に止まります。負荷、bot traffic、Turnstile障害時は担当者が有効にし、司会へ「演出停止、ビンゴ継続」を伝えてください。Turnstileの検証だけを迂回してreachを通さないでください。会場全体を閉じる場合に別の`event-closed` ruleを使っているなら、次の公開前に無効へ戻します。
 
-off-seasonにsite全体を閉じる場合は別の単一`event-closed` edge ruleを使います。翌年preflight前にdisabledを確認します。
+## イベント中は画面と状態更新を優先する
 
-## イベント当日
+### 開場前に表示と手元の記録を確認する
 
-### 開場前
+- 主担当と代行担当のログイン、直前と現行のWorker version IDを確認し、`mise run smoke`を実行する。
+- Admin担当の端末、会場画面、公開端末で表示を確認する。
+- `optional-public-mutations`が無効であり、Turnstileの操作とstamp/reachが届くことを確認する。
+- 紙の番号・取消・景品当選／引渡し記録を開始し、時刻順に残す。
 
-- primary/backup operator、Cloudflare login、直前/active Worker version IDを確認。
-- `mise run smoke`を1回実行。
-- Admin policy所属者の端末1台、Screen実機、public端末で1回ずつ表示確認。
-- `optional-public-mutations`がdisabled、Turnstileが解ける、stamp/reachが届くことを確認。
-- 紙master logを開始し、以後のcalled number、取消、景品winner/引渡しを時刻順に記録。
+### 開場後は異常と利用量を確認する
 
-### 開場後
-
-通常監視は会場画面とAdmin更新だけです。開場15分後と異常時だけCloudflare dashboardでWorker 5xx、Worker/DO usage、optional mutation trafficを確認します。30分ごとのdashboard巡回、daily snapshot確認、weekly security workflowは行いません。
+会場画面とAdminの更新を確認します。画面に異常がある場合や利用量を見直す際は、Cloudflare DashboardでWorkerの5xxとWorker/DOの利用量を確認してください。stamp/reachのtrafficも確認します。監視頻度は会場の状況と担当体制で決めます。
 
 次をincidentとして扱います。
 
@@ -174,33 +190,34 @@ off-seasonにsite全体を閉じる場合は別の単一`event-closed` edge rule
 
 reactionやpublic reachだけの停止はイベント停止ではありません。
 
-### 当日アクセス・公開WebSocket接続数の確認
+### アクセス規模と公開WebSocket接続数を記録する
 
 アクセス規模はCloudflare DashboardのHTTP Traffic / Analyticsで開催時間を指定して確認します。公開HTML、JavaScript、CSSはWorkers Static Assetsから直接配信されるため、Worker request数をサイト全体のアクセス数として扱いません。
 
-公開ユーザー向けWebSocketの同時接続数はWorkers ObservabilityのQuery Builderで `metric = public_websocket_connections` に絞って確認します。開催開始前から公開WebSocketへ接続できる場合は、開催時間内だけに絞らず公開開始時刻から開催終了までを対象にします。ピーク値は集計を `Max`、対象フィールドを `connections` にして確認し、`Max(connections)` をピーク公開WebSocket本数として記録します。`Count` は該当ログ件数であり同時接続数ではありません。接続数の変化を確認する場合は `Events` に切り替え、`cause` と `connections` を表示してtimestamp順に確認します。例えば2接続を順に開閉した場合は `open 1 → open 2 → close 1 → close 0` となります。これは利用者人数ではなくWebSocket本数で、再接続、複数タブ、複数端末は別接続として数えます。
+公開ユーザー向けWebSocketの同時接続数はWorkers ObservabilityのQuery Builderで`metric = public_websocket_connections`に絞って確認します。公開開始が開催時間より早い場合は、公開開始時刻から開催終了までを対象にします。
 
-ログは接続成立・切断時だけ出るため、値が変化しない時間帯にはイベントがありません。定期サンプリングされた連続時系列としては扱いません。イベント終了後または翌営業日に、開催日時、HTTP Traffic / Analyticsで確認したアクセス規模、`Max(connections)` のピーク値と必要なグラフまたはexportを実行委員会の通常の記録先へ転記します。
+ピークを調べるには集計を`Max`、対象フィールドを`connections`にします。`Max(connections)`が公開WebSocket本数のピークです。`Count`はログの件数であり、接続数ではありません。変化を調べる場合は`Events`に切り替え、`cause`と`connections`を時刻順に確認します。2接続を順に開閉すると`open 1 → open 2 → close 1 → close 0`となります。複数タブ・端末や再接続も別々に数えるため、この値を利用者数として扱わないでください。
 
-### 終了後
+ログは接続成立・切断時だけ出るため、値が変化しない時間帯にはイベントがありません。定期サンプリングされた連続時系列としては扱いません。イベント終了後、開催日時、HTTP Traffic / Analyticsで確認したアクセス規模、`Max(connections)`のピーク値と必要なグラフまたはexportを実行委員会の通常の記録先へ転記します。
 
-- paper master logとAdmin stateを照合し、必要な結果だけ別途保存。
-- `optional-public-mutations`または`event-closed`を必要に応じてenable。
-- Worker version、incident、PITR receiptの有無を年次記録へ追記。
+### 終了後は紙の記録と本番状態を照合する
+
+- 紙の記録とAdminの状態を照合し、必要な結果を別途保存する。
+- 必要に応じて`optional-public-mutations`または`event-closed`を有効にする。次の公開時には無効に戻す。
+- Worker version、障害、PITR receiptの有無を運用記録へ追記する。
 - R2画像は容量上限に近づいた場合だけ削除を検討する。現在の景品に参照がないだけでは削除しない。画像ごとに最後に参照された時刻（景品の画像変更・削除または年次リセットの時刻）を記録で確認し、`/admin/api/recovery`の`pitrEarliestAt`がその時刻より後になってから、現在も参照されていないcontent-hashだけを削除する。最終参照時刻を証明できない画像は削除しない。
-- 翌年まで週次on-call、daily backup、quarterly GCを置かない。
 
-## Incident対応
+## 障害時は原因に応じて切り戻す
 
-### reaction / reach異常
+### stamp / reachだけが異常なら演出を止める
 
 1. `optional-public-mutations`をEnable。
 2. stamp/reachを使わず司会と紙集計で継続。
 3. GameStateの番号/景品/Admin更新が正常ならinfra変更をしない。
 
-### code/assets/config regression
+### コード・assets・設定の不具合なら直前のversionへ戻す
 
-DO class/bindingを変更していない通常releaseだけ、記録した直前versionへ戻します。
+DO classやschemaを変更していないリリースに限り、記録した直前のversionへ戻します。直前のGit SHAとWorker version IDが同じリリースを指していることを先に照合してください。
 
 ```bash
 previous_sha=<previous-git-sha>
@@ -211,18 +228,18 @@ SMOKE_RELEASE_SHA=$previous_sha mise run smoke
 
 rollbackはWorker code、assets、bindings、compatibilityを戻します。DO/R2 dataは戻しません。DO class/schemaを変更したreleaseは古いversionへ戻さずfix-forwardします。
 
-### data誤操作
+### データの誤操作はまずAdminで逆操作する
 
-紙master logを正としてAdminから逆操作します。bounded audit logを時刻とactor照合に使います。軽微な誤操作でPITRを使わないでください。
+紙の記録を正としてAdminで戻します。監査記録で時刻と操作した人を照合してください。軽微な誤操作でPITRを実行すると、対象時刻以降の正しい更新まで失われます。
 
-### SQLite DO PITR
+### 状態を巻き戻す必要があればSQLite DO PITRを使う
 
-PITRはSQLとKVを含む`game`全体を過去30日へ戻し、既存WebSocketを切断します。localでは使えません。イベントをpauseし、紙master logを継続してから実行します。
+PITRはSQLとKVを含む`game`全体を過去の時点へ戻し、既存WebSocketを切断します。復元可能な範囲は`/admin/api/recovery`の`pitrEarliestAt`で確認します（Cloudflareの保持上限は30日）。ローカルでは使えません。イベント進行を止め、紙の記録を継続してから実行してください。
 
-PITRはR2画像を復元しません。復元可能な時点で参照される画像はR2に残す必要があります。容量上限に近づいた場合も、上記のR2画像の削除条件に従ってください。
+PITRはR2画像を復元しません。復元先から参照される画像がR2に残っていることを確認してください。画像の削除条件は「終了後」を参照してください。
 
-1. Admin policy所属者のbrowserから`CF_Authorization`値をmode `600` fileへ保存する。shell argumentへtoken値を直接書かない。
-2. `/admin/api/recovery`の`pitrEarliestAt`より後のrestore時刻を二者確認しplanを作る。
+1. Admin policyに所属する人のブラウザから`CF_Authorization`の値を取得し、権限`600`のファイルに保存する。tokenをシェルの引数やGitに置かない。
+2. `/admin/api/recovery`の`pitrEarliestAt`より後の復元時刻を二人で確認し、planを作る。
 
 ```bash
 mise run recover -- prepare \
@@ -239,7 +256,7 @@ CONFIRM_PITR=<target-bookmark> mise run recover -- restore \
   --access-jwt-file .cloudflare/admin-access-jwt
 ```
 
-commandはreceipt pathを排他的にmode `600`で確保してからPITRをscheduleし、undo bookmarkを書いてfsyncしてからDOをrestartします。schedule後にCLIが中断しても、同じplan/outputでpending targetを再開できます。client WebSocket切断/reconnectは期待動作です。
+CLIは書き込み先のreceiptを権限`600`で確保し、PITRを予約します。undo用bookmarkをreceiptへ保存・同期してからDOを再起動します。予約後にCLIが中断しても同じplan/outputで再開できます。WebSocketの切断と再接続は想定どおりの動作です。
 
 5. Admin/public/Screen stateを紙master logと照合し、欠けた操作をAdminから追記する。
 6. undoする場合はrestore receiptだけを入力にして次を実行する。raw bookmarkによる通常prepareはありません。
@@ -250,38 +267,54 @@ CONFIRM_PITR_UNDO=<undo-bookmark> mise run recover -- undo \
   --access-jwt-file .cloudflare/admin-access-jwt
 ```
 
-PITRが60秒以内に完了しない、Access/Cloudflare障害、復旧見込み不明の場合は観客の前で試行を重ねず、紙master logと静的projector fallbackでイベントを継続します。
+CLIはPITRの完了を最大60秒待ちます。時間切れ、Access/Cloudflare障害、復旧見込み不明の場合は観客の前で試行を重ねず、紙の記録とオフライン投影画面で進行します。
 
-## Resourceを初回作成する場合
+## リソース消失・初回構築時だけ作成する
 
-通常年は実行しません。ゼロベース構築またはresource消失時だけ、organization accountを確認して実行します。
+既存リソースが残っている通常の年には実行しません。団体アカウントと`wrangler.jsonc`のaccount IDが一致すること、`cloudflare.production.env`のドメイン・Access AUD・sitekeyが作成する設定を指すことを先に確認します。値が違う場合はレビューして修正し、commit/pushしてからデプロイしてください。古いDOからのデータ移行や既存データの復元を想定した手順ではありません。以下のbucket作成は、同名のbucketが存在しない場合だけ行います。
 
 ```bash
 ./scripts/check-cloudflare-operator.sh
 pnpm exec wrangler r2 bucket create nutfes-bingo-prize-images --config wrangler.jsonc --update-config=false
 ```
 
-1. `r2.dev`を無効のままmedia custom domainを接続し、minimum TLSを1.2にする。
-2. Cloudflare Dashboardの`Images > Transformations`でapp/media custom domainを含むzoneのTransformationsを有効にする。source originはsame-zoneのままとし、`Resize images from any origin`は有効にしない。
-3. managed Turnstile widgetをapp hostnameへ限定し、secretを`TURNSTILE_SECRET_KEY`として登録する。
+1. `r2.dev`を無効にしたままmedia custom domainをR2 bucketへ接続し、minimum TLSを1.2にする。
+2. Dashboardの`Images > Transformations`でapp/media custom domainを含むzoneのTransformationsを有効にする。source originはsame-zoneのままとし、`Resize images from any origin`は有効にしない。
+3. managed Turnstile widgetをapp hostnameへ限定する。新しいWorkerにsecretがない場合に限り、app custom domainを接続する前に`pnpm exec wrangler secret put TURNSTILE_SECRET_KEY --config wrangler.jsonc`で登録する。値をシェル履歴やGitへ残さない。`secret put`はWorkerの新しいversionを直ちにデプロイする操作なので、既存Workerへのsecret更新としてこの手順を再実行しない。
 4. Admin Access applicationは`/admin`と`/admin/*`、Screen applicationは`/screen`と`/screen/*`を保護し、別AUDを使う。各policyまたは既存reusable groupでmembershipを管理し、Screen policyだけの利用者はAdmin applicationへ入れない。
 5. app custom domainをWorkerへ接続し、`workers.dev`とpreview URLを無効のままにする。
-6. disabledの`optional-public-mutations` WAF ruleを作る。
-7. `develop`のfinal SHAから`mise run preflight && mise run deploy && mise run smoke`を実行する。
+6. 無効状態の`optional-public-mutations` WAF ruleを作る。
+7. 上記のデプロイ手順で`develop`の確定したHEADを検査・公開し、smokeと実端末確認を行う。`wrangler.jsonc`のmigration `v1`で`GameState`と`ReactionHub`を作る。
 
 作成するDO classは`GameState`と`ReactionHub`だけ、R2は景品画像bucketだけです。private backup、Cron、KV、D1、Queue、常設stagingは作りません。
 
-## Offline projector fallback
+## 回線障害時は紙の記録とオフライン投影に切り替える
 
-`offline/projector.html`はbuild、server、networkを使わずbrowserで直接開けます。紙master logを正本とし、offline画面は投影専用です。
+`offline/projector.html`はビルド、サーバー、ネットワークなしでブラウザから開けます。紙の記録を正本とし、画面は投影専用です。
 
-1. イベント前にfileをoffline端末2台へcopyし、機内modeで開く。
+1. イベント前にファイルをオフライン端末へコピーし、機内モードで開けることを確認する。
 2. 紙masterへ番号と時刻を記録してから、同じ番号を画面へ入力する。
 3. 誤入力は「1つ戻す」で画面だけを訂正し、紙masterは取消線と訂正時刻を残す。
 4. reload後にcalled numbersが端末内へ残ること、reset確認文なしでは消えないこと、fullscreen表示を確認する。
 5. online復帰後は紙masterとAdmin stateを照合してから通常Screenへ戻す。
 
-## 公式資料
+## 用語と参照先
+
+| 用語                 | 意味                                                                      |
+| -------------------- | ------------------------------------------------------------------------- |
+| Worker               | 動的なAPI、認可、外部サービスへの振り分けを担当するCloudflareの実行環境   |
+| Static Assets        | HTML・JavaScript・CSSなどの配信機能。公開ファイルは原則Workerを起動しない |
+| Durable Object（DO） | 状態を持つCloudflareの実行単位。`GameState`は正本、`ReactionHub`は演出用  |
+| R2                   | 景品画像を保存するオブジェクトストレージ                                  |
+| reach                | リーチになった人が公開画面から送る申告。Turnstileで検証し、人数を集計する |
+| stamp                | 来場者から会場画面へ送る演出用リアクション                                |
+| Access AUD           | Cloudflare Access applicationごとの識別子。AdminとScreenで別々            |
+| PITR                 | SQLite DOを指定した時点へ復元する仕組み。R2やWorkerのコードは戻さない     |
+| smoke                | 本番デプロイの公開面と認証境界を自動で確かめる軽量な確認                  |
+
+手順に不備があれば[リポジトリのIssue](https://github.com/NUTFes/nutfes-Bingo/issues)で相談し、この文書と実装を同時に更新してください。最終更新: 2026-09-28。
+
+### 公式資料
 
 - <https://developers.cloudflare.com/workers/platform/pricing/>
 - <https://developers.cloudflare.com/workers/platform/limits/>
