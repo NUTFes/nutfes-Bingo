@@ -57,6 +57,8 @@ mise run cloudflare:check
 
 `pnpm test`はWorkers Vitest runtimeでWorker、SQLite Durable Objects、R2、WebSocket、Access、Turnstileを検査します。`mise run cloudflare:check`はDockerでのclient/Worker build、binding type freshness、Wrangler dry-run、Free plan bundle上限、Worker startup profileを確認します。
 
+開発toolchainのHigh advisory対策は`pnpm-workspace.yaml`のoverrideと`pnpm-lock.yaml`で管理します。現在は`fast-uri`、`undici` v7、`brace-expansion`を修正版へ固定し、`minimumReleaseAge`と`trustPolicy: no-downgrade`は維持しています。release gateの監査を無効化したりseverity閾値を下げたりせず、依存の修正後に再実行してください。
+
 ### ブラウザE2EとLighthouse CI
 
 ```bash
