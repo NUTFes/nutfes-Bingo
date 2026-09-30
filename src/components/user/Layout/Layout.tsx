@@ -1,23 +1,14 @@
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
+import type { ReactNode, SetStateAction } from "react";
 import { useMatch } from "react-router";
 
 import BackIcon from "@/components/user/icons/BackIcon";
-import Button from "@/components/user/buttons/Button";
 import Header from "@/components/user/Header";
-import Modal from "@/components/user/Modal";
 import NavigationBar from "@/components/user/NavigationBar";
 import PrizesIcon from "@/components/user/icons/PrizesIcon";
 import ReachIcon from "@/components/user/icons/ReachIcon";
 import ReactionsIcon from "@/components/user/icons/ReactionsIcon";
 import SettingsIcon from "@/components/user/icons/SettingsIcon";
-import ToggleButton from "@/components/user/buttons/ToggleButton";
-import {
-  Globe,
-  ArrowUpDown,
-  Moon,
-  MessageSquare,
-  Settings as SettingsLucideIcon,
-} from "lucide-react";
 import { REACTION_IMAGES } from "@/types/bingo/constants";
 import type { AppStateRow } from "@/types/bingo/types";
 import { BingoLanguageProvider, useBingoLanguage } from "@/utils/i18n/provider";
@@ -40,9 +31,10 @@ const ReachConfirmationModal = lazy(
 const SurveyPromptModal = lazy(
   () => import("@/components/user/SurveyPromptModal/SurveyPromptModal"),
 );
+const SettingsModal = lazy(() => import("./SettingsModal"));
 
 interface InnerLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
   appState: AppStateRow;
   isSortedAscending?: boolean;
   setIsSortedAscending?: (value: boolean) => void;
@@ -55,7 +47,7 @@ function InnerLayout({
   setIsSortedAscending,
 }: InnerLayoutProps) {
   const isPrizePage = useMatch("/prizes") !== null;
-  const { language, setLanguage, t } = useBingoLanguage();
+  const { language, t } = useBingoLanguage();
 
   const interactions = usePublicInteractions(appState);
   const { preferences, setPreferences, markReachConfirmed } = usePublicPreferences(
@@ -69,19 +61,19 @@ function InnerLayout({
     modalState;
   const { isReachIconVisible, isSortOrderActive, isDarkMode } = preferences;
   const { isSending: isStampSending, activeName: activeStampName } = stampState;
-  const setIsReactionModalOpen = (value: React.SetStateAction<boolean>) =>
+  const setIsReactionModalOpen = (value: SetStateAction<boolean>) =>
     interactions.setReactionModalOpen(
       typeof value === "function" ? value(modalState.isReactionModalOpen) : value,
     );
-  const setIsSettingsModalOpen = (value: React.SetStateAction<boolean>) =>
+  const setIsSettingsModalOpen = (value: SetStateAction<boolean>) =>
     interactions.setSettingsModalOpen(
       typeof value === "function" ? value(modalState.isSettingsModalOpen) : value,
     );
-  const setIsReachModalOpen = (value: React.SetStateAction<boolean>) =>
+  const setIsReachModalOpen = (value: SetStateAction<boolean>) =>
     interactions.setReachModalOpen(
       typeof value === "function" ? value(modalState.isReachModalOpen) : value,
     );
-  const setIsSurveyModalOpen = (value: React.SetStateAction<boolean>) =>
+  const setIsSurveyModalOpen = (value: SetStateAction<boolean>) =>
     interactions.setSurveyModalOpen(
       typeof value === "function" ? value(modalState.isSurveyModalOpen) : value,
     );
@@ -105,10 +97,6 @@ function InnerLayout({
     persistBooleanPreference(PUBLIC_PREFERENCE_KEYS.sortedAscending, next);
     setIsSortedAscending(next);
     setPreferences((prev) => ({ ...prev, isSortOrderActive: next }));
-  };
-
-  const toggleLanguage = () => {
-    setLanguage(language === "ja" ? "en" : "ja");
   };
 
   const toggleDarkMode = () => {
@@ -183,68 +171,18 @@ function InnerLayout({
             onConfirmed={markReachConfirmed}
           />
         )}
+        {isSettingsModalOpen && (
+          <SettingsModal
+            appState={appState}
+            isDarkMode={isDarkMode}
+            isSortOrderActive={isSortOrderActive}
+            setIsOpened={setIsSettingsModalOpen}
+            onToggleDarkMode={toggleDarkMode}
+            onToggleSortOrder={setIsSortedAscending ? toggleSortOrder : undefined}
+            onAnswerSurvey={handleAnswerSurvey}
+          />
+        )}
       </Suspense>
-      <Modal isOpened={isSettingsModalOpen} setIsOpened={setIsSettingsModalOpen}>
-        <div className={styles.settingsModal}>
-          <div className={styles.settingsHeader}>
-            <SettingsLucideIcon className={styles.headerIcon} />
-            <h2 className={styles.modalTitle}>SETTINGS</h2>
-          </div>
-          <div className={styles.settingsList}>
-            {appState.is_survey_active && appState.survey_url && (
-              <div className={styles.settingsRow}>
-                <div className={styles.settingsRowLabel}>
-                  <MessageSquare className={styles.rowIcon} />
-                  <span>{t.settingsModal.survey}</span>
-                </div>
-                <div className={styles.settingsRowControl}>
-                  <Button inversion className={styles.surveyButton} onClick={handleAnswerSurvey}>
-                    {t.settingsModal.answerSurvey}
-                  </Button>
-                </div>
-              </div>
-            )}
-            <div className={styles.settingsRow}>
-              <div className={styles.settingsRowLabel}>
-                <Globe className={styles.rowIcon} />
-                <span>{t.settingsModal.languageSelection}</span>
-              </div>
-              <div className={styles.settingsRowControl}>
-                <ToggleButton isActive={language !== "ja"} onClick={toggleLanguage}>
-                  <span>{t.settingsModal.japanese}</span>
-                  <span>{t.settingsModal.english}</span>
-                </ToggleButton>
-              </div>
-            </div>
-            {setIsSortedAscending && (
-              <div className={styles.settingsRow}>
-                <div className={styles.settingsRowLabel}>
-                  <ArrowUpDown className={styles.rowIcon} />
-                  <span>{t.settingsModal.sortOrder}</span>
-                </div>
-                <div className={styles.settingsRowControl}>
-                  <ToggleButton isActive={isSortOrderActive} onClick={toggleSortOrder}>
-                    <span>{t.settingsModal.drawOrder}</span>
-                    <span>{t.settingsModal.ascending}</span>
-                  </ToggleButton>
-                </div>
-              </div>
-            )}
-            <div className={styles.settingsRow}>
-              <div className={styles.settingsRowLabel}>
-                <Moon className={styles.rowIcon} />
-                <span>{t.settingsModal.theme}</span>
-              </div>
-              <div className={styles.settingsRowControl}>
-                <ToggleButton isActive={isDarkMode} onClick={toggleDarkMode}>
-                  <span>{t.settingsModal.light}</span>
-                  <span>{t.settingsModal.dark}</span>
-                </ToggleButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Modal>
       <Header />
       <main className={styles.content} tabIndex={0} aria-label="ビンゴコンテンツ">
         {children}

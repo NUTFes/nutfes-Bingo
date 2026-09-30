@@ -1,17 +1,18 @@
-import { cn } from "@/utils/utils";
+import { clsx } from "clsx";
+import type { ReactNode, Ref } from "react";
 import styles from "./NavigationBar.module.css";
 
 interface NavigationBarProps {
-  children: React.ReactNode;
+  children: ReactNode;
   isCentered: boolean;
-  ref?: React.Ref<HTMLDivElement>;
+  ref?: Ref<HTMLDivElement>;
 }
 
 const NavigationBar = ({ children, isCentered, ref }: NavigationBarProps) => {
   return (
     <div
       ref={ref}
-      className={cn(styles.navigationBar, {
+      className={clsx(styles.navigationBar, {
         [styles.center]: isCentered,
       })}
     >

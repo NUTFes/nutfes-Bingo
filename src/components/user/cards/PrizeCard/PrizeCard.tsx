@@ -1,6 +1,6 @@
 import { ResponsiveImage } from "@/components/ui/ResponsiveImage";
 import { useState } from "react";
-import { cn } from "@/utils/utils";
+import { clsx } from "clsx";
 
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 import { useBingoLanguage } from "@/utils/i18n/provider";
@@ -53,7 +53,7 @@ const PrizeCard = ({ prize, highPriority = false }: PrizeCardProps) => {
       <div className={styles.card}>
         <div className={styles.image}>
           <div
-            className={cn(styles.imageWrapper, {
+            className={clsx(styles.imageWrapper, {
               [styles.wonImage]: prize.is_won,
             })}
           >

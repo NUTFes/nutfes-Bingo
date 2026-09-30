@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cn } from "@/utils/utils";
+import { clsx } from "clsx";
 
 import styles from "./IconFramework.module.css";
 
@@ -27,7 +27,7 @@ const IconFramework = ({
   return (
     <button
       type="button"
-      className={cn(
+      className={clsx(
         styles.iconContainer,
         {
           [styles.outline]: outline,

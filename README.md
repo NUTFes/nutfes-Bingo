@@ -76,6 +76,10 @@ pnpm test:e2e:report
 - CIはPR・developへのpush・手動実行で両方を実行します。E2E失敗時もLighthouseを実行し、生成できたレポートを`browser-quality-reports` artifactとして7日間保持します。レポートはGit・Docker build contextに含めません。
 - Ubuntu CIでは、インストールしたChromium実行ファイルだけにAppArmorのuser namespace許可を設定します。Lighthouseの起動に`--no-sandbox`は使わず、OS全体の制限も無効化しません。[Chromium公式の説明](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md)を参照してください。
 
+公開ページの初期表示は、build時にentry CSSをHTMLへ埋め込み、ヘッダーで使うRajdhani 700を低い取得優先度のhint付きで先読みします。公開状態の先読みはHTMLから開始し、Reactの取得・実行と並行させます。データの採用条件・WebSocket更新・再検証cacheの扱いは変えません。
+
+ホームと景品一覧は通常のimportで初期Suspenseとpage chunkの取得待ちを避け、設定画面を含むモーダル・ヘルプは必要になってから読み込みます。CSS Modulesのクラス連結には`clsx`を使い、初回表示から不要なTailwindのクラス解決処理を外しています。ローディングはシステムフォントの短い案内だけにし、10秒経過時の接続エラーと再読み込みボタンを残しています。
+
 #### 計測結果の読み方
 
 1. CI artifactを展開し、`lighthouse-report/`のHTMLをブラウザで開きます。`manifest.json`からURLと代表runを確認し、JSONと`.lighthouseci/assertion-results.json`で数値・assertionを確認できます。

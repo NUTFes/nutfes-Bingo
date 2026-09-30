@@ -1,82 +1,40 @@
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(16px, 4vw, 20px);
-  text-align: center;
-}
-
-.brand {
-  margin: 0;
-  color: var(--main-color);
-  font-family: var(--font-rajdhani), var(--font-sans);
-  font-size: clamp(24px, 7.5vw, 30px);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 4px solid color-mix(in srgb, var(--main-color) 24%, transparent);
-  border-top-color: var(--main-color);
-  border-radius: 50%;
-  animation: spin 0.9s linear infinite;
-}
-
-.message {
-  color: var(--text-color);
-  font-size: clamp(15px, 3.8vw, 17px);
-  font-weight: 600;
+.loading {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 24px;
+  font-family: system-ui, sans-serif;
+  font-size: 16px;
   line-height: 1.5;
+  color: var(--text-color);
 }
 
 .error {
-  margin: 0;
-  color: var(--text-color);
-  font-size: clamp(15px, 3.8vw, 17px);
-  line-height: 1.6;
+  max-width: 28rem;
+  text-align: center;
+}
+
+.error p {
+  margin: 0 0 16px;
 }
 
 .retryButton {
-  width: clamp(200px, 60vw, 260px);
-  min-height: 48px;
-  height: auto;
-  padding: 10px 16px;
-  border-width: 3px;
-  border-radius: 99px;
-  font-size: clamp(16px, 4.5vw, 18px);
+  min-height: 44px;
+  padding: 8px 20px;
+  border: 2px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
   cursor: pointer;
 }
 
+.retryButton:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
 .retryButton:focus-visible {
-  outline: 3px solid var(--text-color);
-  outline-offset: 3px;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spinner {
-    animation: none;
-  }
+  outline: 3px solid var(--main-color);
+  outline-offset: 4px;
 }

@@ -16,9 +16,16 @@ test("public pages support mobile keyboard navigation", async ({ page }) => {
   await backButton.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/$/);
+  await expect(prizesButton).toBeVisible();
 
   const settingsButton = page.getByRole("button", { name: "Settings", exact: true });
   await settingsButton.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "SETTINGS", exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("heading", { name: "SETTINGS", exact: true })).toBeHidden();
+  await expect(settingsButton).toBeFocused();
+
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "SETTINGS", exact: true })).toBeVisible();
 });

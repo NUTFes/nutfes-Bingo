@@ -45,7 +45,7 @@ export function siteHtml({ siteUrl }: { siteUrl: string }): Plugin {
   return {
     name: "nutfes-site-html",
     transformIndexHtml: {
-      order: "pre",
+      order: "post",
       handler(html, context) {
         // Cloudflare passes an absolute filename as the dev transform URL.
         const filename = context.server ? context.path : context.filename;
@@ -128,6 +128,52 @@ export function siteHtml({ siteUrl }: { siteUrl: string }): Plugin {
             children: publicThemeBootstrapScript(false),
             injectTo: "head-prepend",
           });
+        }
+        if (page?.area === "public") {
+          tags.push({
+            tag: "link",
+            attrs: {
+              rel: "preload",
+              href: "/api/bingo/state",
+              as: "fetch",
+              crossorigin: "anonymous",
+            },
+            injectTo: "head",
+          });
+        }
+        if (page?.area === "public" && context.bundle) {
+          const bundle = context.bundle;
+          // The small entry styles must not delay the HTML loading shell's first paint.
+          html = html.replace(
+            /<link\b(?=[^>]*\brel="stylesheet")[^>]*\bhref="([^"]+)"[^>]*>/g,
+            (link: string, href: string) => {
+              const asset = bundle[href.slice(1)];
+              if (asset?.type !== "asset") return link;
+              const css =
+                typeof asset.source === "string"
+                  ? asset.source
+                  : new TextDecoder().decode(asset.source);
+              return `<style>${css.replace(/<\/style/gi, "<\\/style")}</style>`;
+            },
+          );
+          const font = Object.values(bundle).find(
+            (asset) =>
+              asset.type === "asset" && asset.names.includes("rajdhani-latin-700-normal.woff2"),
+          );
+          if (font) {
+            tags.push({
+              tag: "link",
+              attrs: {
+                rel: "preload",
+                href: `/${font.fileName}`,
+                as: "font",
+                type: "font/woff2",
+                crossorigin: "anonymous",
+                fetchpriority: "low",
+              },
+              injectTo: "head",
+            });
+          }
         }
         return { html, tags };
       },
