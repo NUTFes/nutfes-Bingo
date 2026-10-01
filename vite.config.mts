@@ -47,6 +47,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
 
   const localDev = command === "serve" && !isPreview && process.env.BINGO_LOCAL_DEV === "true";
   const usePolling = process.env.VITE_USE_POLLING === "true";
+  const publicBootstrapEntry = resolve(import.meta.dirname, "src/entry/public-bootstrap.ts");
   const htmlInputs = [
     ...SITE_PAGES.map(({ html }) => resolve(import.meta.dirname, html)),
     resolve(import.meta.dirname, "404.html"),
@@ -89,7 +90,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
         },
         build: {
           outDir: "dist/client",
-          rolldownOptions: { input: htmlInputs },
+          rolldownOptions: { input: [...htmlInputs, publicBootstrapEntry] },
         },
       },
       worker: {

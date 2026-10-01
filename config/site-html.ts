@@ -38,6 +38,7 @@ function sitemapXml(siteUrl: string) {
 
 export function siteHtml({ siteUrl }: { siteUrl: string }): Plugin {
   const root = resolve(import.meta.dirname, "..");
+  const publicBootstrapEntry = resolve(root, "src/entry/public-bootstrap.ts");
   const pagesByHtml = new Map<string, (typeof SITE_PAGES)[number]>(
     SITE_PAGES.map((page) => [page.html, page]),
   );
@@ -129,7 +130,40 @@ export function siteHtml({ siteUrl }: { siteUrl: string }): Plugin {
             injectTo: "head-prepend",
           });
         }
-        if (page?.area === "public") {
+        if (page?.path === "/prizes") {
+          const bootstrapChunk =
+            context.bundle &&
+            Object.values(context.bundle).find(
+              (output) =>
+                output.type === "chunk" &&
+                output.facadeModuleId !== null &&
+                normalizePath(output.facadeModuleId) === normalizePath(publicBootstrapEntry),
+            );
+          if (context.server) {
+            tags.push({
+              tag: "script",
+              attrs: {
+                type: "module",
+                src: "/src/entry/public-bootstrap.ts",
+                async: true,
+              },
+              injectTo: "head",
+            });
+          } else if (context.bundle) {
+            if (!bootstrapChunk) {
+              throw new Error("Missing public bootstrap entry chunk");
+            }
+            tags.push({
+              tag: "script",
+              attrs: {
+                type: "module",
+                src: `/${bootstrapChunk.fileName}`,
+                async: true,
+              },
+              injectTo: "head",
+            });
+          }
+        } else if (page?.area === "public") {
           tags.push({
             tag: "link",
             attrs: {

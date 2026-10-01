@@ -1,10 +1,12 @@
 import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
 import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
 const assetsDirectory = existsSync("./dist/client/index.html") ? "./dist/client" : "./test/assets";
 
 export default defineConfig({
+  resolve: { alias: { "@": resolve(import.meta.dirname, "src") } },
   plugins: [
     cloudflareTest({
       miniflare: {

@@ -1,4 +1,5 @@
 import { ResponsiveImage } from "@/components/ui/ResponsiveImage";
+import { PRIZE_IMAGE_SIZES } from "@/utils/responsive-image";
 import { useState } from "react";
 import { clsx } from "clsx";
 
@@ -36,7 +37,7 @@ function PrizeImage({
       src={imageUrl}
       alt={name}
       className={styles.prizeImage}
-      sizes="(max-width: 639px) 22.5vw, 98px"
+      sizes={PRIZE_IMAGE_SIZES}
       loading={highPriority ? "eager" : undefined}
       fetchPriority={highPriority ? "high" : undefined}
       onError={() => setHasLoadError(true)}

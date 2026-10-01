@@ -78,7 +78,7 @@ pnpm test:e2e:report
 - CIはPR・developへのpush・手動実行で両方を実行します。E2E失敗時もLighthouseを実行し、生成できたレポートを`browser-quality-reports` artifactとして7日間保持します。レポートはGit・Docker build contextに含めません。
 - Ubuntu CIでは、インストールしたChromium実行ファイルだけにAppArmorのuser namespace許可を設定します。Lighthouseの起動に`--no-sandbox`は使わず、OS全体の制限も無効化しません。[Chromium公式の説明](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md)を参照してください。
 
-公開ページの初期表示は、build時にentry CSSをHTMLへ埋め込み、ヘッダーで使うRajdhani 700を低い取得優先度のhint付きで先読みします。公開状態の先読みはHTMLから開始し、Reactの取得・実行と並行させます。データの採用条件・WebSocket更新・再検証cacheの扱いは変えません。
+公開ページの初期表示は、build時にentry CSSをHTMLへ埋め込み、ヘッダーで使うRajdhani 700を低い取得優先度のhint付きで先読みします。ホームの公開状態はHTMLのfetch preloadから開始します。景品一覧ではReactを含まない小さなbootstrapを先に実行し、初回の状態応答をアプリと共有して、先頭景品の画像を描画と同じsrcset・sizesで先読みします。初回GETを重複させず、状態の採用条件・WebSocket更新・ETagによる再検証は維持します。途中で画面が破棄された場合は本文読み込みまで中断し、その応答を後続の取得へ再利用しません。
 
 ホームと景品一覧は通常のimportで初期Suspenseとpage chunkの取得待ちを避け、設定画面を含むモーダル・ヘルプは必要になってから読み込みます。CSS Modulesのクラス連結には`clsx`を使い、初回表示から不要なTailwindのクラス解決処理を外しています。ローディングはシステムフォントの短い案内だけにし、10秒経過時の接続エラーと再読み込みボタンを残しています。
 

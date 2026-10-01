@@ -18,6 +18,7 @@ import {
 import { resolvePrizeImageUrl } from "@/utils/image";
 import { startVenueSocketLifecycle } from "@/lib/venue-socket-lifecycle";
 import { shouldAcceptRevision, type StateUpdateAuthority } from "@/lib/state-order";
+import { takeInitialPublicState } from "@/lib/initial-public-state";
 
 const PUBLIC_STATE_URL = "/api/bingo/state";
 const PUBLIC_STATE_SOCKET_PATH = "/api/bingo/socket";
@@ -151,6 +152,14 @@ async function fetchState(
   etag: string | null,
   view: "public" | "screen",
 ) {
+  if (view === "public") {
+    const initial = takeInitialPublicState(signal);
+    if (initial !== undefined) {
+      const { data, etag: initialEtag } = await initial;
+      return { state: normalizeBingoState(data, fallback), etag: initialEtag };
+    }
+  }
+
   const headers = new Headers({ Accept: "application/json" });
   if (etag !== null) headers.set("If-None-Match", etag);
   if (view === "screen") headers.set("X-Requested-With", "XMLHttpRequest");

@@ -1,10 +1,10 @@
 import type { CSSProperties, ImgHTMLAttributes } from "react";
 
-import cloudflareImageLoader from "@/utils/cloudflare-image-loader";
-
-const IMAGE_WIDTHS = [
-  32, 48, 64, 96, 128, 160, 192, 256, 384, 640, 750, 828, 1080, 1200, 1920, 2048, 3840,
-] as const;
+import {
+  canTransformResponsiveImage,
+  getResponsiveImageSrc,
+  getResponsiveImageSrcSet,
+} from "@/utils/responsive-image";
 
 type ResponsiveImageProps = Omit<
   ImgHTMLAttributes<HTMLImageElement>,
@@ -15,10 +15,6 @@ type ResponsiveImageProps = Omit<
   sizes: string;
 };
 
-const canTransform = (src: string) =>
-  import.meta.env.VITE_IMAGE_TRANSFORMATIONS === "true" &&
-  (src.startsWith("/") || /^https?:\/\//.test(src));
-
 export function ResponsiveImage({
   src,
   alt,
@@ -27,13 +23,9 @@ export function ResponsiveImage({
   style,
   ...imageProps
 }: ResponsiveImageProps) {
-  const transformed = canTransform(src);
-  const resolvedSrc = transformed
-    ? cloudflareImageLoader({ src, width: IMAGE_WIDTHS.at(-1) as number })
-    : src;
-  const srcSet = transformed
-    ? IMAGE_WIDTHS.map((width) => `${cloudflareImageLoader({ src, width })} ${width}w`).join(", ")
-    : undefined;
+  const transformed = canTransformResponsiveImage(src);
+  const resolvedSrc = getResponsiveImageSrc(src, transformed);
+  const srcSet = getResponsiveImageSrcSet(src, transformed);
   const fillStyle: CSSProperties = {
     position: "absolute",
     inset: 0,
