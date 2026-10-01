@@ -35,7 +35,9 @@ export class ReactionHub extends DurableObject<Env> {
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
-    ctx.blockConcurrencyWhile(async () => this.migrate());
+    ctx.blockConcurrencyWhile(async () => {
+      this.initializeSchema();
+    });
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
   }
 
@@ -96,20 +98,6 @@ export class ReactionHub extends DurableObject<Env> {
     return { accepted: true, stamp };
   }
 
-  async getStatus(): Promise<{
-    day: string;
-    dailyCount: number;
-    connectedScreens: number;
-  }> {
-    this.ensureState();
-    const state = this.readStateRow();
-    return {
-      day: state.day,
-      dailyCount: state.daily_count,
-      connectedScreens: this.ctx.getWebSockets("stamps").length,
-    };
-  }
-
   async fetch(request: Request): Promise<Response> {
     if (request.method !== "GET" || request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       return Response.json({ error: "WebSocket Upgrade が必要です。" }, { status: 426 });
@@ -156,36 +144,15 @@ export class ReactionHub extends DurableObject<Env> {
     // With the current compatibility date the runtime replies to close frames automatically.
   }
 
-  private migrate(): void {
+  private initializeSchema(): void {
     this.ctx.storage.sql.exec(`
-      CREATE TABLE IF NOT EXISTS _sql_schema_migrations (
-        id INTEGER PRIMARY KEY,
-        applied_at TEXT NOT NULL
+      CREATE TABLE IF NOT EXISTS reaction_state (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        day TEXT NOT NULL,
+        daily_count INTEGER NOT NULL CHECK (daily_count >= 0),
+        next_id INTEGER NOT NULL CHECK (next_id >= 1)
       );
     `);
-    const currentVersion =
-      this.ctx.storage.sql
-        .exec<{ version: number }>(
-          "SELECT COALESCE(MAX(id), 0) AS version FROM _sql_schema_migrations",
-        )
-        .one().version ?? 0;
-    if (currentVersion >= 1) return;
-
-    const now = new Date().toISOString();
-    this.ctx.storage.transactionSync(() => {
-      this.ctx.storage.sql.exec(`
-        CREATE TABLE IF NOT EXISTS reaction_state (
-          id INTEGER PRIMARY KEY CHECK (id = 1),
-          day TEXT NOT NULL,
-          daily_count INTEGER NOT NULL CHECK (daily_count >= 0),
-          next_id INTEGER NOT NULL CHECK (next_id >= 1)
-        );
-      `);
-      this.ctx.storage.sql.exec(
-        "INSERT OR IGNORE INTO _sql_schema_migrations (id, applied_at) VALUES (1, ?)",
-        now,
-      );
-    });
   }
 
   private ensureState(): void {

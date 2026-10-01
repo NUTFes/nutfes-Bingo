@@ -1,6 +1,6 @@
 import { ResponsiveImage } from "@/components/ui/ResponsiveImage";
 import React, { type Key, useMemo, useReducer } from "react";
-import { LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
+import { LazyMotion, domMax, m, useReducedMotion } from "framer-motion";
 import {
   DropIndicator,
   GridLayout,
@@ -472,8 +472,14 @@ function usePrizeResultController({
     try {
       const current = await fetchAdminState();
       setBingoPrize(current.prizes);
+      return true;
     } catch (error) {
       console.error(error);
+      showToast({
+        title: "再読込失敗",
+        description: "サーバー状態を確認できません。ページを再読み込みしてください。",
+      });
+      return false;
     }
   };
   const [state, dispatch] = useReducer(prizeUiReducer, INITIAL_PRIZE_UI_STATE);
@@ -556,11 +562,12 @@ function usePrizeResultController({
       if (rollbackPrizes) {
         setBingoPrize(rollbackPrizes);
       }
-      await refreshAuthoritativePrizes();
-      showToast({
-        title: "並び替え結果を再確認しました",
-        description: "サーバーに保存された順番を表示しています。",
-      });
+      if (await refreshAuthoritativePrizes()) {
+        showToast({
+          title: "並び替え結果を再確認しました",
+          description: "サーバーに保存された順番を表示しています。",
+        });
+      }
     } finally {
       dispatch({ type: "finishMove" });
     }
@@ -703,7 +710,7 @@ const PrizeResult = (props: PrizeResultProps) => {
     <>
       <div className="flex flex-col gap-4">
         {isReordering ? (
-          <LazyMotion features={domAnimation}>
+          <LazyMotion features={domMax}>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:gap-10">
               {prizeGroups.map((group) => (
                 <PrizeReorderSection

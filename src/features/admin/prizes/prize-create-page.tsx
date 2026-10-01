@@ -104,14 +104,8 @@ export function AdminPrizeCreatePage() {
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.set("nameJp", nameJp);
-      formData.set("nameEn", nameEn);
-      if (imageFile) {
-        formData.set("file", imageFile);
-      }
       const existingPrizeIds = new Set(bingoPrize.map((prize) => prize.id));
-      const result = await prizeActions.createPrize(formData);
+      const result = await prizeActions.createPrize({ nameJp, nameEn, file: imageFile });
       if (!result.ok) {
         console.error(result.error);
         try {
@@ -207,14 +201,7 @@ export function AdminPrizeCreatePage() {
             }
           }}
           onUpdate={async ({ id, nameJp, nameEn, file }) => {
-            const formData = new FormData();
-            formData.set("id", String(id));
-            formData.set("nameJp", nameJp);
-            formData.set("nameEn", nameEn);
-            if (file) {
-              formData.set("file", file);
-            }
-            const result = await prizeActions.updatePrize(formData);
+            const result = await prizeActions.updatePrize({ id, nameJp, nameEn, file });
             if (!result.ok) {
               throw new Error(result.error);
             }

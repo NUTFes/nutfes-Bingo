@@ -10,13 +10,17 @@ import { RouteErrorBoundary } from "./AppErrorBoundary";
 import { RouteMetadata } from "./RouteMetadata";
 
 const AdminDashboardPage = lazy(() =>
-  import("@/features/admin").then(({ AdminDashboardPage }) => ({ default: AdminDashboardPage })),
+  import("@/features/admin/dashboard/dashboard-page").then(({ AdminDashboardPage }) => ({
+    default: AdminDashboardPage,
+  })),
 );
 const AdminPrizesPage = lazy(() =>
-  import("@/features/admin").then(({ AdminPrizesPage }) => ({ default: AdminPrizesPage })),
+  import("@/features/admin/prizes/prizes-page").then(({ AdminPrizesPage }) => ({
+    default: AdminPrizesPage,
+  })),
 );
 const AdminPrizeCreatePage = lazy(() =>
-  import("@/features/admin").then(({ AdminPrizeCreatePage }) => ({
+  import("@/features/admin/prizes/prize-create-page").then(({ AdminPrizeCreatePage }) => ({
     default: AdminPrizeCreatePage,
   })),
 );

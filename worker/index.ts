@@ -70,8 +70,6 @@ const worker = {
       switch (url.pathname) {
         case "/api/bingo/state":
           return await handlePublicState(request, env, "state");
-        case "/api/bingo/prizes":
-          return await handlePublicState(request, env, "prizes");
         case "/api/bingo/socket":
           return await handleStateSocket(request, env, "public");
         case "/api/bingo/reach":
@@ -157,7 +155,7 @@ async function handleScreenRoute(request: Request, env: Env): Promise<Response> 
 async function handlePublicState(
   request: Request,
   env: Env,
-  view: "state" | "prizes" | "screen",
+  view: "state" | "screen",
 ): Promise<Response> {
   assertMethod(request, ["GET", "HEAD"]);
   const state = await getGameState(env).getState();
@@ -170,17 +168,10 @@ async function handlePublicState(
   );
 }
 
-function selectPublicView(state: BingoUnifiedState, view: "state" | "prizes" | "screen"): unknown {
+function selectPublicView(state: BingoUnifiedState, view: "state" | "screen"): unknown {
   switch (view) {
     case "state":
       return state;
-    case "prizes":
-      return {
-        revision: state.revision,
-        prizes: state.prizes,
-        appState: state.appState,
-        serverTime: state.serverTime,
-      };
     case "screen":
       return {
         revision: state.revision,

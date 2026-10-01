@@ -1,4 +1,10 @@
-import { env, runDurableObjectAlarm, runInDurableObject, SELF } from "cloudflare:test";
+import {
+  env,
+  evictDurableObject,
+  runDurableObjectAlarm,
+  runInDurableObject,
+  SELF,
+} from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { TURNSTILE_ACTION } from "../worker/turnstile";
@@ -250,6 +256,61 @@ describe("Durable Object state", () => {
     expect(updated.revision).toBe(1);
     expect(updated.numbers).toHaveLength(1);
     expect(updated.numbers[0]?.number).toBe(42);
+  });
+});
+
+describe("ReactionHub durable state", () => {
+  it("preserves an existing daily limit and stamp ID across eviction", async () => {
+    const reactions = env.REACTION_HUB.getByName("legacy-reaction-state");
+    const fixedNowMs = await runInDurableObject(reactions, (_instance, ctx) => {
+      const day = new Date(Date.now() + 9 * 60 * 60 * 1_000).toISOString().slice(0, 10);
+      const fixedNowMs = Date.parse(`${day}T12:00:00+09:00`);
+      ctx.storage.sql.exec(`
+        CREATE TABLE IF NOT EXISTS _sql_schema_migrations (
+          id INTEGER PRIMARY KEY,
+          applied_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS reaction_state (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          day TEXT NOT NULL,
+          daily_count INTEGER NOT NULL CHECK (daily_count >= 0),
+          next_id INTEGER NOT NULL CHECK (next_id >= 1)
+        );
+      `);
+      ctx.storage.sql.exec(
+        "INSERT OR REPLACE INTO _sql_schema_migrations (id, applied_at) VALUES (1, ?)",
+        `${day}T03:00:00.000Z`,
+      );
+      ctx.storage.sql.exec(
+        "INSERT OR REPLACE INTO reaction_state (id, day, daily_count, next_id) VALUES (1, ?, ?, ?)",
+        day,
+        24_999,
+        42_001,
+      );
+      return fixedNowMs;
+    });
+
+    await evictDurableObject(reactions);
+
+    const result = await runInDurableObject(reactions, async (instance) => {
+      const actualDateNow = Date.now;
+      const fixedDate = new Date(fixedNowMs);
+      Date.now = fixedDate.getTime.bind(fixedDate);
+      try {
+        return {
+          accepted: await instance.submitStamp("a".repeat(64), "good"),
+          limited: await instance.submitStamp("b".repeat(64), "heart"),
+        };
+      } finally {
+        Date.now = actualDateNow;
+      }
+    });
+
+    expect(result.accepted).toMatchObject({
+      accepted: true,
+      stamp: { id: 42_001, name: "good" },
+    });
+    expect(result.limited).toEqual({ accepted: false, reason: "daily_limit" });
   });
 });
 

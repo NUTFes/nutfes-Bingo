@@ -73,7 +73,7 @@ pnpm test:e2e:report
 
 両commandは既存のDocker production previewを`http://localhost:8788`で自動起動・終了します。port 8788を空け、E2Eと性能計測は順番に実行してください。既存サーバーや任意のremote URLは使いません。毎回新しいcontainerのtmpfsにDO/R2の状態を作り、通常開発の`.wrangler`や本番データには触れません。build用URLとTurnstile keyはテスト値に固定し、Admin/Screenは既存のloopback限定local bypassだけを使用します。Cloudflare Accessの実ログインはE2E対象外です。
 
-- `playwright.config.ts` / `e2e/`：Chromiumでモバイル幅のキーボード操作、番号の入力境界、管理画面での追加・削除→公開画面へのlive反映・reload後の永続化を検査します。Worker/APIをmockしません。失敗時のscreenshotとtraceは`test-results/`、HTMLは`playwright-report/`に保存します。
+- `playwright.config.ts` / `e2e/`：Chromiumでモバイル幅のキーボード操作、番号の入力境界、管理画面での追加・削除→公開画面へのlive反映・reload後の永続化、景品更新失敗時の正本への再同期を検査します。Worker/APIをmockしません。失敗時のscreenshotとtraceは`test-results/`、HTMLは`playwright-report/`に保存します。
 - `lighthouserc.cjs`：公開`/`と`/prizes/`をLighthouse標準のmobile条件で各3回計測します。PlaywrightのChromiumを再利用し、計測データは`.lighthouseci/`、HTML/JSONとmanifestは`lighthouse-report/`に保存します。外部のレポート公開serviceやAPI keyは使いません。
 - CIはPR・developへのpush・手動実行で両方を実行します。E2E失敗時もLighthouseを実行し、生成できたレポートを`browser-quality-reports` artifactとして7日間保持します。レポートはGit・Docker build contextに含めません。
 - Ubuntu CIでは、インストールしたChromium実行ファイルだけにAppArmorのuser namespace許可を設定します。Lighthouseの起動に`--no-sandbox`は使わず、OS全体の制限も無効化しません。[Chromium公式の説明](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md)を参照してください。
@@ -81,6 +81,10 @@ pnpm test:e2e:report
 公開ページの初期表示は、build時にentry CSSをHTMLへ埋め込み、ヘッダーで使うRajdhani 700を低い取得優先度のhint付きで先読みします。ホームの公開状態はHTMLのfetch preloadから開始します。景品一覧ではReactを含まない小さなbootstrapを先に実行し、初回の状態応答をアプリと共有して、先頭景品の画像を描画と同じsrcset・sizesで先読みします。初回GETを重複させず、状態の採用条件・WebSocket更新・ETagによる再検証は維持します。途中で画面が破棄された場合は本文読み込みまで中断し、その応答を後続の取得へ再利用しません。
 
 ホームと景品一覧は通常のimportで初期Suspenseとpage chunkの取得待ちを避け、設定画面を含むモーダル・ヘルプは必要になってから読み込みます。CSS Modulesのクラス連結には`clsx`を使い、初回表示から不要なTailwindのクラス解決処理を外しています。ローディングはシステムフォントの短い案内だけにし、10秒経過時の接続エラーと再読み込みボタンを残しています。
+
+管理画面は各ページの実装を直接lazy importし、番号入力の初回表示では景品一覧・新規登録ページを読み込みません。景品作成・編集のクライアント内部入力は型付きobjectで受け渡し、multipartは画像uploadのHTTP境界だけで使用します。Tailwind設定の正本は`src/styles/admin/globals.css`です。
+
+景品更新が失敗した場合は`PrizeResult`が正本を1回だけ再取得し、再取得も失敗した場合は再読み込みを案内します。失敗した更新の自動再送はしません。並び替えはMotionの`domMax`でlayout機能を読み込み、reduced motionとキーボード操作を維持します。
 
 #### 計測結果の読み方
 

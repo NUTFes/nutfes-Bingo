@@ -5,32 +5,14 @@ import { AdminHeader, AdminLoading } from "@/components/admin";
 import { SearchField } from "@/components/ui/SearchField";
 import { Button } from "@/components/ui/Button";
 import { MyToastRegion } from "@/components/ui/Toast";
-import { queue } from "@/components/ui/toastQueue";
 import PrizeResult from "./components/PrizeResult";
 import { prizeActions } from "./actions-client";
-import { fetchAdminState } from "@/lib/admin-api";
 import { useAdminPrizes } from "./useAdminPrizes";
 
 export function AdminPrizesPage() {
   const { bingoPrize, setBingoPrize, loadError, isLoaded } = useAdminPrizes();
   const [searchText, setSearchText] = useState("");
   const [isReorderMode, setIsReorderMode] = useState(false);
-
-  const refreshAuthoritativePrizes = async () => {
-    try {
-      const state = await fetchAdminState();
-      setBingoPrize(state.prizes);
-    } catch (error) {
-      console.error(error);
-      queue.add(
-        {
-          title: "再読込失敗",
-          description: "サーバー状態を確認できません。ページを再読み込みしてください。",
-        },
-        { timeout: 5000 },
-      );
-    }
-  };
 
   const handleSearchChange = (value: string) => {
     setSearchText(value);
@@ -104,7 +86,6 @@ export function AdminPrizesPage() {
           onToggle={async (id, isWon) => {
             const result = await prizeActions.togglePrizeWon(id, isWon);
             if (!result.ok) {
-              await refreshAuthoritativePrizes();
               throw new Error(result.error);
             }
             return result.data;
@@ -112,21 +93,12 @@ export function AdminPrizesPage() {
           onDelete={async (prize) => {
             const result = await prizeActions.deletePrize(prize.id);
             if (!result.ok) {
-              await refreshAuthoritativePrizes();
               throw new Error(result.error);
             }
           }}
           onUpdate={async ({ id, nameJp, nameEn, file }) => {
-            const formData = new FormData();
-            formData.set("id", String(id));
-            formData.set("nameJp", nameJp);
-            formData.set("nameEn", nameEn);
-            if (file) {
-              formData.set("file", file);
-            }
-            const result = await prizeActions.updatePrize(formData);
+            const result = await prizeActions.updatePrize({ id, nameJp, nameEn, file });
             if (!result.ok) {
-              await refreshAuthoritativePrizes();
               throw new Error(result.error);
             }
             return result.data;
@@ -134,7 +106,6 @@ export function AdminPrizesPage() {
           onReorder={async (orderedIds) => {
             const result = await prizeActions.reorderPrizeGroup(orderedIds);
             if (!result.ok) {
-              await refreshAuthoritativePrizes();
               throw new Error(result.error);
             }
             return result.data;

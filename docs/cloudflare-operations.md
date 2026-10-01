@@ -35,7 +35,7 @@ flowchart LR
     media["bingo-media.nutfes.net"] -->|景品画像の取得| r2
 ```
 
-管理用・会場用のAccess policyとAUDは別々です。WorkerでもJWTの署名、issuer、AUD、有効期限、`email`、`sub`を確認します。人員の追加・削除はAccess policy（または参照するreusable group）で行い、Workerの再デプロイは不要です。公開状態はWebSocketで配信し、接続できないときは回数制限付きHTTP取得に切り替わります。公開リーチは`/api/bingo/reach`でTurnstileによる検証を受け、スタンプは`/api/bingo/stamps`から`ReactionHub`へ送られます。
+管理用・会場用のAccess policyとAUDは別々です。WorkerでもJWTの署名、issuer、AUD、有効期限、`email`、`sub`を確認します。人員の追加・削除はAccess policy（または参照するreusable group）で行い、Workerの再デプロイは不要です。公開状態はWebSocketで配信し、接続できないときは回数制限付きHTTP取得に切り替わります。HTTP取得とsmokeは`/api/bingo/state`の統合stateから番号・景品を確認します。公開リーチは`/api/bingo/reach`でTurnstileによる検証を受け、スタンプは`/api/bingo/stamps`から`ReactionHub`へ送られます。
 
 | 確認したい内容                                                                       | 設定・実装の正本                                                                                                                            |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -47,6 +47,8 @@ flowchart LR
 | ローカル実行と本番リリース                                                           | `mise.toml`、`scripts/cloudflare-dev.sh`、`scripts/preflight-cloudflare.sh`、`scripts/deploy-cloudflare.sh`、`scripts/cloudflare-smoke.mjs` |
 
 `wrangler.jsonc`のDO migrationは`GameState`と`ReactionHub`を作る`v1`です。番号・景品・当選状態・reach・survey・監査記録の正本は固定名`game`のSQLite Durable Object 1個です。景品画像だけをR2に保存します。画像アップロード時には5 MiB上限、MIME、実データの形式、content-hash keyを検査します。DOの世代切替、論理スナップショット、専用バックアップbucket、常設stagingはありません。短期のデータ復旧はSQLite DOのPITR（ある時点への復元）を使います。
+
+`ReactionHub`はテーブルを冪等に初期化し、起動や退避後の再生成で既存の日付、日次送信カウンター、次のスタンプIDをリセットしません。旧SQL migration台帳が存在しても削除せず、`wrangler.jsonc`のDO migrationは変更しません。
 
 ## 作業環境とCLIを用意する
 

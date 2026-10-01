@@ -2,45 +2,42 @@ import { sendAdminCommand, uploadPrizeImage } from "@/lib/admin-api";
 import { toActionResult } from "@/types/action-result";
 import type { PrizeWithImageUrl } from "@/types/bingo/types";
 
-function getString(formData: FormData, key: string) {
-  const value = formData.get(key);
-  return typeof value === "string" ? value : "";
+type CreatePrizeInput = {
+  nameJp: string;
+  nameEn: string;
+  file?: File | null;
+};
+
+type UpdatePrizeInput = CreatePrizeInput & { id: number };
+
+async function uploadOptionalImage(file?: File | null) {
+  return file && file.size > 0 ? uploadPrizeImage(file) : null;
 }
 
-function getFile(formData: FormData) {
-  const value = formData.get("file");
-  return value instanceof File && value.size > 0 ? value : null;
-}
-
-async function uploadOptionalImage(formData: FormData) {
-  const file = getFile(formData);
-  return file ? uploadPrizeImage(file) : null;
-}
-
-async function createPrize(formData: FormData) {
-  const image = await uploadOptionalImage(formData);
+async function createPrize(input: CreatePrizeInput) {
+  const image = await uploadOptionalImage(input.file);
   return sendAdminCommand<PrizeWithImageUrl>({
     type: "createPrize",
-    nameJp: getString(formData, "nameJp"),
-    nameEn: getString(formData, "nameEn"),
+    nameJp: input.nameJp,
+    nameEn: input.nameEn,
     ...(image ? { imagePath: image.image_path } : {}),
   });
 }
 
-async function updatePrize(formData: FormData) {
-  const image = await uploadOptionalImage(formData);
+async function updatePrize(input: UpdatePrizeInput) {
+  const image = await uploadOptionalImage(input.file);
   return sendAdminCommand<PrizeWithImageUrl>({
     type: "updatePrize",
-    id: Number(getString(formData, "id")),
-    nameJp: getString(formData, "nameJp"),
-    nameEn: getString(formData, "nameEn"),
+    id: input.id,
+    nameJp: input.nameJp,
+    nameEn: input.nameEn,
     ...(image ? { imagePath: image.image_path } : {}),
   });
 }
 
 export const prizeActions = {
-  createPrize: (formData: FormData) => toActionResult(() => createPrize(formData)),
-  updatePrize: (formData: FormData) => toActionResult(() => updatePrize(formData)),
+  createPrize: (input: CreatePrizeInput) => toActionResult(() => createPrize(input)),
+  updatePrize: (input: UpdatePrizeInput) => toActionResult(() => updatePrize(input)),
   togglePrizeWon: (id: number, isWon: boolean) =>
     toActionResult(() =>
       sendAdminCommand<PrizeWithImageUrl>({ type: "togglePrizeWon", id, isWon }),
